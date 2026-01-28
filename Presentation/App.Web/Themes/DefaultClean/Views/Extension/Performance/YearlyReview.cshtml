@@ -1,0 +1,319 @@
+@using App.Core
+@using App.Web.Models.PerformanceMeasurements;
+@model PerformanceMeasurementModel
+@inject App.Core.IWebHelper webHelper
+@{
+    Layout = "_ColumnsTwo";
+
+    //title
+    NopHtml.AddTitleParts(T("PageTitle.Career").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-career-result-page");
+}
+
+@section left
+{
+    @await Component.InvokeAsync(typeof(CustomerNavigationViewComponent), new { selectedTabId = CustomerNavigationEnum.YearlyReview })
+}
+
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Kendo UI JS -->
+<script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
+<form asp-controller="Performance" asp-action="YearlyReview" method="post">
+    <input type="hidden" asp-for="@Model.Id" />   
+
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.YearlyReview")
+        </h1>
+    </div>
+    <section class="content">
+
+        <div class="container-fluid fieldset">
+            <div class="form-horizontal">
+                <div class="cards-group form-fields">
+                    <div class="card card-default card-popup">
+                        <div class="card-body main">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="same-row">                          
+                                        <div class="form-group row">
+                                                
+                                            <div class="col-sm-3">
+                                                <nop-label asp-for="StartMonth" />
+                                            </div>
+                                            <div class="col-sm-4">
+                                                <nop-select asp-for="StartMonth" class="select1" asp-items="Model.Months" />
+
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <div class="col-sm-3">
+                                                <nop-label asp-for="StartYear" />
+                                            </div>
+                                            <div class="col-sm-4">
+                                                <nop-select asp-for="StartYear" class="select1" asp-items="Model.Years" />
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="same-row">
+                                        <div class="form-group row">
+
+                                            <div class="col-sm-3">
+                                                <nop-label asp-for="EndMonth" />
+                                            </div>
+                                            <div class="col-sm-4">
+                                                <nop-select asp-for="EndMonth" class="select1" asp-items="Model.Months" />
+
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <div class="col-sm-3">
+                                                <nop-label asp-for="EndYear" />
+                                            </div>
+                                            <div class="col-sm-4">
+                                                <nop-select asp-for="EndYear" class="select1" asp-items="Model.Years" />
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <label asp-for="EmployeeId" asp-postfix=":"></label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="hidden" id="EmployeeId" name="EmployeeId" value="@Model.EmployeeId" />
+                                            <select id="employeeDropdown" name="employeeDropdown" class="form-control" style="border: none; box-shadow: none; height:35px; "></select>
+                                            <span style="color:red; " id="dateError"></span>
+                                        </div>
+                                    </div>
+                                    <script>
+                                        $(document).ready(function () {
+
+                                            var preselectedEmployeeId = @Model.EmployeeId; // Server-side value for the preselected EmployeeId
+                                            if (preselectedEmployeeId == 0)
+                                                preselectedEmployeeId = @Model.currCustomer;
+
+                                            // Initialize the Kendo DropDownList
+                                            var dropdown = $('#employeeDropdown').kendoDropDownList({
+                                                dataTextField: "Text",
+                                                dataValueField: "Value",
+                                                filter: "contains",
+                                                autoBind: true, // Ensure data is bound immediately
+                                                dataSource: @Html.Raw(Json.Serialize(Model.Employees)),
+                                                value: preselectedEmployeeId, // Set the pre-selected value
+                                            }).data("kendoDropDownList");
+
+                                            $('#searchButton').on('click', function () {
+                                                var selectedValue = $('#employeeDropdown').data('kendoDropDownList').value();
+                                                $('#EmployeeId').val(selectedValue);
+                                            });
+
+                                        });
+                                    </script>
+                                </div>
+                              
+                               
+                            </div>
+                            <br />
+                            <br />
+                            <div class="row1">
+                                <div class="text-center col-12 button1">
+                                    <button type="submit" id="searchButton" class="button1 btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                    <a asp-action="YearlyReview" class="reset-btn btn btn-primary">
+                                        <i class="fas fa-plus-square"></i>
+                                        @T("Admin.PerformanceMeasurement.Reset")
+                                    </a>
+                                </div>
+                            </div>
+                            </br>
+                            </br>
+                            @await Html.PartialAsync("_YearlyReviewList.cshtml", Model.measurementModel)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+<style>
+    #summary-table {
+        width: 100%;
+        font-family: Arial, sans-serif;
+        border-collapse: collapse;
+        border: 2px solid #dcdcdc;
+    }
+
+        #summary-table th, #summary-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        #summary-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        #summary-table td {
+            text-align: right; /* Right-align the numeric data */
+        }
+
+    .cards-group {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        /* padding: 20px; */
+    }
+
+    .card-default {
+        border: 1px solid #ccc;
+        padding: 20px;
+        border-radius: 5px;
+        background-color: #f9f9f961;
+    }
+
+    .card-body {
+        padding: 15px;
+    }
+
+    .row {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        width: 90%;
+    }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            height: 40px;
+            width: 290px;
+        }
+
+    .k-picker {
+        width: 290px;
+    }
+
+    .reset-btn {
+        padding: 10px 20px;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        text-transform: uppercase;
+        background-color: #aaa;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+    }
+
+    .same-row {
+        display: flex;
+        gap: 35px;
+    }
+
+    .reset-btn:hover {
+        background-color: #bbb;
+    }
+
+    .error-message {
+        color: red;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .btn-search {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+        .btn-search:hover {
+            background-color: #0056b3;
+        }
+
+    .content-header {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .page-btn {
+        display: flex;
+        justify-content: space-around;
+    }
+    /* Row */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    /* Column */
+    .col-md-6 {
+        /* flex: 0 0 50%; */
+        max-width: 50%;
+        padding: 1px;
+    }
+
+    /* Button search */
+    .btn-search {
+        min-width: 105px;
+        border: 0;
+        background-color: #4ab2f1;
+        padding: 10px 24px;
+        text-align: center;
+        font-size: 15px;
+        color: #fff;
+        text-transform: uppercase;
+        margin: 1%;
+        border-radius: 0;
+        text-wrap: nowrap;
+    }
+
+        .btn-search:hover {
+            background-color: #248ece;
+        }
+
+    #employeeDropdown {
+        width: 300px;
+    }
+
+    textarea {
+        min-height: 100px;
+        min-width: 250px;
+    }
+
+    .form-fields{
+        padding:0px;
+    }
+</style>

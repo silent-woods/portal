@@ -1,0 +1,29 @@
+@using App.Web.Areas.Admin.Models.Extension.ProcessRules;
+@model ProcessRulesModel
+@{
+    //page title
+    Layout = "~/Areas/Admin/Views/Shared/_AdminPopupLayout.cshtml";
+}
+
+<form asp-controller="ProcessRules" asp-action="Edit" method="post" asp-route-btnId="@Context.Request.Query["btnId"]"
+      asp-route-formId="@Context.Request.Query["formId"]" asp-route-projectIdId="@Context.Request.Query["processWorkflowId"]">
+    <input asp-for="Id" type="hidden" />
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.ProcessWorkflow.ProcessRules.Edit") - @Model.ProcessWorkflowName
+        </h1>
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessRules, PermissionAction.Edit))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/ProcessWorkflows/_ProcessRulesMapping.cshtml", Model)
+</form>
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="projectemp-delete" />
+
+

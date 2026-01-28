@@ -1,0 +1,26 @@
+﻿@model TeamPerformanceSettingsModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="StartReminderDate_OverrideForStore" asp-input="StartReminderDate" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="StartReminderDate" />
+        </div>
+        <div class="col-md-6">
+            <nop-select asp-for="StartReminderDate" asp-items="Model.AvailableDates" />
+            <span asp-validation-for="StartReminderDate"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="StartCCDate_OverrideForStore" asp-input="StartCCDate" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="StartCCDate" />
+        </div>
+        <div class="col-md-6">
+            <nop-select asp-for="StartCCDate" asp-items="Model.AvailableDates" />
+            <span asp-validation-for="StartCCDate"></span>
+        </div>
+    </div>
+  
+</div>

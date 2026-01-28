@@ -1,0 +1,63 @@
+﻿@model ProjectModel
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ProjectTitle" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="ProjectTitle" asp-required="true" />
+            <span asp-validation-for="ProjectTitle"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Description" />
+        </div>
+        <div class="col-md-4">
+            <nop-textarea asp-for="Description" asp-required="true" />
+            <span asp-validation-for="Description"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="StatusId" />
+        </div>
+        <div class="col-sm-4">
+            <nop-select asp-for="StatusId" id="Status" asp-items="Model.ProjectStatus"/>
+            <span asp-validation-for="StatusId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SelectedProcessWorkflowIds" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="SelectedProcessWorkflowIds" asp-items="Model.AvailableProcessWorkflows" asp-multiple="true" />
+            <script>
+                $(document).ready(function () {
+                    var rolesIdsInput =
+                        $('#@Html.IdFor(model => model.SelectedProcessWorkflowIds)')
+                            .data("kendoMultiSelect");
+                    rolesIdsInput.setOptions({
+                        autoClose: true,
+                        filter: "contains"
+                    });
+
+                @if (Model.AvailableProcessWorkflows.Count == 0)
+                {
+                    <text>
+                            rolesIdsInput.setOptions({
+                                enable: false,
+                                placeholder:
+                                    '@T("Admin.Catalog.Project.ProcessWorkflow.noProcessWorkflow")'
+                            });
+                        rolesIdsInput._placeholder();
+                        rolesIdsInput._enable();
+                    </text>
+                }
+                                                                                                                                            });
+            </script>
+        </div>
+    </div>
+    
+</div>

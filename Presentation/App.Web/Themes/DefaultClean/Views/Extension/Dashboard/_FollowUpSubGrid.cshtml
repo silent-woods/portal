@@ -1,0 +1,32 @@
+﻿@using App.Web.Models.Dashboard
+@model IList<FollowUpSubGridModel>
+
+<table class="subgrid-table">
+    <thead>
+        <tr>
+            <th class="col-followon">Follow-Up On</th>
+            <th class="col-employee">Employee</th>
+            <th class="col-alertpercent">Alert %</th>
+            <th class="col-ontrack">On Track</th>
+            <th class="col-reason">Reason</th>
+            <th class="col-comment">Comment</th>
+            <th class="col-neweta">New ETA</th>
+            <th class="col-type">Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.CreatedOnUtc.ToString("dd-MMM-yyyy hh:mm tt")</td>
+                <td>@item.EmployeeName</td>
+                <td>@item.AlertPercentage</td>
+                <td>@(item.IsAutomatic? item.OnTrack ? "Yes" : "No":"")</td>
+                <td>@item.ReasonName</td>
+                <td>@item.Comment</td>
+                <td>@item.ETAHours</td>
+                <td>@(item.IsAutomatic ? "Automatic" : "Manual")</td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,74 @@
+﻿@using Satyanam.Plugin.Misc.EmailVerification.Models
+@model ConfigurationModel
+
+
+@{
+    Layout = "_ConfigurePlugin";
+}
+
+@* <link rel="stylesheet" href="~/Plugins/Misc.Sendinblue/Content/styles.css" /> *@
+
+@* @await Component.InvokeAsync(typeof(StoreScopeConfigurationViewComponent))
+ *@
+<form asp-controller="Configure" asp-action="Configure" method="post">
+    <nop-cards id="sendinblue-cards">
+            <div class="card-body">
+                <div class="card card-default">
+                    <div class="card-body">
+
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="ApiKey" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="ApiKey" />
+                                <span asp-validation-for="ApiKey"></span>
+                            </div>
+                        </div>
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <nop-label asp-for="ApiUrl" />
+                        </div>
+                        <div class="col-md-9">
+                            <nop-editor asp-for="ApiUrl" />
+                            <span asp-validation-for="ApiUrl"></span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <nop-label asp-for="Registartionpage" />
+                        </div>
+                        <div class="col-md-9">
+                            <nop-editor asp-for="Registartionpage" />
+                            <span asp-validation-for="Registartionpage"></span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <nop-label asp-for="ContactUspage" />
+                        </div>
+                        <div class="col-md-9">
+                            <nop-editor asp-for="ContactUspage" />
+                            <span asp-validation-for="ContactUspage"></span>
+                        </div>
+                    </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="DisconnectOnUninstall" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="DisconnectOnUninstall" />
+                                <span asp-validation-for="DisconnectOnUninstall"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-9 offset-md-3">
+                                <button type="submit" name="save" class="btn btn-primary">@T("Admin.Common.Save")</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+    </nop-cards>
+</form>

@@ -1,0 +1,33 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.Announcements
+@model AnnouncementModel
+@{
+    const string hideInfoBlockAttributeName = "AnnouncementsDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+    const string hideAcknowledgmentBlockAttributeName = "AnnouncementsAcknowledgment.HideInfoBlock";
+    var hideInfoBlockAcknowledgment = await genericAttributeService.GetAttributeAsync<bool>(customer, hideAcknowledgmentBlockAttributeName);
+}
+<input asp-for="Id" type="hidden" />
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="activity-item-cards">
+                <nop-card asp-name="activity-item-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Announcements.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Announcements/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+            </nop-cards>
+
+             @if (Model.Id > 0)
+            {
+                <nop-card asp-name="announcement-acknowledgment"
+                asp-icon="fas fa-thumbs-up"
+                      asp-title="@T("Admin.Configuration.Announcements.Acknowledgment")"
+                      asp-hide-block-attribute-name="hideAcknowledgmentBlockAttributeName"
+                      asp-hide="false">
+                @await Html.PartialAsync("/Areas/Admin/Views/Extension/Announcements/_CreateOrUpdate.Acknowledgment.cshtml", Model)
+            </nop-card>
+            }
+        </div>
+    </div>
+</section>

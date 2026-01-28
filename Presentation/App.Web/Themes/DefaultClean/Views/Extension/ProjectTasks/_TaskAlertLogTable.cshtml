@@ -1,0 +1,138 @@
+﻿@using App.Web.Models.Extensions.ProjectTasks
+@model IList<TaskAlertLogRowModel>
+<div class="manual-followup-bar">
+    <button id="btnManualFollowUp" class="follow-btn">
+        Manual Follow-Up
+    </button>
+</div>
+<div id="manualFollowupEditor" style="display:none;" class="followup-editor">
+
+    <textarea id="mf-comment"
+              placeholder="Enter follow-up comment..."></textarea>
+    <input type="datetime-local" id="mf-nextdate" />
+    <label class="fu-checkbox">
+        <input type="checkbox" id="mf-completed" />
+        Mark task as completed
+    </label>
+    <div class="fu-actions">
+        <button id="mf-save" class="save-btn">Save</button>
+        <button id="mf-cancel" class="cancel-btn">Cancel</button>
+    </div>
+    <div id="mf-error" class="fu-error"></div>
+</div>
+<table class="subgrid-table">
+    <thead>
+        <tr>
+            <th>Follow-Up On</th>
+            <th>Employee</th>
+            <th>Alert %</th>
+            <th>On Track</th>
+            <th>Comment</th>
+            <th>New ETA</th>
+            <th>Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.FollowUpOn.ToString("dd-MMM-yyyy hh:mm tt")</td>
+                    <td>@item.EmployeeName</td>
+                    @if(item.AlertId >0){
+                    <td>@item.AlertPercentage%</td>
+                    <td>
+                        @if (item.OnTrack)
+                        {
+                            <span class="track-yes">Yes</span>
+                        }
+                        else
+                        {
+                            <span class="track-no">
+                                No
+                                <span class="info-icon"
+                                      title="@item.ReasonName">ℹ️</span>
+                            </span>
+                        }
+                        </td>
+                    }
+                    else
+                    {
+                        <td>-</td>
+                        <td>-</td>
+                    }
+                    <td>@item.Comment</td>
+                    <td>@item.ETAHours</td>
+                    <td>@item.Type</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="7" class="text-center text-muted">
+                    No follow-up logs found
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<script>
+      isSavingFollowUp = false;
+    $("#btnManualFollowUp").click(function () {
+             $("#manualFollowupEditor").slideDown();
+             $(this).hide();
+         });
+                     $("#mf-cancel").click(function () {
+             $("#manualFollowupEditor").slideUp();
+             $("#btnManualFollowUp").show();
+             $("#mf-error").text("");
+         });
+                     $("#mf-save").click(function () {
+                          if (isSavingFollowUp) return;
+             const followUpId = $("#FollowUpTaskId").val();
+             const comment = $("#mf-comment").val();
+             const nextDate = $("#mf-nextdate").val();
+             const isCompleted = $("#mf-completed").is(":checked");
+
+             $("#mf-error").text("");
+             if (!isCompleted && (!nextDate || nextDate.trim() === "")) {
+        $("#mf-error").text("Next follow-up date is required if task is not completed.");
+        return;
+    }
+    isSavingFollowUp = true;
+     $("#mf-save").prop("disabled", true).text("Saving...");
+    $("#mf-cancel").prop("disabled", true);
+             var postData = {
+                  id: followUpId,
+                     nextDate: nextDate,
+                     comment: comment,
+                     isCompleted: isCompleted
+             }
+             addAntiForgeryToken(postData)
+             $.ajax({
+                 url: "/Dashboard/SaveFollowUp",
+                 type: "POST",
+                 data: postData,
+                 success: function (res) {
+                     if (!res.success) {
+                         $("#mf-error").text(res.message);
+                           isSavingFollowUp = false;
+                          $("#mf-save").prop("disabled", false).text("Save");
+                         return;
+                     }
+                     loadFollowUpTask(); 
+                     $("#manualFollowupEditor").hide();
+                     $("#btnManualFollowUp").show();
+                     $("#mf-comment").val("");
+                     $("#mf-nextdate").val("");
+                     $("#mf-completed").prop("checked", false);
+                 },
+                 error: function () {
+                     $("#mf-error").text("Something went wrong.");
+                      $("#mf-save").prop("disabled", false).text("Save");
+                 }
+             });
+         });
+</script>

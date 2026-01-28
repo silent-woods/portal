@@ -1,0 +1,2181 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Language Name="EN">
+    <LocaleResource Name="Plugin.SatyanamCRM.Titles">
+        <Value>Title</Value>
+    </LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Titles.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchTitleName">
+		<Value>Title Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchTitleName.Hint">
+		<Value>Enter title name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Titles.Fields.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Titles.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Titles.Create">
+		<Value>Add a new title</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Titles.BackToList">
+		<Value>back to title list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Titles.Info">
+		<Value>Title Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Titles.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Titles.Name.Hint">
+		<Value>Enter a name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Titles.Name.Hint">
+		<Value>Enter a name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Titles.EditTitleDetails">
+		<Value>Edit title details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Title.Added">
+		<Value>title has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Title.Updated">
+		<Value>title has beed updated successfully</Value>
+	</LocaleResource>
+	
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadStatus">
+		<Value>Lead Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadStatus.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadStatus.Fields.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadStatus.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadStatus.Created">
+		<Value>Add a new  lead status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadStatus.BackToList">
+		<Value>back to lead status list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadStatus.Info">
+		<Value>Lead Status Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadStatus.EditLeadStatusDetails">
+		<Value>Edit lead status details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LeadStatus.Name">
+		<Value>Name </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LeadStatus.Name.Hint">
+		<Value>Enter lead status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadStatus.Added">
+		<Value>lead status has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadStatus.Updated">
+		<Value>lead status has been updated successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.LeadStatus.LeadStatusSearchModel.SearchLeadStatusName">
+		<Value>Lead status name </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.LeadStatus.LeadStatusSearchModel.SearchLeadStatusName.Hint">
+		<Value>Enter a lead status name </Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Plugin.SatyanamCRM.Industrys">
+		<Value>Industry</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Industrys.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Industrys.IndustrySearchModel.SearchIndustryName">
+		<Value>Industry Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Industrys.IndustrySearchModel.SearchIndustryName.Hint">
+		<Value>Enter a industry name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Industrys.Fields.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Industrys.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Industrys.Create">
+		<Value>Add a new industry</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Industrys.BackToList">
+		<Value>back to industry list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Industrys.Info">
+		<Value>Industry Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Industrys.IndustryModel.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Industrys.IndustryModel.Name.Hint">
+		<Value>Enter a industry name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Industrys.EditIndustryDetails">
+		<Value>Edit industry details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Industry.Added">
+		<Value>Industry has been added successfully </Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Industry.Updated">
+		<Value>Industry has been updated successfully </Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadSources">
+		<Value>Lead Sources </Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadSources.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.LeadSources.LeadSourceSearchModel.SearchLeadSourceName">
+		<Value>Lead Source Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.LeadSources.LeadSourceSearchModel.SearchLeadSourceName.Hint">
+		<Value>Enter lead sources Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadSources.Fields.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadSources.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadSources.EditLeadSourceDetails">
+		<Value>Edit lead source details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadSources.Create">
+		<Value>Add a new lead sources</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadSources.BackToList">
+		<Value>back to lead sources list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadSources.Info">
+		<Value>Lead Sources Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LeadSources.LeadSourceModel.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LeadSources.LeadSourceModel.Name.Hint">
+		<Value>Enter a lead source name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadSource.Added">
+		<Value>Lead Source has been added successfully </Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LeadSource.Updated">
+		<Value>Lead Source has been updated successfully </Value>
+	</LocaleResource>
+	
+	<LocaleResource Name="Plugin.SatyanamCRM.Categorys">
+		<Value>Categories </Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Categorys.AddNew">
+		<Value>Create </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Categorys.CategorysSearchModel.SearchCategorysName">
+		<Value>Category Name </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Categorys.CategorysSearchModel.SearchCategorysName.Hint">
+		<Value>Enter a category name </Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Categorys.Fields.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Categorys.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Categorys.Create">
+		<Value>Add a new categories</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Categorys.BackToList">
+		<Value>back to categories list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Categorys.Info">
+		<Value>Categories Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Categorys.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Categorys.Name.Hint">
+		<Value>Enter a name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Categorys.EditCategorysDetails">
+		<Value>Edit categories details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Categorys.Added">
+		<Value>Categories has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Categorys.Updated">
+		<Value>Categories has been updated successfully</Value>
+	</LocaleResource>
+	
+	<LocaleResource Name="Plugin.SatyanamCRM.Tags">
+		<Value>Tags</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Tags.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Tags.TagsSearchModel.SearchTagsName">
+		<Value>Tags Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Tags.TagsSearchModel.SearchTagsName.Hint">
+		<Value>Enter a tags name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Tags.Fields.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.tags.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Tags.Create">
+		<Value>Add a new tags</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Tags.BackToList">
+		<Value>back to tags list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Tags.Info">
+		<Value>Tags Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Tags.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Tags.Name.Hint">
+		<Value>Enter a name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Tags.EditTagsDetails">
+		<Value>Edit tags details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Tags.Added">
+		<Value>Tags has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Tags.Updated">
+		<Value>Tags has been updated successfully</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead">
+		<Value>Lead</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchName">
+		<Value>Lead Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchName.Hint">
+		<Value>Enter a lead name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchCompanyName">
+		<Value>Company Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchCompanyName.Hint">
+		<Value>Enter a company name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchPhone">
+		<Value>Phone </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchPhone.Hint">
+		<Value>Enter a phone </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchEmail">
+		<Value>Email </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchEmail.Hint">
+		<Value>Enter a email </Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Fields.Name">
+		<Value>Lead Name </Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Fields.CompanyName">
+		<Value>Company Name </Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Fields.Phone">
+		<Value>Phone</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Fields.Email">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.lead.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Create">
+		<Value>Add a new lead</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.BackToList">
+		<Value>back to lead list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Info">
+		<Value>Lead Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.FirstName">
+		<Value>First Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.FirstName.Hint">
+		<Value>Enter a first name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.LastName">
+		<Value>Last Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.LastName.Hint">
+		<Value>Enter a last name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.CompanyName">
+		<Value>Company Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.CompanyName.Hint">
+		<Value>Enter a company name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Phone">
+		<Value>Phone</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Phone.Hint">
+		<Value>Enter a phone</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Email">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Email.Hint">
+		<Value>Enter a email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.AnnualRevenue">
+		<Value>Annual Revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.AnnualRevenue.Hint">
+		<Value>Enter a annual revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.WebsiteUrl">
+		<Value>WebSite</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.WebsiteUrl.Hint">
+		<Value>Enter a website</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.NoofEmployee">
+		<Value>No of Employees </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.NoofEmployee.Hint">
+		<Value>Entera a no of employees </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.SkypeId">
+		<Value>Skype ID </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.SkypeId.Hint">
+		<Value>Enter a skype id</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.SecondaryEmail">
+		<Value>Secondary Email </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.SecondaryEmail.Hint">
+		<Value>Enter a secondary email </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.TitleId">
+		<Value>Title </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.TitleId.Hint">
+		<Value>Select the title</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.LeadSourceId">
+		<Value>Lead Source</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.LeadSourceId.Hint">
+		<Value>Select the lead source</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.IndustryId">
+		<Value>Industry</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.IndustryId.Hint">
+		<Value>Select the industry</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.LeadStatusId">
+		<Value>Lead Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.LeadStatusId.Hint">
+		<Value>Select the lead status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.EmailOptOut">
+		<Value>EmailOptOut</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.EmailOptOut.Hint">
+		<Value>Check to emailoptout</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Twitter">
+		<Value>Twitter</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Twitter.Hint">
+		<Value>Enter a twitter account or url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.LinkedinUrl">
+		<Value>Linkedin</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.LinkedinUrl.Hint">
+		<Value>Enter a Llinkedin account or url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Facebookurl">
+		<Value>Facebook</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Facebookurl.Hint">
+		<Value>Enter a facebook account or url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.ZipCode">
+		<Value>ZipPostal Code</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.ZipCode.Hint">
+		<Value>Enter a zippostal code</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.StateId">
+		<Value>State</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.StateId.Hint">
+		<Value>Select the state</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.City">
+		<Value>City</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.City.Hint">
+		<Value>Enter a city</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.CountryId">
+		<Value>Country</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.CountryId.Hint">
+		<Value>Select the country</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Address1">
+		<Value>Address1</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Address1.Hint">
+		<Value>Enter address1</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Address2">
+		<Value>Address2</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Address2.Hint">
+		<Value>Enter address2</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Address2.Hint">
+		<Value>Enter address2</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Description">
+		<Value>Description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.Description.Hint">
+		<Value>Enter a description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.CategoryId">
+		<Value>Category</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.CategoryId.Hint">
+		<Value>Select the category</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Leads.Added">
+		<Value>Lead has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Leads.Updated">
+		<Value>Lead has been updated successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.EditLeadDetails">
+		<Value>Edit lead details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.CustomerId">
+		<Value>Lead Owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.CustomerId.Hint">
+		<Value>Select lead owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Fields.WebsiteUrl">
+		<Value>WebSiteUrl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Fields.NoofEmployee">
+		<Value>NoOfEmployee</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Fields.LeadStatus">
+		<Value>Lead Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchWebsiteUrl">
+		<Value>WebsiteUrl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchWebsiteUrl.Hint">
+		<Value>Enter a websiteurl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchNoofEmployee">
+		<Value>NoOfEmployee</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchNoofEmployee.Hint">
+		<Value>Enter a noofemployee</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchLeadStatusId">
+		<Value>Lead Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchLeadStatusId.Hint">
+		<Value>Select a lead status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Lead.Deleted">
+		<Value>Lead has been deleted successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.TagsId">
+		<Value>Tags</Value>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.TagsId.Hint">
+		<Value>Select the tags</Value>
+	</LocaleResource>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.SelectedTagIds">
+		<Value>Tags</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.SelectedTagIds.Hint">
+		<Value>Select the tags</Value>
+	</LocaleResource>
+	
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings">
+		<Value>Campaings</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Categorys.CampaingsSearchModel.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Categorys.CampaingsSearchModel.Name.Hint">
+		<Value>Enter name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Categorys.CampaingsSearchModel.To">
+		<Value>To</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Categorys.CampaingsSearchModel.To.Hint">
+		<Value>Enter to </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Categorys.CampaingsSearchModel.StatusId">
+		<Value>Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Categorys.CampaingsSearchModel.StatusId.Hint">
+		<Value>Select the status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Fields.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Fields.To">
+		<Value>To</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Fields.StatusId">
+		<Value>Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Fields.CreatedOnUtc">
+		<Value>CreatedOn</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Create">
+		<Value>Add a new campaings</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.BackToList">
+		<Value>back to campaings list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Info">
+		<Value>Campaings Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.Name.Hint">
+		<Value>The name of this campaings</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.EmailAccountId">
+		<Value>From</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.EmailAccountId.Hint">
+		<Value>Select the from email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.Subject">
+		<Value>Subject</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.Subject.Hint">
+		<Value>The subject of the campaings email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.To">
+		<Value>To</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.To.Hint">
+		<Value>Enter a to email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.Body">
+		<Value>Body</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.Body.Hint">
+		<Value>The body of your campaing email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.StatusId">
+		<Value>Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.StatusId.Hint">
+		<Value>Select the status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.TagsId">
+		<Value>Tags</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.TagsId.Hint">
+		<Value>Select the tags</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.ScheduledDate">
+		<Value>Scheduled Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.ScheduledDate.Hint">
+		<Value>Select the scheduled date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.EditCampaingsDetails">
+		<Value>Edit campaings details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.SendTestEmailTo">
+		<Value>Send email to</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.SendTestEmailTo.Hint">
+		<Value>Send test email to ensure that everything is properly configured</Value>
+	</LocaleResource>
+	<LocaleResource Name="Campaigns.SendMassEmail">
+		<Value>Send mass email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Added">
+		<Value>Campaings has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Updated">
+		<Value>Campaings has been updated successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Campaigns.Replicate">
+		<Value>Replicate</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Campaings.Deleted">
+		<Value>Campaings has been deleted successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Fields.UpdatedOnUtc">
+		<Value>UpdatedOn</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Fields.TitleName">
+		<Value>Titles</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Lead.CreatedOnUtc">
+		<Value>CreatedOn</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchTitlesId">
+		<Value>Titles</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchTitlesId.Hint">
+		<Value>Select titles</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.AllowedTokens">
+		<Value>Allowed message tokens</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CampaingsModel.AllowedTokens.Hint">
+		<Value>This is a list of the message tokens you can use in your campaign emails.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Campaings.SendTestEmail">
+		<Value>Send Test Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="SatyanamCRM.Admin.Settings.LinkedInUrl">
+		<Value>LinkedInUrl</Value>
+	</LocaleResource>
+	<LocaleResource Name="SatyanamCRM.Admin.Settings.LinkedInUrl.Hint">
+		<Value>Enter a linkedinurl</Value>
+	</LocaleResource>
+	<LocaleResource Name="SatyanamCRM.Admin.Settings.WebsiteUrl">
+		<Value>WebsiteUrl</Value>
+	</LocaleResource>
+	<LocaleResource Name="SatyanamCRM.Admin.Settings.WebsiteUrl.Hint">
+		<Value>Enter a websiteurl</Value>
+	</LocaleResource>
+	<LocaleResource Name="SatyanamCRM.Admin.Settings.FooterText">
+		<Value>FooterText</Value>
+	</LocaleResource>
+	<LocaleResource Name="SatyanamCRM.Admin.Settings.FooterText.Hint">
+		<Value>Enter a footertext</Value>
+	</LocaleResource>
+	<LocaleResource Name="SatyanamCRM.Admin.Settings.APIKey">
+		<Value>API key</Value>
+	</LocaleResource>
+	<LocaleResource Name="SatyanamCRM.Admin.Settings.APISecret">
+		<Value>API Secret key</Value>
+	</LocaleResource>
+		<LocaleResource Name="SatyanamCRM.Admin.Settings.APIKey.hint">
+		<Value>Enter API key</Value>
+	</LocaleResource>
+	<LocaleResource Name="SatyanamCRM.Admin.Settings.APISecret.hint">
+		<Value>Enter API Secret key</Value>
+	</LocaleResource>
+	<LocaleResource Name="SatyanamCRM.Admin.Settings.AllowedDomains">
+		<Value>AllowedDomains</Value>
+	</LocaleResource>
+	<LocaleResource Name="SatyanamCRM.Admin.Settings.AllowedDomains.hint">
+		<Value>Enter All Allowed Domain For Insert API Comma Seperated (Do Blank If Allow All).</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts">
+		<Value>Contacts</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Contacts.ContactsSearchModel.SearchName">
+		<Value>Contact Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Contacts.ContactsSearchModel.SearchName.Hint">
+		<Value>Enter a contact name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Contacts.ContactsSearchModel.SearchCompanyName">
+		<Value>Company Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Contacts.ContactsSearchModel.SearchCompanyName.Hint">
+		<Value>Enter a comapny name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Contacts.ContactsSearchModel.SearchWebsiteUrl">
+		<Value>WebsiteUrl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Contacts.ContactsSearchModel.SearchWebsiteUrl.Hint">
+		<Value>Enter websiteurl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.Fields.Name">
+		<Value>Contact Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.Fields.CompanyName">
+		<Value>Company Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.Fields.WebsiteUrl">
+		<Value>WebsiteUrl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.CreatedOnUtc">
+		<Value>CreatedOn</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.Create">
+		<Value>Add a new contact</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.BackToList">
+		<Value>back to contact list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.Info">
+		<Value>Contact Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.FirstName">
+		<Value>Contact First Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.FirstName.Hint">
+		<Value>Enter a first name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.LastName">
+		<Value>Contact Last Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.LastName.Hint">
+		<Value>Enter a last name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.CompanyName">
+		<Value>Company Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.CompanyName.Hint">
+		<Value>Enter company name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Phone">
+		<Value>Phone</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Phone.Hint">
+		<Value>Enter a phone no</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Email">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Email.Hint">
+		<Value>Enter a email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.AnnualRevenue">
+		<Value>Annual Revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.AnnualRevenue.Hint">
+		<Value>Enter a annual revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.WebsiteUrl">
+		<Value>Website</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.WebsiteUrl.Hint">
+		<Value>Enter a websiteurl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.NoofEmployee">
+		<Value>No of Employee</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.NoofEmployee.Hint">
+		<Value>Enter a no of employee</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.SkypeId">
+		<Value>SkypeId</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.SkypeId.Hint">
+		<Value>Enter a skypeid</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.SecondaryEmail">
+		<Value>Secondary Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.SecondaryEmail.Hint">
+		<Value>Enter a secondary email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.TitleId">
+		<Value>Title</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.TitleId.Hint">
+		<Value>Enter a title</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.CustomerId">
+		<Value>Contact Owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.CustomerId.Hint">
+		<Value>Select contact Owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.ContactsSourceId">
+		<Value>Contact Source</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.ContactsSourceId.Hint">
+		<Value>Select contact Source</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.IndustryId">
+		<Value>Industry</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.IndustryId.Hint">
+		<Value>Select industry</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.EmailOptOut">
+		<Value>EmailOptOut</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.EmailOptOut.Hint">
+		<Value>Check emailoptout</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Twitter">
+		<Value>Twitter</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Twitter.Hint">
+		<Value>Enter a twitter</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.LinkedinUrl">
+		<Value>Linkedin</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.LinkedinUrl.Hint">
+		<Value>Enter linkedin url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Facebookurl">
+		<Value>Facebook</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Facebookurl.Hint">
+		<Value>Enter a facebookurl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.ZipCode">
+		<Value>ZipCode</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.ZipCode.Hint">
+		<Value>Enter a zipCode</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.StateId">
+		<Value>State</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.StateId.Hint">
+		<Value>Select a state</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.City">
+		<Value>City</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.City.Hint">
+		<Value>Select city</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.CountryId">
+		<Value>Country</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.CountryId.Hint">
+		<Value>Select country</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Address1">
+		<Value>Address1</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Address1.Hint">
+		<Value>Enter a address1</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Address2">
+		<Value>Address2</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Address2">
+		<Value>Address2</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Address2.Hint">
+		<Value>Enter a address2</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Description">
+		<Value>Description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.Description.Hint">
+		<Value>Enter a description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.SelectedTagIds">
+		<Value>Tags</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.SelectedTagIds.Hint">
+		<Value>Select a tags</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.EditContactsDetails">
+		<Value>Edit Contact Details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.Added">
+		<Value>contact has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.Updated">
+		<Value>contact has been updated successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Contact.Deleted">
+		<Value>contact has been deleted successfully</Value>
+	</LocaleResource>
+	
+	<LocaleResource Name="Plugin.SatyanamCRM.AccountType">
+		<Value>Account Type</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.AccountType.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.AccountTypes.AccountTypeSearchModel.SearchAccountTypeName">
+		<Value>Account Type Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.AccountTypes.AccountTypeSearchModel.SearchAccountTypeName.Hint">
+		<Value>Enter a account type name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.AccountType.Fields.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.AccountType.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.AccountType.EditAccountTypeDetails">
+		<Value>Edit Account Type Details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.AccountType.BackToList">
+		<Value>back to account type list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.AccountType.Create">
+		<Value>Add a new account type </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.AccountTypes.Name">
+		<Value>Name </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.AccountTypes.Name.Hint">
+		<Value>Eter a name </Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.AccountType.Info">
+		<Value>Account Type Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.AccountType.Added">
+		<Value>account type has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.AccountType.Updated">
+		<Value>account type has been updated successfully</Value>
+	</LocaleResource>
+	
+	<LocaleResource Name="Plugin.SatyanamCRM.Company">
+		<Value>Company</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Company.ComapnySearchModel.CompanyName">
+		<Value>Company Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Company.ComapnySearchModel.CompanyName.Hint">
+		<Value>Enter a company name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Company.ComapnySearchModel.SearchWebsiteUrl">
+		<Value>WebsiteUrl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Company.ComapnySearchModel.SearchWebsiteUrl.Hint">
+		<Value>Enter a websiteurl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.Fields.CompanyName">
+		<Value>Company Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.Fields.WebsiteUrl">
+		<Value>WebsiteUrl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Compnay.Fields.CreatedOn">
+		<Value>CreatedOn</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.EditCompanyDetails">
+		<Value>Edit Company Details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Comapny.BackToList">
+		<Value>back to company list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.Create">
+		<Value>Add a new company</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.Info">
+		<Value>Company Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ContactId">
+		<Value>Company Owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ContactId.Hint">
+		<Value>Select company owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.CompanyName">
+		<Value>Company Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.CompanyName.Hint">
+		<Value>Enter a company name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.WebsiteUrl">
+		<Value>WebsiteUrl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.WebsiteUrl.Hint">
+		<Value>Enter a websiteurl</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ParentAccountID">
+		<Value>Parent Account</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ParentAccountID.Hint">
+		<Value>Select a parent account</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.AccountNumber">
+		<Value>Account Number</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.AccountNumber.Hint">
+		<Value>Enter a account number</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.AccountTypeId">
+		<Value>Account Type</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.AccountTypeId.Hint">
+		<Value>Select a account type</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.IndustryId">
+		<Value>Industry</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.IndustryId.Hint">
+		<Value>Select a industry</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.CustomerId">
+		<Value>Company CreatedBy</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.CustomerId.Hint">
+		<Value>Select a company createdby</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.Phone">
+		<Value>Phone</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.Phone.Hint">
+		<Value>Enter a phone</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.OwnerShipId">
+		<Value>OwnerShip</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.OwnerShipId.Hint">
+		<Value>Select a ownership</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.NoofEmployee">
+		<Value>No of Employee</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.NoofEmployee.Hint">
+		<Value>Enter a no of employee</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.AnnualRevenue">
+		<Value>Annual Revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.AnnualRevenue.Hint">
+		<Value>Enter a annual revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingZipCode">
+		<Value>Billing ZipCode</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingZipCode.Hint">
+		<Value>Enter a billing zipcode</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingStateId">
+		<Value>Billing State</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingStateId.Hint">
+		<Value>Select a billing state</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingCity">
+		<Value>Billing City</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingCity.Hint">
+		<Value>Enter a billing city</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingCountryId">
+		<Value>Billing Country</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingCountryId.Hint">
+		<Value>Select billing country</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingAddress1">
+		<Value>Billing Address1</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingAddress1.Hint">
+		<Value>Enter a billing address1</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingAddress2">
+		<Value>Billing Address2</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillingAddress2.Hint">
+		<Value>Enter a billing address2</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingZipCode">
+		<Value>Shipping ZipCode</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingZipCode.Hint">
+		<Value>Enter a shipping zipcode</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingStateId">
+		<Value>Shipping State</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingStateId.Hint">
+		<Value>Select shipping state</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingCity">
+		<Value>Shipping City</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingCity.Hint">
+		<Value>Enter a shipping city</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingCountryId">
+		<Value>Shipping Country</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingCountryId.Hint">
+		<Value>Select a shipping country</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingAddress1">
+		<Value>Shipping Address1</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingAddress1.Hint">
+		<Value>Enter a shipping address1</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingAddress2">
+		<Value>Shipping Address2</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.ShipingAddress2.Hint">
+		<Value>Enter a shipping address2</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.Description">
+		<Value>Description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Company.Description.Hint">
+		<Value>Enter a description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.Updated">
+		<Value>company has been updated successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.Added">
+		<Value>company has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Company.Deleted">
+		<Value>company has been deleted successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.BackToList">
+		<Value>back to company list</Value>
+	</LocaleResource>
+	
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals">
+		<Value>Deals</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Deals.DealsSearchModel.DealName">
+		<Value>Deal Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Deals.DealsSearchModel.DealName.Hint">
+		<Value>Enter a deal name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Deals.DealsSearchModel.Amount">
+		<Value>Amount</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Deals.DealsSearchModel.Amount.Hint">
+		<Value>Enter a amount</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Deals.DealsSearchModel.StageId">
+		<Value>Stage</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Deals.DealsSearchModel.StageId.Hint">
+		<Value>Select a stage</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Fields.DealName">
+		<Value>Deal Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Fields.Amount">
+		<Value>Amount</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Fields.StageName">
+		<Value>Stage</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Fields.CreatedOn">
+		<Value>CreatedOn</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.EditDealsDetails">
+		<Value>Edit Deals Details</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.BackToList">
+		<Value>back to deals list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Create">
+		<Value>Add a new deal</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Info">
+		<Value>Deal Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Info">
+		<Value>Deal Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.CustomerId">
+		<Value>Deal Owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.CustomerId.Hint">
+		<Value>Select deal owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.DealName">
+		<Value>Deal Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.DealName.Hint">
+		<Value>Enter a deal name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.Amount">
+		<Value>Amount</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.Amount.Hint">
+		<Value>Enter amount</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.CompanyId">
+		<Value>Company Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.CompanyId.Hint">
+		<Value>Select company name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.StageId">
+		<Value>Stage</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.StageId.Hint">
+		<Value>Select the stage</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.TypeId">
+		<Value>Type</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.TypeId.Hint">
+		<Value>Select the type</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.Probability">
+		<Value>Probability</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.Probability.Hint">
+		<Value>Enter a probability</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.NextStep">
+		<Value>Next Step</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.NextStep.Hint">
+		<Value>Enter a next step</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.ExpectedRevenue">
+		<Value>Expected Revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.ExpectedRevenue.Hint">
+		<Value>Enter a expected revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.LeadSourceId">
+		<Value>Lead Source</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.LeadSourceId.Hint">
+		<Value>Select a lead source</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.ClosingDate">
+		<Value>Closing Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.ClosingDate.Hint">
+		<Value>Select the closing date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.Description">
+		<Value>Description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.Description.Hint">
+		<Value>Enter a description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.ContactName">
+		<Value>Contact Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Deals.ContactName.Hint">
+		<Value>Enter a contact name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Added">
+		<Value>deals has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Updated">
+		<Value>deals has been updated successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Deals.Deleted">
+		<Value>deals has been deleted successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Convert">
+		<Value>Convert</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.ConvertLead">
+		<Value>Convert Lead</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Leads.Converted">
+		<Value>Lead converted successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Fields.Date">
+		<Value>Closing Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SelectedTags">
+		<Value>Tags</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SelectedTags.Hint">
+		<Value>Select tags</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Fields.TagsId">
+		<Value>Tags</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Deals.DealsSearchModel.ClosingDate">
+		<Value>Closing Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Deals.DealsSearchModel.ClosingDate.Hint">
+		<Value>Select closing date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Contact.Deals.DealName">
+		<Value>DealName</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Contact.Deals.Amount">
+		<Value>Amount</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Contact.Deals.Stage">
+		<Value>Stage</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Contact.Deals.Probability">
+		<Value>Probability</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Contact.Deals.ClosingDate">
+		<Value>ClosingDate</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Contacts.Deals.AddButton">
+		<Value>Add</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Contacts.Deals">
+		<Value>Deals</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Company.Deals.AddButton">
+		<Value>Add</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.Deals">
+		<Value>Deals</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Company.Deals.BackToList">
+		<Value>back to company edit </Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Contacts.Deals.BackToList">
+		<Value>back to contact edit </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.DealName">
+		<Value>Deal Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.DealName.Hint">
+		<Value>Enter deal name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.Amount">
+		<Value>Amount</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.Amount.Hint">
+		<Value>Enter amount</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.StageId">
+		<Value>Stage</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.StageId.Hint">
+		<Value>Select stage</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.Probability">
+		<Value>Probability</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.Probability.Hint">
+		<Value>Enter probability</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.ClosingDate">
+		<Value>Closing Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.ClosingDate.Hint">
+		<Value>Select the closing date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.CustomerId">
+		<Value>Deal Owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.CustomerId.Hint">
+		<Value>Select deal owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.CompanyId">
+		<Value>Company Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.CompanyId.Hint">
+		<Value>Select company name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.CompanyId.Hint">
+		<Value>Select company name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.TypeId">
+		<Value>Type</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.TypeId.Hint">
+		<Value>Select the type</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.NextStep">
+		<Value>Next Step</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.NextStep.Hint">
+		<Value>Enter a next step</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.ExpectedRevenue">
+		<Value>Expected Revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.ExpectedRevenue.Hint">
+		<Value>Enter a expected revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.LeadSourceId">
+		<Value>Lead Source</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.LeadSourceId.Hint">
+		<Value>Select lead source</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.Description">
+		<Value>Description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.Description.Hint">
+		<Value>Enter description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.ContactId">
+		<Value>Contact Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ContactsDealsModel.ContactId.Hint">
+		<Value>Select contact name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.DealName">
+		<Value>Deal Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.DealName.Hint">
+		<Value>Enter deal name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.Amount">
+		<Value>Amount</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.Amount.Hint">
+		<Value>Enter amount</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.Probability">
+		<Value>Probability</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.Probability.Hint">
+		<Value>Enter probability</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.ClosingDate">
+		<Value>Closing Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.ClosingDate.Hint">
+		<Value>Select the closing date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.CustomerId">
+		<Value>Deal Owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.CustomerId.Hint">
+		<Value>Select deal owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.CompanyId">
+		<Value>Company Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.CompanyId.Hint">
+		<Value>Select company name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.StageId">
+		<Value>Stage</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.StageId.Hint">
+		<Value>Select stage</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.TypeId">
+		<Value>Type</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.TypeId.Hint">
+		<Value>Select type</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.NextStep">
+		<Value>Next Step</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.NextStep.Hint">
+		<Value>Enter next step</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.ExpectedRevenue">
+		<Value>Expected Revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.ExpectedRevenue.Hint">
+		<Value>Enter expected revenue</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.LeadSourceId">
+		<Value>Lead Source</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.LeadSourceId.Hint">
+		<Value>Select lead source</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.Description">
+		<Value>Description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.Description.Hint">
+		<Value>Enter description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.ContactId">
+		<Value>Contact Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.ContactId.Hint">
+		<Value>Select contact name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.CompanyDealsModel.ContactId.Hint">
+		<Value>Select contact name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Contacts">
+		<Value>Contact</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Deals.Company">
+		<Value>Company</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Deals.BackToList">
+		<Value>back to deal edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Deals.BackToList">
+		<Value>back to deal edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Fields.EmailStatusName">
+		<Value>Email Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.EmailStatusId">
+		<Value>Email Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Lead.EmailStatusId.Hint">
+		<Value>Select the email status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchEmailStatusId">
+		<Value>Email Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchEmailStatusId.Hint">
+		<Value>Select email status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.EmailStatusId">
+		<Value>Email Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.Contacts.EmailStatusId.Hint">
+		<Value>Select email status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.SelectedEmail.Email">
+		<Value>Check Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Address.Fields.DealName">
+		<Value>Deal Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Address.Fields.Amount">
+		<Value>Amount</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Address.Fields.Stage">
+		<Value>Stage</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Address.Fields.Probability">
+		<Value>Probability</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Address.Fields.Probability">
+		<Value>Probability</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Address.Fields.ClosingDate">
+		<Value>Closing Date</Value>
+	</LocaleResource>
+	
+	<LocaleResource Name="Admin.Common.ImportReply">
+		<Value>ImportReply</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.ImportReplyFromExcel">
+		<Value>ImportReply from Excel</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.ExportToExcelReply.All">
+		<Value>Export to ExcelReply (all found)</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.ExportToExcelReply.Selected">
+		<Value>Export to ExcelReply (Selected)</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Company.Contact">
+		<Value>Contact</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.CompanyContactModel.Fields.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.CompanyContactModel.Fields.TitleName">
+		<Value>Titles</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.SelectedLead.SyncToReply">
+		<Value>Sync to Reply.io</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchIsSyncedToReply">
+		<Value>IsSynctoReply</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchIsSyncedToReply.Hint">
+		<Value>Select IsSynctoReply</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Lead.Fields.IsSyncedToReply">
+		<Value>IsSynctoReply</Value>
+	</LocaleResource>
+	<LocaleResource Name="Campaings.Analytics">
+		<Value>Campaings Analytics</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Fields.TotalLead">
+		<Value>Total Leads</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Fields.TotalOpens">
+		<Value>Total Opens</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Fields.TotalClicks">
+		<Value>Total Clicks</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Campaings.Fields.UnsubscribedCount">
+		<Value>Total Unsubscribe</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.CampaignLogs.Fields.Email">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.CampaignLogs.Fields.IsOpened">
+		<Value>Opened</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.CampaignLogs.Fields.OpenCount">
+		<Value>Open Count</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.CampaignLogs.Fields.IsClicked">
+		<Value>Clicked</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.CampaignLogs.Fields.ClickCount">
+		<Value>Click Count</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.CampaignLogs.Fields.IsUnsubscribed">
+		<Value>Unsubscribed</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.CampaignLogs.Fields.OpenedOnUtc">
+		<Value>Last Opened</Value>
+	</LocaleResource>
+	
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.Email">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.Email.Hint">
+		<Value>Search email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.IsOpened">
+		<Value>IsOpened</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.IsOpened.Hint">
+		<Value>Select isopened</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.IsClicked">
+		<Value>IsClicked</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.IsClicked.Hint">
+		<Value>Select isclicked</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.OpenCountMin">
+		<Value>OpenCountMin</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.OpenCountMin.Hint">
+		<Value>Enter open count minimum</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.OpenCountMax">
+		<Value>OpenCountMax</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.OpenCountMax.Hint">
+		<Value>Enter open count maximum</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.ClickCountMin">
+		<Value>ClickCountMin</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.ClickCountMin.Hint">
+		<Value>Enter click count minimum</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.ClickCountMax">
+		<Value>ClickCountMax</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.ClickCountMax.Hint">
+		<Value>Enter click count max</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.All">
+		<Value>All</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.Opened">
+		<Value>Opened</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.NotOpened">
+		<Value>Not Opened</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.Clicked">
+		<Value>Clicked</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.NotClicked">
+		<Value>Not Clicked</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.Unsubscribed">
+		<Value>Unsubscribed</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.Subscribed">
+		<Value>Subscribed</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.IsUnsubscribed">
+		<Value>IsUnsubscribed</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.CampaingsEmailLogSearchModel.IsUnsubscribed.Hint">
+		<Value>Select subscribed or unsubscribed</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups">
+		<Value>LinkedIn Follow-ups</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchFirstName">
+		<Value>First Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchFirstName.Hint">
+		<Value>Enter first name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchLastName">
+		<Value>Last Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchLastName.Hint">
+		<Value>Enter last name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchLinkedinUrl">
+		<Value>Linkedin Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchLinkedinUrl.Hint">
+		<Value>Enter linkedin url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchEmail">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchEmail.Hint">
+		<Value>Enter email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchWebsiteUrl">
+		<Value>Website Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchWebsiteUrl.Hint">
+		<Value>Enter website url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchLastMessDate">
+		<Value>Last Message Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchLastMessDate.Hint">
+		<Value>Select last message date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.NextFollowUpDate">
+		<Value>Next Follow-Up Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.NextFollowUpDate.Hint">
+		<Value>Select next follow-up date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchStatus">
+		<Value>Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchStatus.Hint">
+		<Value>Select status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.ChangeStatus">
+		<Value>Change Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.LinkedinUrl">
+		<Value>Linkedin Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.LastMessageDate">
+		<Value>Last Message Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.FollowUp">
+		<Value>Follow-Up(next to send)</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.NextFollowUpDate">
+		<Value>Next Follow-Up Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.FirstName">
+		<Value>First Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.LastName">
+		<Value>Last Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.Email">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.WebsiteUrl">
+		<Value>Website Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.DaysUntilNext">
+		<Value>Days Until Next</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.RemainingFollowUps">
+		<Value>Remaining Follow-Ups</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.AutoStatus">
+		<Value>Auto Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.Status">
+		<Value>Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.Notes">
+		<Value>Notes</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.CreatedOnUtc">
+		<Value>CreatedOn</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.UpdatedOnUtc">
+		<Value>UpdatedOn</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.UpdatedOnUtc">
+		<Value>UpdatedOn</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.FirstName">
+		<Value>First Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.FirstName.Hint">
+		<Value>Enter first name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.LastName">
+		<Value>Last Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.LastName.Hint">
+		<Value>Enter last name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.LinkedinUrl">
+		<Value>LinkedIn Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.LinkedinUrl.Hint">
+		<Value>Enter linkedin url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.Email">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.Email.Hint">
+		<Value>Enter email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.WebsiteUrl">
+		<Value>Website Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.WebsiteUrl.Hint">
+		<Value>Enter website url </Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.LastMessageDate">
+		<Value>Last Message Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.LastMessageDate.Hint">
+		<Value>Select last message date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.FollowUp">
+		<Value>Follow-Up</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.FollowUp.Hint">
+		<Value>Enter follow-up</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.NextFollowUpDate">
+		<Value>Next Follow-Up Date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.NextFollowUpDate.Hint">
+		<Value>Select next follow-up date</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.DaysUntilNext">
+		<Value>Days Until Next</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.DaysUntilNext.Hint">
+		<Value>Enter days until next</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.RemainingFollowUps">
+		<Value>Remaining Follow-Ups</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.RemainingFollowUps.Hint">
+		<Value>Enter remaining follow-ups</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.AutoStatus">
+		<Value>Auto Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.AutoStatus.Hint">
+		<Value>Enter auto status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.Status">
+		<Value>Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.Status.Hint">
+		<Value>Select status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.Notes">
+		<Value>Notes</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.Notes.Hint">
+		<Value>Enter notes</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Info">
+		<Value>Linkedin follow-ups Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Create">
+		<Value>Add a new linkedin follow-ups</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.BackToList">
+		<Value>Back to linkedin follow-ups list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowUps.Added">
+		<Value>linkedin followups has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Satyanam.Plugin.Misc.SatyanamCRM.API.InvalidSource">
+		<Value>Enter Valid Source</Value>
+	</LocaleResource>
+	<LocaleResource Name="Satyanam.Plugin.Misc.SatyanamCRM.API.UnauthorizedAccess">
+		<Value>You are not authorized to access this API</Value>
+	</LocaleResource>
+	<LocaleResource Name="Satyanam.Plugin.Misc.SatyanamCRM.API.Success">
+		<Value>inquiry inserted successfully.</Value>
+	</LocaleResource>
+		<LocaleResource Name="Satyanam.Plugin.Misc.SatyanamCRM.API.Error">
+		<Value>An error occurred while processing your request.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Satyanam.Plugin.Misc.SatyanamCRM.API.MissingHeader">
+		<Value>Missing Origin Header</Value>
+	</LocaleResource>
+	<LocaleResource Name="satyanam.plugin.misc.satyanamcrm.api.accessdenied">
+		<Value>Access Denied For This Domain Source</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="plugin.satyanamcrm.inquiries">
+		<Value>Inquiry</Value>
+	</LocaleResource>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.firstname">
+		<Value>First Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.lastname">
+		<Value>Last Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.email">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.contactno">
+		<Value>Contact no</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.company">
+		<Value>company</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.source">
+		<Value>Source</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.wanttohire">
+		<Value>Want To Hire</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.projecttype">
+		<Value>Project type</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.engagementduration">
+		<Value>Engagement duration</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.timecommitment">
+		<Value>Time commitment</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.budget">
+		<Value>Budget</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.describe">
+		<Value>Describe</Value>
+	</LocaleResource>
+	<LocaleResource Name="plugin.satyanamcrm.inquiries.fields.createdonutc">
+		<Value>Created on</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Inquiry.InquirySearchModel.SearchName">
+		<Value>Name</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Inquiry.InquirySearchModel.SearchEmail">
+		<Value>Email</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Inquiry.InquirySearchModel.SearchContactNo">
+		<Value>Contact Number</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Inquiry.InquirySearchModel.SearchCompany">
+		<Value>Company</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Inquiry.InquirySearchModel.SearchSourceId">
+		<Value>Source</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Inquiry.InquirySearchModel.SearchName.Hint">
+		<Value>Enter full or partial name to search inquiries.</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Inquiry.InquirySearchModel.SearchEmail.Hint">
+		<Value>Search inquiries by email address.</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Inquiry.InquirySearchModel.SearchContactNo.Hint">
+		<Value>Search inquiries by contact number.</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Inquiry.InquirySearchModel.SearchCompany.Hint">
+		<Value>Search inquiries by company name.</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.Inquiry.InquirySearchModel.SearchSourceId.Hint">
+		<Value>Select source type to filter inquiries.</Value>
+	</LocaleResource>
+
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest">
+		<Value>Connection Request</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.AddNew">
+		<Value>Create</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchFirstName">
+		<Value>First Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchFirstName.Hint">
+		<Value>Enter first name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchLastName">
+		<Value>Last Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchLastName.Hint">
+		<Value>Enter last name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchLinkedinUrl">
+		<Value>Linkedin Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchLinkedinUrl.Hint">
+		<Value>Enter linkedin url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchEmail">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchEmail.Hint">
+		<Value>Enter email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchWebsiteUrl">
+		<Value>Website Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchWebsiteUrl.Hint">
+		<Value>Enter website url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchStatus">
+		<Value>Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Models.ConnectionRequests.SearchStatus.Hint">
+		<Value>Select status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.ChangeStatus">
+		<Value>Change Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Fields.LinkedinUrl">
+		<Value>Linkedin Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Fields.FirstName">
+		<Value>First Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Fields.LastName">
+		<Value>Last Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Fields.Email">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Fields.WebsiteUrl">
+		<Value>Website Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Fields.Status">
+		<Value>Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Fields.CreatedOnUtc">
+		<Value>CreatedOn</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Fields.UpdatedOnUtc">
+		<Value>UpdatedOn</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Create">
+		<Value>Add a new connection request</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.BackToList">
+		<Value>Back to connection request list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Info">
+		<Value>Connection Request Info</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.FirstName">
+		<Value>First Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.FirstName.Hint">
+		<Value>Enter first name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.LastName">
+		<Value>Last Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.LastName.Hint">
+		<Value>Enter last name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.LinkedinUrl">
+		<Value>Linkedin Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.LinkedinUrl.Hint">
+		<Value>Enter linkedin url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.LinkedinUrl.Hint">
+		<Value>Enter linkedin url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.Email">
+		<Value>Email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.Email.Hint">
+		<Value>Enter email</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.WebsiteUrl">
+		<Value>Website Url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.WebsiteUrl.Hint">
+		<Value>Enter website url</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.Status">
+		<Value>Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.ConnectionRequests.Status.Hint">
+		<Value>Select status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequests.Added">
+		<Value>Connection request has been added successfully</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Edit">
+		<Value>Edit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequests.Moved">
+		<Value>{0} new record(s) added and {1} record(s) updated in LinkedIn Followups.</Value>
+	</LocaleResource>
+</Language>
+

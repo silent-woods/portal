@@ -1,0 +1,224 @@
+﻿@model PermissionMappingModel
+
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.ACL").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Access control list");
+}
+
+<form asp-controller="Security" asp-action="Permissions" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.ACL")
+        </h1>
+        <div class="float-right">
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+            @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.PermissionListButtons, additionalData = Model })
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default">
+                        <div class="card-body">
+                            <p>
+                                @T("Admin.Configuration.ACL.Description")
+                                <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.Acl", Docs.Acl + Utm.OnAdmin)" asp-add-wrapper="false" />
+                            </p>
+                            @if (Model.AvailablePermissions.Count == 0)
+                            {
+                                <text>No permissions defined</text>
+                            }
+                            else if (Model.AvailableCustomerRoles.Count == 0)
+                            {
+                                <text>No customer roles available</text>
+                            }
+                            else
+                            {
+                                <script>
+                                    $(document).ready(function () {
+                                        @foreach (var cr in Model.AvailableCustomerRoles)
+                                        {
+                                                <text>
+                                                    prepareTableCheckboxes('#selectall-@(cr.Id)', '.allow_@(cr.Id)');
+                                                </text>
+                                        }
+                                    });
+                                </script>
+                                <div class="scroll-wrapper">
+                                    <table class="table table-hover table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">
+                                                    <strong>@T("Admin.Configuration.ACL.Permission")</strong>
+                                                </th>
+                                                @foreach (var cr in Model.AvailableCustomerRoles)
+                                                {
+                                                    <th scope="col">
+                                                        <div class="checkbox">
+                                                            <label>
+                                                                <input type="checkbox" id="selectall-@(cr.Id)" />
+                                                                <strong>@cr.Name</strong>
+                                                            </label>
+                                                        </div>
+                                                    </th>
+                                                }
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var pr in Model.AvailablePermissions)
+                                            {
+                                                var permissionKey = pr.SystemName.Replace(".", "_");
+
+                                                <tr class="permission-row" data-permission="@permissionKey">
+                                                    <td>
+                                                        <i class="fas fa-chevron-right toggle-icon"></i> <span>@pr.Name</span>
+                                                    </td>
+                                                    @foreach (var cr in Model.AvailableCustomerRoles)
+                                                    {
+                                                        var allowed = Model.Allowed[pr.SystemName][cr.Id];
+                                                        <td class="text-center">
+                                                            <input type="checkbox"
+                                                                   class="allow_@(cr.Id)"
+                                                                   name="allow_@(cr.Id)"
+                                                                   value="@pr.SystemName"
+                                                                   @(allowed ? "checked" : null) />
+                                                        </td>
+                                                    }
+                                                </tr>
+
+                                                <tr class="permission-subgrid" id="subgrid_@permissionKey" style="display:none">
+                                                    <td colspan="@(Model.AvailableCustomerRoles.Count + 1)">
+                                                        <table class="table table-sm table-bordered mb-0">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Action</th>
+                                                                    @foreach (var cr in Model.AvailableCustomerRoles)
+                                                                    {
+                                                                        <th class="text-center">@cr.Name</th>
+                                                                    }
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var action in Model.AvailableActions)
+                                                                {
+                                                                    <tr>
+                                                                        <td><span>@action</span></td>
+                                                                        @foreach (var cr in Model.AvailableCustomerRoles)
+                                                                        {
+                                                                            var checkedState = Model.ActionPermissions.ContainsKey(pr.SystemName)
+                                                                            && Model.ActionPermissions[pr.SystemName].ContainsKey(cr.Id)
+                                                                            && Model.ActionPermissions[pr.SystemName][cr.Id].Contains(action)
+                                                                            ? "checked"
+                                                                            : "";
+                                                                            <td class="text-center">
+                                                                                <input type="checkbox"
+                                                                                       name="perm_@(permissionKey)_@(action)_@(cr.Id)"
+                                                                                       class="perm-action"
+                                                                                       value="true"
+                                                                                       data-permission="@permissionKey"
+                                                                                       data-action="@action"
+                                                                                       data-role="@cr.Id"
+                                                                                       @checkedState />
+                                                                            </td>
+                                                                        }
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+
+<style>
+    .permission-subgrid {
+        background-color: #f9f9f9;
+    }
+
+    .permission-subgrid table {
+        margin-left: 25px;
+    }
+
+    .toggle-icon {
+        margin-right: 6px;
+    }
+</style>
+
+<script>
+    $(document).ready(function () {
+        $('.toggle-icon').on('click', function () {
+            var $icon = $(this);
+            var key = $icon.closest('.permission-row').data('permission');
+            $('#subgrid_' + key).toggle();
+            $icon.toggleClass('fa-chevron-right fa-chevron-down');
+        });
+
+        $(document).on('change', '.perm-action', function () {
+            const $current = $(this);
+            const permission = $current.data('permission');
+            const role = $current.data('role');
+            const action = $current.data('action');
+            const checked = $current.prop('checked');
+
+            function getAction(actionName) {
+                return $('.perm-action').filter(function () {
+                    return $(this).data('permission') === permission && $(this).data('role') === role && $(this).data('action') === actionName;
+                });
+            }
+
+            const $add = getAction('Add');
+            const $edit = getAction('Edit');
+            const $delete = getAction('Delete');
+            const $view = getAction('View');
+            const $full = getAction('Full');
+
+            if (action === 'Full') {
+                $add.prop('checked', checked);
+                $edit.prop('checked', checked);
+                $delete.prop('checked', checked);
+                $view.prop('checked', checked);
+            }
+
+            if (action === 'View' && !checked) {
+                $add.prop('checked', false);
+                $edit.prop('checked', false);
+                $delete.prop('checked', false);
+            }
+
+            if (action === 'Add' || action === 'Edit' || action === 'Delete') {
+                if (checked) {
+                    $view.prop('checked', true);
+                }
+            }
+
+            const allChecked = $add.prop('checked') && $edit.prop('checked') && $delete.prop('checked') && $view.prop('checked');
+            $full.prop('checked', allChecked);
+
+            const $permissionRow = $('.permission-row[data-permission="' + permission + '"]');
+            const $mainPermissionCheckbox = $permissionRow.find('input.allow_' + role);
+            const anyActionChecked = $('.perm-action').filter(function () {
+                return $(this).data('permission') === permission &&
+                       $(this).data('role') === role &&
+                       $(this).prop('checked');
+            }).length > 0;
+            $mainPermissionCheckbox.prop('checked', anyActionChecked);
+        });
+    });
+</script>

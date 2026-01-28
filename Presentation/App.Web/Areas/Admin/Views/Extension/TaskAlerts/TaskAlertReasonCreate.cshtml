@@ -1,0 +1,32 @@
+﻿@model TaskAlertReasonModel
+
+@{
+    ViewBag.PageTitle = T("Admin.TaskAlert.TaskAlertReason.Add").Text;
+    NopHtml.SetActiveMenuItemSystemName("Alert Reason");
+}
+
+<form asp-controller="TaskAlert" asp-action="TaskAlertReasonCreate" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.TaskAlert.TaskAlertReason.Add")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="TaskAlertReasons" asp-controller="TaskAlert">@T("Admin.TaskAlert.TaskAlertReason.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAlertReason, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/TaskAlerts/_CreateOrUpdateTaskAlertReason.cshtml", Model)
+</form>

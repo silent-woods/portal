@@ -1,0 +1,114 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Copyright>Copyright © Nop Solutions, Ltd</Copyright>
+    <Company>Nop Solutions, Ltd</Company>
+    <Authors>Nop Solutions, Ltd</Authors>
+    <PackageLicenseUrl></PackageLicenseUrl>
+    <PackageProjectUrl>https://www.nopcommerce.com/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/nopSolutions/nopCommerce</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <OutputPath>..\..\Presentation\App.Web\Plugins\Misc.SatyanamNopCore</OutputPath>
+    <OutDir>$(OutputPath)</OutDir>
+
+    <!--Set this parameter to true to get the dlls copied from the NuGet cache to the output of your project.
+    You need to set this parameter to true if your plugin has a nuget package 
+    to ensure that the dlls copied from the NuGet cache to the output of your project-->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Models\AccountTypes\**" />
+    <Compile Remove="Models\Campaings\**" />
+    <Compile Remove="Models\Categorys\**" />
+    <Compile Remove="Models\Company\**" />
+    <Compile Remove="Models\Contacts\**" />
+    <Compile Remove="Models\Deals\**" />
+    <Compile Remove="Models\Industrys\**" />
+    <Compile Remove="Models\LeadSources\**" />
+    <Compile Remove="Models\LeadStatus\**" />
+    <Compile Remove="Models\Leads\**" />
+    <Compile Remove="Models\Tags\**" />
+    <Compile Remove="Models\Titles\**" />
+    <Compile Remove="Models\Unsubscribes\**" />
+    <EmbeddedResource Remove="Models\AccountTypes\**" />
+    <EmbeddedResource Remove="Models\Campaings\**" />
+    <EmbeddedResource Remove="Models\Categorys\**" />
+    <EmbeddedResource Remove="Models\Company\**" />
+    <EmbeddedResource Remove="Models\Contacts\**" />
+    <EmbeddedResource Remove="Models\Deals\**" />
+    <EmbeddedResource Remove="Models\Industrys\**" />
+    <EmbeddedResource Remove="Models\LeadSources\**" />
+    <EmbeddedResource Remove="Models\LeadStatus\**" />
+    <EmbeddedResource Remove="Models\Leads\**" />
+    <EmbeddedResource Remove="Models\Tags\**" />
+    <EmbeddedResource Remove="Models\Titles\**" />
+    <EmbeddedResource Remove="Models\Unsubscribes\**" />
+    <None Remove="Models\AccountTypes\**" />
+    <None Remove="Models\Campaings\**" />
+    <None Remove="Models\Categorys\**" />
+    <None Remove="Models\Company\**" />
+    <None Remove="Models\Contacts\**" />
+    <None Remove="Models\Deals\**" />
+    <None Remove="Models\Industrys\**" />
+    <None Remove="Models\LeadSources\**" />
+    <None Remove="Models\LeadStatus\**" />
+    <None Remove="Models\Leads\**" />
+    <None Remove="Models\Tags\**" />
+    <None Remove="Models\Titles\**" />
+    <None Remove="Models\Unsubscribes\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Domains\LeadDto.cs" />
+    <Compile Remove="Models\SatyanamCRMSettingsModel.cs" />
+    <Compile Remove="Services\ILeadExportManagerService.cs" />
+    <Compile Remove="Services\LeadExportManagerService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="plugin.json" />
+    <None Remove="Views\Configure.cshtml" />
+    <None Remove="Views\_ViewImports.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="plugin.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\Configure.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\_ViewImports.cshtml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+	<Target Name="ExcludeViewImports" AfterTargets="ResolvePublishFiles">
+		<ItemGroup>
+			<ResolvedFileToPublish Remove="Views\_ViewImports.cshtml" />
+		</ItemGroup>
+	</Target>
+  <ItemGroup>
+    <ClearPluginAssemblies Include="$(MSBuildProjectDirectory)\..\..\Build\ClearPluginAssemblies.proj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\App.Core\App.Core.csproj" />
+    <ProjectReference Include="..\..\Libraries\App.Services\App.Services.csproj" />
+    <ProjectReference Include="..\..\Presentation\App.Web.Framework\App.Web.Framework.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- This target execute after "Build" target -->
+  <Target Name="NopTarget" AfterTargets="Build">
+    <!-- Delete unnecessary libraries from plugins path -->
+    <MSBuild Projects="@(ClearPluginAssemblies)" Properties="PluginPath=$(MSBuildProjectDirectory)\$(OutDir)" Targets="NopClear" />
+  </Target>
+
+</Project>

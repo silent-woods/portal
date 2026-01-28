@@ -1,0 +1,28 @@
+﻿@model UpdateTemplateModel
+
+@{
+    const string hideInfoBlockAttributeName = "UpdateTemplateDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+    const string hideInfoBlockAttributeupdatequestion = "updateQuestionDetails.HideInfoBlock";
+    var hideInfoBlockUpdateQuestion = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeupdatequestion);
+}
+
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="UpdateTemplate-item-cards">
+                <nop-card asp-name="UpdateTemplate-item-info" asp-icon="fas fa-info" asp-title="@T("Admin.UpdateTemplate.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">@await Html.PartialAsync("/Areas/Admin/Views/Extension/UpdateTemplate/_CreateOrUpdate.Info.cshtml", Model)</nop-card>
+            </nop-cards>
+            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionTemplate, PermissionAction.View))
+            {
+                <nop-card asp-name="UpdateQuestion-item" asp-icon="fas fa-address-book" asp-title="@T("Admin.UpdateTemplate.Question")" asp-hide-block-attribute-name="@hideInfoBlockAttributeupdatequestion" asp-hide="@hideInfoBlockUpdateQuestion">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/UpdateTemplate/_QuestionList.cshtml", Model)
+                </nop-card>
+            }
+        </div>
+    </div>
+</section>

@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Satyanam Info Solutions",
+  "FriendlyName": "Azure Integration",
+  "SystemName": "Misc.AzureIntegration",
+  "Version": "1.0.0",
+  "SupportedVersions": [ "4.60" ],
+  "Author": "Satyanam Info Solutions",
+  "DisplayOrder": 1,
+  "FileName": "Satyanam.Plugin.Misc.AzureIntegration.dll",
+  "Description": "This plugin allows you to sync your project and tasks to azure."
+}

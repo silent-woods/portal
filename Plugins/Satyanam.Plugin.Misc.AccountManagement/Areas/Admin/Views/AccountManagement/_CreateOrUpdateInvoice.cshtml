@@ -1,0 +1,40 @@
+﻿@model InvoiceModel
+
+@{
+    var customer = await workContext.GetCurrentCustomerAsync();
+
+    const string hideInfoBlockAttributeName = "InvoicePage.HideInfoBlock";
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+    const string hideInvoiceItemsBlockAttributeName = "InvoicePage.HideInvoiceItemsBlock";
+    var hideInvoiceItemsBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInvoiceItemsBlockAttributeName);
+
+    const string hideInvoicePaymentHistoriesBlockAttributeName = "InvoicePage.HideInvoicePaymentHistoriesBlock";
+    var hideInvoicePaymentHistoriesBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInvoicePaymentHistoriesBlockAttributeName);
+}
+
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="project-integration-cards">
+                <nop-card asp-name="project-integration-info" asp-icon="fas fa-info" asp-title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock" asp-advanced="false">
+                    @await Html.PartialAsync("_CreateOrUpdateInvoice.Info.cshtml", Model)
+                </nop-card>
+                @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoiceItems, PermissionAction.View))
+                {
+                    <nop-card asp-name="project-integration-info" asp-icon="fas fa-th-list" asp-title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.InvoiceItems")" asp-hide-block-attribute-name="@hideInvoiceItemsBlockAttributeName" asp-hide="@hideInvoiceItemsBlock" asp-advanced="false">
+                        @await Html.PartialAsync("_CreateOrUpdateInvoice.InvoiceItems.cshtml", Model)
+                    </nop-card>
+                }
+                @if (Model.ShowPaymentHistories && await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoicePaymentHistories, PermissionAction.View))
+                {
+                    <nop-card asp-name="project-integration-info" asp-icon="fas fa-th-list" asp-title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.InvoicePaymentHistories")" asp-hide-block-attribute-name="@hideInvoicePaymentHistoriesBlockAttributeName" asp-hide="@hideInvoicePaymentHistoriesBlock" asp-advanced="false">
+                        @await Html.PartialAsync("_CreateOrUpdateInvoice.InvoicePaymentHistories.cshtml", Model)
+                    </nop-card>
+                }
+            </nop-cards>
+        </div>
+    </div>
+</section>

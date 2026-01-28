@@ -1,0 +1,133 @@
+@using App.Web.Areas.Admin.Models.WeeklyQuestions;
+@model App.Web.Areas.Admin.Models.WeeklyQuestions.WeeklyQuestionsSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.WeeklyQuestion").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("WeeklyQuestions");
+
+    const string hideSearchBlockAttributeName = "TimeSheet.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.WeeklyQuestion")
+    </h1>
+    <div class="float-right">
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageWeeklyQuestions, PermissionAction.Add))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </a>
+        }
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageWeeklyQuestions, PermissionAction.Delete))
+        {
+            <button type="button" id="delete-selected" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete.Selected")
+            </button>
+            <nop-action-confirmation asp-button-id="delete-selected" />
+        }
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "WeeklyQuestion-rate-grid",
+                                UrlRead = new DataUrl("List", "WeeklyQuestion", null),
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WeeklyQuestionsModel.Id))
+                            {
+                                IsMasterCheckBox = true,
+                                Render = new RenderCheckBox("checkbox_weekly_questions"),
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "30"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WeeklyQuestionsModel.QuestionText))
+                            {
+                                Title = T("Admin.WeeklyQuestions.Fields.QuestionText").Text,
+                                Width = "200"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WeeklyQuestionsModel.ControlType))
+                            {
+                                Title = T("Admin.WeeklyQuestions.Fields.ControlType").Text,
+                                Width = "200"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WeeklyQuestionsModel.ControlValue))
+                            {
+                                Title = T("Admin.WeeklyQuestions.Fields.ControlValue").Text,
+                                Width = "200"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WeeklyQuestionsModel.DesignationName))
+                            {
+                                Title = T("Admin.WeeklyQuestions.Fields.DesignationName").Text,
+                                Width = "200"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WeeklyQuestionsModel.DisplayOrder))
+                            {
+                                Title = T("Admin.WeeklyQuestions.Fields.DisplayOrder").Text,
+                                Width = "200"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WeeklyQuestionsModel.CreatedOn))
+                            {
+                                Title = T("Admin.WeeklyQuestions.Fields.CreatedOn").Text,
+                                Width = "200",
+                                Render = new RenderDate()
+                            });
+                            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageWeeklyQuestions, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WeeklyQuestionsModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "80",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonEdit(new DataUrl("Edit"))
+                                });
+                            }
+                        }
+
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            <script>
+                $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+                    var postData = {
+                        selectedIds: selectedIds
+                    };
+                    addAntiForgeryToken(postData);
+                    $.ajax({
+                        cache: false,
+                        type: "POST",
+                        url: "@(Url.Action("DeleteSelected", "WeeklyQuestion"))",
+                        data: postData,
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            showAlert('deleteSelectedFailed', errorThrown);
+                        },
+                        complete: function (jqXHR, textStatus) {
+                            if (jqXHR.status === 204) {
+                                showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                                return;
+                            }
+                            updateTable('#WeeklyQuestion-rate-grid');
+
+                        }
+                    });
+                    $('#delete-selected-action-confirmation').modal('toggle');
+                    return false;
+                });
+            </script>
+            <nop-alert asp-alert-id="deleteSelectedFailed" />
+            <nop-alert asp-alert-id="nothingSelectedAlert" />
+        </div>
+    </div>
+</section>

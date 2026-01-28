@@ -1,0 +1,147 @@
+@model TeamPerformanceMeasurementModel
+
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.TeamPerformanceMeasurement.YearlyRatingReview").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("YearlyReview");
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.System.YearlyReview")
+    </h1>
+</div>
+<form asp-controller="TeamPerformanceMeasurement" asp-action="YearlyReviewCreate" method="post">
+    <input type="hidden" asp-for="@Model.Id" />
+    <input type="hidden" asp-for="MonthId" />
+    <input type="hidden" id="startMonth" name="startmonth" />
+    <input type="hidden" id="endMonth" name="endmonth" />
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-popup">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-sm-5">
+                                            <nop-label asp-for="StartMonth" />
+                                        </div>
+                                        <div class="col-sm-7">
+                                            <nop-select asp-for="StartMonth" asp-items="Model.Months" />
+                                            <span asp-validation-for="StartMonth"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-5">
+                                            <nop-label asp-for="EndMonth" />
+                                        </div>
+                                        <div class="col-sm-7">
+                                            <nop-select asp-for="EndMonth" asp-items="Model.Months" />
+                                            <span asp-validation-for="EndMonth"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-5">
+                                            <nop-label asp-for="SelectedEmployeeId" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <div style="position: relative;">
+                                                <nop-select asp-for="SelectedEmployeeId" asp-items="Model.AvailableEmployees" asp-multiple="true" class="form-control" />
+
+                                            </div>
+                                            <script>
+                                                $(document).ready(function () {
+                                                    var selectElement = $('#@Html.IdFor(model => model.SelectedEmployeeId)').data("kendoMultiSelect");
+
+
+                                                    selectElement.setOptions({
+                                                        autoClose: true,
+                                                        filter: "contains",
+                                                        change: function (e) {
+
+                                                            if (this.value().length > 1) {
+
+                                                                var lastItem = this.value()[this.value().length - 1];
+
+                                                                this.value([lastItem]);
+                                                            }
+                                                        }
+                                                    });
+
+                                                @if (Model.AvailableEmployees.Count == 0)
+                                                {
+                                                    <text>
+                                                            selectElement.setOptions({
+                                                                enable: false,
+                                                                placeholder: '@T("Admin.Catalog.Employee.NoEmployee")'
+                                                            });
+                                                        selectElement._placeholder();
+                                                        selectElement._enable();
+                                                    </text>
+                                                }
+                                                                                                                                                                                            });
+                                            </script>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-sm-3">
+                                            <nop-label asp-for="StartYear" />
+                                        </div>
+                                        <div class="col-sm-7">
+                                            <nop-select asp-for="StartYear" asp-items="Model.Years" />
+                                            <span asp-validation-for="StartYear"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-3">
+                                            <nop-label asp-for="EndYear" />
+                                        </div>
+                                        <div class="col-sm-7">
+                                            <nop-select asp-for="EndYear" asp-items="Model.Years" />
+                                            <span asp-validation-for="EndYear"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="submit" id="search-brands" class="btn btn-primary btn-search" style="display: inline-block; margin-right: 10px;">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+
+                                    <a asp-action="YearlyReviewCreate" class="btn btn-danger" style="margin-top: 10px;">
+                                        @T("Admin.PerformanceMeasurement.Reset")
+                                    </a>
+                                </div>
+                            </div>
+                            </br>
+                            </br>
+                            @await Html.PartialAsync("/Areas/Admin/Views/Extension/PerformanceMeasurements/TeamPerformanceMeasurement/_YearlyReviewList.cshtml", Model.measurementModel)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+<script>
+    $(document).ready(function () {
+        $('#search-brands').click(function () {
+            // Get the selected values from the dropdown lists
+            var startMonth = $('#StartMonth').val();
+            var endMonth = $('#EndMonth').val();
+
+            // Set the values of the hidden input fields
+            $('#startMonth').val(startMonth);
+            $('#endMonth').val(endMonth);
+
+            // Submit the form
+            $('#yearly-review-form').submit();
+        });
+    });
+</script>

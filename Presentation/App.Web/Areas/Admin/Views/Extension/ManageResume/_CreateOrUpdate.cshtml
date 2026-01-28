@@ -1,0 +1,27 @@
+﻿@using App.Web.Areas.Admin.Models.ManageResumes;
+@model CandiatesResumesModel
+
+@{
+    const string hideInfoBlockAttributeName = "CandidatesDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+<input asp-for="Id" type="hidden" />
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="Candidates-cards">
+                <nop-card asp-name="Candidates-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Candidates.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/ManageResume/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+                @if (Model.Id>0)
+                {
+                    <nop-card asp-name="Candidates-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Candidates.Result")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/ManageResume/CandidatesResult.cshtml", Model)
+                </nop-card>
+                }
+                
+            </nop-cards>
+        </div>
+    </div>
+</section>

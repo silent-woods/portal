@@ -1,0 +1,37 @@
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Contacts
+@model ContactsModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.Contacts.Create").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Contacts");
+}
+
+<form asp-controller="Contacts" asp-action="Create" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Plugin.SatyanamCRM.Contacts.Create")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Plugin.SatyanamCRM.Contacts.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageContacts, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Contacts/_CreateOrUpdate.cshtml", Model)
+</form>

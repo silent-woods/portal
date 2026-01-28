@@ -1,0 +1,378 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.Announcements
+@model AnnouncementModel
+
+<div class="card-body">
+
+    <!-- Title -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Title" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="Title" class="form-control" asp-required="true" />
+            <span asp-validation-for="Title"></span>
+        </div>
+    </div>
+
+    <!-- Message -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Message" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Message" asp-template="RichEditor" />
+            <span asp-validation-for="Message"></span>
+        </div>
+    </div>
+
+
+    <!-- Schedule Announcement Checkbox -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsScheduledOnUtc" />
+        </div>
+        <div class="col-md-9">
+            <input type="checkbox" id="chkSchedule" />
+        </div>
+    </div>
+
+    <!-- Scheduled On -->
+    <div class="form-group row" id="scheduledRow" style="display:none;">
+        <div class="col-md-3">
+            <nop-label asp-for="ScheduledOnUtc" />
+        </div>
+        <div class="col-md-6">
+            <input asp-for="ScheduledOnUtc" type="datetime-local" class="form-control" />
+            <span asp-validation-for="ScheduledOnUtc"></span>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+          
+$("#chkSchedule").change(function () {
+    if ($(this).is(":checked")) {
+        $("#scheduledRow").show();
+
+        if (!$("#ScheduledOnUtc").val()) {
+            let now = new Date();
+
+            // Shift from Central America (UTC-6) to IST (UTC+5:30)
+            let diffMinutes = (5.5 - (-6)) * 60; 
+            let istTime = new Date(now.getTime() + diffMinutes * 60000);
+
+            let formatted = istTime.toISOString().slice(0, 16);
+            $("#ScheduledOnUtc").val(formatted);
+        }
+    } else {
+        $("#scheduledRow").hide();
+        $("#ScheduledOnUtc").val('');
+    }
+});
+
+
+
+            // If the model already has ScheduledOnUtc (edit mode), auto check and show
+            if ($("#ScheduledOnUtc").val()) {
+                $("#chkSchedule").prop("checked", true);
+                $("#scheduledRow").show();
+            }
+        });
+    </script>
+
+
+    <!-- Audience Type -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="AudienceTypeId" />
+        </div>
+        <div class="col-md-6">
+            @if (Model.IsSent)
+            {
+                <select id="AudienceTypeId"
+                        asp-for="AudienceTypeId"
+                        asp-items="Model.AvailableAudienceTypes"
+                        class="form-control"
+                        disabled="disabled">
+                </select>
+                <input type="hidden" asp-for="AudienceTypeId" />
+
+                <!-- keep value in POST -->
+            }
+            else
+            {
+                <select id="AudienceTypeId"
+                        asp-for="AudienceTypeId"
+                        asp-items="Model.AvailableAudienceTypes"
+                        class="form-control">
+                </select>
+            }
+
+        </div>
+    </div>
+
+
+    <!-- Reference Ids (Project / Designation / Employee) -->
+    <div class="form-group row" id="referenceRow">
+        <div class="col-md-3">
+            <nop-label asp-for="ReferenceName" />
+            
+        </div>
+        <div class="col-md-6">
+            <select id="referenceDropdown" multiple="multiple" name="ReferenceIdList" class="form-control"></select>
+        </div>
+    </div>
+
+    <!-- Employees -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SendEmployeeIdList" />
+        </div>
+        <div class="col-md-6">
+            <select id="sendEmployeeDropdown" name="SendEmployeeIdList" multiple="multiple" class="form-control"></select>
+            <span asp-validation-for="SendEmployeeIdList"></span>
+        </div>
+    </div>
+
+ 
+
+
+
+</div>
+
+@if(Model.Id >0){
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SendTestEmailTo" />
+        </div>
+        <div class="col-md-9">
+            <div class="input-group">
+                <nop-editor asp-for="SendTestEmailTo" id="TestEmail" />
+                <div class="input-group-append">
+                    <button type="submit"
+                            formaction="@Url.Action("SendTestAnnouncementEmail", "Announcement")"
+                            formmethod="post"
+                            class="btn btn-primary">
+                        @T("Admin.Configuration.EmailAccounts.SendTestEmail.Button")
+                    </button>
+                </div>
+            </div>
+            <span asp-validation-for="SendTestEmailTo"></span>
+        </div>
+    </div>
+</div>
+}
+
+<script>
+    $(document).ready(function () {
+        $("#btnSendAnnouncement").click(function () {
+            if (!confirm("Are you sure you want to send this announcement to employees?")) {
+                return;
+            }
+            var announcementId = { id: @Model.Id };
+          
+            addAntiForgeryToken(announcementId)
+
+            $.ajax({
+                url: '@Url.Action("SendAnnouncement", "Announcement")',
+                type: 'POST',
+                data:announcementId ,
+                success: function (result) {
+                    if (result.success) {
+                        alert("✅ " + result.message);
+                        // Optionally refresh page
+                        location.reload();
+                    } else {
+                        alert("⚠️ " + result.message);
+                    }
+                },
+                error: function () {
+                    alert("❌ An error occurred while sending the announcement.");
+                }
+            });
+        });
+    });
+</script>
+
+
+<script>
+    $(document).ready(function () {
+
+
+        // =============================
+        // Schedule Announcement toggle
+        // =============================
+        $("#chkSchedule").change(function () {
+            if ($(this).is(":checked")) {
+                $("#scheduledRow").show();
+                if (!$("#ScheduledOnUtc").val()) {
+                    let now = new Date().toISOString().slice(0, 16);
+                    $("#ScheduledOnUtc").val(now);
+                }
+            } else {
+                $("#scheduledRow").hide();
+                $("#ScheduledOnUtc").val('');
+            }
+        });
+          // =============================
+        // Init Employee MultiSelect
+        // =============================
+        var allEmployees = @Html.Raw(Json.Serialize(Model.AvailableEmployees));
+        var preselectedEmps = @Html.Raw(Json.Serialize(Model.SendEmployeeIdList)) || [];
+
+        $("#sendEmployeeDropdown").kendoMultiSelect({
+            placeholder: "Select employees...",
+            dataTextField: "Text",
+            dataValueField: "Value",
+            filter: "contains",
+            autoBind: true,
+            dataSource: allEmployees
+        });
+
+        var sendEmployeeDropdown = $("#sendEmployeeDropdown").data("kendoMultiSelect");
+
+        // =============================
+        // Init Reference MultiSelect
+        // =============================
+        var preselectedRefs = @Html.Raw(Json.Serialize(Model.ReferenceIdList)) || [];
+
+        $("#referenceDropdown").kendoMultiSelect({
+            placeholder: "Select references...",
+            dataTextField: "Text",
+            dataValueField: "Value",
+            filter: "contains",
+            autoBind: true,
+            dataSource: []
+        });
+
+        var referenceDropdown = $("#referenceDropdown").data("kendoMultiSelect");
+
+        // =============================
+        // AudienceType change handler
+        // =============================
+        $("#AudienceTypeId").change(function () {
+            var audienceType = $(this).val();
+
+            referenceDropdown.dataSource.data([]);
+            referenceDropdown.value([]);
+
+            sendEmployeeDropdown.dataSource.data(allEmployees);
+            sendEmployeeDropdown.value([]);
+
+            if (audienceType == "0") { // All
+                sendEmployeeDropdown.value(allEmployees.map(x => x.Value));
+                $("#referenceRow").hide();
+            }
+            else if (audienceType == "1") { // Project
+                $("#referenceRow").show();
+                loadReference('@Url.Action("GetAllProjects", "Announcement")', preselectedRefs);
+            }
+            else if (audienceType == "2") { // Designation
+                $("#referenceRow").show();
+                loadReference('@Url.Action("GetAllDesignations", "Announcement")', preselectedRefs);
+            }
+            else if (audienceType == "3") { // Employee
+                $("#referenceRow").hide();
+                // no auto-selection, user picks employees
+            }
+        }).trigger("change");
+
+        // ✅ Apply preselected employees ONLY once on edit load
+        if (preselectedEmps.length > 0) {
+            sendEmployeeDropdown.value(preselectedEmps.map(x => x.toString()));
+        }
+
+        // =============================
+        // Reference change -> reload employees
+        // =============================
+        $("#referenceDropdown").change(function () {
+            var audienceType = $("#AudienceTypeId").val();
+            var referenceIds = $("#referenceDropdown").val() || [];
+
+            if (!referenceIds.length) {
+                sendEmployeeDropdown.value([]);
+                return;
+            }
+
+            if (audienceType == "1") {
+                $.get('@Url.Action("GetEmployeesByProjects", "Announcement")', { projectIds: referenceIds.join(",") }, function (data) {
+                    sendEmployeeDropdown.dataSource.data(data);
+                    sendEmployeeDropdown.value(data.map(x => x.Value.toString()));
+                });
+            }
+            else if (audienceType == "2") {
+                $.get('@Url.Action("GetEmployeesByDesignations", "Announcement")', { designationIds: referenceIds.join(",") }, function (data) {
+                    sendEmployeeDropdown.dataSource.data(data);
+                    sendEmployeeDropdown.value(data.map(x => x.Value.toString()));
+                });
+            }
+            else if (audienceType == "3") {
+                $.get('@Url.Action("GetEmployeesByIds", "Announcement")', { employeeIds: referenceIds.join(",") }, function (data) {
+                    sendEmployeeDropdown.dataSource.data(data);
+                    sendEmployeeDropdown.value(data.map(x => x.Value.toString()));
+                });
+            }
+        });
+
+        // =============================
+        // Helper to load references
+        // =============================
+        function loadReference(url, preselected) {
+            $.get(url, function (data) {
+                referenceDropdown.dataSource.data(data);
+                if (preselected && preselected.length > 0) {
+                    referenceDropdown.value(preselected.map(x => x.toString()));
+                }
+            });
+        }
+
+ 
+    });
+</script>
+
+@if (Model.IsSent)
+{
+    <script>
+        $(document).ready(function () {
+            // Disable Kendo MultiSelects
+            var sendEmp = $("#sendEmployeeDropdown").data("kendoMultiSelect");
+            if (sendEmp) sendEmp.enable(false);
+
+            var refEmp = $("#referenceDropdown").data("kendoMultiSelect");
+            if (refEmp) refEmp.enable(false);
+
+            // Disable Kendo DropDownList (AudienceType)
+            var audience = $("#AudienceTypeId").data("kendoDropDownList");
+            if (audience) audience.enable(false);
+
+            // Disable Kendo DateTimePicker (ScheduledOnUtc)
+            var schedule = $("#ScheduledOnUtc").data("kendoDateTimePicker");
+            if (schedule) schedule.enable(false);
+
+            // Disable normal textboxes
+            $("#Title").prop("readonly", true);
+
+            // ✅ Disable Rich Editor (TinyMCE / Kendo Editor)
+            if (typeof tinymce !== "undefined") {
+                // If nop is using TinyMCE
+                if (tinymce.get("Message")) {
+                    tinymce.get("Message").setMode("readonly");
+                }
+            }
+
+            var kendoEditor = $("#Message").data("kendoEditor");
+            if (kendoEditor) {
+                kendoEditor.body.setAttribute("contenteditable", false);
+                $(".k-editor-toolbar", kendoEditor.wrapper).hide(); // hide toolbar
+            }
+
+            // Disable schedule checkbox
+            $("#chkSchedule").prop("disabled", true);
+        });
+    </script>
+}
+
+
+
+

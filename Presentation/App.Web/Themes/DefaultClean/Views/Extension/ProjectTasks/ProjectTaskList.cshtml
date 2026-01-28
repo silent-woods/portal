@@ -1,0 +1,536 @@
+﻿@using App.Core
+@using App.Web.Models.Extensions.ProjectTasks;
+
+@model ProjectTaskSearchModel;
+
+@{
+    Layout = "_ColumnsOne";
+
+    NopHtml.AddTitleParts(T("PageTitle.ProjectTaskList").Text);
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-customer-info-page");
+  
+
+}
+<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/timesheetlist.css")" />
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
+<link rel="stylesheet" href="https://jqwidgets.com/public/jqwidgets/styles/jqx.base.css" type="text/css" />
+<script type="text/javascript" src="https://jqwidgets.com/public/jqwidgets/jqx-all.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>@T("Admin.Catalog.ProjectTask.List")</h1>
+    <button type="button" class="add-btn button-1 save-customer-info-button" onclick="openProjectTaskPopup()">Add Task</button>
+</div>
+<script>
+    function openProjectTaskPopup() {
+        $.ajax({
+            url: '/TimeSheet/CreateProjectTask',
+            type: 'GET',
+            dataType: 'html',
+            success: function (data) {
+                $('#popupDialog .custom-modal-body').html($(data).find('.page-body').html());
+                $('#popupDialog').fadeIn();
+            },
+            error: function (xhr, status, error) {
+                console.error("Error loading the popup content: ", error);
+            }
+        });
+    }
+    function closeModal() {
+        $('#popupDialog').fadeOut();
+    }
+    $(document).on('click', '#save-info-button', function (e) {
+        e.preventDefault(); 
+        var ProjectId = $('#ProjectId').val();
+        var EmployeeId = $('#EmployeeId').val();
+        var TaskTitle = $('input[name="TaskTitle"]').val();
+        var Description = $('textarea[name="Description"]').val();
+        var EstimationTimeHHMM = $('input[name="EstimationTimeHHMM"]').val();
+        var DueDate = $('#DueDate').val();
+        var Tasktypeid = $('#Tasktypeid').val();
+        var ProcessWorkflowId = $('#ProcessWorkflowId').val();
+        var TaskCategoryId = $('#TaskCategoryId').val();
+        var IsSync = $('#IsSync').is(':checked');
+        var IsQARequired = $('#IsQARequired').is(':checked');
+        var parentTaskId = $('#ParentTaskId').val();
+        $('.validation-error-message').hide().text("");
+        var postData = {
+            projectId: ProjectId,
+            employeeId :EmployeeId,
+            taskTitle: TaskTitle,
+            description: Description,
+            estimatedTimeHHMM: EstimationTimeHHMM,
+            dueDate:DueDate,
+            taskTypeid: Tasktypeid,
+            isQARequired: IsQARequired,
+            processWorkflowId: ProcessWorkflowId,
+            taskCategoryId:TaskCategoryId?TaskCategoryId:0,
+            parentTaskId : parentTaskId,
+            isSync: IsSync
+        }
+        addAntiForgeryToken(postData);
+        $.ajax({
+            url: '@Url.Action("InsertProjectTask", "TimeSheet")',
+            type: 'POST',
+            data: postData,
+            success: function (response) {
+                if (response.success) {
+                    $('#popupDialog').fadeOut(); 
+                } else {
+                    const errorMessage = response.message || "An error occurred. Please try again.";
+                    $('.validation-error-message').text(errorMessage).show();
+                }
+            },
+            error: function (xhr, status, error) {
+                $('.validation-error-message').text("An error occurred: " + error).show();
+            }
+
+        });
+    });
+
+    $(document).ready(function () {
+        $(document).on('change', '#ProjectId', function (e) {
+            var projectId = $(this).val();
+            
+            if (projectId) {
+                $.ajax({
+                    url: '/TimeSheet/GetProcessWorkflowsByProjectId',
+                    type: 'GET',                            
+                    data: { projectId: projectId },
+                    success: function (data) {
+                        var workflowDropdown = $('#ProcessWorkflowId');
+                        workflowDropdown.empty();
+
+                        if (data && data.length > 0) {
+                            $.each(data, function (i, item) {
+                                workflowDropdown.append($('<option></option>').val(item.Value).text(item.Text));
+                            });
+                        }
+                    },
+                    error: function () {
+                        alert('Error loading workflows.');
+                    }
+                });
+            }
+        });
+    });
+</script>
+<div class="content-body">
+    <div id="popupDialog" class="custom-modal" style="display:none;">
+        <div class="custom-modal-dialog">
+            <div class="custom-modal-content">
+                <div class="custom-modal-header">
+                    <h3 class="custom-modal-title">Add Project Task</h3>
+                    <span class="custom-modal-close" onclick="closeModal()">&times;</span>
+                </div>
+                <div class="custom-modal-body">
+                </div>
+            </div>
+        </div>
+    </div>
+        <div class="card card-default card-search">
+        <div class="card-body nop-card-body">
+            <input type="hidden" id="EmployeeId" name="EmployeeId" value="@Model.EmployeeId" />
+            <div class="form-horizontal">
+                <div class="grid-container">
+                    <input type="hidden" id="SelectedProjectIds"
+                           name="SelectedProjectIds"
+                           value="@(string.Join(",", Model.SelectedProjectIds ?? new List<int>()))" />
+                    <div class="grid-item">
+                        <label asp-for="SelectedEmployeeIds" asp-postfix=":"></label>
+                        <select id="SelectedEmployeeIds" name="SelectedEmployeeIds" class="kendo-multi-select" multiple>
+                            @foreach (var employee in Model.AvailableEmployees)
+                            {
+                                <option value="@employee.Value">@employee.Text</option>
+                            }
+                        </select>
+                        <script>
+                            $(document).ready(function () {
+                                var projectSelect = $('#SelectedEmployeeIds').kendoMultiSelect({
+                                    autoClose: true,
+                                    filter: "contains",
+                                    value: [@Html.Raw(Model.EmployeeId)],
+                                }).data("kendoMultiSelect");
+
+                            @if (Model.AvailableEmployees.Count == 0)
+                            {
+                                <text>
+                                        projectSelect.setOptions({
+                                            enable: false,
+                                            placeholder: '@T("Admin.Catalog.NoAvailableEmployees")'
+                                        });
+                                    projectSelect._placeholder();
+                                    projectSelect._enable();
+                                </text>
+                            }
+                    });
+                        </script>
+                    </div>
+                    <div class="grid-item">
+                        <label asp-for="TaskId" asp-postfix=":"></label>
+                        <input asp-for="TaskId" />
+                        <span asp-validation-for="TaskId"></span>
+                    </div>
+                    <div class="grid-item">
+                        <label asp-for="SearchProcessWorkflowId" asp-postfix=":"></label>
+                        <nop-select asp-for="SearchProcessWorkflowId" class="select1" asp-items="Model.AvailableProcessWorkflow" />
+                    </div>
+                  
+                    <div class="grid-item">
+                        <label asp-for="DueDate" asp-postfix=":"></label>
+                        <input asp-for="DueDate" type="date" id="SearchDueDate" />
+                        <span asp-validation-for="DueDate"></span>
+                    </div>
+
+                    <div class="grid-item">
+                        <label asp-for="SearchDeliveryOnTime" asp-postfix=":"></label>
+                        <nop-select asp-for="SearchDeliveryOnTime" class="select1" asp-items="Model.AvailableDeliveryOnTime" />
+                    </div>
+
+                    <div class="grid-item">
+                        <label asp-for="TaskName" asp-postfix=":"></label>
+                        <input asp-for="TaskName" />
+                        <span asp-validation-for="TaskName"></span>
+                    </div>
+                    <div class="grid-item">
+                        <label asp-for="SearchTaskTypeId" asp-postfix=":"></label>
+                        <nop-select asp-for="SearchTaskTypeId" class="select1" asp-items="Model.AvailableTaskTypes" />
+                    </div>
+
+                    <div class="grid-item" style="padding:10px;">
+                        <label asp-for="SearchStatusId" asp-postfix=":"></label>
+
+                        <div class="select2-wrap" style="width:200px;">
+                            <select id="SearchStatusId"
+                                    asp-for="SearchStatusId"
+                                    asp-items="Model.AvailableStatus"
+                                    style="width:100%;">
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid-item">
+                     <label asp-for="SearchParentTaskId" asp-postfix=":"></label>
+                     <select id="SearchParentTaskId" name="SearchParentTaskId" class="form-control" style="border: none; box-shadow: none; height:35px;"></select>
+                    </div>
+
+                    <script>
+                        $(document).ready(function () {
+
+                        var searchParentTaskId = $("#SearchParentTaskId").kendoDropDownList({
+                            dataTextField: "Text",
+                            dataValueField: "Value",
+                            filter: "contains",
+                            autoBind: false,
+                            dataSource: @Html.Raw(Json.Serialize(Model.AvailableParentTasks))
+                        }).data("kendoDropDownList");
+
+                            function formatStatus(state) {
+                                if (!state.id) return state.text;
+
+                                const [text, color] = state.text.split("|||");
+                                return $(`
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};"></div>
+                                        <span>${text}</span>
+                                    </div>
+                                `);
+                            }
+
+                        var $sel = $('#SearchStatusId');
+                        var $wrap = $sel.closest('.select2-wrap'); 
+
+                        if ($sel.data('select2')) {
+                          $sel.select2('destroy');
+                        }
+
+                        $sel.select2({
+                          width: '100%',           
+                          dropdownParent: $wrap,    
+                          templateResult: formatStatus,
+                          templateSelection: formatStatus,
+                          escapeMarkup: function (m) { return m; },
+                          minimumResultsForSearch: Infinity
+                        });
+                        var s2 = $sel.data('select2');
+                        if (s2 && s2.$container) {
+                          s2.$container.css({ 'width': '220px', 'min-width': '220px' });
+                          s2.$container.find('.select2-selection').css({ 'width': '220px', 'min-width': '220px' });
+                        } else {
+                          $sel.next('.select2-container').css({ 'width': '220px' }).find('.select2-selection').css({ 'width': '220px' });
+                        }
+                        });
+                    </script>
+                    <div class="grid-item button-container">
+                        <button type="button" id="search-brands" class="btn-search">
+                            <i class="fas fa-search"></i> @T("Admin.Common.Search")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    <div id="status-summary"
+         style="display: none; overflow-x: auto; max-width: 100%; background-color: #f9f9f9; padding: 16px; margin-top: 20px; margin-bottom: 10px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
+    </div>
+    <div id="timesheet-table-container">
+        <div id="timesheet-table"></div>
+    </div>
+</div>
+
+<script>
+ 
+    $(document).ready(function () {
+          window.onload = function () {
+        document.getElementById("search-brands").click();
+    };
+        function performSearch(pageIndex, pageSize) {
+
+            pageIndex = pageIndex || 0; 
+            pageSize = pageSize || 10;
+            var selectedProjects = $('#SelectedProjectIds').val() || [];
+            var selectedEmployees = $('#SelectedEmployeeIds').val() || [];
+               var selectedProjects = $('#SelectedProjectIds').val() || [];
+    if (!Array.isArray(selectedProjects)) {
+        selectedProjects = [selectedProjects];
+    }
+    selectedProjects = selectedProjects.join(',');
+            selectedEmployees = selectedEmployees.join(',');
+            var taskName = $('#TaskName').val();
+            var fromDate = $('#From').val();
+            var toDate = $('#To').val();
+            var statusId = $('#SearchStatusId').val();
+            var taskId = $('#TaskId').val();
+            var taskTypeId = $('#SearchTaskTypeId').val();
+            var searchProcessWorkflowId = $('#SearchProcessWorkflowId').val();
+            var searchDeliveryOnTime = $('#SearchDeliveryOnTime').val();
+            var searchParentTaskId = $('#SearchParentTaskId').val();
+            var dueDate = $('#SearchDueDate').val();
+
+            var data = {
+                projectIds: selectedProjects,
+                employeeIds: selectedEmployees,
+                taskName: taskName,
+                fromDate: fromDate,
+                toDate: toDate,
+                statusId: statusId,
+                taskId: taskId,
+                taskTypeId: taskTypeId,
+                searchProcessWorkflowId: searchProcessWorkflowId,
+                dueDate : dueDate,
+                searchDeliveryOnTime:searchDeliveryOnTime,
+                SearchParentTaskId:searchParentTaskId
+            };
+
+            $("#timesheet-table").jqxGrid({
+                width: '100%',
+                autoheight: true,
+           
+                sortable: true,
+                columnsresize: true,
+                source: {
+                    datatype: 'json',
+                    datafields: [
+                        { name: 'TaskTypeName' },
+                        { name: 'Id' },
+                        { name: 'TaskTitle' },
+                        { name: 'AssignedEmployee' },
+                        { name: 'Status' },
+                        { name: 'EstimationTimeHHMM' },
+                        { name: 'SpentTime' },
+                        { name: 'DueDateFormat' },
+                        { name: 'DeliveryOnTime' },
+                        { name: 'WorkQualityFormat' },
+                        { name: 'DOTPercentageFormat' },
+                        { name: 'TaskTypeName' }
+
+                    ],
+                    url: '@Url.Action("ProjectTaskList", "ProjectTask")',
+                    data: data
+                },
+                columns: [
+                     {
+                        text: 'Edit',
+                        datafield: 'Edit',
+                        width: '6%',
+                        cellsrenderer: function (row, column, value, defaultHtml, columnSettings, rowData) {
+                            return `
+        <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
+            <a href="/ProjectTask/Edit?id=${rowData.Id}" class="btn-edit" target="_blank">✎ Edit</a>
+        </div>`;
+                        }
+
+                    },
+                    { text: 'Task Type', datafield: 'TaskTypeName', width: '8%', minWidth: 20 },
+                    { text: 'Task Id', datafield: 'Id', width: '6%', minWidth: 40 },
+                      {
+            text: 'Task Name',
+            datafield: 'TaskTitle',
+            width: '24%',
+            cellsrenderer: function (row, column, value, defaultHtml, columnProperties, rowData) {
+                if (!rowData.Id) return value;
+                return `
+                    <div class="task-cell" onclick="window.open('/ProjectTask/Edit?id=${rowData.Id}', '_blank')">
+                        ${value}
+                    </div>`;
+            }
+        },
+                    { text: 'Assigned To', datafield: 'AssignedEmployee', width: '8%', minWidth: 90 },
+
+                        {
+        text: 'Status',
+        datafield: 'Status',
+        width: '8%',
+        minWidth: 50,
+        cellsrenderer: function (row, column, value) {
+            if (!value) return "";
+
+            const [text, color] = value.split("|||");
+            return `
+                <div style="display: flex; align-items: center; gap: 6px; padding-left: 4px;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background-color: ${color || '#ccc'};"></div>
+                    <span>${text}</span>
+                </div>
+            `;
+        }
+    },
+                    { text: 'Estimated Time', datafield: 'EstimationTimeHHMM', width: '7%', minWidth: 50 },
+                    { text: 'Spent Time', datafield: 'SpentTime', width: '7%', minWidth: 50 },
+                    { text: 'Due Date', datafield: 'DueDateFormat', width: '8%', minWidth: 80 },
+                    { text: 'W.Q %', datafield: 'WorkQualityFormat', width: '6%', minWidth: 70 },
+                    { text: 'DOT %', datafield: 'DOTPercentageFormat', width: '6%', minWidth: 70 },
+                           {
+        text: 'D.O.T',
+        datafield: 'DeliveryOnTime',
+        width: '6%',
+        cellsrenderer: function (row, columnfield, value) {
+            var iconStyle = 'text-align: center; font-size: 18px; width: 100%; height: 100%;';
+            if (value === true || value === "true") {
+                return '<div style="' + iconStyle + '"><i class="fa fa-check" style="color: green;"></i></div>';
+            } else {
+                return '<div style="' + iconStyle + '"><i class="fa fa-times" style="color: red;"></i></div>';
+            }
+        }
+    }   
+                ],
+                pageable: true,
+                pagerMode: 'advanced',
+                pagesize: pageSize,
+                pagesizeoptions: ['5', '10', '20', '50', '100']
+                }).on("bindingcomplete", function () {
+        loadStatusSummary(); 
+    });;
+        }
+
+        $('#search-brands').on('click', function () {
+            performSearch(0);
+        });
+
+       function loadStatusSummary() {
+        const data = {
+            SearchTaskTitle: $('#SearchTaskTitle').val(),
+            SearchStatusId: $('#SearchStatusId').val(),
+            SearchTaskId: $('#SearchTaskId').val(),
+            SelectedProjectIds: $('#SelectedProjectIds').val(),
+            SearchTaskTypeId: $('#SearchTaskTypeId').val(),
+            SelectedEmployeeIds: $('#SelectedEmployeeIds').val(),
+            SearchProcessWorkflowId: $('#SearchProcessWorkflowId').val(),
+            DueDate: $('#DueDate').val(),
+            SearchDeliveryOnTime: $('#SearchDeliveryOnTime').val(),
+            SearchParentTaskId : $('#SearchParentTaskId').val()
+        };
+        addAntiForgeryToken(data);
+        $.post('@Url.Action("GetStatusSummary", "ProjectTask")', data, function (response) {
+            const container = $('#status-summary');
+            container.empty(); 
+            container.hide();
+
+            if (!response || response.length === 0) {
+                return; 
+            }
+
+            const grouped = {};
+            response.forEach(item => {
+                if (!grouped[item.WorkflowId]) {
+                    grouped[item.WorkflowId] = {
+                        WorkflowName: item.WorkflowName,
+                        Statuses: []
+                    };
+                }
+                grouped[item.WorkflowId].Statuses.push(item);
+            });
+            const table = $('<table style="border-collapse: collapse; min-width: 100%; width: max-content; background-color: #fff; border: 1px solid #ddd;"></table>');
+            for (const [workflowId, data] of Object.entries(grouped)) {
+                const { WorkflowName, Statuses } = data;
+                const row = $('<tr></tr>');
+                const workflowCell = $(`<td style="padding: 12px 16px; border: 1px solid #ddd; font-weight: bold; background-color: #e9f0f5; white-space: nowrap;">${WorkflowName}</td>`);
+                row.append(workflowCell);
+                Statuses.forEach(s => {
+                    const cell = $(`
+                        <td style="padding: 12px 16px; border: 1px solid #ddd; background-color: #fefefe;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 10px; height: 10px; border-radius: 50%; background-color: ${s.ColorCode};"></div>
+                                <span>${s.StatusName} (${s.TaskCount})</span>
+                            </div>
+                        </td>
+                    `);
+                    row.append(cell);
+                });
+                table.append(row);
+            }
+            container.append(table);
+            container.show(); 
+        });
+    }
+ 
+        function afterGridReloaded() {
+            loadStatusSummary();
+        }
+
+        $(document).ready(function () {
+            $('#projecttask-grid').on('draw.dt', function () {
+                afterGridReloaded(); 
+            });
+        });
+
+         var processWorkflowSelector = $('#@Html.IdFor(model => model.SearchProcessWorkflowId)');
+          var statusSelector = $('#SearchStatusId');
+                   processWorkflowSelector.change(function () {
+            getStatusByProcessWorkflow()
+            });
+         
+          function getStatusByProcessWorkflow() {
+            var processWorkflowId = processWorkflowSelector.val();
+            statusSelector.empty();
+            if (processWorkflowId) {
+                $.ajax({
+                    url: '/ProjectTask/GetStatusesByProcessWorkflow',
+                    type: 'GET',
+                    data: {
+                        processWorkflowId: processWorkflowId
+                    },
+                    success: function (data) {
+                        statusSelector.empty();
+                        if (data && data.length > 0) {
+                            $.each(data, function (index, item) {
+                                statusSelector.append($('<option>').val(item.Value).text(item.Text));
+                            });
+                        } else {
+                            statusSelector.append($('<option>').val('').text('No statuses available'));
+                        }
+                    },
+                    error: function () {
+                        alert('Failed to load statuses.');
+                    }
+                });
+            }
+        }
+    });
+</script>
+

@@ -1,0 +1,40 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.ProcessWorkflows;
+
+@model ProcessWorkflowModel
+
+@{
+    var showTour = ViewBag.ShowTour ?? false;
+
+    const string hideInfoBlockAttributeName = "ProcessWorkflowPage.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+    const string hideProjectEmpMappingBlockAttributeName = "ProjectEmpMappingPage.HideProjectEmpMappingBlock";
+    var hideProjectEmpMappBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideProjectEmpMappingBlockAttributeName);
+}
+
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="ProcessWorkflow-cards">
+                <nop-card asp-name="ProcessWorkflow-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.ProcessWorkflow.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock" asp-advanced="false">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/ProcessWorkflows/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageWorkflowStatus, PermissionAction.View))
+                {
+                    <nop-card asp-name="Projects-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.WorkflowStatus")" asp-hide-block-attribute-name="@hideProjectEmpMappingBlockAttributeName" asp-hide="@hideProjectEmpMappBlock" asp-advanced="false">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/ProcessWorkflows/_CreateOrUpdateWorkflowStatus.cshtml", Model)
+                    </nop-card>
+                }
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessRules, PermissionAction.View))
+                {
+                    <nop-card asp-name="Projects-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.ProcessRules")" asp-hide-block-attribute-name="@hideProjectEmpMappingBlockAttributeName" asp-hide="@hideProjectEmpMappBlock" asp-advanced="false">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/ProcessWorkflows/_CreateOrUpdateProcessRules.cshtml", Model)
+                    </nop-card>
+                }
+            </nop-cards>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,230 @@
+﻿@model App.Web.Models.Dashboard.PendingDashboardModel
+
+
+@if (Model.CompletedList != null && Model.CompletedList.Count > 0)
+{
+    <div class="section-header">Completed</div>
+    <table class="followup-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Task Name</th>
+                <th>Project</th>
+                <th>Assign To</th>
+                <th>Esti.</th>
+                <th>deve.</th>
+                <th>status</th>
+                <th>Last FollowUp</th>
+                <th>Next Review</th>
+                <th>Comment</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @if (Model.CompletedList == null || Model.CompletedList.Count == 0)
+            {
+                <tr><td colspan="10" class="row-empty">No completed items</td></tr>
+            }
+            else
+            {
+                foreach (var t in Model.CompletedList)
+                {
+                    <tr class="overdue-row" data-id="@t.Id">
+                        <td class="expand-cell">
+                            <span class="toggle-subgrid" data-id="@t.Id">+</span>
+                        </td>
+                        <td data-label="Task Name">@t.TaskName</td>
+                        <td data-label="Project">@t.ProjectName</td>
+                        <td data-label="Assign To">@t.EmployeeName</td>
+                        <td data-label="Esti">@t.EstimationTime</td>
+                        <td data-label="Dev">@t.DevelopementTime</td>
+                        <td data-label="Status">
+                            <span class="status-dot" style="background:@t.StatusColor"></span>@t.StatusName
+                        </td>
+                        <td data-label="Last Follow-Up">
+                            <span>
+                                @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy")
+                            </span>
+                            <span class="no-wrap">
+                                @t.LastFollowupDateTime?.ToString("hh:mm tt")
+                            </span>
+                        </td>
+                        <td class="next-followup" data-label="Next Review">
+                            <span>
+                                @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy")
+                            </span>
+                            <span class="no-wrap">
+                                @t.NextFollowupDateTime?.ToString("hh:mm tt")
+                            </span>
+                        </td>
+                        <td class="comment" data-label="Comment">@t.LastComment</td>
+                        <td class="action-cell" data-label="Action">
+                            <button class="follow-btn btn-followup" data-id="@t.Id">Follow-Up</button>
+                        </td>
+                    </tr>
+                    <tr class="subgrid-row" style="display:none;">
+                        <td colspan="11">
+                            <div class="subgrid-container"></div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+    <div class="table-footer">
+    <div class="page-size-box">
+        <label for="pageSize">Page size:</label>
+            <select id="pageSize" onchange="changePageSize()">
+                <option value="1" selected="@(Model.PageSize == 1)">1</option>
+                <option value="2" selected="@(Model.PageSize == 2)">2</option>
+                <option value="20" selected="@(Model.PageSize == 20)">20</option>
+                <option value="50" selected="@(Model.PageSize == 50)">50</option>
+
+            </select>
+    </div>
+
+    <div class="pagination-box">
+        @if (Model.PageIndex > 1)
+        {
+            <button onclick="loadCompleted(@(Model.PageIndex - 1))" class="page-btn">Prev</button>
+        }
+
+        <span class="page-info">Page @Model.PageIndex of @Model.TotalPages</span>
+
+        @if (Model.PageIndex < Model.TotalPages)
+        {
+            <button onclick="loadCompleted(@(Model.PageIndex + 1))" class="page-btn">Next</button>
+        }
+    </div>
+</div>
+
+}
+
+
+<script>
+    $(document).ready(function () {
+        $("table").on("click", ".btn-followup", function () {
+            var row = $(this).closest("tr");
+            var taskId = row.data("id");
+            var nextCell = row.find(".next-followup");
+            var commentCell = row.find(".comment");
+            var actionCell = row.find(".action-cell");
+            var originalNext = nextCell.text();
+            var originalComment = commentCell.text();
+                   nextCell.html(`
+        <div style="display:flex; flex-direction:column; gap:4px;">
+            <input type="datetime-local"
+                   class="next-input"
+                   value="${(originalNext !== '-' ? originalNext : '')}" />
+            <label style="font-size:13px;">
+                <input type="checkbox" class="mark-complete" /> Mark Completed
+            </label>
+        </div>
+    `);
+            commentCell.html('<input type="text" value="' + originalComment + '" />');
+            actionCell.html('<button class="save-btn btn-save">Save</button><button class="cancel-btn btn-cancel">Cancel</button>');
+        });
+
+        $("table").on("click", ".btn-cancel", function () {
+            var row = $(this).closest("tr");
+            var nextCell = row.find(".next-followup");
+            var commentCell = row.find(".comment");
+            var actionCell = row.find(".action-cell");
+            var originalNext = nextCell.find("input").attr("value");
+            var originalComment = commentCell.find("input").val();
+            nextCell.text(originalNext ? originalNext.split("T")[0] : "-");
+            commentCell.text(originalComment);
+            actionCell.html('<button class="follow-btn btn-followup">Follow-Up</button>');
+        });
+            $("table").on("change", ".mark-complete", function () {
+        var container = $(this).closest("td");
+        var nextInput = container.find(".next-input");
+
+        if ($(this).is(":checked")) {
+            nextInput.val("");
+            nextInput.prop("disabled", true);
+        } else {
+            nextInput.prop("disabled", false);
+        }
+    });
+
+         $("table").on("click", ".btn-save", function () {
+        var row = $(this).closest("tr");
+        var taskId = row.data("id");
+        var nextCell = row.find(".next-followup");
+        var commentCell = row.find(".comment");
+        var actionCell = row.find(".action-cell");
+        var nextDate = nextCell.find(".next-input").val();
+        var isCompleted = nextCell.find(".mark-complete").is(":checked");
+        var comment = commentCell.find("input").val();
+
+        if (isCompleted) {
+            nextDate = null;
+        }
+        else {
+            if (!nextDate) {
+                alert("Please select next follow-up date.");
+                return;
+            }
+        }
+        var data = {
+            id: taskId,
+            nextDate: nextDate,
+            comment: comment,
+            isCompleted: isCompleted
+        };
+        addAntiForgeryToken(data);
+        $.ajax({
+            url: "/Dashboard/SaveFollowUp",
+            type: "POST",
+            data: data,
+            success: function (res) {
+                if (res && res.success) {
+                    $.ajax({
+                        url: "/Dashboard/ReloadFollowupTables",
+                        type: "GET",
+                        success: function (html) {
+                            $("#followupTablesContainer").html(html);
+                        }
+                    });
+                } else {
+                    alert("Error saving follow-up.");
+                }
+            },
+            error: function () {
+                alert("Network error occurred.");
+            }
+        });
+    });
+
+        $("table").on("click", ".toggle-subgrid", function () {
+        var btn = $(this);
+        var parentRow = btn.closest("tr");
+        var subgridRow = parentRow.next(".subgrid-row");
+        var container = subgridRow.find(".subgrid-container");
+        var taskId = btn.data("id");
+        if (subgridRow.is(":visible")) {
+            subgridRow.hide();
+            btn.text("+");
+            return;
+        }
+        btn.text("-");
+        subgridRow.show();
+        if (container.html().trim() !== "") {
+            return;
+        }
+        $.ajax({
+            url: "/Dashboard/GetFollowUpSubGrid",
+            type: "GET",
+            data: { followUpTaskId: taskId },
+            success: function (html) {
+                container.html(html);
+            },
+            error: function () {
+                container.html("<div class='error'>Failed to load follow-ups</div>");
+            }
+        });
+    });
+    });
+</script>

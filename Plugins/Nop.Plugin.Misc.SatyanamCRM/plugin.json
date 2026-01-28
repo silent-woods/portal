@@ -1,0 +1,12 @@
+﻿{
+  "Group": "Misc",
+  "FriendlyName": "SatyanamCRM",
+  "SystemName": "Misc.SatyanamCRM",
+  "Version": "1.00",
+  "SupportedVersions": [ "4.60" ],
+  "Author": "Satyanam team",
+  "DisplayOrder": 1,
+  "FileName": "Satyanam.Nop.Plugin.Misc.SatyanamCRM.dll",
+  "Description": " ",
+  "ConfigurationUrl": "~/Admin/SatyanamCRM/Configure"
+}

@@ -1,0 +1,22 @@
+﻿@model AccountGroupModel
+
+@{
+    var customer = await workContext.GetCurrentCustomerAsync();
+
+    const string hideInfoBlockAttributeName = "AccountGroupPage.HideInfoBlock";
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="account-group-cards">
+                <nop-card asp-name="account-group-info" asp-icon="fas fa-info" asp-title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountGroup.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock" asp-advanced="false">
+                    @await Html.PartialAsync("_CreateOrUpdateAccountGroup.Info.cshtml", Model)
+                </nop-card>
+            </nop-cards>
+        </div>
+    </div>
+</section>

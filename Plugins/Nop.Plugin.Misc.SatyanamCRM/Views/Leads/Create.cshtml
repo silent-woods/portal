@@ -1,0 +1,37 @@
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Leads
+@model LeadModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.Lead.Create").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Lead");
+}
+
+<form asp-controller="Lead" asp-action="Create" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Plugin.SatyanamCRM.Lead.Create")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Plugin.SatyanamCRM.Lead.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Leads/_CreateOrUpdate.cshtml", Model)
+</form>

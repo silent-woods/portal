@@ -1,0 +1,823 @@
+﻿@using App.Web.Models.Extension.TimesheetReports
+@model TimesheetReportSearchModel
+@{
+    //page title
+    Layout = "_ColumnsOne";
+
+    NopHtml.AddTitleParts(T("Account.EmployeePerformanceReport").Text);
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-customer-info-page");
+}
+<link rel="stylesheet" href="https://jqwidgets.com/public/jqwidgets/styles/jqx.base.css" type="text/css" />
+<script type="text/javascript" src="https://jqwidgets.com/public/jqwidgets/jqx-all.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+<script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
+
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.MonthlyPerformanceReports")
+    </h1>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">                       
+                        <div class="row">
+                           
+                            <div class="col-md-6">
+                          
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <label asp-for="EmployeeId" asp-postfix=":"></label>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select id="employeeDropdown" name="employeeDropdown" class="form-control" style="border: none; box-shadow: none; height:35px;"></select>
+                                        <span style="color:red; " id="dateError"></span>
+                                    </div>
+                                </div>
+                             
+                                    <div class="form-group row">
+                                        <label asp-for="SelectedProjectIds" asp-postfix=":"></label>
+                                        <select id="SelectedProjectIds" name="SelectedProjectIds" class="kendo-multi-select" multiple>
+                                            @foreach (var project in Model.AvailableProjects)
+                                            {
+                                                <option value="@project.Value">@project.Text</option>
+                                            }
+                                        </select>
+                                        <script>
+                                            $(document).ready(function () {
+                                                var projectSelect = $('#SelectedProjectIds').kendoMultiSelect({
+                                                    autoClose: true,
+                                                    filter: "contains"
+                                                }).data("kendoMultiSelect");
+
+                                            @if (Model.AvailableProjects.Count == 0)
+                                            {
+                                                <text>
+                                                        projectSelect.setOptions({
+                                                            enable: false,
+                                                            placeholder: '@T("Admin.Catalog.Products.NoAvailableProjects")'
+                                                        });
+                                                    projectSelect._placeholder();
+                                                    projectSelect._enable();
+                                                </text>
+                                            }
+                                                                                                                                              });
+                                        </script>
+                                    </div>                             
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <label asp-for="OverEstimation" asp-postfix=":"></label>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <nop-select asp-for="OverEstimation" asp-items="Model.AvailableOverEstimations" id="OverEstimation" />
+                                        <span asp-validation-for="OverEstimation"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <label asp-for="SearchPeriodId" asp-postfix=":"></label>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <nop-select asp-for="SearchPeriodId" asp-items="Model.PeriodList" id="SearchPeriodId" />
+                                        <span asp-validation-for="SearchPeriodId"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group row" style="display:none;" id="from-container">
+                                    <div class="col-md-3">
+                                        <label asp-for="From" asp-postfix=":"></label>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input asp-for="From" type="date" id="From" />
+                                        <p style="color:red; " id="fromError"></p>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row" style="display:none;" id="to-container">
+                                    <div class="col-md-3">
+                                        <label asp-for="To" asp-postfix=":"></label>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input asp-for="To" type="date" id="To" />
+                                        <p style="color:red; " id="toError"></p>
+                                    </div>
+                                </div>
+
+
+
+                            </div>
+
+                        </div>
+                       
+                        <div class="row">
+                            <div class="text-center col-12">
+                                <button type="submit" id="search-employeePerformance" class="btn btn-primary btn-search">
+                                    <i class="fas fa-chart-line"></i>
+                                    @T("Admin.Reports.MonthlyReport.RunReport")
+                                </button>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <div class="card card-default hide-before">
+                    <div class="card-body">
+
+                        <div id="summary-container" style="margin-bottom: 20px;"></div>
+                        <div id="jqxGrid"></div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function () {
+
+      
+
+
+            $('#SearchPeriodId').on('change', function () {
+            var periodId = $(this).val();
+
+            $.ajax({
+              url: "@(Url.Action("GetPeriodDateRange", "Reports"))",
+                type: 'GET',
+                data: { periodId: periodId },
+                success: function (data) {
+                    if (data.from && data.to) {
+
+                        // Not custom, auto-fill and hide custom fields
+                        $('#From').val(data.from);
+                        $('#To').val(data.to);
+                        $('#from-container').hide();
+                        $('#to-container').hide();
+                      
+                    } else {
+                        // Custom selected
+                        $('#From').val('');
+                        $('#To').val('');
+                        $('#from-container').show();
+                        $('#to-container').show();
+                       
+                    }
+                }
+            });
+        });
+         $('#SearchPeriodId').trigger('change');
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+
+            var employeeDropdown = $(`#employeeDropdown`).kendoDropDownList({
+                dataTextField: "Text",
+                dataValueField: "Value",
+                filter: "contains",
+                autoBind: false,
+
+                dataSource: @Html.Raw(Json.Serialize(Model.AvailableEmployees)),
+
+            }).data("kendoDropDownList");
+            employeeDropdown.value(@Model.EmployeeId);
+
+            $("#SelectedProjectIds").data("kendoMultiSelect").value(0);
+            // Project selection change event
+            $('#SelectedProjectIds').on('change', function () {
+                var projectMultiSelect = $("#SelectedProjectIds").data("kendoMultiSelect");  // Get Kendo MultiSelect instance
+                var selectedProjectIds = projectMultiSelect.value();  // Get the selected project IDs
+          
+                // Check if "All" (0) is selected
+                if (selectedProjectIds.includes('0')) {
+                    // If "All" is the only selection, do nothing
+                    if (selectedProjectIds.length === 1) {
+                        return; // Only "All" is selected, do nothing
+                    }
+
+                    // If "All" is selected last, unselect all other options
+                    if (selectedProjectIds[selectedProjectIds.length - 1] === '0') {
+                        // Keep only "All"
+                        projectMultiSelect.value(['0']);
+                    } else {
+                        // If another project is selected, unselect "All"
+                        projectMultiSelect.value($.grep(selectedProjectIds, function (value) {
+                            return value !== '0'; // Remove "All" from selection
+                        }));
+                    }
+                } else {
+                    // If no projects are selected, select "All" by default
+                    if (selectedProjectIds.length === 0) {
+                        projectMultiSelect.value(['0']); // Default to "All"
+                    }
+                }
+            });
+          
+
+            // Function to update jqxGrid data source dynamically based on new search parameters
+            function updatePerformanceReport() {
+                var from = $('#From').val();
+                var to = $('#To').val();
+                var employeeId = $('#employeeDropdown').val();
+                var SelectedProjectIds = $('#SelectedProjectIds').val();
+                var OverEstimation = $('#OverEstimation').val();
+
+                var projectIds = SelectedProjectIds.join(',');
+                var isValid = true;
+                // Clear previous errors
+                $('#fromError').text('');
+                $('#toError').text('');
+                if (new Date(to) < new Date(from)) {
+                    $('#toError').text('"To" date must be after "From" date.');
+                    isValid = false;
+                }
+
+                if(!from){
+                    $('#fromError').text('Please select a valid "From" date.');
+                    isValid = false;
+                }
+                if (!to) {
+                    $('#toError').text('Please select a valid "To" date.');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    return;
+                }
+
+             
+                    // Show the table container
+                    $('.hide-before').removeClass('hide-before');
+              
+                // Define the jqxGrid data source structure
+                var source = {
+                    datatype: "json",
+
+                    datafields: [
+                        { name: 'ProjectName', type: 'string' },
+                        { name: 'TaskId', type: 'int' },
+
+                        { name: 'TaskName', type: 'string' },
+                        { name: 'StatusName', type: 'string' },
+                        { name: 'DueDateFormat', type: 'string' },
+                        
+
+                        { name: 'EstimatedTimeFormat', type: 'string' },
+                        { name: 'SpentTimeFormat', type: 'string' },
+                        { name: 'ExtraTime', type: 'string' },
+                        { name: 'BugTime', type: 'string' },
+                        { name: 'QaTime', type: 'string' },
+
+                        { name: 'WorkQuality', type: 'number' },
+                        { name: 'DOTPercentage', type: 'number' },
+
+
+                        { name: 'DeliveredOnTime', type: 'bool' },
+                       
+                    ],
+                    url: '@Url.Action("GetEmployeePerformanceReport", "Reports")',
+                    data: {
+                        From: $('#From').val(),
+                        To: $('#To').val(),
+                        EmployeeId: $('#employeeDropdown').val(),
+                        ProjectIds: projectIds,
+                        OverEstimation:OverEstimation
+                          
+                    },
+
+                };
+
+                var dataAdapter = new $.jqx.dataAdapter(source);
+
+                // Initialize jqxGrid with the specified columns
+                $("#jqxGrid").jqxGrid({
+                    width: '100%',
+                    autoheight: true,
+
+                    source: dataAdapter,
+                    pageable: true,
+                    sortable: true,
+                    columnsresize: true,
+                    rowdetails: true,
+        rowdetailstemplate: {
+            rowdetails: "<div class='subgrid-container' style='margin: 10px;'></div>",
+            rowdetailsheight: 200
+        },
+        initrowdetails: initRowDetailsFunction,
+
+                    columns: [
+                        { text: 'Project', datafield: 'ProjectName', width: 100 },
+                        { text: 'TaskId', datafield: 'TaskId', width: 50 },
+
+
+                               {
+            text: 'Task',
+            datafield: 'TaskName',
+            width: 250,
+                   cellsrenderer: function (row, column, value, defaultHtml, columnProperties, rowData) {
+            if (!rowData.TaskId) return value;
+            return `
+                <div class="task-cell" onclick="window.open('/ProjectTask/Edit?id=${rowData.TaskId}', '_blank')">
+                    ${value}
+                </div>`;
+        }
+
+        },
+
+                         {
+        text: 'Status',
+        datafield: 'StatusName',
+        width: '15%',
+        minWidth: 100,
+        cellsrenderer: function (row, column, value) {
+            if (!value) return "";
+
+            const [text, color] = value.split("|||");
+            return `
+                <div style="display: flex; align-items: center; gap: 6px; padding-left: 4px;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background-color: ${color || '#ccc'};"></div>
+                    <span>${text}</span>
+                </div>
+            `;
+        }
+        },
+                        { text: 'Due date', datafield: 'DueDateFormat', width: 100 },
+
+                        { text: 'Estimated Hours', datafield: 'EstimatedTimeFormat', width: 60 },
+                        { text: 'Spent Time', datafield: 'SpentTimeFormat', width: 60 },
+                        { text: 'Extra Time', datafield: 'ExtraTime', width: 60 },
+                        { text: 'Bug Time', datafield: 'BugTime', width: 60 },
+                        { text: 'Qa Time', datafield: 'QaTime', width: 60 },
+                        { text: 'Work Quality %', datafield: 'WorkQuality', width: 60 },
+                        { text: 'DOT %', datafield: 'DOTPercentage', width: 60 },
+
+
+
+                      
+
+                      
+                        {
+                            text: 'Delivered On Time',
+                            datafield: 'DeliveredOnTime',
+                            columntype: 'checkbox',
+                            width: 60,
+                            cellsrenderer: function (row, columnfield, value, defaulthtml, columnproperties) {
+                                // Define the style for the icon container
+                                var iconStyle = 'text-align: center; font-size: 24px; width: 100%; height: 100%;';
+
+                                // Render Font Awesome check or cross based on the value (boolean)
+                                if (value == true) {
+                                    return '<div style="' + iconStyle + '"><i class="fa fa-check" style="color: green;"></i></div>';
+                                } else {
+                                    return '<div style="' + iconStyle + '"><i class="fa fa-times" style="color: red;"></i></div>';
+                                }
+                            }
+                        },
+                       
+                    ]
+                });
+                    // Update jqxGrid data source with new parameters
+                    var newSource = {
+                        datatype: "json",
+                        datafields: [
+                            { name: 'ProjectName', type: 'string' },
+                            { name: 'TaskId', type: 'int' },
+
+                            { name: 'TaskName', type: 'string' },
+                        { name: 'StatusName', type: 'string' },
+                        { name: 'DueDateFormat', type: 'string' },
+
+                        { name: 'EstimatedTimeFormat', type: 'string' },
+                        { name: 'SpentTimeFormat', type: 'string' },
+                            { name: 'ExtraTime', type: 'string' },
+                           { name: 'BugTime', type: 'string' },
+                        { name: 'QaTime', type: 'string' },
+                        { name: 'WorkQuality', type: 'number' },
+                        { name: 'DOTPercentage', type: 'number' },
+
+
+                            { name: 'DeliveredOnTime', type: 'bool' },
+                           
+                        ],
+                        url: '@Url.Action("GetEmployeePerformanceReport", "Reports")',
+                        data: {
+                            From: from,
+                            To: to,
+                            EmployeeId: employeeId,
+                            ProjectIds: projectIds,
+                            OverEstimation:OverEstimation
+                        }
+                    };
+
+                    var dataAdapter = new $.jqx.dataAdapter(newSource);
+                    $("#jqxGrid").jqxGrid({ source: dataAdapter });
+
+
+                    updateSummary();
+                
+                
+            }
+
+                         function initRowDetailsFunction(index, parentElement, gridElement, datarecord) {
+            const container = $(parentElement).find(".subgrid-container");
+            const taskId = datarecord.TaskId; // Make sure the main grid uses this exact field name
+
+            $.ajax({
+                url: '/Reports/GetBugTasksByTaskId', // Update if your controller or area differs
+                type: 'GET',
+                data: { taskId: taskId },
+                success: function (data) {
+                    const subGridId = 'subGrid-' + taskId;
+                    container.html('<div id="' + subGridId + '"></div>');
+
+                    const source = {
+                        datatype: "json",
+                        datafields: [
+                            { name: 'TaskId', type: 'int' },
+
+                            { name: 'TaskName', type: 'string' },
+                            { name: 'StatusName', type: 'string' },
+                        { name: 'DueDateFormat', type: 'string' },
+
+                            { name: 'EstimatedTimeFormat', type: 'string' },
+                            { name: 'SpentTimeFormat', type: 'string' },
+                            { name: 'ExtraTime', type: 'string' },
+                            { name: 'DeliveredOnTime', type: 'bool' },
+                            { name: 'DOTPercentage', type: 'number' }
+
+                        ],
+                        localdata: data
+                    };
+
+                    const adapter = new $.jqx.dataAdapter(source);
+
+                    $("#" + subGridId).jqxGrid({
+                        width: '100%',
+                        autoheight: true,
+                        theme: 'material', 
+                        source: adapter,
+                    columnsresize: true,
+
+                        columns: [
+                            { text: 'TaskId', datafield: 'TaskId', width: '7%' },
+
+                             {
+            text: 'Task',
+            datafield: 'TaskName',
+            width: '30%',
+                   cellsrenderer: function (row, column, value, defaultHtml, columnProperties, rowData) {
+            if (!rowData.TaskId) return value;
+            return `
+                <div class="task-cell" onclick="window.open('/ProjectTask/Edit?id=${rowData.TaskId}', '_blank')">
+                    ${value}
+                </div>`;
+        }
+
+        },
+
+                             
+                         {
+        text: 'Status',
+        datafield: 'StatusName',
+        width: '15%',
+        minWidth: 100,
+        cellsrenderer: function (row, column, value) {
+            if (!value) return "";
+
+            const [text, color] = value.split("|||");
+            return `
+                <div style="display: flex; align-items: center; gap: 6px; padding-left: 4px;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background-color: ${color || '#ccc'};"></div>
+                    <span>${text}</span>
+                </div>`;
+        }
+        },                                        
+         { text: 'Due date', datafield: 'DueDateFormat', width: '15%' },
+                            { text: 'Estimated', datafield: 'EstimatedTimeFormat', width: '8%', cellsalign: 'center', align: 'center' },
+                            { text: 'Spent', datafield: 'SpentTimeFormat', width: '8%', cellsalign: 'center', align: 'center' },
+                            { text: 'Extra Time', datafield: 'ExtraTime', width: '10%', cellsalign: 'center', align: 'center' },    
+                             { text: 'D.O.T(%)', datafield: 'DOTPercentage', width: '10%', cellsalign: 'center', align: 'center' },
+                            {
+                                text: 'Delivered On Time',
+                                datafield: 'DeliveredOnTime',
+                                width: '8%',
+                                cellsalign: 'center',
+                                align: 'center',
+                                cellsrenderer: function (row, columnfield, value) {
+                                    const iconStyle = 'text-align: center; font-size: 18px;';
+                                    if (value === true) {
+                                        return `<div style="${iconStyle}"><i class="fa fa-check" style="color: #007bff;"></i></div>`; // blue tick
+                                    } else {
+                                        return `<div style="${iconStyle}"><i class="fa fa-times" style="color: red;"></i></div>`;
+                                    }
+                                }
+                            }
+                        ]
+                    });
+                },
+                error: function () {
+                    container.html('<div style="color: red;">Failed to load bug tasks.</div>');
+                }
+            });
+        }
+
+
+
+            function updateSummary() {
+
+
+                var from = $('#From').val();
+                var to = $('#To').val();
+                var employeeId = $('#employeeDropdown').val();
+                var fromError = '';
+                var toError = '';
+                var employeeError = '';
+                var isValidate = true;
+                $('#summary-container').html("");
+
+
+
+                if (from && to && new Date(to) < new Date(from)) {
+                    ToError = 'End date cannot be earlier than start date.';
+                    $('#To-error').html(ToError).css('color', 'red');
+                    $('#summary-container').html('');
+                    isValidate = false;
+                }
+                else {
+                    $('#To-error').html('').css('color', '');
+                    isValidate = true;
+                }
+
+                if (from == "" || to == "") {
+                    isValidate = false;
+                }
+
+                if (isValidate) {
+                    var SelectedProjectIds = $('#SelectedProjectIds').val()
+                    var projectIds = SelectedProjectIds.join(',');
+
+                    var postData = {
+                        From: $('#From').val(),
+                            To: $('#To').val(),
+                                employeeId: $('#employeeDropdown').val(),
+                                    ProjectIds: projectIds,
+                                    overEstimation:$('#OverEstimation').val(),
+                    }
+                    addAntiForgeryToken(postData);
+                    $.ajax({
+                        type: "POST",
+                        url: "@(Url.Action("GetSummary", "Reports"))",
+                        data: postData,
+                                              success: function (data) {
+                   var summaryTable = `
+                            <table id="summary-table" class="table table-bordered"
+                                   style="width: 100%; background-color: #fff; border-radius: 6px; overflow: hidden;
+                                          box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-collapse: collapse; margin-bottom: 20px;">
+                                <thead style="background-color: #f2f4f8;">
+                                    <tr>
+                                        <th rowspan="2" style="padding: 12px; font-weight: 600; font-size: 14px;
+                                                               border: 1px solid #ddd; text-align: center; vertical-align: middle;">
+                                            @T("Admin.Extension.MonthlyPerformance.Fields.TotalTask")
+                                        </th>
+                                        <th rowspan="2" style="padding: 12px; font-weight: 600; font-size: 14px;
+                                                               border: 1px solid #ddd; text-align: center; vertical-align: middle;">
+                                            @T("Admin.Extension.MonthlyPerformance.Fields.NumberOverDue")
+                                        </th>
+                                        <th colspan="3" style="padding: 12px; font-weight: 600; font-size: 14px;
+                                                               border: 1px solid #ddd; text-align: center;">
+                                            Over Estimation Percentange
+                                        </th>
+                                         <th rowspan="2" style="padding: 12px; font-weight: 600; font-size: 14px;
+                                                               border: 1px solid #ddd; text-align: center; vertical-align: middle;">
+                                            @T("Admin.Extension.MonthlyPerformance.Fields.AvgWorkQuality")
+                                        </th>
+                                        <th rowspan="2" style="padding: 12px; font-weight: 600; font-size: 14px;
+                                                               border: 1px solid #ddd; text-align: center; vertical-align: middle;">
+                                            @T("Admin.Extension.MonthlyPerformance.Fields.ResultPercentage")
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th style="padding: 8px; font-size: 13px; border: 1px solid #ddd; text-align: center; background-color: #f9f9f9;">
+                                             ${data.FirstOverDueThreshold}%
+                                        </th>
+                                        <th style="padding: 8px; font-size: 13px; border: 1px solid #ddd; text-align: center; background-color: #f9f9f9;">
+                                             ${data.SecondOverDueThreshold}%
+                                        </th>
+                                        <th style="padding: 8px; font-size: 13px; border: 1px solid #ddd; text-align: center; background-color: #f9f9f9;">
+                                             ${data.ThirdOverDueThreshold}%
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                            ${data.TotalTask}
+                                        </td>
+                                        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                            ${data.OverDueTask}
+                                        </td>
+                                        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                            ${data.FirstOverDueThresholdCount}
+                                        </td>
+                                        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                            ${data.SecondOverDueThresholdCount}
+                                        </td>
+                                        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                            ${data.ThirdOverDueThresholdCount}
+                                        </td>
+                                                 <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+            ${data.AvgWorkQuality != null ? data.AvgWorkQuality.toFixed(2) + '%' : '-'}
+        </td>
+
+        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+            ${data.ResultPercentage != null ? data.ResultPercentage.toFixed(2) + '%' : '-'}
+        </td>
+
+                                    </tr>
+                                </tbody>
+                            </table>`;
+
+
+            $('#summary-container').html(summaryTable);
+        }
+
+
+                    });
+                }
+            }
+
+            // Event listener for the "Run Report" button
+            $('#search-employeePerformance').click(function () {
+               
+                updatePerformanceReport();
+                updateSummary();
+                
+            });
+        });
+
+       
+    </script>
+
+
+
+   
+</section>
+
+
+<style>
+
+    .task-cell {
+        cursor: pointer;
+        padding: 5px; /* keeps spacing */
+        color: inherit; /* default text color */
+        text-decoration: none; /* no underline by default */
+    }
+
+        .task-cell:hover {
+            background-color: #f0f8ff; /* light highlight on hover */
+            color: #007bff; /* blue text on hover */
+            text-decoration: underline; /* underline on hover */
+        }
+
+    #summary-table {
+        width: 100%;
+        font-family: Arial, sans-serif;
+        border-collapse: collapse;
+        border: 2px solid #dcdcdc;
+      
+    }
+
+        #summary-table th, #summary-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        #summary-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        #summary-table td {
+            text-align: right; /* Right-align the numeric data */
+        }
+
+    .cards-group {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .card-default {
+        border: 1px solid #ccc;
+        padding: 20px;
+        border-radius: 5px;
+        background-color: #f9f9f961;
+    }
+
+    .card-body {
+        padding: 15px;
+    }
+
+    .row {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        width: 90%;
+    }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            height: 40px;
+            width: 30vw;
+            min-width: 200px;
+        }
+
+    .error-message {
+        color: red;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .btn-search {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+        .btn-search:hover {
+            background-color: #0056b3;
+        }
+
+    /* Row */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    /* Column */
+    .col-md-6 {
+        /* flex: 0 0 50%; */
+        max-width: 50%;
+        padding: 1px;
+    }
+
+    /* Button search */
+    .btn-search {
+        min-width: 105px;
+        border: 0;
+        background-color: #4ab2f1;
+        padding: 10px 24px;
+        text-align: center;
+        font-size: 15px;
+        color: #fff;
+        text-transform: uppercase;
+        margin: 1%;
+        border-radius: 0;
+        text-wrap: nowrap;
+    }
+
+        .btn-search:hover {
+            background-color: #248ece;
+        }
+
+    .hide-before {
+        display: none;
+    }
+
+        .hide-before table:not(:empty) {
+            display: block;
+        }
+</style>

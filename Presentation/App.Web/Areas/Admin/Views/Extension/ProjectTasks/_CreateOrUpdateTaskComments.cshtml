@@ -1,0 +1,227 @@
+@using App.Web.Areas.Admin.Models.Extension.ProjectTasks
+@using App.Web.Areas.Admin.Models.Extension.TaskComments
+@model ProjectTaskModel
+
+<div class="card-body">
+    <div class="form-group row" id="statusCommentGroup">
+        <div class="col-sm-3">
+            <nop-label asp-for="StatusChangeComment" />
+        </div>
+        <div class="col-sm-6">
+            <nop-textarea asp-for="StatusChangeComment" />
+            <span asp-validation-for="StatusChangeComment"></span>
+        </div>
+    </div>
+
+    @if (Model.Id > 0)
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "taskcomments-grid",
+                        UrlRead = new DataUrl("List", "TaskComments", new RouteValueDictionary { [nameof(Model.TaskCommentsSearchModel.SearchTaskId)] = Model.Id }),
+                        UrlDelete = new DataUrl("Delete", "TaskComments", new RouteValueDictionary { [nameof(Model.Id)] = Model.TaskCommentsModel.FirstOrDefault()?.Id }),
+                        Length = Model.TaskCommentsSearchModel.PageSize,
+                        LengthMenu = Model.TaskCommentsSearchModel.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskCommentsModel.TaskName))
+                    {
+                        Title = T("Admin.TaskCommentsModel.Fields.TaskName").Text,
+                        Width = "200"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskCommentsModel.EmployeeName))
+                    {
+                        Title = T("Admin.TaskCommentsModel.Fields.EmployeeName").Text,
+                        Width = "200"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskCommentsModel.Description))
+                    {
+                        Title = T("Admin.TaskCommentsModel.Fields.Description").Text,
+                        Width = "400"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskCommentsModel.CreatedOn))
+                    {
+                        Title = T("Admin.TaskCommentsModel.Fields.CreateOn").Text,
+                        Width = "150",
+                        Render = new RenderDate()
+                    });
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectTaskComments, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskCommentsModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                            ClassName = NopColumnClassDefaults.Button
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+            <script>
+                function renderColumnEdit(data, type, row, meta) {
+                    var projectId = @Model.Id;
+                    var url = '@Url.Action("Edit", "ProjectEmployeeMapping")' + '?projectId=' + projectId + '&id=' + data;
+                    return '<button onclick="javascript:OpenWindow(\'' + url + '&btnId=btnRefreshProjectEmp&formId=project-form\', 800, 800, true); return false;" class="btn btn-default"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit").Text</button>';
+                }
+
+                $(document).ready(function () {
+                    $(window).on('refreshGrid', function () {
+                        updateTable('#projectempmapping-grid');
+                        console.log("Grid refreshed");
+                    });
+                });
+            </script>
+
+        </div>
+    }
+    else
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @T("Admin.Catalog.Products.SpecificationAttributes.SaveBeforeEdit")
+            </div>
+        </div>
+    }
+</div>
+<script>
+    $(document).ready(function () {
+        const employees = @Html.Raw(Json.Serialize(Model.AvailableEmployees));
+        const $textarea = $('#StatusChangeComment');
+        const $mentionBox = $('<div class="mention-suggestions"></div>').insertAfter($textarea);
+
+        const atSymbol = String.fromCharCode(64);
+        let currentWord = '';
+        let selectedMentionIndex = -1;
+
+        function updateMentionSelection(items) {
+            items.removeClass('active');
+            if (selectedMentionIndex >= 0 && selectedMentionIndex < items.length) {
+                items.eq(selectedMentionIndex).addClass('active');
+                // Scroll the dropdown if the selected item is out of view
+                const item = items.eq(selectedMentionIndex);
+                const itemTop = item.position().top;
+                const itemHeight = item.outerHeight();
+                const boxHeight = $mentionBox.height();
+
+                // Scroll the dropdown to ensure the selected item is in view
+                if (itemTop < 0) {
+                    $mentionBox.scrollTop($mentionBox.scrollTop() + itemTop);
+                } else if (itemTop + itemHeight > boxHeight) {
+                    $mentionBox.scrollTop($mentionBox.scrollTop() + (itemTop + itemHeight - boxHeight));
+                }
+            }
+        }
+
+        function renderSuggestions(filtered, textBeforeCursor, caretPos) {
+            $mentionBox.empty();
+            selectedMentionIndex = 0; // Set the first item as selected by default
+
+            filtered.forEach(emp => {
+                const cleanName = emp.Text.trim().replace(/\s+/g, ' ');
+                $('<div class="mention-item"></div>')
+                    .text(cleanName)
+                    .data('value', cleanName)
+                    .on('click', function () {
+                        const value = $(this).data('value');
+                        const updatedText = textBeforeCursor.replace(new RegExp(atSymbol + "(\\w*)$"), atSymbol + '<' + value + '>') + $textarea.val().substring(caretPos);
+                        $textarea.val(updatedText);
+                        $mentionBox.hide();
+                        $textarea.focus();
+                    })
+                    .appendTo($mentionBox);
+            });
+
+            const items = $mentionBox.find('.mention-item');
+            updateMentionSelection(items);
+
+            const pos = $textarea.position();
+            $mentionBox.css({
+                top: pos.top + $textarea.outerHeight(),
+                left: pos.left,
+                width: $textarea.outerWidth(),
+                maxHeight: '200px',
+                overflowY: 'auto',
+                position: 'absolute',
+                zIndex: 1000 // ensure it's above other elements
+            }).show();
+
+        }
+
+
+        $textarea.on('keyup', function (e) {
+            const caretPos = this.selectionStart;
+            const textBeforeCursor = this.value.substring(0, caretPos);
+            const match = textBeforeCursor.match(new RegExp(atSymbol + "(\\w*)$"));
+
+            if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter") {
+                return; // Skip navigation keys here
+            }
+
+            if (match) {
+                currentWord = match[1].toLowerCase();
+                const filtered = employees.filter(emp => emp.Text.toLowerCase().includes(currentWord));
+                selectedMentionIndex = -1; // reset highlight
+
+                if (filtered.length > 0) {
+                    renderSuggestions(filtered, textBeforeCursor, caretPos);
+                } else {
+                    $mentionBox.hide();
+                }
+            } else {
+                $mentionBox.hide();
+            }
+        });
+
+        $textarea.on('keydown', function (e) {
+            if (!$mentionBox.is(':visible')) return;
+
+            const items = $mentionBox.find('.mention-item');
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedMentionIndex = (selectedMentionIndex + 1) % items.length;
+                updateMentionSelection(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedMentionIndex = (selectedMentionIndex - 1 + items.length) % items.length;
+                updateMentionSelection(items);
+            } else if (e.key === 'Enter' && selectedMentionIndex >= 0) {
+                e.preventDefault();
+                items.eq(selectedMentionIndex).click();
+            }
+        });
+
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.mention-suggestions, #StatusChangeComment').length) {
+                $mentionBox.hide();
+            }
+        });
+    });
+</script>
+<style>
+    .mention-suggestions {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        position: absolute;
+        z-index: 1000;
+        padding: 5px 0;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        font-size: 14px;
+    }
+
+    .mention-item {
+        padding: 6px 12px;
+        cursor: pointer;
+    }
+
+        .mention-item:hover,
+        .mention-item.active {
+            background-color: #007bff;
+            color: white;
+        }
+</style>

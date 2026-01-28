@@ -1,0 +1,18 @@
+﻿@using App.Web.Areas.Admin.Models.WeeklyReports;
+@model App.Web.Areas.Admin.Models.WeeklyReports.WeeklyReportModel
+@{
+    const string hideInfoBlockAttributeName = "WeeklyReportingDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="WeeklyReport-item-cards">
+                <nop-card asp-name="WeeklyReport-item-info" asp-icon="fas fa-info" asp-title="@T("Admin.WeeklyReport.Date")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/WeeklyReports/List.cshtml", Model)
+                </nop-card>
+            </nop-cards>
+        </div>
+    </div>
+</section>

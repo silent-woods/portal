@@ -1,0 +1,36 @@
+@using App.Web.Areas.Admin.Models.WeeklyReports;
+@model WeeklyReportModel
+@using Nop.Core.Domain.Catalog;
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.JobPosting.AddNew").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("WeeklyReporting");
+}
+<form id="weeklyreport" asp-controller="WeeklyReporting" asp-action="WeeklyreportCreate" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.WeeklyUpdate.AddNew")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.Configuration.JobPosting.BackToList")</a>
+            </small>
+        </h1>
+        <div class="float-right">
+            <button type="submit" name="save" id="submitFormBtn" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+           @* <button type="submit" id="submitFormBtn" name="save-continue" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.SaveContinue")
+            </button>*@
+        </div>
+    </div>
+
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Weeklyreports/_CreateOrUpdate.cshtml", Model)
+</form>
+ 
+
+
+

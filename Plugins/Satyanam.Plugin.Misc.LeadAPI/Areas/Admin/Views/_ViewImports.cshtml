@@ -1,0 +1,42 @@
+﻿@inherits App.Web.Framework.Mvc.Razor.NopRazorPage<TModel>
+
+@inject IGenericAttributeService genericAttributeService
+@inject INopHtmlHelper NopHtml
+@inject IPermissionService permissionService
+@inject IWorkContext workContext
+
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, App.Web.Framework
+
+@using System.Globalization;
+@using System.Net;
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
+@using Microsoft.AspNetCore.Routing
+@using Microsoft.Extensions.Primitives
+@using App.Core
+@using App.Core.Domain.Common
+@using App.Core.Domain.Security
+@using App.Core.Events
+@using App.Core.Infrastructure
+@using App.Services.Common
+@using App.Services.Security
+@using static App.Services.Common.NopLinksDefaults
+@* @using App.Web.Areas.Admin.Components *@
+@* @using App.Web.Components *@
+@* @using App.Web.Extensions *@
+@using App.Web.Framework
+@using App.Web.Framework.Events
+@using App.Web.Framework.Extensions
+@using App.Web.Framework.Infrastructure
+@using App.Web.Framework.Menu
+@using App.Web.Framework.Models
+@using App.Web.Framework.Models.DataTables
+@using App.Web.Framework.Mvc.Routing
+@using App.Web.Framework.Security.Captcha
+@using App.Web.Framework.Security.Honeypot
+@using App.Web.Framework.Themes
+@using App.Web.Framework.UI
+@using Satyanam.Plugin.Misc.LeadAPI.Areas.Admin.Models.Configuration
+@using Satyanam.Plugin.Misc.LeadAPI.Areas.Admin.Models.LeadAPILog
+@using Satyanam.Plugin.Misc.LeadAPI.Services

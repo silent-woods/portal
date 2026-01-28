@@ -1,0 +1,138 @@
+﻿@model MonthlyReportSettingsModel
+
+<div class="card-body">
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="OverDue_From_OverrideForStore" asp-input="OverDue_From" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="OverDue_From" />
+        </div>
+        <div class="col-md-4">
+            <input asp-for="OverDue_From" id="OverDue_From" type="time" class="form-control" />
+            <span asp-validation-for="OverDue_From"></span>
+        </div>
+    </div>
+
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="OverDue_To_OverrideForStore" asp-input="OverDue_To" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="OverDue_To" />
+        </div>
+        <div class="col-md-4">
+            <input asp-for="OverDue_To" id="OverDue_To" type="time" class="form-control" />
+            <span asp-validation-for="OverDue_To"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendOverdueEmailToEmployee_OverrideForStore" asp-input="SendOverdueEmailToEmployee" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendOverdueEmailToEmployee" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendOverdueEmailToEmployee" />
+            <span asp-validation-for="SendOverdueEmailToEmployee"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendOverdueReportToProjectLeader_OverrideForStore" asp-input="SendOverdueReportToProjectLeader" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendOverdueReportToProjectLeader" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendOverdueReportToProjectLeader" />
+            <span asp-validation-for="SendOverdueReportToProjectLeader"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendOverdueReportToManager_OverrideForStore" asp-input="SendOverdueReportToManager" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendOverdueReportToManager" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendOverdueReportToManager" />
+            <span asp-validation-for="SendOverdueReportToManager"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendOverdueReportToHR_OverrideForStore" asp-input="SendOverdueReportToHR" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendOverdueReportToHR" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendOverdueReportToHR" />
+            <span asp-validation-for="SendOverdueReportToHR"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="OverdueCountCCThreshold_OverrideForStore" asp-input="OverdueCountCCThreshold" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="OverdueCountCCThreshold" />
+        </div>
+        <div class="col-md-4">
+            <input asp-for="OverdueCountCCThreshold" type="number" class="form-control" />
+            <span asp-validation-for="OverdueCountCCThreshold"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="IncludeProjectLeadersInCC_OverrideForStore" asp-input="IncludeProjectLeadersInCC" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="IncludeProjectLeadersInCC" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="IncludeProjectLeadersInCC" />
+            <span asp-validation-for="IncludeProjectLeadersInCC"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="IncludeProjectManagerInCC_OverrideForStore" asp-input="IncludeProjectManagerInCC" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="IncludeProjectManagerInCC" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="IncludeProjectManagerInCC" />
+            <span asp-validation-for="IncludeProjectManagerInCC"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="IncludeManagementInCC_OverrideForStore" asp-input="IncludeManagementInCC" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="IncludeManagementInCC" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="IncludeManagementInCC" />
+            <span asp-validation-for="IncludeManagementInCC"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="IncludeHRInCC_OverrideForStore" asp-input="IncludeHRInCC" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="IncludeHRInCC" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="IncludeHRInCC" />
+            <span asp-validation-for="IncludeHRInCC"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="IncludeProjectCoordinatorInCC_OverrideForStore" asp-input="IncludeProjectCoordinatorInCC" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="IncludeProjectCoordinatorInCC" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="IncludeProjectCoordinatorInCC" />
+            <span asp-validation-for="IncludeProjectCoordinatorInCC"></span>
+        </div>
+    </div>
+    
+</div>

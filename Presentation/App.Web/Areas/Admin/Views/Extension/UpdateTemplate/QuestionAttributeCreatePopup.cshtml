@@ -1,0 +1,53 @@
+@using App.Web.Areas.Admin.Models.Extension.UpdateTemplateQuestion
+@model UpdateQuestionOptionModel
+@{
+    Layout = "_AdminPopupLayout";
+
+    //page title
+    ViewBag.PageTitle = T("Admin.UpdateQuestionOptionModel.AttributeCombinations.AddTitle").Text;
+}
+
+@if (ViewBag.RefreshPage == true)
+{
+    <script>
+        try {
+            var btn = window.opener.document.getElementById('@ViewBag.BtnId');
+            if (btn) {
+                btn.click();
+            } else {
+                console.log("Could not find button with ID: @ViewBag.BtnId");
+            }
+        } catch (e) {
+            console.log("Error refreshing parent:", e);
+        }
+        window.close();
+    </script>
+}
+
+
+<form asp-controller="UpdateTemplate" asp-action="UpdateQuestionAttributeCreatePopup"
+      asp-route-updateTemplateQuestionId="@Model.UpdateTemplateQuestionId"
+      asp-route-btnId="@Context.Request.Query["btnId"]"
+      asp-route-formId="@Context.Request.Query["formId"]"
+      asp-route-controlType="@Context.Request.Query["controlType"]">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="UpdateTemplateQuestionId" />
+    <input type="hidden" name="formId" value="@Context.Request.Query["formId"]" />
+    <input type="hidden" name="btnId" value="@Context.Request.Query["btnId"]" />
+    <input type="hidden" name="controlType" value="@Context.Request.Query["controlType"]" />
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.UpdateQuestionOptionModel.AttributeCombinations.AddTitle")
+        </h1>
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionOptionTemplate, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/UpdateTemplate/_CreateOrUpdateQuestionOptionAttributeValue.cshtml", Model)
+</form>

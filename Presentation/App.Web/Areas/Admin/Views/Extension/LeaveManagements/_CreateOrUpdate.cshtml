@@ -1,0 +1,18 @@
+﻿@model LeaveManagementModel
+@{
+    const string hideInfoBlockAttributeName = "LeaveManagementDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+<input asp-for="Id" type="hidden" />
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="leavemanagement-item-cards">
+                <nop-card asp-name="leavemanagement-item-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.LeaveManagement.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/LeaveManagements/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+            </nop-cards>
+        </div>
+    </div>
+</section>

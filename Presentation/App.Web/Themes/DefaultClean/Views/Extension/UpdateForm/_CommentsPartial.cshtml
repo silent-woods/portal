@@ -1,0 +1,173 @@
+@using App.Web.Models.Extensions.UpdateForm
+@model List<UpdateSubmissionCommentModel>
+
+@{
+    // ? Only allow adding a single comment at the bottom
+    bool canReply = ViewData["CanReply"] != null && (bool)ViewData["CanReply"];
+    var submissionId = ViewData["SubmissionId"] != null
+        ? (int)ViewData["SubmissionId"]
+        : 0;
+}
+
+<style>
+    /* ===== Comments Styling (NopCommerce-friendly) ===== */
+    .comment-item {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 4px;
+        margin-bottom: 8px;
+    }
+
+    .commenter-name {
+        font-weight: bold;
+        font-size: 1rem;
+    }
+
+    .comment-date {
+        color: #888;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .comment-text {
+        font-size: 0.95rem;
+        line-height: 1.4;
+        margin-bottom: 8px;
+    }
+
+    .nested-replies {
+        border-left: 2px solid #ddd;
+        padding-left: 15px;
+        margin-top: 10px;
+    }
+
+    .reply-box {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        align-items: center;
+    }
+
+    .reply-input {
+        flex: 1;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+
+    .btn-reply {
+        background: #4CAF50;
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+        .btn-reply:hover {
+            background: #45a049;
+        }
+</style>
+
+@functions {
+    void RenderComment(UpdateSubmissionCommentModel c)
+    {
+        <div class="comment-item" data-comment-id="@c.Id">
+            <!-- Comment Header -->
+            <div class="comment-header">
+                <span class="commenter-name">@c.CommentedByName</span>
+                <span class="comment-date">@c.CreatedOnUtc.ToLocalTime().ToString("M/d/yyyy h:mm tt")</span>
+            </div>
+
+            <!-- Comment Text -->
+            <div class="comment-text">
+                @Html.Raw(Html.Encode(c.CommentText).Replace("\n", "<br/>"))
+            </div>
+
+            <!-- Nested Replies -->
+            @if (c.Replies != null && c.Replies.Any())
+            {
+                <div class="nested-replies">
+                    @foreach (var r in c.Replies)
+                    {
+                        RenderComment(r);
+                    }
+                </div>
+            }
+        </div>
+    }
+}
+
+<!-- Comments List -->
+<div class="comments-list">
+    @if (Model == null || !Model.Any())
+    {
+        <div class="text-muted">No comments yet.</div>
+    }
+    else
+    {
+        @foreach (var cm in Model)
+        {
+            RenderComment(cm);
+        }
+    }
+</div>
+
+<!-- Add Comment Box (only for submitter) -->
+@if (canReply)
+{
+    <div class="reply-box">
+        <!-- Hidden field to hold submission ID -->
+        <input type="hidden" id="updateSubmissionId" value="@submissionId" />
+
+        <input type="text"
+               id="single-reply-text"
+               class="reply-input"
+               placeholder="Write your comment..." />
+
+        <button id="submit-single-reply-btn"
+                class="btn-reply"
+                data-parent-id="">
+            Reply Comment
+        </button>
+    </div>
+}
+
+<script>
+    $(document).on('click', '#submit-single-reply-btn', function () {
+        var text = $('#single-reply-text').val().trim();
+        var submissionId = $('#updateSubmissionId').val();
+        var parentId = $(this).data('parent-id') || null;
+
+        if (!text) {
+            alert('Please write a comment before submitting.');
+            return;
+        }
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.post('/UpdateSubmission/AddComment', {
+            __RequestVerificationToken: token,
+            UpdateSubmissionId: submissionId, // ? match property name in model
+            ParentCommentId: parentId,
+            CommentText: text
+        })
+        .done(function () {
+            location.reload();
+        })
+        .fail(function () {
+            alert('Failed to post comment.');
+        });
+    });
+</script>
+

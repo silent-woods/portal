@@ -1,0 +1,112 @@
+﻿@model ProjectEmployeeMappingModel
+
+@if (ViewBag.RefreshPage == true)
+{
+    <script>
+        try {
+            // Trigger the custom event in the parent page
+            var event = new Event('refreshGrid');
+            window.opener.dispatchEvent(event);
+            window.close();
+        }
+        catch (e) {
+            console.log("Error triggering event: " + e.message);
+        }
+    </script>
+}
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-popup">
+                    <div class="card-body">
+                        <input asp-for="Id" type="hidden" />
+                        <input asp-for="CreateOn" type="hidden" />
+                        <input asp-for="ProjectId" type="hidden" />
+
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="SelectedEmployeeId" />
+                            </div>
+                            <div class="col-md-4">
+                                <div style="position: relative;">
+                                    <nop-select asp-for="SelectedEmployeeId" asp-items="Model.AvailableEmployees" asp-multiple="true" class="form-control" />
+                                    <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                                </div>
+                                <script>
+                                    $(document).ready(function () {
+                                        var selectElement = $('#@Html.IdFor(model => model.SelectedEmployeeId)').data("kendoMultiSelect");
+
+                                        selectElement.setOptions({
+                                            autoClose: true,
+                                            filter: "contains",
+                                            change: function (e) {
+
+                                                if (this.value().length > 1) {
+                                                    var lastItem = this.value()[this.value().length - 1];
+                                                    this.value([lastItem]);
+                                                }
+
+                                                var selectedEmployeeId = this.value()[0]; 
+                                                if (selectedEmployeeId) {
+                                                    fetchEmployeeDesignation(selectedEmployeeId);
+                                                }
+                                            }
+                                        });
+
+                                    @if (Model.AvailableEmployees.Count == 0)
+                                    {
+                                        <text>
+                                                selectElement.setOptions({
+                                                    enable: false,
+                                                    placeholder: '@T("Admin.Catalog.Employee.NoEmployee")'
+                                                });
+                                            selectElement._placeholder();
+                                            selectElement._enable();
+                                        </text>
+                                    }
+                                          });
+
+                                    function fetchEmployeeDesignation(employeeId) {
+                                        $.ajax({
+                                            url: '@Url.Action("GetEmployeeDesignation", "ProjectEmployeeMapping")',
+                                            type: 'GET',
+                                            data: { employeeId: employeeId },
+                                            success: function (response) {
+
+                                                var roleDropdown = $('#RoleId');
+                                                    roleDropdown.val(response.roleId);
+                                                    roleDropdown.change();
+                                            },
+                                            error: function (xhr, status, error) {
+                                                console.error("Error fetching employee designation: ", error);
+                                            }
+                                        });
+                                    }
+                                </script>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="Role" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-select asp-for="RoleId" asp-items="Model.Roles" asp-required="true" />
+                                <span asp-validation-for="RoleId"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="IsActive" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-editor asp-for="IsActive" />
+                                <span asp-validation-for="IsActive"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

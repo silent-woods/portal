@@ -1,0 +1,88 @@
+﻿@model AccountGroupSearchModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountGroup.List").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountGroups");
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountGroup.List")
+    </h1>
+    @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageAccountGroups, PermissionAction.Add))
+    {
+        <div class="float-right">
+            <a asp-action="AccountGroupCreate" asp-controller="AccountManagement" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </a>
+        </div>
+    }
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "account-groups-grid",
+                                UrlRead = new DataUrl("AccountGroups", "AccountManagement", null),
+                                UrlDelete = new DataUrl("AccountGroupDelete", "AccountManagement", null),
+                                SearchButtonId = "search-account-groups",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                },
+                            };
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountGroupModel.Name))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountGroup.Fields.Name").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountGroupModel.AccountCategory))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountGroup.Fields.AccountCategory").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountGroupModel.IsActive))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountGroup.Fields.IsActive").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountGroupModel.DisplayOrder))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountGroup.Fields.DisplayOrder").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll
+                            });
+                            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageAccountGroups, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountGroupModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "100",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonEdit(new DataUrl("~/Admin/AccountManagement/AccountGroupEdit/"))
+                                });
+                            }
+                            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageAccountGroups, PermissionAction.Delete))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountGroupModel.Id))
+                                {
+                                    Title = T("Admin.Common.Delete").Text,
+                                    Width = "100",
+                                    Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                                    ClassName = NopColumnClassDefaults.Button
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

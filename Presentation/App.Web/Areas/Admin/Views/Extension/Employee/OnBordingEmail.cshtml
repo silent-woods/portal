@@ -1,0 +1,53 @@
+﻿@model EmployeeModel
+
+@{
+    Layout = "_AdminPopupLayout";
+}
+
+@if (ViewBag.RefreshPage == true)
+{
+    <script>
+        try { window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click(); }
+        catch (e) { }
+        window.close();
+    </script>
+}
+else
+{
+    <form asp-controller="Employee" asp-action="SendOnBordingEmail" method="post"
+          asp-route-btnId="@Context.Request.Query["btnId"]"
+          asp-route-formId="@Context.Request.Query["formId"]">
+        <input type="hidden" asp-for="Id" value="@Model.Id" />
+        <div class="content-header clearfix">
+            <h1 class="float-left">
+                @T("Admin.Catalog.Employee.SendEmail")
+            </h1>
+            <div class="float-right">
+                <button type="submit" id="btnRefreshDesignati" name="save" class="btn btn-primary">
+                    <i class="far fa-envelope"></i>
+                    @T("Admin.Customers.Customers.SendEmail")
+                </button>
+            </div>
+        </div>
+  
+        <div class="content">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-popup">
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <div class="col-sm-2">
+                                    <nop-label asp-for="OnBordingEmail" />
+                                </div>
+                                <div class="col-sm-10">
+                                    <nop-editor asp-for="OnBordingEmail" asp-template="RichEditor" />
+                                    <span asp-validation-for="OnBordingEmail"></span>
+                                </div>
+                            </div>
+                        </div>
+                     </div>
+                 </div>
+            </div>
+        </div>
+    </form>
+}

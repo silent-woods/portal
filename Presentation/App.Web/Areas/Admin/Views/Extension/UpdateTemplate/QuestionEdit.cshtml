@@ -1,0 +1,39 @@
+@using App.Web.Areas.Admin.Models.Extension.UpdateTemplateQuestion
+@model UpdateTemplateQuestionModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.UpdateTemplateQuestion.EditUpdateTemplateQuestionDetails").Text;
+     //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("UpdateTemplateQuestion");
+}
+ 
+
+<form asp-controller="UpdateTemplate" asp-action="QuestionEdit" method="post">
+    <input type="hidden" asp-for="UpdateTemplateId"/>
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.UpdateTemplateQuestion.EditUpdateTemplateQuestionDetails") @* - @Model.Name *@
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-controller="UpdateTemplate" asp-action="Edit" asp-route-id="@Model.UpdateTemplateId">@T("Admin.UpdateTemplateQuestion.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionTemplate, PermissionAction.Edit))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/UpdateTemplate/_QuestionCreateOrUpdate.cshtml", Model)
+</form>

@@ -1,0 +1,260 @@
+@using App.Web.Areas.Admin.Models.Extension.TimesheetReports
+
+@model TimesheetReportSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.ActivityLogReport").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("ActivityLogReport");
+
+    const string hideSearchBlockAttributeName = "TimeSheet.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.ActivityLogReport")
+    </h1>
+   
+
+</div>
+<form asp-controller="Reports" asp-action="ActivityLogReport" method="post">
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-6">
+
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SelectedEmployeeIds" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SelectedEmployeeIds" asp-items="Model.AvailableEmployees" asp-multiple="true" />
+                                            <script>
+                                                $(document).ready(function () {
+                                                    var rolesIdsInput =
+                                                        $('#@Html.IdFor(model => model.SelectedEmployeeIds)')
+                                                            .data("kendoMultiSelect");
+                                                    rolesIdsInput.setOptions({
+                                                        autoClose: true,
+                                                        filter: "contains"
+                                                    });
+
+                                                @if (Model.AvailableEmployees.Count == 0)
+                                                {
+                                                    <text>
+                                                            rolesIdsInput.setOptions({
+                                                                enable: false,
+                                                                placeholder:
+                                                                    '@T("Admin.Catalog.Products.CustomerRoles.NoCustomerRolesAvailable")'
+                                                            });
+                                                        rolesIdsInput._placeholder();
+                                                        rolesIdsInput._enable();
+                                                    </text>
+                                                }
+                                                                                            });
+                                            </script>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SelectedProjectIds" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SelectedProjectIds" asp-items="Model.AvailableProjects" asp-multiple="true" />
+                                            <script>
+                                                $(document).ready(function () {
+                                                    var rolesIdsInput =
+                                                        $('#@Html.IdFor(model => model.SelectedProjectIds)')
+                                                            .data("kendoMultiSelect");
+                                                    rolesIdsInput.setOptions({
+                                                        autoClose: true,
+                                                        filter: "contains"
+                                                    });
+
+                                                @if (Model.AvailableProjects.Count == 0)
+                                                {
+                                                    <text>
+                                                            rolesIdsInput.setOptions({
+                                                                enable: false,
+                                                                placeholder:
+                                                                    '@T("Admin.Catalog.Products.CustomerRoles.NoCustomerRolesAvailable")'
+                                                            });
+                                                        rolesIdsInput._placeholder();
+                                                        rolesIdsInput._enable();
+                                                    </text>
+                                                }
+                                                                                                                                            });
+                                            </script>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="TaskName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="TaskName" />
+                                        </div>
+                                    </div>
+                                    </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="From" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="From" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="To" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="To" />
+                                        </div>
+                                    </div>
+
+                                        <div class="form-group row">
+                                            <div class="col-md-4">
+                                                <nop-label asp-for="ActivityName" />
+                                            </div>
+                                            <div class="col-md-8">
+                                                <nop-editor asp-for="ActivityName" />
+                                            </div>
+                                        </div>
+                                       @*  <div class="form-group row">
+                                            <div class="col-md-4">
+                                                <nop-label asp-for="BillableType" />
+                                            </div>
+                                            <div class="col-md-8">
+                                                <nop-select asp-for="BillableType" asp-items="Model.AvailableBillableType" />
+                                            </div>
+                                        </div> *@
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-brands" class="btn btn-primary
+                                         btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-body">
+
+                        @await Html.PartialAsync("Table", new DataTablesModel
+                        {
+                        Name = "timeSheet-grid",
+                           UrlRead = new DataUrl("ActivityLogReport", "Reports", null),
+                        SearchButtonId = "search-brands",
+                        Length = Model.PageSize,
+                        LengthMenu = Model.AvailablePageSizes,
+                        Filters = new List<FilterParameter>
+                        {
+                            new FilterParameter(nameof(Model.SelectedEmployeeIds)),
+                            new FilterParameter(nameof(Model.SelectedProjectIds)),
+                        new FilterParameter(nameof(Model.To)),
+                        new FilterParameter(nameof(Model.From)),
+                        new FilterParameter(nameof(Model.TaskName)),
+                            new FilterParameter(nameof(Model.ActivityName)),
+
+                        new FilterParameter(nameof(Model.BillableType))
+                        },
+                        ColumnCollection = new List<ColumnProperty>
+                        {
+                            new ColumnProperty(nameof(TimesheetReportModel.SpentDateFormat))
+                            {
+                            Title = T("Admin.TimeSheet.Fields.SpentDate").Text
+                            },
+                            new ColumnProperty(nameof(TimesheetReportModel.Time))
+                            {
+                            Title = T("Admin.TimeSheet.Fields.Time").Text
+                            },
+                     
+                            new ColumnProperty(nameof(TimesheetReportModel.EmployeeName))
+                        {
+                        Title = T("Admin.TimeSheet.Fields.EmployeeName").Text
+                        },
+                            new ColumnProperty(nameof(TimesheetReportModel.ProjectName))
+                        {
+                        Title = T("Admin.TimeSheet.Fields.ProjectName").Text
+                        },
+                            new ColumnProperty(nameof(TimesheetReportModel.TaskName))
+                        {
+                        Title = T("Admin.TimeSheet.Fields.Task").Text
+                        },
+                            new ColumnProperty(nameof(TimesheetReportModel.ActivityName))
+                            {
+                            Title = T("Admin.TimeSheet.Fields.ActivityName").Text,
+                           
+                            },
+                        
+                            new ColumnProperty(nameof(TimesheetReportModel.SpentTimeFormat))
+                        {
+                            Title = T("Admin.TimeSheet.Fields.SpentTime").Text
+                        },
+                            new ColumnProperty(nameof(TimesheetReportModel.KeyboardHits))
+                            {
+                            Title = T("Admin.TimeSheet.Fields.KeyboardHits").Text
+                            },
+                            new ColumnProperty(nameof(TimesheetReportModel.MouseHits))
+                            {
+                            Title = T("Admin.TimeSheet.Fields.MouseHits").Text
+                            },
+                            new ColumnProperty(nameof(TimesheetReportModel.Id))
+                            {
+                            Title = T("Admin.Common.Screenshot").Text,
+                            Width = "80",
+                            ClassName =  NopColumnClassDefaults.Button,
+                            Render = new RenderCustom("renderViewScreenshots")
+                            }
+                        //     new ColumnProperty(nameof(TimesheetReportModel.bil))
+                        // {
+                        // Title = T("Admin.TimeSheet.Fields.Billable").Text,
+                        // Width = "70",
+                        // ClassName = NopColumnClassDefaults.CenterAll,
+                        // Render = new RenderBoolean()
+                        // },
+                            // new ColumnProperty(nameof(TimesheetReportModel.IsManualEntry))
+                            // {
+                            // Title = T("Admin.TimeSheet.Fields.IsManualEntry").Text,
+                            // Width = "70",
+                            // ClassName = NopColumnClassDefaults.CenterAll,
+                            // Render = new RenderBoolean()
+                            // },
+                       
+                       
+                        }
+                        })
+                    </div>
+                        <script>
+                            function renderViewScreenshots(data, type, row, meta) {
+                                return '<button onclick=\"javascript:OpenWindow(\'@Url.Content("~/Admin/Reports/ViewScreenshots/")' + row.Id + '?btnId=btnRefreshActivityLogReport&formId=ActivityLogReport-form\', 970,600, true); return false;\" class="btn btn-default"><i class="fas fa-eye"></i>@T("Admin.Common.ViewScreenshots").Text</button>';
+                            }
+                        </script>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+
+</section>
+</form>

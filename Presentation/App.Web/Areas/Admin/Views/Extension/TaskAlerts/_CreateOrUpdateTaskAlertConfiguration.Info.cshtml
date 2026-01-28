@@ -1,0 +1,143 @@
+﻿@model TaskAlertConfigurationModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="TaskAlertTypeId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="TaskAlertTypeId" asp-items="Model.AvailableTaskAlertTypes" />
+            <span asp-validation-for="TaskAlertTypeId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Message" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Message" asp-required="true" />
+            <span asp-validation-for="Message"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Percentage" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Percentage" />
+            <span asp-validation-for="Percentage"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EnableComment" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="EnableComment" />
+            <span asp-validation-for="EnableComment"></span>
+        </div>
+    </div>
+    <nop-nested-setting asp-for="EnableComment">
+        <div class="form-group row">
+            <div class="col-md-3">
+                <nop-label asp-for="CommentRequired" />
+            </div>
+            <div class="col-md-9">
+                <nop-editor asp-for="CommentRequired" />
+                <span asp-validation-for="CommentRequired"></span>
+            </div>
+        </div>
+    </nop-nested-setting>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EnableReason" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="EnableReason" />
+            <span asp-validation-for="EnableReason"></span>
+        </div>
+    </div>
+    <nop-nested-setting asp-for="EnableReason">
+        <div class="form-group row">
+            <div class="col-md-3">
+                <nop-label asp-for="ReasonRequired" />
+            </div>
+            <div class="col-md-9">
+                <nop-editor asp-for="ReasonRequired" />
+                <span asp-validation-for="ReasonRequired"></span>
+            </div>
+        </div>
+    </nop-nested-setting>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EnableDeveloperMail" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="EnableDeveloperMail" />
+            <span asp-validation-for="EnableDeveloperMail"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EnableCoordinatorMail" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="EnableCoordinatorMail" />
+            <span asp-validation-for="EnableCoordinatorMail"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EnableLeaderMail" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="EnableLeaderMail" />
+            <span asp-validation-for="EnableLeaderMail"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EnableManagerMail" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="EnableManagerMail" />
+            <span asp-validation-for="EnableManagerMail"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="NewETA" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="NewETA" />
+            <span asp-validation-for="NewETA"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EnableOnTrack" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="EnableOnTrack" />
+            <span asp-validation-for="EnableOnTrack"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsActive" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="IsActive" />
+            <span asp-validation-for="IsActive"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="DisplayOrder" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="DisplayOrder" />
+            <span asp-validation-for="DisplayOrder"></span>
+        </div>
+    </div>
+</div>

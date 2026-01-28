@@ -1,0 +1,412 @@
+﻿@using App.Web.Areas.Admin.Models.ManageResumes;
+@model CandiatesResumesModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.InterviewPage").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("InterviewPage");
+
+    const string hideSearchBlockAttributeName = "CandiatesResumes.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.InterviewPage")
+    </h1>
+
+</div>
+<style>
+    .center-table {
+        width: 100%;
+        text-align: center;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+        .center-table th,
+        .center-table td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            /*text-align: left;*/
+        }
+
+        .center-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .center-table td input[type="text"] {
+            width: 50px; /* Adjust the width as needed */
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Label styles */
+        .center-table label {
+            font-weight: bold;
+        }
+
+
+        .center-table td {
+            border: 1px solid #dee2e6;
+            padding: 5px;
+            text-align: center; /* Center content within cells */
+            vertical-align: middle !important;
+        }
+
+    .answer-input {
+        width: 50px;
+        margin: 4px;
+        padding: 4px;
+    }
+
+    .Communication {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+        .Communication span {
+            margin-right: 10px; 
+        }
+
+        .Communication input[type="radio"] {
+            margin-right: 5px; 
+        }
+
+        .Communication label.forcheckbox {
+            display: inline-block;
+            vertical-align: middle;
+            margin-bottom: 5px; 
+        }
+
+    .ConfidentLevel {
+        display: flex;
+        flex-wrap: wrap;
+        margin-left:8px;
+    }
+
+        .ConfidentLevel span {
+            margin-right: 10px; 
+        }
+
+        .ConfidentLevel input[type="radio"] {
+            margin-right: 5px; 
+        }
+
+        .ConfidentLevel label.forcheckbox {
+            display: inline-block;
+            vertical-align: middle;
+            margin-bottom: 5px; 
+        }
+
+</style>
+
+<form asp-controller="CandiatesResumes" asp-action="ResultCreate" id="marksForm">
+    <input asp-for="Id" type="hidden" />
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-popup">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <nop-label asp-for="CandidateName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="CandidateName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="form-group row">
+                                            <div class="col-md-5">
+                                                <nop-label asp-for="Interviewer" />
+                                            </div>
+                                            <div class="col-md-7">
+                                                <nop-select asp-for="SelectedInterviewer" asp-items="Model.Employee" asp-multiple="true" />
+                                                <script>
+                                                    $(document).ready(function () {
+                                                        var InterviewerIdsInput =
+                                                            $('#@Html.IdFor(model => model.SelectedInterviewer)')
+                                                                .data("kendoMultiSelect");
+                                                        InterviewerIdsInput.setOptions({
+                                                            autoClose: false,
+                                                            filter: "contains"
+                                                        });
+
+                                                    @if (Model.Employee.Count == 0)
+                                                    {
+                                                        <text>
+                                                                InterviewerIdsInput.setOptions({
+                                                                    enable: false,
+                                                                    placeholder:
+                                                                        '@T("Admin.JobPosting.Fields.InterviewerId")'
+                                                                });
+                                                            InterviewerIdsInput._placeholder();
+                                                            InterviewerIdsInput._enable();
+                                                        </text>
+                                                    }
+                                                                                                                                                                                                                                                                 });
+                                                </script>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+
+                            <table class="center-table">
+                                <tr>
+                                    <th><lable>Questions</lable></th>
+                                    <th><lable>Marks</lable></th>
+                                </tr>
+                                @for (int i = 0; i < Model.Addresses.Count; i++)
+                                {
+                                    <tr>
+                                        <input type="hidden" asp-for="@Model.Addresses[i].Id" />
+
+                                        <td>
+                                            @Model.Addresses[i].Category <br>
+                                            @Model.Addresses[i].Question
+                                        </td>
+
+                                        <td> <input type="text" asp-for="marks" id="marks" class="answer-input" /></td>
+
+                                    </tr>
+                                }
+                            </table>
+
+                        </div>
+
+                        <input type="hidden" asp-for="Incorrect" id="IncorrectInput" />
+                        <input type="hidden" asp-for="partially" id="PartialyInput" />
+                        <input type="hidden" asp-for="correct" id="CorrectInput" />
+                        <input type="hidden" id="marks" name="marks" />
+
+                        <script>
+                            $(document).ready(function () {
+                                $('#submit').on('click', function () {
+                                    var marksData = [];
+                                    $(".center-table input.answer-input").each(function () {
+                                        var markValue = $(this).val();
+                                        marksData.push(markValue);
+                                    });
+                                    $('#marks').val(JSON.stringify(marksData));
+                                });
+                            });
+                        </script>
+
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-9">
+                                    <div class="form-group row">
+                                        <div class="col-sm-3">
+                                            <nop-label asp-for="ResultStatusId" />
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <nop-select asp-for="ResultStatusId" asp-items="Model.AvailableResultStatus" asp-required="true" />
+                                            <span asp-validation-for="ResultStatusId"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <nop-label asp-for="Feedback" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <nop-textarea asp-for="Feedback" asp-required="true" />
+                                            <span asp-validation-for="Feedback"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        @* <div class="inputs">*@
+                                        <div class="col-md-3">
+                                            <nop-label asp-for="Communication" />
+                                        </div>
+                                        <div class="col-md-8" style="margin:10px">
+                                            <div class="Communication">
+                                                <span class="Verypoor">
+                                                    <input type="radio" asp-for="Communication" value="Verypoor" checked="checked" id="Verypoor" />
+                                                    <label class="forcheckbox" for="very-poor">@T("Candiadte.Fields.Communication.Verypoor")</label>
+                                                </span>
+                                                <span class="poor">
+                                                    <input type="radio" asp-for="Communication" value="poor" checked="@(Model.Communication == "poor")" id="poor" />
+                                                    <label class="forcheckbox" for="poor">@T("Candiadte.Communication.Fields.poor")</label>
+                                                </span>
+                                                <span class="average">
+                                                    <input type="radio" asp-for="Communication" value="average" checked="@(Model.Communication == "average")" id="average" />
+                                                    <label class="forcheckbox" for="average">@T("Candiadte.Communication.Fields.average")</label>
+                                                </span>
+                                                <span class="good">
+                                                    <input type="radio" asp-for="Communication" value="good" checked="@(Model.Communication == "good")" id="good" />
+                                                    <label class="forcheckbox" for="good">@T("Candiadte.Communication.Fields.good")</label>
+                                                </span>
+                                                <span class="verygood">
+                                                    <input type="radio" asp-for="Communication" value="verygood" checked="@(Model.Communication == "verygood")" id="verygood" />
+                                                    <label class="forcheckbox" for="verygood">@T("Candiadte.Communication.Fields.verygood")</label>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @* </div>*@
+
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <nop-label asp-for="ConfidentLevel" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="ConfidentLevel">
+                                                <span class="Verypoor">
+                                                    <input type="radio" asp-for="ConfidentLevel" value="Verypoor" checked="checked" id="Verypoor" />
+                                                    <label class="forcheckbox" for="very-poor">@T("Candiadte.Fields.Communication.Verypoor")</label>
+                                                </span>
+                                                <span class="poor">
+                                                    <input type="radio" asp-for="ConfidentLevel" value="poor" checked="@(Model.ConfidentLevel == "poor")" id="poor" />
+                                                    <label class="forcheckbox" for="poor">@T("Candiadte.Communication.Fields.poor")</label>
+                                                </span>
+                                                <span class="average">
+                                                    <input type="radio" asp-for="ConfidentLevel" value="average" checked="@(Model.ConfidentLevel == "average")" id="average" />
+                                                    <label class="forcheckbox" for="average">@T("Candiadte.Communication.Fields.average")</label>
+                                                </span>
+                                                <span class="good">
+                                                    <input type="radio" asp-for="ConfidentLevel" value="good" checked="@(Model.ConfidentLevel == "good")" id="good"/>
+                                                    <label class="forcheckbox" for="good">@T("Candiadte.Communication.Fields.good")</label>
+                                                </span>
+                                                <span class="verygood">
+                                                    <input type="radio" asp-for="ConfidentLevel" value="verygood" checked="@(Model.ConfidentLevel == "verygood")" id="verygood" />
+                                                    <label class="forcheckbox" for="verygood">@T("Candiadte.Communication.Fields.verygood")</label>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <div class="col-md-3" style="margin:auto">
+                                            <button type="submit" name="save" class="btn btn-primary" id="submit">
+                                                @*<i class="far fa-submit"></i>*@
+                                                @T("Admin.Common.Submit")
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="Sumarry">
+                                        <label>@T("Result summary"):</label>
+                                        <div class="result-item" id="Incorrect"></div>
+                                        <div class="result-item" id="Partially"></div>
+                                        <div class="result-item" id="Correct"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        $(document).ready(function () {
+            var numTextboxes = $('.answer-input').length; // Total number of textboxes
+            var filledTextboxes = 0; // Counter for filled textboxes
+
+            // Function to update filled textboxes count and trigger calculation if all filled
+            function updateAndCalculate() {
+                filledTextboxes = 0;
+                // Loop through all textboxes to count filled ones
+                $('.answer-input').each(function () {
+                    if ($(this).val().trim() !== '' && $(this).val().trim() !== '') {
+                        filledTextboxes++;
+                    }
+                });
+
+                // Check if all textboxes are filled
+                if (filledTextboxes === numTextboxes) {
+                    calculateResults(); // If all textboxes are filled, calculate results
+                }
+            }
+
+            // Change event handler for textboxes
+            $('.answer-input').on('change', function () {
+                updateAndCalculate(); // Trigger calculation when any textbox value changes
+            });
+
+            // Click event handler for triggering calculation
+            $('#calculateButton').on('click', function () {
+                calculateResults(); // Trigger calculation on button click
+            });
+
+            function calculateResults() {
+                var sumcorrect = 0;
+                var sumincorrect = 0;
+                var sump = 0;
+
+                // Loop through each textbox and calculate the sum of entered values
+                $('.answer-input').each(function () {
+                    var value = parseFloat($(this).val()) || 0; // Get the value and convert it to a number, default to 0 if not a valid number
+                    if (value === 0) {
+                        sumincorrect++;
+                    } else if (value === 1) {
+                        sumcorrect++;
+                    } else if (value === 0.5) {
+                        sump++;
+                    }
+                });
+
+                var incorrect;
+                var partial;
+                var correct;
+
+                if (sumincorrect > 0) {
+                    incorrect = sumincorrect + ' - Incorrect answers';
+                }
+                if (sumcorrect > 0) {
+                    correct = sumcorrect + ' - Correct answers';
+                }
+                if (sump > 0) {
+                    partial = sump + ' - Partially Correct';
+                }
+
+                // Set the values in respective input fields
+                $('#IncorrectInput').val(incorrect || '');
+                $('#PartialyInput').val(partial || '');
+                $('#CorrectInput').val(correct || '');
+
+                // Display the results
+                $('#Incorrect').text(incorrect || '');
+                $('#Partially').text(partial || '');
+                $('#Correct').text(correct || '');
+            }
+        });
+
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#submit').on('click', function () {
+                // Display the alert when the button is clicked
+                alert("Are you sure you want to submit?");
+            });
+        });
+    </script>
+
+
+
+</form>
+
+
+
+
+
+
+
+
+
+
+
+

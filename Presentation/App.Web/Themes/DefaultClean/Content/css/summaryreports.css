@@ -1,0 +1,432 @@
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto; /* Enables horizontal scroll only when content overflows */
+    position: relative;
+    padding-top: 20px;
+}
+
+td {
+    word-break: normal;
+}
+
+#timesheet-report-table {
+    border-spacing: 0;
+    width: 100%;
+    position: relative; /* Ensure the table is positioned relatively to handle sticky positioning */
+}
+
+    /* Ensure cells do not wrap text */
+    #timesheet-report-table th,
+    #timesheet-report-table td {
+        padding: 10px;
+        text-align: left;
+    }
+
+    /* Fix the first column */
+    #timesheet-report-table thead th:first-child,
+    #timesheet-report-table tbody td:first-child,
+    #timesheet-report-table tfoot th:first-child,
+    #timesheet-report-table tfoot td:first-child {
+        position: sticky;
+        left: 0;
+        background-color: #ffffff; /* White background for better visibility */
+        z-index: 2; /* Ensure it stays on top of other columns */
+    }
+
+    /* Fix the last column */
+    /* Fix the last three columns */
+    #timesheet-report-table thead th:nth-last-child(-n+3),
+    #timesheet-report-table tbody td:nth-last-child(-n+3),
+    #timesheet-report-table tfoot th:nth-last-child(-n+3),
+    #timesheet-report-table tfoot td:nth-last-child(-n+3) {
+        position: sticky;
+        background-color: #ffffff; /* White background for visibility */
+        z-index: 2; /* Keep above other columns */
+    }
+
+    /* Last column */
+    #timesheet-report-table thead th:last-child,
+    #timesheet-report-table tbody td:last-child,
+    #timesheet-report-table tfoot th:last-child,
+    #timesheet-report-table tfoot td:last-child {
+        right: 0;
+    }
+
+    /* Second last column */
+    #timesheet-report-table thead th:nth-last-child(2),
+    #timesheet-report-table tbody td:nth-last-child(2),
+    #timesheet-report-table tfoot th:nth-last-child(2),
+    #timesheet-report-table tfoot td:nth-last-child(2) {
+        right: 56px; /* Adjust based on last column width */
+    }
+
+    /* Third last column */
+    #timesheet-report-table thead th:nth-last-child(3),
+    #timesheet-report-table tbody td:nth-last-child(3),
+    #timesheet-report-table tfoot th:nth-last-child(3),
+    #timesheet-report-table tfoot td:nth-last-child(3) {
+        right: 125px; /* Adjust based on combined width of last two columns */
+    }
+
+
+    /* Style for task name column */
+    #timesheet-report-table th:nth-child(1),
+    #timesheet-report-table td:nth-child(1) {
+        max-width: 200px;
+        min-width: 150px; /* Set a fixed width for the task name column */
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #timesheet-report-table td:nth-child(1) {
+        overflow-wrap: break-word; /* Allow wrapping of long text */
+    }
+
+    #timesheet-report-table th {
+        white-space: nowrap;
+    }
+
+/* Style for total row cells */
+.totalRow {
+    font-weight: bold; /* Make the text bold */
+    text-align: right; /* Align text to the right for numerical values */
+    padding: 10px;
+    border-top: 2px solid #ddd; /* Top border to separate total row from the data rows */
+}
+
+.row-border {
+    border-bottom: 1px solid #ddd;
+}
+
+.header-row {
+    border-bottom: 2px solid #ddd;
+}
+
+#date-report-grid {
+    overflow: hidden; /* Prevents overflow issues */
+    margin-top: 10px;
+}
+
+
+/*     .wrap-text {
+        white-space: normal;
+        overflow: hidden; 
+       height:auto;
+        
+    } */
+
+
+#project-report-table {
+    /*  border-collapse: separate; */
+    border-spacing: 0;
+    width: 100%;
+    position: relative; /* Ensure the table is positioned relatively to handle sticky positioning */
+}
+
+    /* Ensure cells do not wrap text */
+    #project-report-table th,
+    #project-report-table td {
+        padding: 10px;
+        text-align: left;
+    }
+
+    /* Fix the first column */
+    #project-report-table thead th:first-child,
+    #project-report-table tbody td:first-child,
+    #project-report-table tfoot th:first-child,
+    #project-report-table tfoot td:first-child {
+        position: sticky;
+        left: 0;
+        background-color: #ffffff; /* White background for better visibility */
+        z-index: 2; /* Ensure it stays on top of other columns */
+    }
+
+    /* Fix the last three columns */
+    #project-report-table thead th:nth-last-child(-n+3),
+    #project-report-table tbody td:nth-last-child(-n+3),
+    #project-report-table tfoot th:nth-last-child(-n+3),
+    #project-report-table tfoot td:nth-last-child(-n+3) {
+        position: sticky;
+        background-color: #ffffff; /* Keep white for better visibility */
+        z-index: 2; /* Stay on top of other columns */
+    }
+
+    /* Last column (e.g., Total) */
+    #project-report-table thead th:last-child,
+    #project-report-table tbody td:last-child,
+    #project-report-table tfoot th:last-child,
+    #project-report-table tfoot td:last-child {
+        right: 0;
+    }
+
+    /* Second last column (e.g., Billable) */
+    #project-report-table thead th:nth-last-child(2),
+    #project-report-table tbody td:nth-last-child(2),
+    #project-report-table tfoot th:nth-last-child(2),
+    #project-report-table tfoot td:nth-last-child(2) {
+        right: 56px; /* Adjust based on Total column width */
+    }
+
+    /* Third last column (e.g., Non-Billable) */
+    #project-report-table thead th:nth-last-child(3),
+    #project-report-table tbody td:nth-last-child(3),
+    #project-report-table tfoot th:nth-last-child(3),
+    #project-report-table tfoot td:nth-last-child(3) {
+        right: 126px; /* Adjust based on combined width of Billable + Total columns */
+    }
+
+    /* Style for task name column */
+    #project-report-table th:nth-child(1),
+    #project-report-table td:nth-child(1) {
+        max-width: 200px;
+        min-width: 150px; /* Set a fixed width for the task name column */
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #project-report-table td:nth-child(1) {
+        overflow-wrap: break-word; /* Allow wrapping of long text */
+    }
+
+    #project-report-table th {
+        white-space: nowrap;
+    }
+
+
+
+
+
+#employee-report-table {
+    /*  border-collapse: separate; */
+    border-spacing: 0;
+    width: 100%;
+    position: relative; /* Ensure the table is positioned relatively to handle sticky positioning */
+}
+
+    /* Ensure cells do not wrap text */
+    #employee-report-table th,
+    #employee-report-table td {
+        padding: 10px;
+        text-align: left;
+    }
+
+    /* Fix the first column */
+    #employee-report-table thead th:first-child,
+    #employee-report-table tbody td:first-child,
+    #employee-report-table tfoot th:first-child,
+    #employee-report-table tfoot td:first-child {
+        position: sticky;
+        left: 0;
+        background-color: #ffffff; /* White background for better visibility */
+        z-index: 2; /* Ensure it stays on top of other columns */
+    }
+
+    /* Fix the last column */
+    #employee-report-table thead th:last-child,
+    #employee-report-table tbody td:last-child,
+    #employee-report-table tfoot th:last-child,
+    #employee-report-table tfoot td:last-child {
+        right: 0;
+    }
+    #employee-report-table thead th:nth-last-child(-n+3),
+    #employee-report-table tbody td:nth-last-child(-n+3),
+    #employee-report-table tfoot th:nth-last-child(-n+3),
+    #employee-report-table tfoot td:nth-last-child(-n+3) {
+        position: sticky;
+        background-color: #ffffff;
+        z-index: 2;
+    }
+    #employee-report-table thead th:nth-last-child(2),
+    #employee-report-table tbody td:nth-last-child(2),
+    #employee-report-table tfoot th:nth-last-child(2),
+    #employee-report-table tfoot td:nth-last-child(2) {
+        right: 56px; 
+    }
+    #employee-report-table thead th:nth-last-child(3),
+    #employee-report-table tbody td:nth-last-child(3),
+    #employee-report-table tfoot th:nth-last-child(3),
+    #employee-report-table tfoot td:nth-last-child(3) {
+        right: 126px; 
+    }
+    /* Style for task name column */
+    #employee-report-table th:nth-child(1),
+    #employee-report-table td:nth-child(1) {
+        max-width: 200px;
+        width: 150px; /* Set a fixed width for the task name column */
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #employee-report-table td:nth-child(1) {
+        overflow-wrap: break-word; /* Allow wrapping of long text */
+    }
+
+    #employee-report-table th {
+        white-space: nowrap;
+    }
+
+
+#date-report-table th:nth-child(1),
+#date-report-table td:nth-child(1) {
+    max-width: 200px;
+    min-width: 150px; /* Set a fixed width for the task name column */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hide-before {
+    display: none;
+}
+
+    .hide-before table:not(:empty) {
+        display: block;
+    }
+/* new */
+
+.cards-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+.card-default {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.card-body {
+    padding: 15px;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+}
+
+    .form-group label {
+        margin-bottom: 5px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .form-group select,
+    .form-group input {
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        height: 40px;
+        width: 30vw;
+        min-width: 200px;
+    }
+
+.error-message {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.btn-search {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+    .btn-search:hover {
+        background-color: #0056b3;
+    }
+
+/* Row */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+/* Column */
+.col-md-6 {
+    /* flex: 0 0 50%; */
+    max-width: 50%;
+    padding: 1px;
+}
+
+/* Button search */
+.btn-search {
+    min-width: 105px;
+    border: 0;
+    background-color: #4ab2f1;
+    padding: 10px 24px;
+    text-align: center;
+    font-size: 15px;
+    color: #fff;
+    text-transform: uppercase;
+    margin: 1%;
+    border-radius: 0;
+    text-wrap: nowrap;
+}
+
+    .btn-search:hover {
+        background-color: #248ece;
+    }
+
+
+ @media (max-width: 768px) {
+    .form-group {
+        width: 100%; 
+    }
+} 
+
+
+/* General Table Styling */
+#date-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+    #date-report-table th,
+    #date-report-table td {
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        text-align: left;
+        white-space: nowrap; /* Prevent text from wrapping */
+    }
+
+    /* Header Styling */
+    #date-report-table thead th {
+        background-color: #f4f4f4;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    /* Alternating Row Colors for Better Readability */
+    #date-report-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    /* Total Row Styling */
+    #date-report-table tbody tr:last-child {
+        background-color: #e0f7fa;
+        font-weight: bold;
+        border-top: 2px solid #000;
+    }
+
+#project-report-table tbody td {
+    background-color: #f9f9f961;
+}
+

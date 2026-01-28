@@ -1,0 +1,130 @@
+@using App.Web.Areas.Admin.Models.Extension.ProcessWorkflows
+@using App.Web.Areas.Admin.Models.Extension.WorkflowStatus
+@model ProcessWorkflowModel
+
+<div class="card-body">
+    @if (Model.Id > 0)
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "workflowStatus-grid",
+                        UrlRead = new DataUrl("List", "WorkflowStatus", new RouteValueDictionary { [nameof(Model.workflowStatusSearchModel.ProcessWorkflowId)] = Model.Id }),
+                        UrlDelete = new DataUrl("Delete", "WorkflowStatus", new RouteValueDictionary { [nameof(Model.Id)] = Model.WorkflowStatusModel.FirstOrDefault()?.Id }),
+                        Length = Model.workflowStatusSearchModel.PageSize,
+                        LengthMenu = Model.workflowStatusSearchModel.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WorkflowStatusModel.StatusName))
+                    {
+                        Title = T("Admin.WorkflowStatus.Fields.StatusName").Text,
+                        Render = new RenderCustom("renderStatusDot"),
+                        Width = "200"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WorkflowStatusModel.IsDefaultDeveloperStatus))
+                    {
+                        Title = T("Admin.WorkflowStatus.Fields.IsDefaultDeveloperStatus").Text,
+                        Width = "30",
+                        ClassName = NopColumnClassDefaults.CenterAll,
+                        Render = new RenderBoolean()
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WorkflowStatusModel.IsDefaultQAStatus))
+                    {
+                        Title = T("Admin.WorkflowStatus.Fields.IsDefaultQAStatus").Text,
+                        Width = "30",
+                        ClassName = NopColumnClassDefaults.CenterAll,
+                        Render = new RenderBoolean()
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WorkflowStatusModel.DisplayOrder))
+                    {
+                        Title = T("Admin.WorkflowStatus.Fields.DisplayOrder").Text,
+                        Width = "200"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WorkflowStatusModel.ColorCode))
+                    {
+                        Title = T("Admin.WorkflowStatus.Fields.ColorCode").Text,
+                        Width = "200"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WorkflowStatusModel.CreatedOn))
+                    {
+                        Title = T("Admin.WorkflowStatus.Fields.CreatedOn").Text,
+                        Width = "150",
+                        Render = new RenderDate()
+                    });
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageWorkflowStatus, PermissionAction.Edit))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WorkflowStatusModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "80",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderCustom("renderWorkflowStatusEdit")
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageWorkflowStatus, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(WorkflowStatusModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                            ClassName = NopColumnClassDefaults.Button
+                        });
+                    }
+                }
+            </div>
+
+            <script>
+                function renderStatusDot(data, type, row, meta) {
+                    if (!data) return '';
+
+                    const parts = data.split("|||");
+                    const text = parts[0];
+                    const color = parts[1] ;
+
+                    return `
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};"></div>
+                            <span>${text}</span>
+                        </div>`;
+                }
+            </script>
+
+            <script>
+                function renderWorkflowStatusEdit(data, type, row, meta) {
+                    var processWorkflowId = @Model.Id;
+                    var url = '@Url.Action("Edit", "WorkflowStatus")' + '?processWorkflowId=' + processWorkflowId + '&id=' + data;
+                    return '<button onclick="javascript:OpenWindow(\'' + url + '&btnId=btnRefreshWorkflowStatus&formId=processWorkflow-form\', 800, 800, true); return false;" class="btn btn-default"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit").Text</button>';
+                }
+
+                $(document).ready(function () {
+                    $(window).on('refreshGrid', function () {
+                        updateTable('#workflowStatus-grid');
+                        console.log("Grid refreshed");
+                    });
+                });
+            </script>
+
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageChecklist, PermissionAction.Add))
+            {
+                <div class="card-body">
+                    <button type="button" id="btnAddNewEmpProjectMapping" class="btn btn-primary" onclick="javascript:OpenWindow('@Url.Action("Create", "WorkflowStatus", new { processWorkflowId = Model.Id, btnId = "btnRefreshWorkflowStatus", formId = "processWorkflow-form" })', 800, 800, true); return false;">
+                        <i class="fas fa-plus-square"></i>
+                        @T("Admin.Catalog.Products.ProjectEmployee.AddNew")
+                    </button>
+                    <button type="button" id="btnRefreshWorkflowStatus" style="display:none"></button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @T("Admin.Catalog.Products.SpecificationAttributes.SaveBeforeEdit")
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,673 @@
+@using App.Services.Common
+@using App.Web.Framework.Models.DataTables
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Leads
+@inject IGenericAttributeService GenericAttributeService
+@inject IWorkContext WorkContext
+
+@model LeadSearchModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.Lead").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Lead");
+
+    const string hideSearchBlockAttributeName = "leadsListPage.HideSearchBlock";
+    var hideSearchBlock = await GenericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Plugin.SatyanamCRM.Lead")
+    </h1>
+    <div class="float-right">  
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
+        {
+            <button type="button" id="syncToReplyBtn" class="btn btn-primary" fdprocessedid="k7p67s">
+                <i class="fas fa-sync-alt"></i>
+                @T("Admin.SelectedLead.SyncToReply")
+            </button>
+            <button type="button" id="checkemail-selected" class="btn btn-success" fdprocessedid="k7p67s">
+                <i class="fas fa-check"></i>
+                @T("Admin.SelectedEmail.Email")
+            </button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-success">
+                    <i class="fas fa-download"></i>
+                    @T("Admin.Common.Export")
+                </button>
+                <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                    <span class="caret"></span>
+                    <span class="sr-only">Toggle Dropdown</span>
+                </button>
+                <form id="export-shared-form" method="post">
+                    <input type="hidden" name="SearchName" />
+                    <input type="hidden" name="SearchEmail" />
+                    <input type="hidden" name="SearchCompanytName" />
+                    <input type="hidden" name="SelectedTags" />
+                    <input type="hidden" name="SearchWebsiteUrl" />
+                    <input type="hidden" name="SearchNoofEmployee" />
+                    <input type="hidden" name="SearchLeadStatusId" />
+                    <input type="hidden" name="SearchTitlesId" />
+                    <input type="hidden" name="SearchEmailStatusId" />
+                </form>
+
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <button type="button" class="dropdown-item export-btn"
+                                data-action="@Url.Action("ExportToExcel")"
+                                data-button-name="exportexcel-all">
+                            <i class="far fa-file-excel"></i>
+                            @T("Admin.Common.ExportToExcel.All")
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item export-btn"
+                                data-action="@Url.Action("ExportToExcelReply")"
+                                data-button-name="exportexcelReply-all">
+                            <i class="far fa-file-excel"></i>
+                            @T("Admin.Common.ExportToExcelReply.All")
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" id="exportexcel-selected" class="dropdown-item">
+                            <i class="far fa-file-excel"></i>
+                            @T("Admin.Common.ExportToExcel.Selected")
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" id="exportexcelReply-selected" class="dropdown-item">
+                            <i class="far fa-file-excel"></i>
+                            @T("Admin.Common.ExportToExcelReply.Selected")
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn bg-olive dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-upload"></i>
+                    @T("Admin.Common.Import")
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#importexcel-window">
+                            <i class="fas fa-upload"></i>
+                            @T("Admin.Common.Import")
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#importexcelReply-window">
+                            <i class="fas fa-upload"></i>
+                            @T("Admin.Common.ImportReply")
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        }
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Plugin.SatyanamCRM.Lead.AddNew")
+            </a>
+        }
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Delete))
+        {
+            <button type="button" id="delete-selected" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete.Selected")
+            </button>
+            <nop-action-confirmation asp-button-id="delete-selected" />
+        }
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchTitlesId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchTitlesId" asp-items="Model.AvailableTitles" asp-multiple="true" />
+                                            <script>
+                                                $(document).ready(function () {
+                                                    var rolesIdsInput =
+                                                        $('#@Html.IdFor(model => model.SearchTitlesId)')
+                                                            .data("kendoMultiSelect");
+                                                    rolesIdsInput.setOptions({
+                                                        autoClose: true,
+                                                        filter: "contains"
+                                                    });
+
+                                                @if (Model.AvailableTitles.Count == 0)
+                                                {
+                                                    <text>
+                                                            rolesIdsInput.setOptions({
+                                                                enable: false,
+                                                                placeholder: "No titles available"
+                                                            });
+                                                        rolesIdsInput._placeholder();
+                                                        rolesIdsInput._enable();
+                                                    </text>
+                                                }
+                                                                                                                                                                                        });
+                                            </script>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchEmail" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchEmail" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchCompanytName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchCompanytName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchWebsiteUrl" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchWebsiteUrl" />
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchNoofEmployee" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchNoofEmployee" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SelectedTags" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SelectedTags" asp-items="Model.Tags" asp-multiple="true" />
+                                            <script>
+                                                $(document).ready(function () {
+                                                    var tagsDropdown = $('#@Html.IdFor(model => model.SelectedTags)').data("kendoMultiSelect");
+
+                                                    tagsDropdown.setOptions({
+                                                        autoClose: false,
+                                                        filter: "contains",
+                                                        placeholder: "Select Tags..."
+                                                    });
+
+                                                @if (Model.Tags.Count == 0)
+                                                {
+                                                    <text>
+                                                            tagsDropdown.setOptions({
+                                                                enable: false,
+                                                                placeholder: "No tags available"
+                                                            });
+                                                        tagsDropdown._placeholder();
+                                                        tagsDropdown._enable();
+                                                    </text>
+                                                }
+                                                                                                                                                        });
+                                            </script>
+                                            <span asp-validation-for="SelectedTags"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchLeadStatusId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchLeadStatusId" asp-items="Model.AvailableStatus" />
+                                            <span asp-validation-for="SearchLeadStatusId"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchEmailStatusId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchEmailStatusId" asp-items="Model.AvailableEmailStatus" />
+                                            <span asp-validation-for="SearchEmailStatusId"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="IsSyncedToReply" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="IsSyncedToReply" asp-items="Model.AvailableIsSyncReplyOptions" />
+                                            <span asp-validation-for="IsSyncedToReply"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="text-center col-12">
+                                <button type="button" id="search-lead" class="btn btn-primary btn-search">
+                                    <i class="fas fa-search"></i>
+                                    @T("Admin.Common.Search")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-default">
+                <div class="card-body">
+                    @{
+                        var gridModel = new DataTablesModel
+                        {
+                            Name = "lead-grid",
+                            UrlRead = new DataUrl("List", "Lead", null),
+                            SearchButtonId = "search-lead",
+                            Length = Model.PageSize,
+                            LengthMenu = Model.AvailablePageSizes,
+                            Filters = new List<FilterParameter>
+                            {
+                                new FilterParameter(nameof(Model.SearchName)),
+                                new FilterParameter(nameof(Model.SearchTitlesId)),
+                                new FilterParameter(nameof(Model.SearchCompanytName)),
+                                new FilterParameter(nameof(Model.SearchEmail)),
+                                new FilterParameter(nameof(Model.SearchWebsiteUrl)),
+                                new FilterParameter(nameof(Model.SelectedTags)),
+                                new FilterParameter(nameof(Model.SearchNoofEmployee)),
+                                new FilterParameter(nameof(Model.SearchLeadStatusId)),
+                                new FilterParameter(nameof(Model.SearchEmailStatusId)),
+                                new FilterParameter(nameof(Model.IsSyncedToReply))
+                            },
+                        };
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.Id))
+                        {
+                            IsMasterCheckBox = true,
+                            Render = new RenderCheckBox("checkbox_leads"),
+                            ClassName = NopColumnClassDefaults.CenterAll,
+                            Width = "50"
+                        });
+                        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+                        {
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.Id))
+                            {
+                                Title = T("Plugin.SatyanamCRM.lead.Edit").Text,
+                                Width = "100",
+                                ClassName = NopColumnClassDefaults.Button,
+                                Render = new RenderButtonEdit(new DataUrl("Edit"))
+                            });
+                        }
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.Name))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Lead.Fields.Name").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.TitleName))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Lead.Fields.TitleName").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.Email))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Lead.Fields.Email").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.CompanyName))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Lead.Fields.CompanyName").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.WebsiteUrl))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Lead.Fields.WebsiteUrl").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.NoofEmployee))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Lead.Fields.NoofEmployee").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.TagsName))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Lead.Fields.TagsId").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.EmailStatusName))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Lead.Fields.EmailStatusName").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.LeadStatusName))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Lead.Fields.LeadStatus").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.IsSyncedToReply))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Lead.Fields.IsSyncedToReply").Text,
+                            ClassName = NopColumnClassDefaults.CenterAll,
+                            Render = new RenderBoolean(),
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.CreatedOnUtc))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Campaings.Lead.CreatedOnUtc").Text,
+                            Render = new RenderDate()
+                        });
+
+                    }
+                    @await Html.PartialAsync("Table", gridModel)
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: selectedIds
+            };
+            addAntiForgeryToken(postData);
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "Lead"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204) {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#lead-grid');
+
+                }
+            });
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('.export-btn').click(function () {
+                const actionUrl = $(this).data('action');
+                const buttonName = $(this).data('button-name');
+                const form = $('#export-shared-form');
+
+                // Set form action
+                form.attr('action', actionUrl);
+
+                // Remove any previous submit buttons
+                form.find('input[type=submit], button[type=submit], input[name="exportexcel-all"], input[name="exportexcelReply-all"]').remove();
+
+                // Add the clicked button name as a hidden input
+                form.append(`<input type="hidden" name="${buttonName}" value="true" />`);
+
+                // Copy current filter values from search form to export form
+                form.find('input[name="SearchName"]').val($('#SearchName').val());
+                form.find('input[name="SearchEmail"]').val($('#SearchEmail').val());
+                form.find('input[name="SearchCompanytName"]').val($('#SearchCompanytName').val());
+                form.find('input[name="SelectedTags"]').val($('#SelectedTags').val());
+                form.find('input[name="SearchWebsiteUrl"]').val($('#SearchWebsiteUrl').val());
+                form.find('input[name="SearchNoofEmployee"]').val($('#SearchNoofEmployee').val());
+                form.find('input[name="SearchLeadStatusId"]').val($('#SearchLeadStatusId').val());
+                form.find('input[name="SearchTitlesId"]').val($('#SearchTitlesId').val());
+                form.find('input[name="SearchEmailStatusId"]').val($('#SearchEmailStatusId').val());
+
+                // Submit the form
+                form.submit();
+            });
+        });
+    </script>
+
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+    <div id="importexcel-window" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="importexcel-window-title">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="importexcel-window-title">@T("Admin.Common.ImportFromExcel")</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <form asp-controller="Lead" asp-action="ImportFromExcel" method="post" enctype="multipart/form-data">
+                    <div class="form-horizontal">
+                        <div class="modal-body">
+                            <ul class="common-list">
+                                <li>
+                                    <em>@T("Admin.Catalog.Products.List.ImportFromExcelTip")</em>
+                                </li>
+                                <li>
+                                    <em>@T("Admin.Common.ImportFromExcel.ManyRecordsWarning")</em>
+                                </li>
+                            </ul>
+                            <div class="form-group row">
+                                <div class="col-md-2">
+                                    <div class="label-wrapper">
+                                        <label class="col-form-label">
+                                            @T("Admin.Common.ExcelFile")
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <input type="file" id="importFile" name="importFile" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">
+                                @T("Admin.Common.ImportFromExcel")
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="importexcelReply-window" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="importexcelReply-window-title">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="importexcelReply-window-title">@T("Admin.Common.ImportReplyFromExcel")</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form asp-controller="Lead" asp-action="ImportFromExcelReply" method="post" enctype="multipart/form-data">
+                    <div class="form-horizontal">
+                        <div class="modal-body">
+                            <ul class="common-list">
+                                <li>
+                                    <em>@T("Admin.Catalog.Products.List.ImportFromExcelTip")</em>
+                                </li>
+                                <li>
+                                    <em>@T("Admin.Common.ImportFromExcel.ManyRecordsWarning")</em>
+                                </li>
+                            </ul>
+                            <div class="form-group row">
+                                <div class="col-md-2">
+                                    <div class="label-wrapper">
+                                        <label class="col-form-label">
+                                            @T("Admin.Common.ExcelFile")
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <input type="file" id="importReplyFile" name="importFile" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">
+                                @T("Admin.Common.ImportReplyFromExcel")
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <form asp-controller="Lead" asp-action="SelectedExportToExcel" method="post" id="export-excel-selected-form">
+        <input type="hidden" id="selectedIds" name="selectedIds" value="" />
+    </form>
+    <form asp-controller="Lead" asp-action="SelectedExportToExcelReply" method="post" id="export-excel-selected-forms">
+        <input type="hidden" id="selectedIds" name="selectedIds" value="" />
+    </form>
+
+    <script>
+        $(document).ready(function () {
+            $('#exportexcel-selected').click(function (e) {
+                e.preventDefault();
+                var ids = selectedIds.join(",");
+                if (!ids) {
+                    $('#exportExcelSelected-info').text("@T("Admin.Products.NoProducts")");
+                    $("#selectedExportExcel").click();
+                }
+                else {
+                    $('#export-excel-selected-form #selectedIds').val(ids);
+                    $('#export-excel-selected-form').submit();
+                    updateTable('#products-grid');
+                }
+                return false;
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('#exportexcelReply-selected').click(function (e) {
+                e.preventDefault();
+                var ids = selectedIds.join(",");
+                if (!ids) {
+                    $('#exportExcelSelected-info').text("@T("Admin.Products.NoProducts")");
+                    $("#selectedExportExcelReply").click();
+                }
+                else {
+                    $('#export-excel-selected-forms #selectedIds').val(ids);
+                    $('#export-excel-selected-forms').submit();
+                    updateTable('#products-grid');
+                }
+                return false;
+            });
+        });
+    </script>
+    <nop-alert asp-alert-id="selectedExportExcel" />
+    <nop-alert asp-alert-id="selectedExportExcelReply" />
+    <form asp-controller="Lead" asp-action="EmailSelectedCheck" method="post" id="check-email-selected-form">
+        <input type="hidden" id="selectedLeadIds" name="selectedIds" value="" />
+    </form>
+
+    <script>
+        var selectedIds = [];
+
+        // Update selectedIds on checkbox change
+        $(document).on('change', '.checkbox-lead', function () {
+            selectedIds = [];
+            $('.checkbox-lead:checked').each(function () {
+                selectedIds.push($(this).data('id'));
+            });
+            console.log("Selected IDs:", selectedIds);
+        });
+
+        // Handle "Check Email" button click
+        $(document).on('click', '#checkemail-selected', function (e) {
+            e.preventDefault();
+
+            if (selectedIds.length === 0) {
+                alert('Please select at least one lead to check emails.');
+                return;
+            }
+
+            // Set selected IDs in hidden input and submit the form
+            $('#check-email-selected-form #selectedLeadIds').val(selectedIds.join(","));
+            $('#check-email-selected-form').submit();
+            updateTable('#lead-grid');
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('#syncToReplyBtn').on('click', function () {
+                var selectedIds = [];
+                $('#lead-grid').find('input[name="checkbox_categories"]:checked').each(function () {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length === 0) {
+                    alert('Please select at least one lead to sync.');
+                    return;
+                }
+
+                // Disable button and show spinner
+                $('#syncToReplyBtn').prop('disabled', true).html('<i class="fas fa-sync-alt fa-spin"></i> Syncing...');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/Admin/ReplyIo/SyncSelectedLeads',
+                    contentType: 'application/json',
+                    data: JSON.stringify(selectedIds),
+                    success: function (response) {
+                        if (response.success) {
+                            alert(response.message);
+                        } else {
+                            alert("Error: " + response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('An unexpected error occurred while syncing leads to Reply.io.');
+                    },
+                    complete: function () {
+                        $('#syncToReplyBtn').prop('disabled', false).html('<i class="fas fa-sync-alt"></i> Sync to Reply.io');
+                    }
+                });
+            });
+        });
+    </script>
+</section>

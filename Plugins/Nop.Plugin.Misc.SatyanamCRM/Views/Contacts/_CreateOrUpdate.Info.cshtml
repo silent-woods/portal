@@ -1,0 +1,480 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Contacts
+@model ContactsModel
+<input type="hidden" asp-for="AddressId" />
+<input type="hidden" asp-for="TagsId" />
+<input type="hidden" asp-for="CreatedOnUtc" />
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CustomerId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="CustomerId" asp-items="Model.Customers" />
+            <span asp-validation-for="CustomerId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="FirstName" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="FirstName" asp-required="true" />
+            <span asp-validation-for="FirstName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="LastName" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="LastName" asp-required="true" />
+            <span asp-validation-for="LastName"></span>
+        </div>
+    </div>
+    <!-- Company Dropdown -->
+    <!-- Company Dropdown -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CompanyId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="CompanyId" asp-items="Model.Companys" id="companyDropdown" onchange="onCompanyChange()" />
+            <span asp-validation-for="CompanyId"></span>
+        </div>
+    </div>
+
+    <!-- Hidden field to hold new company name -->
+    <input type="hidden" asp-for="NewCompanyName" id="NewCompanyNameHidden" />
+
+    <!-- Modal for Adding New Company -->
+    <div class="modal fade" id="newCompanyModal" tabindex="-1" role="dialog" aria-labelledby="newCompanyModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newCompanyModalLabel">Add New Company</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="resetNewCompany()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <label for="modalNewCompanyName">Company Name</label>
+                    <input type="text" id="modalNewCompanyName" class="form-control" autocomplete="off" oninput="searchCompanies(this.value)" />
+                    <ul id="companySuggestions" class="list-group mt-2" style="max-height: 150px; overflow-y: auto;"></ul>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="resetNewCompany()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmNewCompany()">Add Company</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        function onCompanyChange() {
+            const dropdown = document.getElementById("companyDropdown");
+            if (dropdown.value === "-1") {
+                $('#newCompanyModal').modal('show');
+            }
+        }
+
+        function confirmNewCompany() {
+            const name = document.getElementById("modalNewCompanyName").value.trim();
+            if (!name) {
+                alert("Please enter a company name.");
+                return;
+            }
+
+            document.getElementById("NewCompanyNameHidden").value = name;
+
+            const dropdown = document.getElementById("companyDropdown");
+            let newOption = dropdown.querySelector("option[value='-1']");
+            if (newOption) {
+                newOption.text = name;
+            }
+
+            dropdown.value = "-1";
+            $('#newCompanyModal').modal('hide');
+            resetSuggestions();
+        }
+
+        function resetNewCompany() {
+            document.getElementById("companyDropdown").value = "0";
+            document.getElementById("modalNewCompanyName").value = "";
+            document.getElementById("NewCompanyNameHidden").value = "";
+
+            const dropdown = document.getElementById("companyDropdown");
+            let newOption = dropdown.querySelector("option[value='-1']");
+            if (newOption) {
+                newOption.text = "+ Add New Company";
+            }
+
+            resetSuggestions();
+        }
+
+        function resetSuggestions() {
+            $("#companySuggestions").empty();
+        }
+
+        function searchCompanies(term) {
+            resetSuggestions();
+            if (term.length < 2) return;
+
+            $.ajax({
+                url: '/Admin/Company/Search', // Replace with your actual endpoint
+                type: 'GET',
+                data: { term: term },
+                success: function (data) {
+                    if (data && data.length > 0) {
+                        data.forEach(function (item) {
+                            $("#companySuggestions").append(
+                                `<li class='list-group-item list-group-item-action' onclick="selectSuggestion('${item}')">${item}</li>`
+                            );
+                        });
+                    }
+                }
+            });
+        }
+
+        function selectSuggestion(name) {
+            $("#modalNewCompanyName").val(name);
+            $("#NewCompanyNameHidden").val(name);
+            resetSuggestions();
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const newCompanyName = document.getElementById("NewCompanyNameHidden").value;
+            if (newCompanyName) {
+                const dropdown = document.getElementById("companyDropdown");
+                let newOption = dropdown.querySelector("option[value='-1']");
+                if (newOption) {
+                    newOption.text = newCompanyName;
+                    dropdown.value = "-1";
+                }
+            }
+        });
+    </script>
+
+
+    @* <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CompanyId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="CompanyId" asp-items="Model.Companys" id="companyDropdown" onchange="toggleNewCompany()" />
+            <span asp-validation-for="CompanyId"></span>
+        </div>
+    </div>
+    <div class="form-group row" id="newCompanyRow" style="display: none;">
+        <div class="col-md-3">
+            <label for="NewCompanyName">New Company Name</label>
+        </div>
+        <div class="col-md-4">
+            <input asp-for="NewCompanyName" class="form-control" />
+        </div>
+    </div>
+    <script>
+        function toggleNewCompany() {
+            var dropdown = document.getElementById("companyDropdown");
+            var newRow = document.getElementById("newCompanyRow");
+            if (dropdown.value === "-1") {
+                newRow.style.display = "flex";
+            } else {
+                newRow.style.display = "none";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            toggleNewCompany();
+        });
+    </script> *@
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="TitleId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="TitleId" asp-items="Model.Titles" />
+            <span asp-validation-for="TitleId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Phone" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Phone" />
+            <span asp-validation-for="Phone"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Email" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Email" />
+            <span asp-validation-for="Email"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EmailStatusId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="EmailStatusId" asp-items="Model.EmailStatus" />
+            <span asp-validation-for="EmailStatusId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="WebsiteUrl" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="WebsiteUrl" />
+            <span asp-validation-for="WebsiteUrl"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IndustryId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="IndustryId" asp-items="Model.Industrys" />
+            <span asp-validation-for="IndustryId"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ContactsSourceId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="ContactsSourceId" asp-items="Model.ContactsSources" />
+            <span asp-validation-for="ContactsSourceId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="NoofEmployee" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="NoofEmployee" />
+            <span asp-validation-for="NoofEmployee"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="AnnualRevenue" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="AnnualRevenue" />
+            <span asp-validation-for="AnnualRevenue"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SecondaryEmail" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="SecondaryEmail" />
+            <span asp-validation-for="SecondaryEmail"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SkypeId" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="SkypeId" />
+            <span asp-validation-for="SkypeId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Twitter" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Twitter" />
+            <span asp-validation-for="Twitter"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="LinkedinUrl" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="LinkedinUrl" />
+            <span asp-validation-for="LinkedinUrl"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Facebookurl" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Facebookurl" />
+            <span asp-validation-for="Facebookurl"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CountryId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="CountryId" asp-items="Model.Countrys" />
+            <span asp-validation-for="CountryId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="StateId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="StateId" asp-items="Model.States" />
+            <span asp-validation-for="StateId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="City" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="City" />
+            <span asp-validation-for="City"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Address1" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Address1" />
+            <span asp-validation-for="Address1"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Address2" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Address2" />
+            <span asp-validation-for="Address2"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ZipCode" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="ZipCode" />
+            <span asp-validation-for="ZipCode"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SelectedTagIds" />
+        </div>
+        <div class="col-md-4">
+            <select id="tagsDropdown" name="SelectedTagIds" multiple="multiple">
+                @foreach (var tag in Model.Tags)
+                {
+                    <option value="@tag.Value" selected="@(Model.SelectedTagIds.Contains(int.Parse(tag.Value)) ? "selected" : null)">
+                        @tag.Text
+                    </option>
+                }
+            </select>
+            <span asp-validation-for="SelectedTagIds"></span>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            var tagsDropdown = $("#tagsDropdown").kendoMultiSelect({
+                placeholder: "Select Tags...",
+                autoClose: false,
+                filter: "contains"
+            }).data("kendoMultiSelect");
+
+        @if (Model.Tags.Count == 0)
+        {
+            <text>
+                    tagsDropdown.setOptions({
+                        enable: false,
+                        placeholder: "No tags available"
+                    });
+                tagsDropdown._placeholder();
+                tagsDropdown._enable();
+            </text>
+        }
+                    });
+    </script>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EmailOptOut" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="EmailOptOut" />
+        </div>
+    </div>
+
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Description" />
+        </div>
+        <div class="col-md-4">
+            <nop-textarea asp-for="Description" asp-required="true" />
+            <span asp-validation-for="Description"></span>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        var countrySelector = "#@Html.IdFor(model => model.CountryId)";
+        var stateSelector = "#@Html.IdFor(model => model.StateId)";
+        var selectedStateId = "@Model.StateId";
+
+        function loadStates(countryId, stateDropdown, selectedState) {
+            if (!countryId) return;
+
+            $.ajax({
+                cache: false,
+                type: "GET",
+                url: "@(Url.Action("GetStatesByCountryId", "Country"))",
+                data: {
+                    countryId: countryId,
+                    addSelectStateItem: "true"
+                },
+                success: function (data) {
+                    stateDropdown.html('');
+                    $.each(data, function (id, option) {
+                        stateDropdown.append($('<option></option>').val(option.id).html(option.name));
+                    });
+
+                    // Preselect the state
+                    if (selectedState) {
+                        stateDropdown.val(selectedState);
+                    }
+                },
+                error: function () {
+                    $("#statesAlert").click();
+                }
+            });
+        }
+
+        // On change
+        $(countrySelector).change(function () {
+            var selectedCountryId = $(this).val();
+            loadStates(selectedCountryId, $(stateSelector), null);
+        });
+
+        // On page load
+        var currentCountryId = $(countrySelector).val();
+        if (currentCountryId) {
+            loadStates(currentCountryId, $(stateSelector), selectedStateId);
+        }
+    });
+</script>

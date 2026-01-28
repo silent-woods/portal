@@ -1,0 +1,195 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.Activities
+@model ActivityModel
+
+<div class="card-body">
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ActivityName" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="ActivityName" id="ActivityName" asp-required="true" />
+            <span asp-validation-for="ActivityName"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SpentTime" />
+        </div>
+        <div class="col-md-4">
+            <input type="text" name="SpentTime" class="spentTimeInput form-control" placeholder="HH:MM" value="@Model.SpentTime" />
+            <span class="text-danger" id="SpentTimeValidation"></span>
+        </div>
+    </div>
+
+    <script>
+        $(document).on('input', '.spentTimeInput', function () {
+            var inputVal = $(this).val().replace(/[^0-9:]/g, ''); // Allow only numbers and ":"
+
+            // Ensure ":" is present only once
+            var timeParts = inputVal.split(":");
+
+            if (timeParts.length > 2) {
+                inputVal = timeParts[0] + ":" + timeParts[1].slice(0, 2); // Prevent multiple colons
+            }
+
+            // Validate format (HH:MM)
+            var isValid = timeParts.length === 2 && timeParts[0].length > 0 && timeParts[1].length > 0;
+
+            // Ensure minutes do not exceed 59
+            if (isValid && parseInt(timeParts[1], 10) > 59) {
+                timeParts[1] = "59"; // Force max value of 59 for minutes
+            }
+
+            // Show validation message if format is incorrect
+            if (!isValid) {
+                $('#SpentTimeValidation').text("Invalid format. Use HH:MM");
+            } else {
+                $('#SpentTimeValidation').text("");
+            }
+
+            // Update input value
+            $(this).val(timeParts.join(":"));
+        });
+
+
+    </script>
+
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="EmployeeId" />
+        </div>
+       
+
+        <div class="col-md-4">
+            <div style="position: relative;">
+                <select id="employeeDropdown" name="EmployeeId" class="form-control" style="border: none;
+        box-shadow: none;">
+                    <option value=""></option>
+                    @foreach (var employee in Model.AvailableEmployees)
+                    {
+                        <option value="@employee.Value">@employee.Text</option>
+                    }
+                </select>
+                <span asp-validation-for="EmployeeId"></span>
+
+                <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                <span style="color:red;" id="employeeError"></span>
+            </div>
+        </div>
+    </div>
+   
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="ProjectId" />
+        </div>
+        <div class="col-md-4">
+            <div style="position: relative;">
+                <select id="projectDropdown" name="ProjectId" class="form-control" style="border: none;
+        box-shadow: none;">
+                    <option value=""></option>
+                    @foreach (var project in Model.AvailableProjects)
+                    {
+                        <option value="@project.Value">@project.Text</option>
+                    }
+                </select>
+                <span asp-validation-for="ProjectId"></span>
+
+                <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                <span style="color:red;" id="projectError"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="TaskId" />
+        </div>
+        <div class="col-md-4">
+            <div style="position: relative;">
+                <select id="taskDropdown" name="TaskId" class="form-control" style="border: none;
+        box-shadow: none;">
+                    <option value=""></option>
+                    @foreach (var task in Model.AvailableTasks)
+                    {
+                        <option value="@task.Value">@task.Text</option>
+                    }
+                </select>
+                <span asp-validation-for="TaskId"></span>
+
+                <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                <span style="color:red;" id="taskError"></span>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            // Initialize Kendo DropDownList for employees
+            $("#employeeDropdown").kendoDropDownList({
+                optionLabel: "Select an employee",
+                dataTextField: "Text",
+                dataValueField: "Value",
+                filter: "contains",
+                autoBind: false,
+                value:@Model.EmployeeId,
+                dataSource: @Html.Raw(Json.Serialize(Model.AvailableEmployees)),
+
+            });
+
+            // Initialize Kendo DropDownList for project
+            $("#projectDropdown").kendoDropDownList({
+                optionLabel: "Select an project",
+                dataTextField: "Text",
+                dataValueField: "Value",
+                filter: "contains",
+                autoBind: false,
+                value: @Model.ProjectId,
+                dataSource: @Html.Raw(Json.Serialize(Model.AvailableProjects)),
+                change: onValueChange
+            });
+
+            // Initialize Kendo DropDownList for task
+            $("#taskDropdown").kendoDropDownList({
+                optionLabel: "Select an task",
+                dataTextField: "Text",
+                dataValueField: "Value",
+                filter: "contains",
+                autoBind: false,
+                value: @Model.TaskId,
+                dataSource: @Html.Raw(Json.Serialize(Model.AvailableTasks)),
+
+            });
+
+            onValueChange();
+            function onValueChange(){
+                var projectId = $("#projectDropdown").val();
+
+                $.ajax({
+                    url: '@Url.Action("GetTasksByProject", "Activity")', // Adjust to your controller/action
+                    type: 'GET',
+                    data: {
+                        projectId: projectId,
+                      
+                    },
+
+                    success: function (response) {
+                       
+                        var taskDropdown = $(`#taskDropdown`).data("kendoDropDownList");
+                        taskDropdown.dataSource.data(response);
+                        taskDropdown.refresh();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error updating leave balance: " + error);
+                    }
+                });
+            }
+        });
+    </script>
+
+    
+
+  
+</div>
+
+

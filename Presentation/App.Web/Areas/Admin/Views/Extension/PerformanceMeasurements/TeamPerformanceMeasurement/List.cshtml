@@ -1,0 +1,169 @@
+@model TeamPerformanceMeasurementSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.TeamPerformanceMeasurement").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("TeamPerformanceMeasurement");
+
+    const string hideSearchBlockAttributeName = "TeamPerformanceMeasurement.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.TeamPerformanceMeasurement")
+    </h1>
+    <div class="float-right">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus-square"></i>
+            @T("Admin.Common.AddNew")
+        </a>
+        <button type="button" id="delete-selected" class="btn btn-danger">
+            <i class="far fa-trash-alt"></i>
+            @T("Admin.Common.Delete.Selected")
+        </button>
+        <nop-action-confirmation asp-button-id="delete-selected" />
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        @* <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                        <div class="search-text">@T("Admin.Common.Search")</div>
+                        <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                        <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div> *@
+
+                        @* <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                        <div class="row">
+                        <div class="col-md-6"> *@
+                        <div class="form-group row">
+                            <div class="col-md-4">
+                                <nop-label asp-for="KPIName" />
+                            </div>
+                            <div class="col-md-8">
+                                <nop-editor asp-for="KPIName" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-4">
+                                <nop-label asp-for="EmployeeName" />
+                            </div>
+                            <div class="col-md-8">
+                                <nop-editor asp-for="EmployeeName" />
+                            </div>
+                        </div>
+                       
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="text-center col-12">
+                        <button type="button" id="search-brands" class="btn btn-primary btn-search">
+                            <i class="fas fa-search"></i>
+                            @T("Admin.Common.Search")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-default">
+        <div class="card-body">
+
+           @*  @await Html.PartialAsync("Table", new DataTablesModel
+            {
+            Name = "teamPerformances-grid",
+            UrlRead = new DataUrl("List", "TeamPerformanceMeasurement", null),
+            SearchButtonId = "search-brands",
+            Length = Model.PageSize,
+            LengthMenu = Model.AvailablePageSizes,
+            Filters = new List<FilterParameter>
+            {
+            new FilterParameter(nameof(Model.KPIName)),
+            new FilterParameter(nameof(Model.EmployeeName))
+            },
+            ColumnCollection = new List<ColumnProperty>
+            {
+            new ColumnProperty(nameof(TeamPerformanceMeasurementModel.Id))
+            {
+            IsMasterCheckBox = true,
+            Render = new RenderCheckBox("checkbox_categories"),
+            ClassName =  NopColumnClassDefaults.CenterAll,
+            Width = "30"
+            },
+            new ColumnProperty(nameof(TeamPerformanceMeasurementModel.KPIName))
+            {
+            Title = T("Admin.TeamPerformanceMeasurement.Fields.KPIName").Text
+            },
+            new ColumnProperty(nameof(TeamPerformanceMeasurementModel.EmployeeName))
+            {
+            Title = T("Admin.TeamPerformanceMeasurement.Fields.EmployeeName").Text
+            },
+            new ColumnProperty(nameof(TeamPerformanceMeasurementModel.EmployeeManagerName))
+            {
+            Title = T("Admin.TeamPerformanceMeasurement.Fields.EmployeeManagerName").Text
+            },
+            new ColumnProperty(nameof(TeamPerformanceMeasurementModel.Rating))
+            {
+            Title = T("Admin.TeamPerformanceMeasurement.Fields.Rating").Text
+            },
+            new ColumnProperty(nameof(TeamPerformanceMeasurementModel.Feedback))
+            {
+            Title = T("Admin.TeamPerformanceMeasurement.Fields.Feedback").Text
+            },
+            new ColumnProperty(nameof(TeamPerformanceMeasurementModel.CreateOn))
+            {
+            Title = T("Admin.TeamPerformanceMeasurement.Fields.CreatedOn").Text,
+            Render = new RenderDate()
+            },
+            new ColumnProperty(nameof(TeamPerformanceMeasurementModel.UpdateOn))
+            {
+            Title = T("Admin.TeamPerformanceMeasurement.Fields.UpdateOn").Text,
+            Render = new RenderDate()
+            },
+            new ColumnProperty(nameof(KPIWeightageModel.Id))
+            {
+            Title = T("Admin.Common.Edit").Text,
+            Width ="80",
+            ClassName =  NopColumnClassDefaults.Button,
+            Render = new RenderButtonEdit(new DataUrl("Edit"))
+            }
+            }
+            }) *@
+        </div>
+    </div>
+    <div>
+    @* <script>
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: selectedIds
+            };
+            addAntiForgeryToken(postData);
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "TeamPerformanceMeasurement"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204) {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#teamPerformances-grid');
+
+                }
+            });
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" /> *@
+    </div>
+</section>

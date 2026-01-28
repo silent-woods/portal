@@ -1,0 +1,16 @@
+﻿@model TimeSheetModel
+
+@{
+    const string hideInfoBlockAttributeName = "TimeSheetDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+
+<input asp-for="Id" type="hidden" />
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            @await Html.PartialAsync("/Areas/Admin/Views/Extension/TimeSheet/_CreateOrUpdate.Info.cshtml", Model)
+        </div>
+    </div>
+</section>

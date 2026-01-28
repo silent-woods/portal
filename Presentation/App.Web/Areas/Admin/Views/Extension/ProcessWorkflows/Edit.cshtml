@@ -1,0 +1,72 @@
+@using App.Web.Areas.Admin.Models.Extension.ProcessWorkflows;
+
+@model ProcessWorkflowModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.ProcessWorkflow.Edit").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("ProcessWorkflow");
+}
+<form asp-controller="ProcessWorkflow" asp-action="Edit" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.ProcessWorkflow.EditProcessWorkflowDetails")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.Configuration.ProcessWorkflow.BackToList")</a>
+            </small>
+        </h1>
+        <div class="float-right">
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessWorkflow, PermissionAction.Edit))
+            {
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+                <button type="button" id="copyWorkflowBtn" class="btn btn-secondary">Copy Workflow</button>
+            }
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessWorkflow, PermissionAction.Delete))
+            {
+                <span id="processWorkflow-delete" class="btn btn-danger">
+                    <i class="far fa-trash-alt"></i>
+                    @T("Admin.Common.Delete")
+                </span>
+            }
+        </div>
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/ProcessWorkflows/_CreateOrUpdate.cshtml", Model)
+</form>
+<script>
+    $(document).ready(function () {
+        $('#copyWorkflowBtn').click(function () {
+            var workflowId = $('#@Html.IdFor(model => model.Id)').val(); 
+            
+            if (confirm("Are you sure you want to copy this process workflow?")) {
+                var postData = { id: workflowId };
+               addAntiForgeryToken(postData);
+                $.ajax({
+                    url: '/Admin/ProcessWorkflow/Copy',
+                    type: 'POST',
+                    data:postData,
+                    success: function (data) {
+                        if (data.success) {
+                            alert('Workflow copied successfully!');
+                            window.location.href = '/Admin/ProcessWorkflow/Edit/' + data.newWorkflowId;
+                        } else {
+                            alert(data.message || 'Copy failed.');
+                        }
+                    },
+                    error: function () {
+                        alert('Error copying workflow.');
+                    }
+                });
+            }
+        });
+    });
+</script>
+
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="processWorkflow-delete" />

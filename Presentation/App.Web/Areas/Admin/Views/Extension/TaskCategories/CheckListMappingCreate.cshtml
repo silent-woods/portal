@@ -1,0 +1,46 @@
+@using App.Web.Areas.Admin.Models.CheckListMappings
+
+@model CheckListMappingModel
+
+@{
+    Layout = "_AdminPopupLayout";
+}
+
+@if (ViewBag.RefreshPage)
+{
+    <script>
+        try {
+            // Trigger the custom event in the parent page
+            var event = new Event('refreshGrid');
+            window.opener.dispatchEvent(event);
+        }
+        catch (e) {
+            console.log("Error triggering event: " + e.message);
+        }
+        // Close the popup window
+        window.close();
+    </script>
+}
+else
+{
+    <form asp-controller="CheckListMapping" asp-action="Create" method="post"
+          asp-route-taskCategoryId="@Context.Request.Query["taskCategoryId"]"
+          asp-route-btnId="@Context.Request.Query["btnId"]"
+          asp-route-formId="@Context.Request.Query["formId"]">
+        <div class="content-header clearfix">
+            <h1 class="float-left">
+                @T("Admin.TaskCategories.CheckListMapping.AddNew")
+            </h1>
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTaskCategoryChecklists, PermissionAction.Add))
+            {
+                <div class="float-right">
+                    <button type="submit" name="save" class="btn btn-primary">
+                        <i class="far fa-save"></i>
+                        @T("Admin.Common.Save")
+                    </button>
+                </div>
+            }
+        </div>
+        @await Html.PartialAsync("/Areas/Admin/Views/Extension/TaskCategories/_CheckListMapping.cshtml", Model)
+    </form>
+}

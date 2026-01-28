@@ -1,0 +1,1134 @@
+﻿@using App.Core
+@using App.Web.Models.Extensions.ProjectTasks;
+@using Newtonsoft.Json
+@model ProjectTaskModel;
+@{
+    Layout = "_ColumnsOne";
+    NopHtml.AddTitleParts(T("PageTitle.TaskEdit").Text);
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-customer-info-page");
+}
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/timesheetlist.css")" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
+<link rel="stylesheet" href="https://jqwidgets.com/public/jqwidgets/styles/jqx.base.css" type="text/css" />
+<script type="text/javascript" src="https://jqwidgets.com/public/jqwidgets/jqx-all.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet"/>
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>
+        <span id="taskId">@Model.Id</span> -
+        <span id="editableTitle"
+              contenteditable="false"
+              style="cursor: pointer;">
+            @Model.TaskTitle
+        </span>
+    </h1>
+    <div class="button-container">
+        <button type="button"
+                class="delete-btn"
+                onclick="confirmDeleteTask(@Model.Id)">
+            Delete
+        </button>
+
+    @if(Model.Tasktypeid!=3){
+    <button type="button" class="update-btn button-1 save-customer-info-button" onclick="openBugTaskPopup()">Add Bug</button>
+    }
+    <button type="button" class="btnSaveTask update-btn">Save</button>
+    </div>
+
+</div>
+<input type="hidden" id="TaskTitle" name="TaskTitle" value="@Model.TaskTitle" />
+<input type="hidden" id="Tasktypeid" name="Tasktypeid" value="@Model.Tasktypeid" />
+<input type="hidden" id="FollowUpTaskId" value="@Model.FollowUpTaskId" />
+
+<script>
+    function openBugTaskPopup() {
+        $.ajax({
+            url: '/ProjectTask/CreateBugTask',
+            type: 'GET',
+            data:{parentTaskId:@Model.Id},
+            dataType: 'html',
+            success: function (data) {
+                $('#popupDialog .custom-modal-body').html($(data).find('.page-body').html());
+                $('#popupDialog').fadeIn();
+            },
+            error: function (xhr, status, error) {
+                console.error("Error loading the popup content: ", error);
+            }
+        });
+    }
+    function closeModal() {
+        $('#popupDialog').fadeOut();
+    }
+    $(document).on('click', '#save-info-button', function (e) {
+        e.preventDefault(); 
+        var TaskTitle = $('#BugTitle').val();
+        var Description = $('#BugDescription').val();
+        var EstimationTimeHHMM = $('#BugEstimation').val();
+        var DueDate = $('#BugDueDate').val();
+        var IsSync = $('#BugIsSync').is(':checked');
+        var parentTaskId = $('#ParentTaskId').val();
+
+        $('.validation-error-message').hide().text("");
+        var postData = {
+            taskTitle: TaskTitle,
+            description: Description,
+            estimatedTimeHHMM: EstimationTimeHHMM,
+            dueDate:DueDate,
+            parentTaskId : parentTaskId,
+            isSync: IsSync
+        }
+        addAntiForgeryToken(postData);
+        $.ajax({
+            url: '@Url.Action("InsertBugTask", "ProjectTask")',
+            type: 'POST',
+            data: postData,
+            success: function (response) {
+                if (response.success) {
+                    $('#popupDialog').fadeOut(); 
+                } else {
+                    const errorMessage = response.message || "An error occurred. Please try again.";
+                    $('.validation-error-message').text(errorMessage).show();
+                }
+            },
+            error: function (xhr, status, error) {
+                $('.validation-error-message').text("An error occurred: " + error).show();
+            }
+        });
+    });
+
+        $(document).ready(function () {
+        var $title = $("#editableTitle");
+        var $hiddenInput = $("#TaskTitle");
+
+        $title.on("click", function () {
+            $title.attr("contenteditable", "true").focus();
+        });
+
+        $title.on("blur keyup paste input", function (event) {
+            $hiddenInput.val($title.text().trim());
+
+            if (event.type === "blur") {
+                $title.attr("contenteditable", "false");
+            }
+        });
+    });
+
+</script>
+
+<div class="content-body">
+    <div id="popupDialog" class="custom-modal" style="display:none;">
+        <div class="custom-modal-dialog">
+            <div class="custom-modal-content">
+                <div class="custom-modal-header">
+                    <h3 class="custom-modal-title">Add Bug Task</h3>
+                    <span class="custom-modal-close" onclick="closeModal()">&times;</span>
+                </div>
+                <div class="custom-modal-body">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="task-main-container">
+        <div class="half-page">
+            <div class="card card-default card-search">
+                <div class="card-body nop-card-body">
+                    <input type="hidden" id="EmployeeId" name="EmployeeId" value="@Model.EmployeeId" />
+                    <div class="form-horizontal">
+                        <div class="grid-container">
+                            <div class="grid-item">
+                                <label asp-for="AssignedTo" asp-postfix=":"></label>
+                                <select id="employeeDropdown" name="employeeDropdown" class="form-control" style="border: none; box-shadow: none; height:35px;"></select>
+                                <span id="error-AssignedTo" class="field-validation-error text-danger"></span>
+                                <script>
+                                    $(document).ready(function () {
+                                            var employeeDropdown = $(`#employeeDropdown`).kendoDropDownList({
+                                                dataTextField: "Text",
+                                                dataValueField: "Value",
+                                                filter: "contains",
+                                                autoBind: false,
+                                                dataSource: @Html.Raw(Json.Serialize(Model.AvailableEmployees)),
+
+                                            }).data("kendoDropDownList");
+                                        employeeDropdown.value(@Model.AssignedTo);
+
+                                                        });
+                                </script>
+                            </div>
+                            <div class="grid-item">
+                                <label asp-for="EstimationTimeHHMM" asp-postfix=":"></label>
+                                <input type="text" name="EstimationTimeHHMM" class="readonly-input" id="EstimationTimeHHMM" value="@Model.EstimationTimeHHMM" readonly />
+                                <span asp-validation-for="EstimationTimeHHMM"></span>
+                            </div>
+
+                            <script>
+                                $(document).ready(function () {
+                                    function formatStatus(state) {
+                                        if (!state.id) return state.text;
+
+                                        const [text, color] = state.text.split("|||");
+                                        return $(`
+                                            <div style="display: flex; align-items: center; gap: 6px;">
+                                                <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};"></div>
+                                                <span>${text}</span>
+                                            </div>
+                                        `);
+                                    }
+                                    var $sel = $('#StatusId');
+                                    var $wrap = $sel.closest('.select2-wrap');
+                                    if ($sel.data('select2')) {
+                                      $sel.select2('destroy');
+                                    }
+
+                                    $sel.select2({
+                                      width: '100%',
+                                      dropdownParent: $wrap,
+                                      templateResult: formatStatus,
+                                      templateSelection: formatStatus,
+                                      escapeMarkup: function (m) { return m; },
+                                      minimumResultsForSearch: Infinity
+                                    });
+
+                                    var s2 = $sel.data('select2');
+                                    if (s2 && s2.$container) {
+                                      s2.$container.css({ 'width': '230px', 'min-width': '230px' });
+                                      s2.$container.find('.select2-selection').css({ 'width': '230px', 'min-width': '230px' });
+                                    } else {
+                                      $sel.next('.select2-container').css({ 'width': '230px' }).find('.select2-selection').css({ 'width': '230px' });
+                                    }
+                                });
+                            </script>
+                            <div class="grid-item">
+                                <label asp-for="DeveloperName" asp-postfix=":"></label>
+                                <input type="text" name="DeveloperName" class="readonly-input" id="EstimationTimeHHMM" value="@Model.DeveloperName" readonly />
+                                <span asp-validation-for="DeveloperName"></span>
+                            </div>
+                            <div class="grid-item">
+                                <label asp-for="TaskCategoryId">
+                                    @Html.DisplayNameFor(m => m.TaskCategoryId):
+                                    <span style="color: red;">*</span>
+                                </label>
+                                <nop-select asp-for="TaskCategoryId" asp-items="Model.AvailableTaskCategories" />
+                                <input type="hidden" asp-for="TaskCategoryId" />
+                                <span id="error-TaskCategoryId" class="field-validation-error text-danger"></span>
+                            </div>
+                            <div class="grid-item">
+                                <label asp-for="Description">
+                                    @Html.DisplayNameFor(m => m.Description):
+                                    <span style="color: red;">*</span>
+                                </label>
+                                <nop-textarea asp-for="Description" />
+                                <span id="error-Description" class="field-validation-error text-danger"></span>
+                            </div>
+                            <div class="grid-item">
+                                <label asp-for="SpentTime" asp-postfix=":"></label>
+
+                                <div>
+                                    @Html.Raw(Model.SpentTimeTable)
+                                </div>
+                                <span asp-validation-for="SpentTime"></span>
+                            </div>
+
+                            <div class="grid-item">
+                                <label asp-for="ProcessWorkflowId" asp-postfix=":"></label>
+                                <nop-select asp-for="ProcessWorkflowId" asp-items="Model.AvailableProcessWorkflows" disabled="disabled" />
+                                <input type="hidden" asp-for="ProcessWorkflowId" />
+
+                                <span asp-validation-for="ProcessWorkflowId"></span>
+                            </div>
+
+                            <div class="grid-item">
+
+                             <label asp-for="ParentTaskId">@Html.DisplayNameFor(m => m.ParentTaskId):</label>
+                             <select id="ParentTaskId" name="ParentTaskId" class="form-control" style="border: none;box-shadow: none;">
+                                    <option value=""></option>
+                                    @foreach (var task in Model.AvailableParentTasks)
+                                    {
+                                        <option value="@task.Value">@task.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="ParentTaskId"></span>
+                                <span id="error-ParentTaskId" class="field-validation-error text-danger"></span>
+                                <span style="color:red;" id="parentTaskError"></span>
+                            </div>
+                            <script>
+                                $(document).ready(function () {
+                                    var initialProjectId     = "@Model.ProjectId";
+                                    var initialParentTaskId  = "@Model.ParentTaskId";
+                                    var taskDropdown = $("#ParentTaskId").kendoDropDownList({
+                                        optionLabel: "Select a task",
+                                        dataTextField: "Text",
+                                        dataValueField: "Value",
+                                        filter: "contains"
+                                    }).data("kendoDropDownList");
+                                    function loadParentTasks(projectId, preselectId) {
+                                        if (!projectId) {
+                                            taskDropdown.dataSource.data([]);
+                                            taskDropdown.value(0);
+                                            return;
+                                        }
+                                        $.getJSON('/ProjectTask/GetParentTasksByProjectId',
+                                                  { projectId: projectId },
+                                                  function (data) {
+                                                      taskDropdown.dataSource.data(data);
+                                                      if (preselectId) taskDropdown.value(preselectId);
+                                                  });
+                                    }
+                                    loadParentTasks(initialProjectId, initialParentTaskId);
+                                    $('#@Html.IdFor(m => m.ProjectId)').change(function () {
+                                        loadParentTasks($(this).val(), null);
+                                    });
+                                var taskTypeSelector = $('#@Html.IdFor(m => m.Tasktypeid)');
+                                var parentTaskSelector = $("#ParentTaskId");
+                                var parentTaskError = $("#taskError");
+
+                                function validateParentTask() {
+                                    var taskTypeVal = taskTypeSelector.val();
+                                    var parentTaskVal = parentTaskSelector.val();
+
+                                    if (taskTypeVal === "3" && (!parentTaskVal || parentTaskVal === "")) {
+                                        parentTaskError.text("Parent task is required when Task Type is Bug.");
+                                        return false;
+                                    } else {
+                                        parentTaskError.text("");
+                                        return true;
+                                    }
+                                }
+                                });
+                            </script>
+
+                            <div style="display: flex; align-items: center; gap: 10px; margin-left: 12px;">
+                                <label for="IsSync" style="font-weight: bold; margin: 0;">
+                                    @Html.DisplayNameFor(m => m.IsSync):
+                                </label>
+                                <input type="checkbox" id="IsSync" name="IsSync" @(Model.IsSync ? "checked" : "") style="margin: 0;" />
+                            </div>
+
+                            <div class="grid-item">
+                                    @Html.Raw(Model.ChildTaskTable)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card card-default card-search">
+                <div class="card-body nop-card-body">
+                    <div class="timesheet-header" id="timesheetHeader">
+                        <h3 class="section-title">
+                            Timesheet
+                            <span id="timesheetArrow">&#9660;</span>
+                        </h3>
+                    </div>
+                    <div id="timesheetContainer" style="display:none;">
+                        <div id="timesheetFilter" class="timesheet-filter">
+                            <div class="grid-item">
+                                <label>Period:</label>
+                                <select id="SearchPeriodId" class="form-control">
+                                    @foreach (var p in Model.PeriodList)
+                                    {
+                                        <option value="@p.Value" selected="@p.Selected">@p.Text</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="grid-item" id="from-container">
+                                <label>From</label>
+                                <input type="date" id="From" class="form-control" />
+                            </div>
+                            <div class="grid-item" id="to-container">
+                                <label>To</label>
+                                <input type="date" id="To" class="form-control" />
+                            </div>
+                        </div>
+                        <div id="timesheetTable"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card card-default card-search">
+                <div class="card-body nop-card-body">
+
+                    <div class="timesheet-header accordion-header" data-target="#followupLogContainer">
+                        <h3 class="section-title">
+                            Follow-Up Logs
+                            <span class="accordion-arrow">&#9660;</span>
+                        </h3>
+                    </div>
+
+                    <div id="followupLogContainer" style="display:none;">
+                        <div id="followupLogLoader" class="text-muted" style="padding:10px;">
+                            Click to load follow-up logs
+                        </div>
+                        <div id="followupLogTable"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card card-default card-search task-change-log-card">
+                <div class="card-body nop-card-body">
+                    <div class="form-horizontal">
+                        <h3 class="section-title">Task Change Logs</h3>
+                        <div class="task-commments-container scrollable-section-highhight">
+                            @if (Model.TaskChangeLogModel != null && Model.TaskChangeLogModel.Any())
+                            {
+                                foreach (var taskLog in Model.TaskChangeLogModel)
+                                {
+                                    <div class="comment-card">
+                                        <div class="comment-header">
+                                            <span class="comment-author">@taskLog.EmployeeName</span>
+                                            <span class="comment-date">@taskLog.CreatedOn.ToString("dd MMM yyyy hh:mm tt")</span>
+                                        </div>
+                                        <div class="comments-body">
+                                            <p>@Html.Raw(taskLog.Notes)</p>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="no-comments">No logs</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+  <div class="half-page">
+  <div class="card card-default card-search">
+    <div class="card-body nop-card-body">
+      <div class="form-horizontal">
+        <div class="grid-container">
+          <div class="grid-item">
+            <label asp-for="StatusId" asp-postfix=":"></label>
+            <div class="select2-wrap" style="width:230px;">
+              <select id="StatusId" asp-for="StatusId" asp-items="Model.StatusList" style="width:100%;"></select>
+            </div>
+            <div id="checklist-container"></div>
+            <span id="error-checklist" class="field-validation-error text-danger" style="display:none;"></span>
+          </div>
+
+          <div class="grid-item">
+            <label asp-for="DueDate">@Html.DisplayNameFor(m => m.DueDate): <span style="color: red;">*</span></label>
+            <input asp-for="DueDate" type="date" />
+            <span id="error-DueDate" class="field-validation-error text-danger"></span>
+          </div>
+        </div>
+
+        <div class="no-grid-container">
+          <h3 class="section-title">Task Comments</h3>
+          <div class="grid-item">
+            <input type="hidden" id="StatusChangeComment" name="StatusChangeComment" />
+            <div id="StatusChangeCommentEditor"></div>
+            <span id="error-StatusChangeComment" class="field-validation-error text-danger"></span>
+          </div>
+          <button type="button" class="btnSaveTask update-btn second-save-btn">Save</button>
+        </div>
+        <div class="task-commments-container scrollable-section">
+          @if (Model.TaskCommentsModel != null && Model.TaskCommentsModel.Any())
+          {
+              foreach (var comment in Model.TaskCommentsModel)
+              {
+                  <div class="comment-card">
+                      <div class="comment-header">
+                          <span class="comment-author">@comment.EmployeeName</span>
+                          <span class="comment-date">@comment.CreatedOn.ToString("dd MMM yyyy hh:mm tt")</span>
+                      </div>
+                      <div class="comments-body">
+                          @if (!string.IsNullOrWhiteSpace(comment.Description))
+                          {
+                                                @Html.Raw(
+                                                System.Text.RegularExpressions.Regex.Replace(
+                                                System.Text.RegularExpressions.Regex.Replace(
+                                                comment.Description ?? "",
+                                                @"(?<!href=['""])(https?:\/\/[^\s<]+)",
+                                                "<a href='$1' target='_blank' class='comment-link'>$1</a>"
+                                                ),
+                                                @"@<([^>]+)>",
+                                                "<span class='mention'>@$1</span>"
+                                                )
+                                                                        )
+
+                          }
+                      </div>
+                  </div>
+              }
+          }
+          else
+          {
+              <p class="no-comments">No comments added yet.</p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        <script>
+            let isSavingFollowUp = false;
+            function loadFollowUpTask() {
+
+                const taskId = "@Model.Id";
+
+                $("#followupLogLoader").text("Loading follow-up logs...");
+
+                $.get("/ProjectTask/GetTaskAlertLogs", { taskId: taskId })
+                    .done(function (html) {
+                        $("#followupLogTable").html(html);
+                        $("#followupLogLoader").hide();
+                    })
+                    .fail(function () {
+                        $("#followupLogLoader").text("Failed to load follow-up logs.");
+                    });
+            }
+
+            $(document).on(
+                "click",
+                ".accordion-header[data-target='#followupLogContainer']",
+                function () {
+
+                    const container = $("#followupLogContainer");
+                    const arrow = $(this).find(".accordion-arrow");
+
+                    container.slideToggle(200);
+                    arrow.toggleClass("active");
+
+                    if (container.is(":visible")) {
+                        loadFollowUpTask();
+                    }
+                }
+            );
+            var isTimesheetLoaded = false;
+            var taskId = @Model.Id;
+
+            $(document).on("click", "#timesheetHeader", function () {
+                toggleTimesheet();
+            });
+
+                 function onPeriodOrDateChange() {
+                var periodId = $('#SearchPeriodId').val();
+
+                $.ajax({
+                    url: '@Url.Action("GetPeriodDateRange", "Reports")',
+                    type: 'GET',
+                    data: { periodId: periodId },
+                    success: function (data) {
+
+                        if (data.from && data.to) {
+                            $('#From').val(data.from);
+                            $('#To').val(data.to);
+                            $('#from-container, #to-container').hide();
+                        } else {
+                            $('#from-container, #to-container').show();
+                        }
+                        loadTimesheet(); 
+                    }
+                });
+            }
+              function isValidHHMM(value) {
+                var regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+                return regex.test(value);
+            }
+            $('#SearchPeriodId').on('change', onPeriodOrDateChange);
+
+            $('#From, #To').on('change', function () {
+                loadTimesheet();  
+            });
+
+            function toggleTimesheet() {
+                var container = $("#timesheetContainer");
+                var arrow = $("#timesheetArrow");
+                if (container.is(":visible")) {
+                    container.slideUp();
+                    arrow.html("&#9660;");
+                    return;
+                }
+                arrow.html("&#9650;");
+
+                if (!isTimesheetLoaded) {
+                    loadTimesheet();
+                    isTimesheetLoaded = true;
+                }
+                container.slideDown();
+            }
+
+            function loadTimesheet() {
+                $("#timesheetTable").html(
+                    "<div class='text-center'>Loading timesheet...</div>"
+                );
+                $.ajax({
+                    url: "/TimeSheet/GetByTaskId",
+                    type: "GET",
+                    data: { taskId: taskId ,
+                    from: $('#From').val(),
+                    to: $('#To').val()
+                    },
+                    success: function (html) {
+                        $("#timesheetTable").html(html);
+                    },
+                    error: function () {
+                        $("#timesheetTable").html(
+                            "<div class='text-danger'>Failed to load timesheet</div>"
+                        );
+                    }
+                });
+            }
+               function isValidDate(value) {
+    if (!value) return false;
+    var dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(value)) return false;
+    var date = new Date(value);
+    if (isNaN(date.getTime())) return false;
+    var parts = value.split("-");
+    var y = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10) - 1;
+    var d = parseInt(parts[2], 10);
+    if (
+        date.getFullYear() !== y ||
+        date.getMonth() !== m ||
+        date.getDate() !== d
+    ) return false;
+    if (y < 1900) return false;
+    return true;
+                              }
+
+             $(document).on("click", "#btnAddTimesheet", function () {
+
+                if ($(".new-timesheet-row").length > 0)
+                    return;
+                $(".timesheet-section-table .no-data").closest("tr").remove();
+                var rowHtml = $("#newTimesheetRowTemplate").html();
+                $(".timesheet-section-table tbody").append(rowHtml);
+                 $("#btnAddTimesheet").hide();
+
+            });
+
+            $(document).on("click", ".btn-create-cancel", function () {
+                $(this).closest("tr").remove();
+                if ($(".timesheet-section-table tbody tr").length === 0) {
+                    $(".timesheet-section-table tbody").html(
+                        `<tr><td colspan="4" class="text-center no-data">No data found</td></tr>`
+                    );
+                }
+                 $("#btnAddTimesheet").show();
+            });
+
+            $(document).on("click", ".btn-create-save", function () {
+                var row = $(this).closest("tr");
+                 var spentTime = row.find(".ts-spent").val();
+            if (!isValidHHMM(spentTime)) {
+                alert("Spent Time must be in HH:MM format.");
+                row.find(".ts-spent").focus();
+                return;
+            }
+                var model = {
+                    SpentDate: row.find(".ts-date").val(),
+                    SpentTime: spentTime,
+                    Billable: row.find(".ts-billable").is(":checked"),
+                    TaskId: taskId 
+                };
+
+                if (!model.SpentDate || !model.SpentTime) {
+                    alert("Please enter Date and Spent Time");
+                    return;
+                }
+                if (!isValidDate(model.SpentDate)) {
+                     alert("Please enter a valid date.");
+                     row.find(".ts-date").focus();
+                     return;
+                 }
+                addAntiForgeryToken(model);
+                $.ajax({
+                    url: "/TimeSheet/CreateInlineTimesheet",
+                    type: "POST",
+                    data: model,
+                    success: function (res) {
+                        if (!res.success) {
+                            alert(res.message);
+                            return;
+                        }
+                        loadTimesheet();
+                 $("#btnAddTimesheet").show();
+
+                    },
+                    error: function () {
+                        alert("Failed to create timesheet.");
+                    }
+                });
+            });
+
+            $(document).on("click", ".btn-edit", function () {
+                var row = $(this).closest("tr");
+
+                row.find(".view-mode").hide();
+                row.find(".edit-mode").show();
+            });
+
+            $(document).on("click", ".btn-cancel", function () {
+                var row = $(this).closest("tr");
+                row.find(".spent-input").val(row.find(".spent-text").text().trim());
+                row.find(".billable-input").prop(
+                    "checked",
+                    row.find(".billable-text i").hasClass("fa-check")
+                );
+                row.find(".edit-mode").hide();
+                row.find(".view-mode").show();
+            });
+             $(document).on('click', '.btn-delete', function () {
+                var row = $(this).closest('tr');
+                var timeSheetId = row.data('id');
+                if (!confirm('Are you sure you want to delete this timesheet entry?'))
+                    return;
+                $.ajax({
+                    url: '@Url.Action("DeleteInlineTimesheet", "TimeSheet")',
+                    type: 'POST',
+                    data: { id: timeSheetId },
+                    success: function (res) {
+                        if (res.success) {
+                            row.fadeOut(300, function () {
+                                $(this).remove();
+                            });
+                        } else {
+                            alert(res.message || 'Failed to delete');
+                        }
+                    }
+                });
+            });
+
+            $(document).on("click", ".btn-save", function () {
+                var row = $(this).closest("tr");
+                var spentTime = row.find(".spent-input").val();
+
+            if (!isValidHHMM(spentTime)) {
+                alert("Spent Time must be in HH:MM format.");
+                row.find(".ts-spent").focus();
+                return;
+            }
+                var model = {
+                    id: row.data("id"),
+                    SpentTime: spentTime,
+                    Billable: row.find(".billable-input").is(":checked")
+                };
+                addAntiForgeryToken(model);
+                $.ajax({
+                    url: "/TimeSheet/UpdateInlineTimesheet",
+                    type: "POST",
+                    data: model,
+                    success: function (res) {
+                        if (!res.success) {
+                            alert(res.message);
+                            return;
+                        }
+                        row.find(".spent-text").text(model.SpentTime);
+                        row.find(".billable-text").html(
+                            model.Billable
+                                ? '<i class="fa fa-check text-success"></i>'
+                                : '<i class="fa fa-times text-danger"></i>'
+                        );
+                        row.find(".edit-mode").hide();
+                        row.find(".view-mode").show();
+                    },
+                    error: function () {
+                        alert("Failed to update timesheet.");
+                    }
+                });
+            });
+        </script>
+<script>
+  (function () {
+      const atSymbol = String.fromCharCode(64);
+      var quill = new Quill('#StatusChangeCommentEditor', {
+          theme: 'snow',
+          modules: {
+              toolbar: [
+                  ['bold','italic','underline','strike'],
+                  
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  ['clean']
+              ],
+              clipboard: {
+                  matchVisual: false
+              }
+          }
+      });
+      var existingHtml = @Html.Raw(JsonConvert.SerializeObject(Model.StatusChangeComment ?? ""));
+      if (existingHtml) {
+          try {
+              quill.clipboard.dangerouslyPasteHTML(0, existingHtml);
+          } catch (e) {}
+      }
+      const $mentionBox = $('<div class="mention-suggestions"></div>').appendTo('body').hide();
+      var selectedMentionIndex = -1;
+      const employees = @Html.Raw(Json.Serialize(Model.AvailableEmployees ?? new List<SelectListItem>()));
+            function showMentionBox(filtered, bounds, matchedToken, caretIndex) {
+                const prevActiveIndex = selectedMentionIndex; 
+                $mentionBox.empty();
+                filtered.forEach((emp, idx) => {
+                    const $it = $('<div class="mention-item"></div>')
+                        .text(emp.Text.trim())
+                        .data('value', emp.Text.trim())
+                        .data('index', idx)
+                        .on('click', function () {
+                            insertMention($(this).data('value'), matchedToken, caretIndex);
+                            $mentionBox.hide();
+                            quill.focus();
+                        })
+                        .on('mouseenter', function () {
+                            selectedMentionIndex = $(this).index();
+                            $mentionBox.children().removeClass('active');
+                            $(this).addClass('active');
+                        });
+                    $mentionBox.append($it);
+                });
+                const $items = $mentionBox.children();
+                if (prevActiveIndex >= 0 && prevActiveIndex < $items.length) {
+                    selectedMentionIndex = prevActiveIndex;
+                } else {
+                    selectedMentionIndex = 0;
+                }
+                $items.removeClass('active').eq(selectedMentionIndex).addClass('active');
+                $mentionBox.css({
+                    left: bounds.left + 'px',
+                    top: (bounds.top + bounds.height) + 'px',
+                    width: Math.max(200, bounds.width) + 'px',
+                    display: 'block'
+                });
+            }
+
+    function insertMention(name, matchedToken, caretIndex) {
+        const mentionText = `${atSymbol}<${name}> `;
+        const start = Math.max(0, caretIndex - (matchedToken ? matchedToken.length : 0));
+        try {
+            if (matchedToken && matchedToken.length > 0) {
+                quill.deleteText(start, matchedToken.length, 'user');
+            }
+            quill.insertText(start, mentionText, { 'bold': false }, 'user');
+            quill.setSelection(start + mentionText.length, 0, 'user');
+        } catch (e) {
+            const sel = quill.getSelection(true);
+            quill.insertText(sel.index, mentionText, 'user');
+            quill.setSelection(sel.index + mentionText.length, 0, 'user');
+        }
+    }
+    quill.on('text-change', function (delta, oldDelta, source) {
+        if (source !== 'user') return;
+        const sel = quill.getSelection();
+        if (!sel) { $mentionBox.hide(); return; }
+        const index = sel.index;
+        const start = Math.max(0, index - 100);
+        const textBeforeCursor = quill.getText(start, index - start);
+        const regex = new RegExp(`${atSymbol}([A-Za-z0-9_\\s]*)$`);
+        const match = textBeforeCursor.match(regex);
+        if (match) {
+            const token = match[0]; 
+            const searchPart = (match[1] || '').trim().toLowerCase();
+            const filtered = employees.filter(e => e.Text.toLowerCase().includes(searchPart));
+            if (filtered.length > 0) {
+                const bounds = quill.getBounds(index);
+                const containerOffset = $('#StatusChangeCommentEditor').offset() || { left: 0, top: 0 };
+                const absoluteBounds = {
+                    left: containerOffset.left + bounds.left,
+                    top: containerOffset.top + bounds.top,
+                    width: bounds.width,
+                    height: bounds.height
+                };
+                showMentionBox(filtered, absoluteBounds, token, index);
+            } else {
+                $mentionBox.hide();
+            }
+        } else {
+            $mentionBox.hide();
+        }
+    });
+              $(document).on('keydown', function (e) {
+                if (!$mentionBox.is(':visible')) return;
+                const $items = $mentionBox.children();
+                if (!$items.length) return;
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedMentionIndex = (selectedMentionIndex + 1) % $items.length;
+                    $items.removeClass('active').eq(selectedMentionIndex).addClass('active');
+                    return false;
+                }
+                else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedMentionIndex = (selectedMentionIndex - 1 + $items.length) % $items.length;
+                    $items.removeClass('active').eq(selectedMentionIndex).addClass('active');
+                    return false;
+                }
+                else if (e.key === 'Enter') {
+                    if ($mentionBox.is(':visible')) {
+                        e.preventDefault();
+                        e.stopPropagation(); 
+                        const $active = $mentionBox.find('.mention-item.active');
+                        if ($active.length) {
+                            $active.trigger('click');
+                        } else if (selectedMentionIndex >= 0 && selectedMentionIndex < $items.length) {
+                            $items.eq(selectedMentionIndex).trigger('click');
+                        }
+                        return false;
+                    }
+                }
+                else if (e.key === 'Escape') {
+                    $mentionBox.hide();
+                    return false;
+                }
+            });
+
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.mention-suggestions, #StatusChangeCommentEditor .ql-editor').length) {
+            $mentionBox.hide();
+        }
+    });
+            const editorElem = document.querySelector('#StatusChangeCommentEditor .ql-editor');
+            editorElem.addEventListener('paste', function (e) {
+                const clipboardData = (e.clipboardData || window.clipboardData);
+                if (!clipboardData) return;
+                const items = clipboardData.items || [];
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
+                    if (item.kind === 'file' && item.type.indexOf('image') !== -1) {
+                        e.preventDefault();
+                        const file = item.getAsFile();
+                        uploadImageFile(file);
+                    }
+                }
+            });
+
+      function uploadImageFile(file) {
+          var formData = new FormData();
+          formData.append('image', file);
+          $.ajax({
+              url: '@Url.Action("UploadCommentImage", "ProjectTask")',
+              type: 'POST',
+              data: formData,
+              processData: false,
+              contentType: false,
+              success: function (res) {
+                  if (res && res.success && res.url) {
+                      const sel = quill.getSelection(true);
+                      quill.insertEmbed(sel.index, 'image', res.url, 'user');
+                      quill.setSelection(sel.index + 1);
+                      setTimeout(() => {
+                      const editor = document.querySelector('#StatusChangeCommentEditor .ql-editor');
+                      const imgs = editor.querySelectorAll('img');
+                      imgs.forEach(img => {
+                          img.style.maxWidth = '500px';
+                          img.style.maxHeight = '350px';
+                          img.style.objectFit = 'contain';
+                          img.style.borderRadius = '6px';
+                          img.style.display = 'block';
+                          img.style.margin = '6px 0';
+                      });
+                  }, 50);
+                  } else {
+                      alert(res.message || 'Image upload failed.');
+                  }
+              },
+              error: function () {
+                  alert('Image upload error.');
+              }
+          });
+      }
+      $('#StatusId').change(function () {
+          var statusId = $(this).val();
+          var taskId = @Model.Id;
+
+                   $.ajax({
+                url: '/ProjectTask/GetStatusInfo',
+                type: 'GET',
+                data: { taskId: taskId, toStateId: statusId },
+                success: function (response) {
+                    if (!response) return;
+                    try {
+                        quill.setText(''); 
+                        if (response.mentions && response.mentions.length > 0) {
+                            var mentionsText = response.mentions.join(' ') + '\n';
+                            quill.insertText(0, mentionsText, 'user');
+                        }
+                        if (response.commentTemplate) {
+                            const currentLength = quill.getLength();
+                            try {
+                                quill.clipboard.dangerouslyPasteHTML(currentLength - 1, response.commentTemplate);
+                            } catch (e) {
+                                quill.insertText(currentLength - 1, response.commentTemplate + '\n');
+                            }
+                        }
+                        if(response.assignToId){
+                           var employeeDropdown = $("#employeeDropdown").data("kendoDropDownList");
+                                     employeeDropdown.value(response.assignToId);
+                          }
+                    } catch (e) {
+                        console.error('Error inserting comment or mentions', e);
+                    }
+                },
+                error: function () { console.error('GetStatusInfo failed'); }
+            });
+          if (statusId && taskId) {
+              $.get("/ProjectTask/GetCheckLists", { taskId: taskId, statusId: statusId }, function (response) {
+                  if (response.success) {
+                 if (response.checklists && response.checklists.length > 0){
+                  var html = `
+                <div style="margin-top:10px;">
+                    <div style="font-weight:600; margin-bottom:6px;">Quality Checklist</div>
+                    <ul>`;
+
+                      if (response.showSelectAll) {
+                          html += '<li><input type="checkbox" id="selectAllChecklist" /> <strong>Select All</strong></li>';
+                      }
+                      response.checklists.forEach(function (item) {
+                          html += '<li><input type="checkbox" class="checklist-item" data-id="' + (item.Id || 0) + '" /> ' +
+                              item.Title +
+                              (item.IsMandatory ? ' <span style="color:red;">*</span>' : '') +
+                              '</li>';
+                      });
+                      html += '</ul></div>';
+                      $("#checklist-container").html(html);
+
+                      if (response.showSelectAll) {
+                          $("#selectAllChecklist").on('change', function () {
+                              var checked = $(this).is(':checked');
+                              $(".checklist-item").prop('checked', checked);
+                          });
+                          $(document).on('change', '.checklist-item', function () {
+                              var total = $(".checklist-item").length;
+                              var checkedCount = $(".checklist-item:checked").length;
+                              $("#selectAllChecklist").prop('checked', total === checkedCount);
+                          });
+                      }
+                      }
+                                else {
+                  $("#checklist-container").html('');
+                   }
+                  } else {
+                      $("#checklist-container").html('<p>No checklist available</p>');
+                  }
+              });
+          }
+      });
+                  $(document).on('click', '#checklist-container li', function (e) {
+                if ($(e.target).is('input[type="checkbox"]')) return;
+
+                var checkbox = $(this).find('input[type="checkbox"]');
+                checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
+            });
+
+      $('.btnSaveTask').click(function () {
+          const $btn = $(this);
+          if ($btn.prop('disabled')) return;
+          $btn.prop('disabled', true).text('Saving...');
+          $("#error-checklist").hide().text('');
+          $("#checklist-container li").removeClass('error');
+          var checklistEntries = [];
+          var checklistError = false;
+          $("#checklist-container .checklist-item").each(function () {
+              var id = $(this).data('id') || 0;
+              var isChecked = $(this).is(':checked');
+              if (id && id > 0) {
+                  checklistEntries.push({ CheckListId: id, IsChecked: isChecked });
+              }
+              var isMandatory = $(this).closest('li').find('span[style*=\"color:red\"]').length > 0;
+              if (isMandatory && !isChecked) {
+                  checklistError = true;
+              }
+          });
+
+          if (checklistError) {
+              $btn.prop('disabled', false).text('Save');
+              $("#checklist-container .checklist-item").each(function () {
+                  var isMandatory = $(this).closest('li').find('span[style*=\"color:red\"]').length > 0;
+                  var isChecked = $(this).is(':checked');
+                  if (isMandatory && !isChecked) $(this).closest('li').addClass('error');
+              });
+              $("#error-checklist").show().text('Please complete all mandatory checklist items before saving.');
+              return;
+          } else {
+              $("#error-checklist").hide().text('');
+          }
+          var commentHtml = quill.root.innerHTML;
+          $('#StatusChangeComment').val(commentHtml);
+          var taskData = {
+              Id: '@Model.Id',
+              TaskTitle: $('#TaskTitle').val(),
+              AssignedTo: $('#employeeDropdown').data('kendoDropDownList') ? $('#employeeDropdown').data('kendoDropDownList').value() : $('#employeeDropdown').val(),
+              EstimationTimeHHMM: $('#EstimationTimeHHMM').val(),
+              ProcessWorkflowId: $('#ProcessWorkflowId').val(),
+              DueDate: $('#DueDate').val(),
+              Tasktypeid: $('#Tasktypeid').val(),
+              Description: $('#Description').val(),
+              StatusId: $('#StatusId').val(),
+              TaskCategoryId:$('#TaskCategoryId').val(),
+              StatusChangeComment: commentHtml,
+              ParentTaskId: $('#ParentTaskId').val() ? $('#ParentTaskId').val() : 0,
+              IsSync: $('#IsSync').is(':checked'),
+              ChecklistEntries: checklistEntries
+          };
+
+          addAntiForgeryToken(taskData);
+
+          $.ajax({
+              type: 'POST',
+              url: '@Url.Action("SaveTask", "ProjectTask")',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify(taskData),
+              success: function (response) {
+                  if (response.success) {
+                      location.reload();
+                  } else if (response.validationErrors) {
+                      showValidationErrors(response.validationErrors);
+                      $btn.prop('disabled', false).text('Save');
+                  } else {
+                      alert(response.message || 'Error saving task.');
+                      $btn.prop('disabled', false).text('Save');
+                  }
+              },
+              error: function (xhr, status, error) {
+                  alert('An error occurred while saving the task: ' + error);
+                  $btn.prop('disabled', false).text('Save');
+              }
+          });
+      });
+
+      function showValidationErrors(errors) {
+          $('.field-validation-error').text('');
+          var firstField = null;
+          for (var key in errors) {
+              var msg = errors[key];
+              var selector = '#error-' + key;
+              $(selector).text(msg);
+              if (!firstField) firstField = key;
+          }
+          if (firstField) {
+              var el = document.getElementById(firstField);
+              if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+          }
+      }
+
+  })();
+
+              function confirmDeleteTask(taskId) {
+                  if (confirm("Are you sure you want to delete this task ?")) {
+                      deleteTask(taskId);
+                  }
+              }
+
+              function deleteTask(taskId) {
+                  var form = document.createElement("form");
+                  form.method = "POST";
+                  form.action = "/ProjectTask/Delete";
+                  var input = document.createElement("input");
+                  input.type = "hidden";
+                  input.name = "id";
+                  input.value = taskId;
+                  form.appendChild(input);
+                  document.body.appendChild(form);
+                  form.submit();
+              }
+</script>
+
+
+
+

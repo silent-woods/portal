@@ -1,0 +1,99 @@
+﻿@model InvoiceModel
+
+@if (Model.Id > 0)
+{
+    <div class="card-body">
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "invoice-payment-histories-grid",
+                        UrlRead = new DataUrl("InvoicePaymentHistories", "AccountManagement", new RouteValueDictionary { [nameof(Model.InvoicePaymentHistorySearchModel.InvoiceId)] = Model.Id }),
+                        UrlDelete = new DataUrl("InvoicePaymentHistoryDelete", "AccountManagement", null),
+                        Length = Model.InvoicePaymentHistorySearchModel.PageSize,
+                        LengthMenu = Model.InvoicePaymentHistorySearchModel.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoicePaymentHistoryModel.PaymentMethod))
+                    {
+                        Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoicePaymentHistory.Fields.PaymentMethodId").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoicePaymentHistoryModel.AmountInPaymentCurrency))
+                    {
+                        Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoicePaymentHistory.Fields.AmountInPaymentCurrency").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoicePaymentHistoryModel.MonthId))
+                    {
+                        Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoicePaymentHistory.Fields.Month").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoicePaymentHistoryModel.YearId))
+                    {
+                        Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoicePaymentHistory.Fields.Year").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoicePaymentHistoryModel.IsPartialPayment))
+                    {
+                        Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoicePaymentHistory.Fields.IsPartialPayment").Text,
+                        ClassName = NopColumnClassDefaults.CenterAll,
+                        Render = new RenderBoolean()
+                    });
+                    @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoicePaymentHistories, PermissionAction.Edit))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoicePaymentHistoryModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "100",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderCustom("renderColumnEditInvoicePaymentHistory")
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoicePaymentHistories, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoicePaymentHistoryModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text)
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoicePaymentHistories, PermissionAction.Add))
+            {
+                <div class="card-footer">
+                    <div width="100%">
+                        <button type="submit" id="btnAddNewInvoicePaymentHistory"
+                                onclick="javascript:OpenWindow('@(Url.Action("InvoicePaymentHistoryCreatePopup", "AccountManagement", new { invoiceId = Model.Id, btnId = "btnInvoicePaymentHistoryRefresh", formId = "invoice-form" }))', 800, 450, true); return false;"
+                                class="btn btn-primary">
+                            <i class="fas fa-plus-square"></i>
+                            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoicePaymentHistory.AddNewInvoicePaymentHistory")
+                        </button>
+                        <button type="submit" id="btnInvoicePaymentHistoryRefresh" style="display: none"></button>
+                        <script>
+                            $(document).ready(function () {
+                                $('#btnInvoicePaymentHistoryRefresh').click(function () {
+                                    updateTable('#invoice-payment-histories-grid');
+                                    return false;
+                                });
+                            });
+                        </script>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="card-body">
+        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.InvoicePaymentHistory.SaveBeforeEdit")
+    </div>
+}
+
+<script>
+    function renderColumnEditInvoicePaymentHistory(data, type, row, meta) {
+        return '<button onclick=\"javascript:OpenWindow(\'@Url.Content("~/Admin/AccountManagement/InvoicePaymentHistoryEditPopup/")' + data + '?btnId=btnInvoicePaymentHistoryRefresh&formId=invoice-form\', 800, 400, true); return false;\" class="btn btn-default"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit").Text</button>';
+    }
+</script>

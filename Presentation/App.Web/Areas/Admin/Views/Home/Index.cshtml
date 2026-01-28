@@ -1,0 +1,66 @@
+﻿@model DashboardModel
+@inject IPermissionService permissionService
+@using App.Services.Security
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Dashboard").Text;
+
+    //close configuration steps value
+    const string closeCardAttributeName = "CloseConfigurationSteps";
+    var closeConfigurationStepsCard = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), closeCardAttributeName);
+
+     //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Dashboard");
+}
+
+<link rel="stylesheet" href="~/lib_npm/ionicons/css/ionicons.min.css" />
+
+<div class="content-header">
+    <h1>
+        @T("Admin.Dashboard")
+    </h1>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                   @*  @if (!closeConfigurationStepsCard)
+                    {
+                        <div class="row">
+                            <div class="col-md-12">
+                                @await Html.PartialAsync("_ConfigurationSteps")
+                            </div>
+                        </div>
+                    } *@
+
+               @*      @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.DashboardTop, additionalData = Model }) *@
+@*                     @if (!Model.IsLoggedInAsVendor)
+                    {
+                        <div class="row">
+                            <div class="col-md-12">
+                                @await Component.InvokeAsync(typeof(NopCommerceNewsViewComponent))
+                            </div>
+                        </div>
+                    } *@
+
+                    <div class="row">
+                        <div class="col-md-7">
+                    @await Html.PartialAsync("_EmployeeOnLeave", Model.EmployeeOnLeave)
+                    </div>
+                    </div>
+                    @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.DashboardNewsAfter, additionalData = Model })
+                    
+                    @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.DashboardCommonstatisticsAfter, additionalData = Model })
+                    
+                    @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.DashboardCustomerorderchartsAfter, additionalData = Model })
+                    @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.DashboardOrderreportsAfter, additionalData = Model })
+                    @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.DashboardLatestordersSearchtermsAfter, additionalData = Model })
+                    @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.DashboardBottom, additionalData = Model })
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+    <nop-alert asp-alert-id="loadOrderStatisticsAlert" asp-alert-message="@T("Admin.SalesReport.OrderStatistics.Alert.FailedLoad")" />
+    <nop-alert asp-alert-id="loadCustomerStatisticsAlert" asp-alert-message="@T("Admin.Reports.Customers.CustomerStatistics.Alert.FailedLoad")" />

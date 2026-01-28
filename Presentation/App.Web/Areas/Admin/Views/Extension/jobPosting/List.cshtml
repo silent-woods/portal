@@ -1,0 +1,176 @@
+@using App.Web.Areas.Admin.Models.JobPostings;
+@model JobPostingSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.JobPosting").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("JobPostings");
+
+    const string hideSearchBlockAttributeName = "TimeSheet.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.JobPosting")
+    </h1>
+    <div class="float-right">
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageJobPosting, PermissionAction.Add))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </a>
+        }
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageJobPosting, PermissionAction.Delete))
+        {
+            <button type="button" id="delete-selected" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete.Selected")
+            </button>
+            <nop-action-confirmation asp-button-id="delete-selected" />
+        }
+    </div>
+
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="Title" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="Title" />
+                                        </div>
+                                    </div>
+                                    </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-sm-3">
+                                            <nop-label asp-for="PositionId" />
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <nop-select asp-for="PositionId" asp-items="Model.AvailablePosition"  />
+                                            <span asp-validation-for="PositionId"></span>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-posting" class="btn btn-primary
+                                         btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "jobPostings-grid",
+                                UrlRead = new DataUrl("List", "jobPostings", null),
+                                SearchButtonId = "search-posting",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                new FilterParameter(nameof(Model.Title)),
+                                new FilterParameter(nameof(Model.PositionId))
+                                },
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.Id))
+                            {
+                                IsMasterCheckBox = true,
+                                Render = new RenderCheckBox("checkbox_jobpostings"),
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "30"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.Title))
+                            {
+                                Title = T("Admin.JobPosting.Fields.Title").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.Description))
+                            {
+                                Title = T("Admin.JobPosting.Fields.Description").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.Position))
+                            {
+                                Title = T("Admin.JobPosting.Fields.Position").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.CreateOn))
+                            {
+                                Title = T("Admin.JobPosting.Fields.CreateOn").Text,
+                                Render = new RenderDate()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.UpdateOn))
+                            {
+                                Title = T("Admin.JobPosting.Fields.UpdateOn").Text,
+                                Render = new RenderDate()
+                            });
+                            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageJobPosting, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "80",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonEdit(new DataUrl("Edit"))
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+   
+    <script>
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: selectedIds
+            };
+            addAntiForgeryToken(postData);
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "jobPostings"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204) {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#jobPostings-grid');
+
+                }
+            });
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+</section>

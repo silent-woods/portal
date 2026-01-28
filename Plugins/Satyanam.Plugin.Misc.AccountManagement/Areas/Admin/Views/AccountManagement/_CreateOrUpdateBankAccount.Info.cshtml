@@ -1,0 +1,130 @@
+﻿@model BankAccountModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Title" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Title" asp-required="true" />
+            <span asp-validation-for="Title"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="BankName" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="BankName" asp-required="true" />
+            <span asp-validation-for="BankName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="AccountNo" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="AccountNo" asp-required="true" />
+            <span asp-validation-for="AccountNo"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="AccountName" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="AccountName" asp-required="true" />
+            <span asp-validation-for="AccountName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SwiftCode" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="SwiftCode" />
+            <span asp-validation-for="SwiftCode"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IFSCCode" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="IFSCCode" />
+            <span asp-validation-for="IFSCCode"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="AccountType" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="AccountType" />
+            <span asp-validation-for="AccountType"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Branch" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Branch" />
+            <span asp-validation-for="Branch"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Currency" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Currency" />
+            <span asp-validation-for="Currency"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Address" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Address" asp-template="RichEditor" />
+            <span asp-validation-for="Address"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Notes" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Notes" asp-template="RichEditor" />
+            <span asp-validation-for="Notes"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsDefault" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="IsDefault" />
+            <span asp-validation-for="IsDefault"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsActive" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="IsActive" />
+            <span asp-validation-for="IsActive"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="DisplayOrder" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="DisplayOrder" />
+            <span asp-validation-for="DisplayOrder"></span>
+        </div>
+    </div>
+</div>

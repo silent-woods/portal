@@ -1,0 +1,179 @@
+﻿@model PermissionUserMappingModel
+
+@{
+    ViewBag.PageTitle = T("Admin.Configuration.UserPermissions").Text;
+    NopHtml.SetActiveMenuItemSystemName("User Permissions");
+}
+
+<form asp-controller="Security" asp-action="UserPermissions" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">@T("Admin.Configuration.UserPermissions")</h1>
+        <div class="float-right">
+            <a asp-action="AddUserPermission" asp-controller="Security" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </a>
+        </div>
+    </div>
+
+    @if (Model.Users.Any() && Model.UserPermissions.Any())
+    {
+        <section class="content">
+            <div class="container-fluid">
+                <div class="form-horizontal">
+                    <div class="cards-group">
+                        <div class="card card-default">
+                            <div class="card-body">
+
+                                <div class="scroll-wrapper">
+                                    <table class="table table-hover table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>User</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            @foreach (var user in Model.Users)
+                                            {
+                                                <tr class="user-row" data-user="@user.Id">
+                                                    <td>
+                                                        <i class="fas fa-chevron-right toggle-user"></i>
+                                                        <span>@user.Username</span>
+                                                    </td>
+                                                </tr>
+
+                                                <tr class="user-permissions" id="user_perm_@user.Id" style="display:none">
+                                                    <td colspan="2">
+                                                        <table class="table table-sm table-bordered mb-0">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Permission</th>
+                                                                    <th class="text-center">Full</th>
+                                                                    <th class="text-center">View</th>
+                                                                    <th class="text-center">Add</th>
+                                                                    <th class="text-center">Edit</th>
+                                                                    <th class="text-center">Delete</th>
+                                                                    
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var perm in Model.UserPermissions[user.Id])
+                                                                {
+                                                                    <tr>
+                                                                        <td>
+                                                                            <span>@perm.PermissionName</span>
+                                                                        </td>
+
+                                                                        @foreach (var action in new[] { "Full", "View", "Add", "Edit", "Delete" })
+                                                                        {
+                                                                            var isChecked = action switch
+                                                                            {
+                                                                                "Full" => perm.Full,
+                                                                                "View" => perm.View,
+                                                                                "Add" => perm.Add,
+                                                                                "Edit" => perm.Edit,
+                                                                                "Delete" => perm.Delete,
+                                                                                _ => false
+                                                                            };
+
+                                                                            <td class="text-center">
+                                                                                <input type="checkbox" class="perm-checkbox" data-user-id="@perm.UserId"
+                                                                                       data-permission-id="@perm.PermissionRecordId"
+                                                                                       data-action="@action" @(isChecked ? "checked" : null) />
+                                                                            </td>
+                                                                        }
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+</form>
+
+<script asp-location="Footer">
+    let isSyncing = false;
+
+    $(document).on('click', '.toggle-user', function () {
+        const $icon = $(this);
+        const userId = $icon.closest('.user-row').data('user');
+        $('#user_perm_' + userId).toggle();
+        $icon.toggleClass('fa-chevron-right fa-chevron-down');
+    });
+
+    $(document).on('change', '.perm-checkbox', function () {
+        const $row = $(this).closest('tr');
+
+        const $full = $row.find('[data-action="Full"]');
+        const $view = $row.find('[data-action="View"]');
+        const $add = $row.find('[data-action="Add"]');
+        const $edit = $row.find('[data-action="Edit"]');
+        const $delete = $row.find('[data-action="Delete"]');
+
+        const action = $(this).data('action');
+
+        if (action === 'Full') {
+            const checked = $full.prop('checked');
+            $view.prop('checked', checked);
+            $add.prop('checked', checked);
+            $edit.prop('checked', checked);
+            $delete.prop('checked', checked);
+        }
+
+        if (action === 'View' && !$view.prop('checked')) {
+            $add.prop('checked', false);
+            $edit.prop('checked', false);
+            $delete.prop('checked', false);
+        }
+
+        if (action !== 'View' && action !== 'Full') {
+            if ($add.prop('checked') || $edit.prop('checked') || $delete.prop('checked')) {
+                $view.prop('checked', true);
+            }
+        }
+
+        const allChecked =
+            $add.prop('checked') &&
+            $edit.prop('checked') &&
+            $delete.prop('checked') &&
+            $view.prop('checked');
+
+        $full.prop('checked', allChecked);
+
+        const payload = {
+            userId: $(this).data('user-id'),
+            permissionRecordId: $(this).data('permission-id'),
+            add: $add.prop('checked'),
+            edit: $edit.prop('checked'),
+            delete: $delete.prop('checked'),
+            view: $view.prop('checked'),
+            full: $full.prop('checked')
+        };
+
+        addAntiForgeryToken(payload);
+
+        $.ajax({
+            url: '@Url.Action("UpdateUserPermission", "Security")',
+            type: 'POST',
+            data: payload,
+            success: function() {
+                alert('User permissions has been updated successfully.');
+            },
+            error: function () {
+                alert('Failed to update permission');
+            }
+        });
+    });
+</script>

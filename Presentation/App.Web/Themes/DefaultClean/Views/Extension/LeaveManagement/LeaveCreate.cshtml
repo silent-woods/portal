@@ -1,0 +1,130 @@
+﻿@using App.Core
+@using App.Web.Models.Extensions.LeaveManagement;
+@model LeaveManagementModel
+@inject App.Core.IWebHelper webHelper
+@{
+    // Layout = "_ColumnsTwo";
+
+    Layout = "_Root.Head";
+
+    //title
+    NopHtml.AddTitleParts(T("PageTitle.Leave").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-career-result-page");
+}
+
+<div class="page registration-page">
+
+    <div class="page-body">
+
+       
+            <input asp-for="Id" type="hidden" />
+        
+            <div class="fieldset">
+              
+     
+                <div class="form-fields">
+                   
+                    <div class="inputs-popup">
+                    <label asp-for="LeaveType" asp-postfix=":" class="required-label"></label>
+                        <nop-select asp-for="LeaveTypeId" id="leaveType" class="select1" asp-items="Model.Leave" />
+                  
+                        <span asp-validation-for="LeaveTypeId"></span>
+                    </div>
+                    <div class="inputs-popup">
+                    <label asp-for="From" asp-postfix=":" class="required-label"></label>
+                        
+                        <input asp-for="From" type="date" id="FromDate" class="form-control select2" />
+                   
+                        <span asp-validation-for="From"></span>
+                    </div>
+                        <br />
+                    <div class="inputs-popup">
+                    <label asp-for="To" asp-postfix=":" class="required-label"></label>
+                        <input asp-for="To" type="date" id="ToDate" class="form-control select2" />
+                    
+                        <span asp-validation-for="To"></span>
+                    </div>
+                 
+                    <br/>
+                    <div class="inputs-popup">
+                    <label asp-for="NoOfDays" asp-postfix=":" class="required-label"></label>
+                        <nop-editor asp-for="NoOfDays" id="NoOfDays" />
+                        @* <nop-required /> *@
+                        <span asp-validation-for="NoOfDays"></span>
+
+                    </div>
+                    <div class="inputs-popup">
+                    <label asp-for="ReasonForLeave" asp-postfix=":" class="required-label"></label>
+                        <nop-textarea asp-for="ReasonForLeave"/>
+                       
+                        <span asp-validation-for="ReasonForLeave"></span>
+                    </div>
+
+
+               
+                    <div class="inputs-popup">
+                    
+                    <label asp-for="SelectedEmployeeId" asp-postfix=":"></label>
+                        <select id="SelectedEmployeeIds" name="SelectedEmployeeIds" class="kendo-multi-select" multiple>
+                            @foreach (var project in Model.AvailableEmployees)
+                            {
+                                <option value="@project.Value">@project.Text</option>
+                            }
+                        </select>
+                        <script>
+                            $(document).ready(function () {
+                            var preSelected = @Html.Raw(Json.Serialize(Model.SelectedEmployeeId)); // Preselected as list of int
+                                var projectSelect = $('#SelectedEmployeeIds').kendoMultiSelect({
+                                    autoClose: true,
+                                    filter: "contains",
+                                value: preSelected,
+                                    
+                                }).data("kendoMultiSelect");
+
+                            @if (Model.AvailableEmployees.Count == 0)
+                            {
+                                <text>
+                                        projectSelect.setOptions({
+                                            enable: false,
+                                            placeholder: '@T("Admin.Catalog.NoEmployee")'
+                                        });
+                                    projectSelect._placeholder();
+                                    projectSelect._enable();
+                                </text>
+                            }
+                                                                                                                                                                                                                                                                                    });
+                        </script>
+                    </div>
+                
+
+
+                </div>
+            <div class="validation-error"><p class="validation-error-message" style="color:red;"></p></div>
+            </div>
+         
+            <div class="text-center col-12 button1">
+                <div class="buttons">
+                    <button type="button" id="save-leave" name="save-info-button" class="button-1 save-customer-info-button">@T("Common.Save")</button>
+                    &nbsp;&nbsp;
+                    <button type="button" class="button-1 add-dailyreport-button" onclick="location.href='/LeaveManagement/SearchLeave'">Back</button>
+                </div>
+
+            </div>
+        
+     
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+

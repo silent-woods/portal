@@ -1,0 +1,799 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.TimesheetReports
+
+@model TimesheetReportSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.ReportByEmployee").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("ReportByEmployee");
+
+    const string hideSearchBlockAttributeName = "ReportByEmployee.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
+
+
+<!-- Kendo UI JS -->
+<script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.ReportByEmployee")
+    </h1>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+                        <!-- First  Row: Employee -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="SelectedEmployeeIds" />
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <select id="SelectedEmployeeIds" name="SelectedEmployeeIds" class="kendo-multi-select" style="min-height:30px;" multiple>
+                                            @foreach (var project in Model.AvailableEmployees)
+                                            {
+                                                <option value="@project.Value">@project.Text</option>
+                                            }
+                                        </select>
+                                        <span style="color:red; font-weight:bold; position: absolute; right: -5px; top: 15px;">*</span>
+
+                                        <script>
+                                            $(document).ready(function () {
+                                                var projectSelect = $('#SelectedEmployeeIds').kendoMultiSelect({
+                                                    autoClose: true,
+                                                    filter: "contains",
+
+                                                }).data("kendoMultiSelect");
+
+                                            @if (Model.AvailableEmployees.Count == 0)
+                                            {
+                                                <text>
+                                                        projectSelect.setOptions({
+                                                            enable: false,
+                                                            placeholder: '@T("Admin.Catalog.Products.NoAvailableProjects")'
+                                                        });
+                                                    projectSelect._placeholder();
+                                                    projectSelect._enable();
+                                                </text>
+                                            }
+                                                                                                                                                                                                                                                                                                            });
+                                        </script>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="ShowById" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <nop-select asp-for="ShowById" asp-items="Model.ShowByList"  />
+                                        <span asp-validation-for="ShowById"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                     
+                        <div class="row">
+                          
+                            <div class="col-md-6">
+                        
+
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="ProjectId" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <select id="projectDropdown" name="@Html.NameFor(model => model.ProjectId)" class="form-control" style="border: none;
+        box-shadow: none;">
+                                            <option value="0" selected>All</option> <!-- Preselect "All" by default -->
+                                            @foreach (var employee in Model.AvailableProjects)
+                                            {
+                                                <option value="@employee.Value">@employee.Text</option>
+                                            }
+                                        </select>
+                                        @Html.HiddenFor(model => model.ProjectId)
+                                     
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="SearchPeriodId" />
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <nop-select asp-for="SearchPeriodId" asp-items="Model.PeriodList" />
+                                        <span asp-validation-for="SearchPeriodId"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                           
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="HoursId" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <nop-select asp-for="HoursId" asp-items="Model.HoursList" />
+                                        <span asp-validation-for="HoursId"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group row" style="display:none;" id="from-container">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="From" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <nop-editor asp-for="From" asp-required="true" />
+                                        <span asp-validation-for="From"></span>
+                                        <span id="From-error"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="IsHideEmpty" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <nop-editor asp-for="IsHideEmpty" class="form-control" />
+                                        <span asp-validation-for="IsHideEmpty"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group row" style="display:none;" id="to-container">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="To" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <nop-editor asp-for="To" asp-required="true" />
+                                        <span asp-validation-for="To"></span>
+                                        <div id="To-error"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+                        <!-- Search Button -->
+                        <div class="row">
+                            <div class="text-center col-12">
+                                <button type="submit" id="search-brands" class="btn btn-primary btn-search">
+                                    <i class="fas fa-chart-line"></i>
+                                    @T("Admin.Reports.MonthlyReport.RunReport")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    $(document).ready(function () {
+
+                         //for automatically change dropdown according to difference of date
+                    function updateShowByDropdown() {
+                        var fromDate = new Date($('#From').val());
+                        var toDate = new Date($('#To').val());
+
+                        // Ensure both dates are selected
+                        if (!isNaN(fromDate) && !isNaN(toDate)) {
+                            var timeDiff = toDate - fromDate;
+                            var daysDiff = timeDiff / (1000 * 3600 * 24);
+
+                            // Get the normal dropdown element
+                            var showByDropdown = $('#ShowById');
+                            if (daysDiff > 31) {
+                                // If the difference is more than 1 months (31 days), set to Monthly
+                                showByDropdown.val('3');
+                            } else if (daysDiff > 7) {
+                                // If the difference is more than 7 days, set to Weekly
+                                showByDropdown.val('2');
+                            } else {
+                                // Otherwise, set to Daily
+                                showByDropdown.val('1');
+                            }
+                        }
+                    }
+
+                    // Trigger the function when the From or To date changes
+                    $('#From, #To').on('change', updateShowByDropdown);
+
+                        $('#SearchPeriodId').on('change', function () {
+                        var periodId = $(this).val();
+
+                        $.ajax({
+                          url: "@(Url.Action("GetPeriodDateRange", "Reports"))",
+                            type: 'GET',
+                            data: { periodId: periodId },
+                            success: function (data) {
+                                if (data.from && data.to) {
+
+                                    // Not custom, auto-fill and hide custom fields
+                                    $('#From').val(data.from);
+                                    $('#To').val(data.to);
+                                    $('#from-container').hide();
+                                    $('#to-container').hide();
+                                    updateShowByDropdown()
+                                } else {
+                                    // Custom selected
+                                    $('#From').val('');
+                                    $('#To').val('');
+                                    $('#from-container').show();
+                                    $('#to-container').show();
+                                    updateShowByDropdown()
+                                }
+                            }
+                        });
+                    });
+                     $('#SearchPeriodId').trigger('change');
+                    });
+                </script>
+                <div class="card card-default hide-before">
+                    <div class="card-body">
+
+                        <div class="table-wrapper">
+                            <table id="timesheet-report-table" class="table">
+                                <thead>
+                                    <!-- Table header will be dynamically created here -->
+                                </thead>
+                                <tbody>
+                                    <!-- Table body will be dynamically created here -->
+                                </tbody>
+                                <tfoot>
+                                    <!-- Total row will be dynamically created here -->
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    $(document).ready(function () {
+                        // Helper function to calculate monthly segments
+
+             
+                            $("#projectDropdown").kendoDropDownList({
+                                
+                                dataTextField: "Text",
+                                dataValueField: "Value",
+                                filter: "contains",
+                                autoBind: false,
+                            dataSource: @Html.Raw(Json.Serialize(Model.AvailableProjects)),
+                                change: function (e) {
+                                var searchProjectId = $('#projectDropdown').val();
+
+                                $('#ProjectId').val(searchProjectId);
+                                }
+                            });
+                        $('#SelectedEmployeeIds').on('change', function () {
+                            var projectMultiSelect = $("#SelectedEmployeeIds").data("kendoMultiSelect");  // Get Kendo MultiSelect instance
+                            var selectedProjectIds = projectMultiSelect.value();  // Get the selected project IDs
+                            console.log('Selected project IDs:', selectedProjectIds);
+                            // Check if "All" (0) is selected
+                            if (selectedProjectIds.includes('0')) {
+                                // If "All" is the only selection, do nothing
+                                if (selectedProjectIds.length === 1) {
+                                    return; // Only "All" is selected, do nothing
+                                }
+
+                                // If "All" is selected last, unselect all other options
+                                if (selectedProjectIds[selectedProjectIds.length - 1] === '0') {
+                                    // Keep only "All"
+                                    projectMultiSelect.value(['0']);
+                                } else {
+                                    // If another project is selected, unselect "All"
+                                    projectMultiSelect.value($.grep(selectedProjectIds, function (value) {
+                                        return value !== '0'; // Remove "All" from selection
+                                    }));
+                                }
+                            } else {
+                                // If no projects are selected, select "All" by default
+                                if (selectedProjectIds.length === 0) {
+                                    projectMultiSelect.value(['0']); // Default to "All"
+                                }
+                            }
+                        });
+                      
+                        $("#SelectedEmployeeIds").data("kendoMultiSelect").value(0);
+                        function getMonthlySegments(fromDate, toDate) {
+                            let segments = [];
+                            let current = new Date(fromDate);
+
+                            // Loop through months, even if partial
+                            while (current <= toDate) {
+                                let startOfMonth = new Date(current.getFullYear(), current.getMonth(), 1);
+                                let endOfMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0); // Last day of the month
+
+                                // Adjust the segment start and end based on the selected range
+                                let segmentStart = current > fromDate ? current : fromDate;
+                                let segmentEnd = endOfMonth > toDate ? toDate : endOfMonth;
+
+                                segments.push({
+                                    start: new Date(segmentStart),
+                                    end: new Date(segmentEnd)
+                                });
+
+                                // Move to the next month
+                                current = new Date(endOfMonth);
+                                current.setDate(current.getDate() + 1);
+                            }
+
+                            return segments;
+                        }
+
+                        // Helper function to calculate weekly segments
+                        function getWeeklySegments(fromDate, toDate) {
+                            let segments = [];
+                            let current = new Date(fromDate);
+
+                            // Loop to calculate weekly segments
+                            while (current <= toDate) {
+                                let weekStart = new Date(current);
+                                let weekEnd = new Date(current);
+                                weekEnd.setDate(current.getDate() + (7 - current.getDay()));  // Set to the end of the week (Sunday if you do satuerday then do 6 insetd of 7 as old)
+                                segments.push({
+                                    start: new Date(weekStart),
+                                    end: new Date(Math.min(weekEnd, toDate)) // Ensure we don't exceed the 'To' date
+                                });
+                                current = new Date(weekEnd);
+                                current.setDate(current.getDate() + 1); // Move to the next week's start (Sunday)
+                            }
+                           
+
+                            return segments;
+                        }
+
+
+                        // Format date as "Aug 1 - Aug 7"
+                        function formatDateRange(startDate, endDate) {
+                            let startMonth = startDate.toLocaleDateString('en-US', { month: 'short' });
+                            let startDay = startDate.toLocaleDateString('en-US', { day: 'numeric' });
+                            let endMonth = endDate.toLocaleDateString('en-US', { month: 'short' });
+                            let endDay = endDate.toLocaleDateString('en-US', { day: 'numeric' });
+
+                            if (startMonth === endMonth) {
+                                return `${startMonth} ${startDay} - ${endDay}`;
+                            } else {
+                                return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+                            }
+                        }
+
+                        function validateEmployeeSelection() {
+                            var selectedEmployeeIds = $('#SelectedEmployeeIds').val(); // Get selected employee IDs
+                            var From = $('#From').val();
+                            var To = $('#To').val();
+
+                            var isValid = true; // Assume valid unless we find errors
+
+                            // Clear previous error messages
+                            $('#Employee-error').html('').css('color', '');
+                            $('#From-error').html('').css('color', '');
+                            $('#To-error').html('').css('color', '');
+
+                            // Validate selected employees
+                            if (!selectedEmployeeIds || selectedEmployeeIds.length === 0) {
+                                $('#Employee-error').html('Please select at least one employee.').css('color', 'red'); // Show error message
+                                isValid = false; // Validation failed
+                            }
+                                                                 
+                            // Validate From and To dates
+                            if (!From || From ==null) {
+                                $('#From-error').html('Please select a start date.').css('color', 'red');
+                                isValid = false; // Validation failed
+                            }
+
+                            if (!To) {
+                                $('#To-error').html('Please select an end date.').css('color', 'red');
+                                isValid = false; // Validation failed
+                            }
+
+                            if (From && To && new Date(To) < new Date(From)) {
+                                $('#To-error').html('End date cannot be earlier than start date.').css('color', 'red');
+                                isValid = false; // Validation failed
+                            }
+
+                            return isValid; // Return validation result
+                        }
+
+                        function isWeekend(data, date) {
+                            const utcTimestamp = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+                            const utcDate = new Date(utcTimestamp);
+                            const dateString = utcDate.toISOString().split('T')[0]; // extract the date part in YYYY-MM-DD format
+                           
+
+                            const isweeked = data.some(item => {
+                               
+                                return item.SpentDate.startsWith(dateString) && item.IsWeekend;
+                            });
+
+
+                            return isweeked;
+                        }
+
+                        function isHoliday(data, date) {
+                            const utcTimestamp = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+                            const utcDate = new Date(utcTimestamp);
+                            const dateString = utcDate.toISOString().split('T')[0]; // extract the date part in YYYY-MM-DD format
+                           
+
+                            const isholiday = data.some(item => {
+                                
+                                return item.SpentDate.startsWith(dateString) && item.IsHoliday;
+                            });
+
+
+                            return isholiday;
+                        }
+
+                        function isLeave(data, date) {
+                            const utcTimestamp = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+                            const utcDate = new Date(utcTimestamp);
+                            const dateString = utcDate.toISOString().split('T')[0]; // extract the date part in YYYY-MM-DD format
+                            
+
+                            const isLeave = data.some(item => {
+                               
+                                return item.SpentDate.startsWith(dateString) && item.IsLeave
+                            });
+
+
+                            return isLeave;
+                        }
+
+
+
+                        function updateTable(data, fromDate, toDate, showById) {
+
+                            if (data && data.length > 0) {
+                                $('.hide-before').removeClass('hide-before');
+                            } else {
+                                $('.hide-before').addClass('hide-before');
+                            }
+                            var tableBody = $("#timesheet-report-table tbody");
+                            var tableHead = $("#timesheet-report-table thead");
+                            var tableFoot = $("#timesheet-report-table tfoot");
+
+                            // Clear previous data
+                            tableBody.empty();
+                            tableHead.empty();
+                            tableFoot.empty();
+
+                            // Calculate the date segments based on ShowById
+                            var segments = [];
+                            if (showById == "2") {
+                                // Weekly view
+                                segments = getWeeklySegments(new Date(fromDate), new Date(toDate));
+                            } else if (showById == "3") {
+                                // Monthly view
+                                segments = getMonthlySegments(new Date(fromDate), new Date(toDate));
+                            } else {
+                                // Daily view
+                                let current = new Date(fromDate);
+                                while (current <= new Date(toDate)) {
+                                    let segment = {
+                                        start: new Date(current),
+                                        end: new Date(current),
+                                        isWeekend: isWeekend(data, current),
+                                        isHoliday: isHoliday(data, current)
+                                    };
+                                    segments.push(segment);
+                                    current.setDate(current.getDate() + 1);
+                                }
+                            }
+
+                            // Create table header with segment ranges
+                            var headerRow = $("<tr></tr>");
+                            headerRow.append($("<th></th>").text("Team Members")); // First column for employee names
+                            
+                            segments.forEach(function (segment) {
+                                var segmentText;
+                                if (showById == "2") {
+                                    // Weekly format: "Aug 1 - Aug 7"
+                                    segmentText = formatDateRange(segment.start, segment.end);
+                                } else if (showById == "3") {
+                                    // Monthly format: "Aug 1 - Aug 31"
+                                    segmentText = segment.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + " - " +
+                                        segment.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                } else {
+                                    // Daily format: "Aug 1"
+                                    segmentText = segment.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                }
+
+                                var headerCell = $("<th></th>").text(segmentText);
+                                if (segment.isHoliday) {
+                                    headerCell.css("color", "#4caf50");
+                                } else if (segment.isWeekend) {
+                                    headerCell.css("color", "red");
+                                }
+                                headerRow.append(headerCell);
+                            });
+
+                            headerRow.append($("<th></th>").text("Total"));
+                            tableHead.append(headerRow);
+
+                            // Group data by EmployeeId
+                            var groupedData = {};
+                            data.forEach(function (item) {
+                                if (!groupedData[item.EmployeeId]) {
+                                    groupedData[item.EmployeeId] = {
+                                        name: item.EmployeeName,
+                                        spentTimeByDate: {},
+                                        totalSpentMinutes: 0
+                                    };
+                                }
+
+                                // Convert hours & minutes into total minutes
+                                var spentMinutes = (item.SpentHours || 0) * 60 + (item.SpentMinutes || 0);
+                                groupedData[item.EmployeeId].spentTimeByDate[item.SpentDate] = spentMinutes;
+                                groupedData[item.EmployeeId].totalSpentMinutes += spentMinutes;
+                            });
+
+                            // Filter out empty rows
+                            groupedData = Object.fromEntries(Object.entries(groupedData).filter(([_, taskData]) => taskData.totalSpentMinutes > 0));
+
+                            // Add data rows for each employee
+                            Object.keys(groupedData).forEach(function (employeeId) {
+                                var taskData = groupedData[employeeId];
+                                var row = $("<tr></tr>");
+                                row.append($("<td></td>").text(taskData.name));
+
+                                // Hours for each segment
+                                segments.forEach(function (segment) {
+                                    var segmentTotalMinutes = 0;
+                                    Object.keys(taskData.spentTimeByDate).forEach(function (date) {
+                                        var dateObj = new Date(date);
+                                        if (dateObj >= segment.start && dateObj <= segment.end) {
+                                            segmentTotalMinutes += taskData.spentTimeByDate[date];
+                                        }
+                                    });
+
+                                    // Convert minutes to HH:MM format
+                                    var formattedTime = formatMinutesToHHMM(segmentTotalMinutes);
+                                    row.append($("<td></td>").text(formattedTime !== "00:00" ? formattedTime : "-"));
+                                });
+
+                                // Total time in HH:MM format
+                                row.append($("<td></td>").text(formatMinutesToHHMM(taskData.totalSpentMinutes)));
+                                tableBody.append(row);
+                            });
+
+                            // Add a row for the total of all employees
+                            var totalRow = $("<tr></tr>").addClass('totalRow');
+                            totalRow.append($("<th></th>").text("Total"));
+
+                            var grandTotalMinutes = 0;
+                            segments.forEach(function (segment) {
+                                var segmentTotalMinutes = 0;
+                                Object.keys(groupedData).forEach(function (employeeId) {
+                                    var taskData = groupedData[employeeId];
+                                    Object.keys(taskData.spentTimeByDate).forEach(function (date) {
+                                        var dateObj = new Date(date);
+
+                                        if (dateObj >= segment.start && dateObj <= segment.end) {
+                                            segmentTotalMinutes += taskData.spentTimeByDate[date];
+                                        }
+                                    });
+                                });
+                                console.log("segments-", segments);
+                                totalRow.append($("<td class='totalRow'></td>").text(formatMinutesToHHMM(segmentTotalMinutes)));
+                                grandTotalMinutes += segmentTotalMinutes;
+                            });
+
+                            // Grand total in HH:MM format
+                            totalRow.append($("<td class='totalRow'></td>").text(formatMinutesToHHMM(grandTotalMinutes)));
+                            tableFoot.append(totalRow);
+                        }
+
+                        // ✅ Function to Convert Minutes into HH:MM Format
+                        function formatMinutesToHHMM(totalMinutes) {
+                            var hours = Math.floor(totalMinutes / 60);
+                            var minutes = totalMinutes % 60;
+                            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                        }
+
+                        // ✅ Function to Format Date Ranges for Weekly Segments
+                        function formatDateRange(start, end) {
+                            var startDate = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            var endDate = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            return startDate + " - " + endDate;
+                        }
+
+                        // Fetch data when the "Run Report" button is clicked
+                        function fetchData() {
+
+                            if (!validateEmployeeSelection()) {
+                                return; // Stop further execution if validation fails
+                            }
+
+                            var selectedEmployeeIds = $('#SelectedEmployeeIds').val(); // Array of employee IDs
+                            var From = $('#From').val();
+                            var To = $('#To').val();
+                            var showById = $('#ShowById').val(); 
+                            var projectId = $('#ProjectId').val(); 
+                            var hours = $('#HoursId').val();
+
+
+
+                            // Clear previous data
+                            $("#timesheet-report-table tbody").empty();
+                            $("#timesheet-report-table thead").empty();
+                            $("#timesheet-report-table tfoot").empty();
+
+                            var aggregatedData = [];
+                            var totalRequests = 0;
+                            var completedRequests = 0;
+
+                            // Fetch data based on employees or all employees
+                            if (selectedEmployeeIds.includes("0")) {
+                                // Fetch all employees' data
+                                $.ajax({
+                                    url: "@(Url.Action("GetAllEmployeesData", "Reports"))",
+                                    type: "GET",
+                                    data: { From: From, To: To, ShowById: showById, ProjectId: projectId, HoursId :hours},
+                                    success: function (data) {
+                                        aggregatedData = data;
+                                       
+                                        updateTable(aggregatedData, From, To, showById); // Pass date range and showById to updateTable
+                                    },
+                                    error: function (xhr, status, error) {
+                                        console.error('Error fetching data for all employees:', error);
+                                    }
+                                });
+                            } else {
+                                totalRequests = selectedEmployeeIds.length;
+                                selectedEmployeeIds.forEach(function (employeeId) {
+                                    $.ajax({
+                                        url: "@(Url.Action("GetReportByEmployee", "Reports"))",
+                                        type: "GET",
+                                        data: { searchEmployeeId: employeeId, From: From, To: To, ShowById: showById, ProjectId: projectId, HoursId: hours },
+                                        success: function (data) {
+
+                                            aggregatedData = aggregatedData.concat(data);
+                                            completedRequests++;
+                                            if (completedRequests === totalRequests) {
+
+                  updateTable(aggregatedData, From, To, showById); // Pass date range and showById to updateTable
+                                            }
+                                        },
+                                        error: function (xhr, status, error) {
+                                            console.error('Error fetching data for employee ID ' + employeeId + ':', error);
+                                            completedRequests++;
+                                            if (completedRequests === totalRequests) {
+                                                updateTable(aggregatedData, From, To, showById); // Pass date range and showById to updateTable
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+                        }
+
+                        //if change then validation text is gone
+                        $('#SelectedEmployeeIds').change(function () {
+                            $('#Employee-error').html('').css('color', '');
+                        });
+
+                        $('#From').change(function () {
+                            $('#From-error').html('').css('color', '');
+
+                        });
+
+                        $('#To').change(function () {
+                            $('#To-error').html('').css('color', '');
+                        });
+
+
+                        // Attach click event to search button
+                        $('#search-brands').click(fetchData);
+
+                       
+                    });
+
+                    // Handle button click event to remove focus
+                    $(document).on('click', 'button', function () {
+                        $(this).blur();
+                    });
+
+                  
+                </script>
+
+            </div>
+        </div>
+    </div>
+
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+</section>
+
+
+<style>
+   
+ 
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto; /* Enables horizontal scroll only when content overflows */
+        position: relative;
+    }
+
+    #timesheet-report-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        position: relative; /* Ensure the table is positioned relatively to handle sticky positioning */
+    }
+
+        /* Ensure cells do not wrap text */
+        #timesheet-report-table th,
+        #timesheet-report-table td {
+            padding: 10px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        /* Fix the first column */
+        #timesheet-report-table thead th:first-child,
+        #timesheet-report-table tbody td:first-child,
+        #timesheet-report-table tfoot th:first-child,
+        #timesheet-report-table tfoot td:first-child {
+            position: sticky;
+            left: 0;
+            background-color: #ffffff; /* White background for better visibility */
+            z-index: 2; /* Ensure it stays on top of other columns */
+        }
+
+        /* Fix the last column */
+        #timesheet-report-table thead th:last-child,
+        #timesheet-report-table tbody td:last-child,
+        #timesheet-report-table tfoot th:last-child,
+        #timesheet-report-table tfoot td:last-child {
+            position: sticky;
+            right: 0;
+            background-color: #ffffff; /* White background for better visibility */
+            z-index: 2; /* Ensure it stays on top of other columns */
+        }
+
+    /* Style for total row cells */
+    .totalRow {
+        font-weight: bold; /* Make the text bold */
+        text-align: right; /* Align text to the right for numerical values */
+        padding: 10px;
+        border-top: 2px solid #ddd; /* Top border to separate total row from the data rows */
+    }
+
+    .hide-before {
+        display: none;
+    }
+
+        .hide-before table:not(:empty) {
+            display: block;
+        }
+
+</style>
+

@@ -1,0 +1,121 @@
+﻿@model InvoicePaymentHistoryModel
+
+<input asp-for="Id" type="hidden" />
+<input asp-for="InvoiceId" type="hidden" />
+
+@if (ViewBag.RefreshPage == true)
+{
+    <script>
+        try {window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click();}
+        catch (e){}
+        window.close();
+    </script>
+}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-popup">
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="AmountInPaymentCurrency" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-editor asp-for="AmountInPaymentCurrency" asp-required="true" />
+                                <span asp-validation-for="AmountInPaymentCurrency"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="AmountInINR" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-editor asp-for="AmountInINR" asp-required="true" />
+                                <span asp-validation-for="AmountInINR"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="PaymentMethodId" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-select asp-for="PaymentMethodId" asp-items="Model.AvailablePaymentMethods" />
+                                <span asp-validation-for="PaymentMethodId"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="IsPartialPayment" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-editor asp-for="IsPartialPayment" />
+                                <span asp-validation-for="IsPartialPayment"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="PaymentReceiptId" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-editor asp-for="PaymentReceiptId" />
+                                <span asp-validation-for="PaymentReceiptId"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="MonthId" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-select asp-for="MonthId" asp-items="Model.AvailableMonths" />
+                                <span asp-validation-for="MonthId"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="YearId" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-select asp-for="YearId" asp-items="Model.AvailableYears" />
+                                <span asp-validation-for="YearId"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="Notes" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-editor asp-for="Notes" asp-template="RichEditor" />
+                                <span asp-validation-for="Notes"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    $(function () {
+        function updateAmount() {
+            var amountInPaymentCurrency = parseFloat($('#AmountInPaymentCurrency').val()) || 0;
+
+            $.ajax({
+                cache: false,
+                url: "@Url.Action("ConvertedCurrencyAmount", "AccountManagement")",
+                data: { invoiceId: @Model.InvoiceId, amountInPaymentCurrency: amountInPaymentCurrency, inrConvert: true },
+                success: function (data) {
+                    if (data.result && data.convertedAmount !== undefined) {
+                        $("#AmountInINR").data("kendoNumericTextBox").value(data.convertedAmount);
+                    }
+                }
+            });
+        }
+
+        $('#AmountInPaymentCurrency').on('input', updateAmount);
+
+        updateAmount();
+    });
+</script>

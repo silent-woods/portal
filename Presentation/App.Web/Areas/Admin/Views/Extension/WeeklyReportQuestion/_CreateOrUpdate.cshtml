@@ -1,0 +1,19 @@
+﻿@using App.Web.Areas.Admin.Models.WeeklyQuestions;
+@model App.Web.Areas.Admin.Models.WeeklyQuestions.WeeklyQuestionsModel
+@{
+    const string hideInfoBlockAttributeName = "WeeklyQuestionsDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+
+            <nop-cards id="Qeations-item-cards">
+                <nop-card asp-name="Qeations-item-info" asp-icon="fas fa-info" asp-title="@T("Admin.WeeklyQuestions.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/WeeklyReportQuestion/_CreateOrUpdate.Info.cshtml", Model)
+                    </nop-card>
+            </nop-cards>
+        </div>
+    </div>
+</section>

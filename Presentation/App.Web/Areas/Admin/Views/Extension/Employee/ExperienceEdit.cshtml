@@ -1,0 +1,38 @@
+@model ExperienceModel
+
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Employee.Experience.Edit").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Employee");
+}
+
+<form asp-controller="Employee" asp-action="ExperienceEdit" method="post">
+    <input asp-for="Id" type="hidden" />
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Employee.Experience.Edit")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-controller="Employee" asp-action="Edit" asp-route-id="@Model.EmployeeID">@T("Admin.Employee.Experience.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageExperience, PermissionAction.Edit))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_EmployeeExperienceMapping.cshtml", Model)
+</form>
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="Experience-delete" />
+
+

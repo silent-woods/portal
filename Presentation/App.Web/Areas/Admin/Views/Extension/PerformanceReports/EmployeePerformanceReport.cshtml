@@ -1,0 +1,993 @@
+@using App.Web.Areas.Admin.Models.Extension.MonthlyPerformanceReports
+@model MonthlyPerformanceReportSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.MonthlyPerformanceReports").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("MonthlyPerformanceReports");
+
+    const string hideSearchBlockAttributeName = "MonthlyPerformanceReports.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.MonthlyPerformanceReports")
+    </h1>
+
+    <div class="float-right">
+
+
+        <button type="button" id="sync-dot" class="btn btn-primary">
+            <i class="fas fa-sync"></i>
+            @T("Admin.Common.SyncDOT")
+        </button>
+
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text"> </div>
+
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="SearchEmployeeId" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <select id="employeeDropdown" asp-for="SearchEmployeeId" asp-items="Model.AvailableEmployees" class="form-control"></select>
+
+                                        @Html.HiddenFor(model => model.SearchEmployeeId)
+                                        <span id="employee-error"></span>
+
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="OverEstimation" />
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <nop-select asp-for="OverEstimation" asp-items="Model.AvailableOverEstimations" />
+                                        <span asp-validation-for="OverEstimation"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row">
+
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="SelectedProjectIds" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <div style="position: relative;">
+                                            <nop-select asp-for="SelectedProjectIds" asp-items="Model.AvailableProjects" asp-multiple="true" class="form-control" />
+                                        </div>
+                                        <span id="Project-error"></span>
+                                        <script>
+                                                                                     $(document).ready(function () {
+                                                var selectElement = $('#@Html.IdFor(model => model.SelectedProjectIds)').data("kendoMultiSelect");
+
+                                                selectElement.setOptions({
+                                                    autoClose: true,
+                                                    filter: "contains",
+                                                });
+
+                                                // preselect projects from model
+                                                var preselected = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.SelectedProjectIds));
+                                                if (preselected && preselected.length > 0) {
+                                                    selectElement.value(preselected);
+                                                }
+
+                                                @if (Model.AvailableProjects.Count == 0)
+                                                {
+                                                        <text>
+                                                            selectElement.setOptions({
+                                                                enable: false,
+                                                                placeholder: '@T("Admin.Catalog.Project.NoProject")'
+                                                            });
+                                                            selectElement._placeholder();
+                                                            selectElement._enable();
+                                                        </text>
+                                                }
+                                            });
+
+                                        </script>
+                                        <div id="Project-error"></div>
+                                        <span asp-validation-for="SelectedProjectIds"></span>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="SearchPeriodId" />
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <nop-select asp-for="SearchPeriodId" asp-items="Model.PeriodList" />
+                                        <span asp-validation-for="SearchPeriodId"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                    </div>
+                                    <div class="col-sm-9">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group row" style="display:none;" id="from-container">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="From" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <nop-editor asp-for="From" />
+                                        <span asp-validation-for="From"></span>
+                                        <span id="From-error"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="col-sm-3">
+                                    </div>
+                                    <div class="col-sm-9">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group row" style="display:none;" id="to-container">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="To" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <nop-editor asp-for="To" />
+                                        <span asp-validation-for="To"></span>
+                                        <div id="To-error"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="text-center col-12">
+                                <button type="submit" id="search-employeePerformance" class="btn btn-primary btn-search">
+                                    <i class="fas fa-chart-line"></i>
+                                    @T("Admin.Reports.MonthlyReport.RunReport")
+                                </button>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <script>
+                    $(document).ready(function () {
+                        $('#SearchPeriodId').on('change', function () {
+                            var periodId = $(this).val();
+
+                            $.ajax({
+                                url: "@(Url.Action("GetPeriodDateRange", "Reports"))",
+                                type: 'GET',
+                                data: { periodId: periodId },
+                                success: function (data) {
+                                    if (data.from && data.to) {
+                                        // Not custom: fill and hide
+                                        $('#From').val(data.from);
+                                        $('#To').val(data.to);
+
+                                        $('#from-container').hide();
+                                        $('#to-container').hide();
+                                    } else {
+                                        // Custom: show fields but DO NOT clear if already filled
+                                        $('#from-container').show();
+                                        $('#to-container').show();
+
+                                        if (!$('#From').val()) {
+                                            $('#From').val(data.from || '');
+                                        }
+                                        if (!$('#To').val()) {
+                                            $('#To').val(data.to || '');
+                                        }
+                                    }
+                                }
+                            });
+                        });
+
+                        // Run once on page load
+                        $('#SearchPeriodId').trigger('change');
+                    });
+                </script>
+
+
+                <div class="card card-default">
+                    <div class="card-body">
+
+
+                        <script>
+                            function updateSummary() {
+
+                                var employeeId = $('#employeeDropdown').val();
+                                var from = $('#From').val();
+                                var to = $('#To').val();
+                               var  overEstimation =$('#OverEstimation').val();
+
+                                var fromError = '';
+                                var toError = '';
+                                var employeeError = '';
+                                var isValidate = true;
+
+
+
+                                if (!employeeId || employeeId == 0) {
+                                    employeeError = 'Please select an employee.';
+                                    $('#employee-error').html(employeeError).css('color', 'red');
+                                    $('#summary-container').html('');
+                                    isValidate = false;
+
+                                    return;
+                                } else {
+                                    $('#employee-error').html('').css('color', '');
+                                    isValidate = true;
+
+                                }
+
+                                if (from && to && new Date(to) < new Date(from)) {
+                                    ToError = 'End date cannot be earlier than start date.';
+                                    $('#To-error').html(ToError).css('color', 'red');
+                                    $('#summary-container').html('');
+                                    isValidate = false;
+                                }
+                                else {
+                                    $('#To-error').html('').css('color', '');
+                                    isValidate = true;
+                                }
+
+
+                                if (isValidate) {
+                                    var SelectedProjectIds = $('#SelectedProjectIds').val()
+                                    var projectIds = SelectedProjectIds.join(',');
+                                    $.ajax({
+                                        type: "GET",
+                                        url: "@(Url.Action("GetSummary", "Reports"))",
+                                        data: {
+                                            searchEmployeeId: $('#employeeDropdown').val(),
+                                            From: $('#From').val(),
+                                            To: $('#To').val(),
+                                            ProjectIds: projectIds,
+                                            overEstimation:overEstimation
+
+                                        },
+                                        success: function (data) {
+                                                                                                                           var summaryTable = `
+                            <table id="summary-table" class="table table-bordered"
+                                   style="width: 100%; background-color: #fff; border-radius: 6px; overflow: hidden;
+                                          box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-collapse: collapse; margin-bottom: 20px;">
+                                <thead style="background-color: #f2f4f8;">
+                                    <tr>
+                                        <th rowspan="2" style="padding: 12px; font-weight: 600; font-size: 14px;
+                                                               border: 1px solid #ddd; text-align: center; vertical-align: middle;">
+                                            @T("Admin.Extension.MonthlyPerformance.Fields.TotalTask")
+                                        </th>
+                                        <th rowspan="2" style="padding: 12px; font-weight: 600; font-size: 14px;
+                                                               border: 1px solid #ddd; text-align: center; vertical-align: middle;">
+                                            @T("Admin.Extension.MonthlyPerformance.Fields.NumberOverDue")
+                                        </th>
+                                        <th colspan="3" style="padding: 12px; font-weight: 600; font-size: 14px;
+                                                               border: 1px solid #ddd; text-align: center;">
+                                            Over Estimation Percentange
+                                        </th>
+                                        <th rowspan="2" style="padding: 12px; font-weight: 600; font-size: 14px;
+                                                               border: 1px solid #ddd; text-align: center; vertical-align: middle;">
+                                            @T("Admin.Extension.MonthlyPerformance.Fields.TotalDeliveredOnTime")
+                                        </th>
+                                         <th rowspan="2" style="padding: 12px; font-weight: 600; font-size: 14px;
+                                                               border: 1px solid #ddd; text-align: center; vertical-align: middle;">
+                                            @T("Admin.Extension.MonthlyPerformance.Fields.AvgWorkQuality")
+                                        </th>
+                                        <th rowspan="2" style="padding: 12px; font-weight: 600; font-size: 14px;
+                                                               border: 1px solid #ddd; text-align: center; vertical-align: middle;">
+                                            @T("Admin.Extension.MonthlyPerformance.Fields.ResultPercentage")
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th style="padding: 8px; font-size: 13px; border: 1px solid #ddd; text-align: center; background-color: #f9f9f9;">
+                                             ${data.FirstOverDueThreshold}%
+                                        </th>
+                                        <th style="padding: 8px; font-size: 13px; border: 1px solid #ddd; text-align: center; background-color: #f9f9f9;">
+                                             ${data.SecondOverDueThreshold}%
+                                        </th>
+                                        <th style="padding: 8px; font-size: 13px; border: 1px solid #ddd; text-align: center; background-color: #f9f9f9;">
+                                             ${data.ThirdOverDueThreshold}%
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                            ${data.TotalTask}
+                                        </td>
+                                        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                            ${data.OverDueCount}
+                                        </td>
+                                        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                            ${data.FirstOverDueThresholdCount}
+                                        </td>
+                                        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                            ${data.SecondOverDueThresholdCount}
+                                        </td>
+                                        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                            ${data.ThirdOverDueThresholdCount}
+                                        </td>
+                                        <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                            ${data.TotalDeliveredOnTime}
+                                        </td>
+                                                                   <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                ${data.AvgWorkQuality != null ? data.AvgWorkQuality.toFixed(2) + '%' : '-'}
+                            </td>
+
+                            <td style="padding: 12px; font-size: 14px; border: 1px solid #ddd; text-align: center;">
+                                ${data.ResultPercentage != null ? data.ResultPercentage.toFixed(2) + '%' : '-'}
+                            </td>
+
+                                    </tr>
+                                </tbody>
+                            </table>`;
+
+
+
+                                            $('#summary-container').html(summaryTable);
+                                        }
+                                    });
+                                }
+                            }
+                            $(document).ready(function () {
+
+
+
+
+                                $('#employeeDropdown').change(function () {
+                                    $('#employee-error').html('').css('color', '');
+                                });
+
+                                $('#From').change(function () {
+                                    $('#To-error').html('').css('color', '');
+                                });
+                                $('#To').change(function () {
+                                    $('#To-error').html('').css('color', '');
+                                });
+
+                                $('#search-employeePerformance').click(function () {
+                                    updateSummary();
+
+                                });
+
+
+
+                            });
+                        </script>
+
+
+                        <div id="summary-container" style="margin-bottom: 20px;"></div>
+
+                        @await Html.PartialAsync("Table", new DataTablesModel
+                        {
+                            Name = "projecttask-grid",
+                                                UrlRead = new DataUrl("EmployeePerformanceReport", "Reports", null),
+                                                SearchButtonId = "search-employeePerformance",
+                                                Length = Model.PageSize,
+                                                LengthMenu = Model.AvailablePageSizes,
+                                                Filters = new List<FilterParameter>
+                                                {
+                                                new FilterParameter(nameof(Model.SearchEmployeeId)),
+                                                new FilterParameter(nameof(Model.From)),
+                                                new FilterParameter(nameof(Model.To)),
+                                                new FilterParameter(nameof(Model.SelectedProjectIds)),
+                                                new FilterParameter(nameof(Model.OverEstimation)),
+                                                },
+                                                ColumnCollection = new List<ColumnProperty>
+                                                {
+                                                new ColumnProperty(null)
+                                                {
+                                                Title = "Details",
+                                                Width = "40",
+                                                Render = new RenderCustom("renderBugsToggleButton"),
+                                                ClassName = "text-center"
+                                                },
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.ProjectName))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.Project").Text,
+                                                Width = "15%"
+                                                },
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.TaskName))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.Task").Text,
+                                                Width = "20%",
+                                                Render = new RenderCustom("renderTaskLink") 
+                                                },
+
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.TaskTypeName))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.TaskTypeName").Text,
+                                                Width = "10%"
+                                                },
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.ParentTaskName))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.ParentTaskName").Text,
+                                                Width = "20%"
+                                                },
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.StatusName))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.StatusName").Text,
+                                                Width = "10%",
+                                                Render = new RenderCustom("renderStatusDot")
+                                                },
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.DueDateFormat))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.DueDate").Text,
+                                                Width = "8%",
+                                                Encode = false
+                                                },
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.EstimatedTimeFormat))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.EstimatedTime").Text,
+                                                Width = "5%",
+                                                Render = new RenderCustom("renderEstimationCell")
+                                                },
+
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.TaskId))
+                                                {
+                                                Visible = false
+                                                },
+
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.SpentTimeFormat))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.SpentTime").Text,
+                                                Width = "5%"
+                                                },
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.ExtraTime))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.ExtraTime").Text,
+                                                Width = "5%"
+                                                },
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.BugTime))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.BugTime").Text,
+                                                Width = "5%"
+                                                },
+                                                
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.QaTimeFormat))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.QaTimeFormat").Text,
+                                                Width = "5%"
+                                                },
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.WorkQuality))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.WorkQuality").Text,
+                                                Width = "5%"
+                                                },
+                                               
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.DeliveredOnTime))
+                                                {
+                                                Title = T("Admin.Extension.MonthlyPerformance.Fields.DeliveredOnTime").Text,
+                                                Width = "10%",
+                                                Render = new RenderCustom("renderDeliveredWithDot")
+                                                },
+
+                                                new ColumnProperty(nameof(MonthlyPerformanceReportModel.TaskId))
+                                                {
+                                                Title = T("Admin.EmployeePerformanceReport.ChangeDOT").Text,
+                                                Width = "7%",
+                                                Render = new RenderButtonCustom(NopButtonClassDefaults.Default, T("Admin.EmployeePerformanceReport.ChangeDOT").Text)
+                                                {
+                                                OnClickFunctionName = "changeDOT",
+                                                ClassName = "btn btn-default btn-change-dot"
+                                                }
+                                                }
+                                                }
+                                                })
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+
+    <script>
+           // Always render cell with span so it remains editable later
+        function renderEstimationCell(data, type, row, meta) {
+            return `<span class="editable-estimation" data-taskid="${row.TaskId}" data-original="${data}">
+                        ${data}
+                    </span>`;
+        }
+
+        // On estimation cell click
+        $(document).on("click", ".editable-estimation", function () {
+            var $span = $(this);
+            var taskId = $span.data("taskid");
+            var currentValue = $span.text().trim();
+
+            // prevent multiple editors
+            if ($span.find("input").length > 0) return;
+
+            // Replace span content with inline editor
+            $span.html(`
+                <div class="inline-editor">
+                    <input type="text" class="form-control form-control-sm estimation-input"
+                           value="${currentValue}" style="width:70px; display:inline-block;" />
+                    <button class="btn btn-sm btn-success save-estimation" data-taskid="${taskId}">Save</button>
+                    <button class="btn btn-sm btn-secondary cancel-estimation">Cancel</button>
+                </div>
+            `);
+        });
+
+        // Save handler
+        $(document).on("click", ".save-estimation", function () {
+            var $btn = $(this);
+            var taskId = $btn.data("taskid");
+            var $cell = $btn.closest("td");
+            var $input = $cell.find(".estimation-input");
+            var newValue = $input.val();
+
+        
+        var timeRegex = /^\d+:[0-5]\d$/;
+        if (!timeRegex.test(newValue)) {
+            alert("Please enter time in valid HH:MM format.");
+            $input.focus();
+            return; // stop save
+        }
+
+
+            var postData = { taskId: taskId, estimation: newValue };
+            addAntiForgeryToken(postData);
+
+            $.ajax({
+                url: "@Url.Action("UpdateTaskEstimation", "Reports")",
+                type: "POST",
+                data: postData,
+                success: function (resp) {
+                    if (resp.success) {
+                        $cell.html(`<span class="editable-estimation" data-taskid="${taskId}" data-original="${newValue}">
+                                        ${newValue}
+                                    </span>`);
+                                     $("#search-employeePerformance").trigger("click");
+                    } else {
+                        alert("Error: " + resp.message);
+                        // revert to original
+                        var original = $cell.find(".estimation-input").val();
+                        $cell.html(`<span class="editable-estimation" data-taskid="${taskId}" data-original="${original}">
+                                        ${original}
+                                    </span>`);
+                    }
+                },
+                error: function () {
+                    alert("Failed to update.");
+                    var original = $cell.find(".estimation-input").val();
+                    $cell.html(`<span class="editable-estimation" data-taskid="${taskId}" data-original="${original}">
+                                    ${original}
+                                </span>`);
+                }
+            });
+        });
+
+        // Cancel handler
+        $(document).on("click", ".cancel-estimation", function () {
+            var $cell = $(this).closest("td");
+            var $span = $cell.find(".editable-estimation");
+            var original = $span.data("original");
+
+            // restore original span
+            $cell.html(`<span class="editable-estimation" data-taskid="${$span.data("taskid")}" data-original="${original}">
+                            ${original}
+                        </span>`);
+        });
+
+
+        $(document).ready(function () {
+            // auto-trigger search after page load
+            $("#search-employeePerformance").trigger("click");
+        });
+    
+         function renderTaskLink(data, type, row, meta) {
+            if (!row.TaskId) return data;
+
+            return `
+                <div class="task-cell" onclick="window.open('/ProjectTask/Edit?id=${row.TaskId}', '_blank')">
+                    ${data}
+                </div>`;
+        }
+                    function renderDeliveredWithDot(data, type, row) {
+            var iconHtml = '';
+            if (data === true) {
+                iconHtml = '<i class="fa fa-check true-icon" style="color:green;"></i>';
+            } else {
+                iconHtml = '<i class="fa fa-times false-icon" style="color:red;"></i>';
+            }
+
+            var dot = row.DOTPercentage != null
+                ? ` <span style="font-size: 90%;">(${row.DOTPercentage.toFixed(2)}%)</span>`
+                : '';
+
+            return iconHtml + dot;
+        }
+
+        function updateButtonTextBasedOnDeliveryStatus() {
+            $('#projecttask-grid tbody tr').each(function () {
+                var row = $(this);
+                var isDelivered = row.find('i.true-icon').length > 0; // Check if delivered
+                var button = row.find('.btn-change-dot'); // Find button
+
+
+
+                // Check if button exists
+                if (button.length > 0) {
+
+
+
+                    // Update button text
+                    if (isDelivered) {
+                        button.text('Undelivered');
+
+                    } else {
+                        button.text('Delivered');
+
+                    }
+
+
+                } else {
+
+                }
+            });
+        }
+
+        // Ensure that the function runs after the data is fully loaded into the table
+        $(document).ready(function () {
+            $("#sync-dot").click(function () {
+                $.ajax({
+
+                    type: "GET",
+                    url: "@(Url.Action("SyncDOT", "Reports"))",
+
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        showAlert('deleteSelectedFailed', errorThrown);
+                    },
+
+                });
+            });
+            $('#projecttask-grid').on('draw.dt', function () {
+                updateButtonTextBasedOnDeliveryStatus();
+            });
+
+            // Initial call to update button text
+            updateButtonTextBasedOnDeliveryStatus();
+        });
+
+
+        //For manually change delivery on time status
+        function changeDOT(taskid){
+            var postData = { taskId: taskid }
+            addAntiForgeryToken(postData);
+            $.ajax({
+                url: '@Url.Action("ChangeDOT", "Reports")',
+                type: 'POST',
+                data: postData,
+                success: function (response) {
+
+
+                    $('#projecttask-grid').DataTable().ajax.reload();  // Reload the data grid
+                    updateSummary();
+                },
+                error: function () {
+                    alert('Error marking task as delivered.');
+                }
+            });
+        }
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: selectedIds
+            };
+            addAntiForgeryToken(postData);
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "ProjectTask"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204) {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#projecttask-grid');
+
+                }
+            });
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+
+        $(document).ready(function () {
+           var employeeDropdown = $("#employeeDropdown").kendoDropDownList({
+            optionLabel: "Select an employee",
+            dataTextField: "Text",
+            dataValueField: "Value",
+            filter: "contains",
+            autoBind: false,
+            dataSource: @Html.Raw(Json.Serialize(Model.AvailableEmployees)),
+            change: function (e) {
+                var searchEmployeeId = $('#employeeDropdown').val();
+                $('#SearchEmployeeId').val(searchEmployeeId);
+            }
+        }).data("kendoDropDownList");
+
+        
+        var preSelectedEmployeeId = "@Model.SearchEmployeeId";
+        if (preSelectedEmployeeId && preSelectedEmployeeId !== "0") {
+            employeeDropdown.value(preSelectedEmployeeId);
+            $('#SearchEmployeeId').val(preSelectedEmployeeId);
+        }
+
+
+            $('#search-employeePerformance').click(function () {
+                var searchEmployeeId = $('#employeeDropdown').val();
+
+                $('#SearchEmployeeId').val(searchEmployeeId).trigger('change');
+                $(this).blur();
+                updateButtonTextBasedOnDeliveryStatus();
+            });
+
+            // Handle button click event to remove focus
+            $(document).on('click', 'button', function () {
+                $(this).blur();
+            });
+
+
+        });
+
+
+
+    </script>
+    <script>
+        function renderStatusDot(data, type, row, meta) {
+            if (!data) return '';
+
+            const parts = data.split("|||");
+            const text = parts[0];
+            const color = parts[1] ;
+
+            return `
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};"></div>
+                    <span>${text}</span>
+                </div>`;
+        }
+    </script>
+    <script>
+
+                   function renderBugsToggleButton(data, type, row, meta) {
+            if (row.HasBugTasks) {
+                return `
+                    <button class="btn btn-sm btn-info toggle-subgrid"
+                        onclick="loadSubgrid(${row.TaskId}, this)">
+                        +
+                    </button>
+                `;
+            } else {
+                return ""; 
+            }
+        }
+
+                                                                            
+
+        function loadSubgrid(taskId, btn) {
+            const tr = $(btn).closest('tr');
+            const subRowId = `subgrid-${taskId}`;
+
+            if ($(`#${subRowId}`).length) {
+                $(`#${subRowId}`).toggle();
+                const isVisible = $(`#${subRowId}`).is(":visible");
+                $(btn).text(isVisible ? "-" : "+");
+                return;
+            }
+
+            $('<tr class="no-hover-subgrid" id="' + subRowId + '"><td colspan="100%">Loading...</td></tr>').insertAfter(tr);
+
+            $.get('@Url.Action("GetBugTasksByTaskId", "Reports")', { taskId: taskId })
+                .done(function (html) {                                                
+                    $(`#${subRowId}`).html('<td colspan="100%">' + html + '</td>');
+                    $(btn).text("-");
+                })
+                .fail(function () {
+                    $(`#${subRowId}`).html('<td colspan="100%">Error loading subgrid</td>');
+                });
+        }
+
+
+
+
+    </script>
+    <script>
+        function renderPresentStatusWithInfo(data, type, row, meta) {
+            let presentStatus = data;
+
+            if (row.ShowLeaveInfo) {
+                return `
+                    ${presentStatus}
+                    <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-html="true" title="${row.LeaveInfo}">
+                        <i class="fas fa-info-circle text-info ms-2"></i>
+                    </a>`;
+            }
+
+            return presentStatus;
+        }
+
+         $(document).on('draw.dt', function () {
+            $('[data-bs-toggle="tooltip"]').tooltip({ html: true });
+        });
+    </script>
+    <script>
+        $('#search-brands').on('click', function (e) {
+            const searchDate = $('#SearchDate').val();
+            const errorSpan = $('#SearchDate-error');
+
+            if (!searchDate) {
+                e.preventDefault(); // prevent form from submitting
+                errorSpan.text("Search Date is required.");
+                errorSpan.show();
+            } else {
+                errorSpan.hide();
+                // Reload the datatable manually
+                $('#projects-grid').DataTable().ajax.reload();
+            }
+        });
+    </script>
+    <style>
+      
+        .dataTables_wrapper {
+            font-size: 15px;
+        }
+
+            .dataTables_wrapper .dt-top-grid,
+            .dataTables_wrapper .dt-bottom-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+                margin-bottom: 8px;
+                align-items: center;
+            }
+
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_filter,
+            .dataTables_wrapper .dataTables_info,
+            .dataTables_wrapper .dataTables_paginate {
+                margin: 0 !important;
+                padding: 0.25rem 0;
+            }
+
+
+        #projects-grid {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+
+         
+
+        .btn-search {
+            padding: 0.3rem 0.8rem;
+            font-size: 14px;
+        }
+
+
+        .card.card-default {
+            margin-bottom: 10px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-body {
+            padding: 0.75rem 1rem;
+        }
+
+        div.dataTables_wrapper div.dataTables_info {
+            padding-top: 0;
+            margin-top: 10px;
+            display: none;
+        }
+
+       
+        .task-link {
+            color: inherit; /* same color as table text */
+            text-decoration: none; /* no underline */
+            font-weight: normal; /* keep like normal text */
+            cursor: pointer;
+        }
+
+        .task-link:hover {
+            color: blue; /* only turn blue on hover */
+            text-decoration: underline; /* add underline only on hover */
+        }
+    
+
+        .task-cell {
+            cursor: pointer;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .task-cell:hover {
+            color: blue;
+            text-decoration: underline;
+        }
+
+        .editable-estimation {
+            display: inline-block;
+            padding: 2px 4px;
+            border: 1px solid transparent; 
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            .editable-estimation:hover {
+                border: 1px dashed #007bff; 
+                background-color: #f8f9fa; 
+            }
+
+
+    </style>
+    <script>
+        $(document).ready(function () {
+            const table = $('#projects-grid').DataTable();
+
+            table.on('init.dt', function () {
+                const wrapper = $('#projects-grid').closest('.dataTables_wrapper');
+
+                wrapper.find('.dataTables_length, .dataTables_filter')
+                    .wrapAll('<div class="dt-top-grid"></div>');
+
+                wrapper.find('.dataTables_info, .dataTables_paginate')
+                    .wrapAll('<div class="dt-bottom-grid"></div>');
+            });
+        });
+    </script>
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+</section>
+
+

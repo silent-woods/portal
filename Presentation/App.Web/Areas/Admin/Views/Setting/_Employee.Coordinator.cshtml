@@ -1,0 +1,14 @@
+﻿@model EmployeeSettingsModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="CoordinatorRoleId_OverrideForStore" asp-input="CoordinatorRoleId" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="CoordinatorRoleId" />
+        </div>
+        <div class="col-md-6">
+            <nop-select asp-for="CoordinatorRoleId" asp-items="Model.AvailableRoles" />
+            <span asp-validation-for="CoordinatorRoleId"></span>
+        </div>
+    </div>
+</div>

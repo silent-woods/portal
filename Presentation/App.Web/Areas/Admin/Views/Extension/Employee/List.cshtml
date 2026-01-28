@@ -1,0 +1,174 @@
+﻿@model EmployeeSearchModel
+
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.HRM.Employees").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Employee");
+}
+
+@{
+    const string hideSearchBlockAttributeName = "EmployeeListPage.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+
+<form asp-controller="Employee" asp-action="List" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.HRM.Employees")
+        </h1>
+        <div class="float-right">
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployee, PermissionAction.Add))
+            {
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus-square"></i>
+                    @T("Admin.Common.AddNew")
+                </a>
+            }
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployee, PermissionAction.Delete))
+            {
+                <button type="button" id="delete-selected" class="btn btn-danger">
+                    <i class="far fa-trash-alt"></i>
+                    @T("Admin.Common.Delete.Selected")
+                </button>
+            }
+            <nop-action-confirmation asp-button-id="delete-selected" />
+            @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.ProductListButtons, additionalData = Model })
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-search">
+                        <div class="card-body">
+                            <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                                <div class="search-text">@T("Admin.Common.Search")</div>
+                                <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                                <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                            </div>
+                            <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                                <div class="row">
+                                    <div class="col-md-7">
+                                        <div class="form-group row">
+                                            <div class="col-md-4">
+                                                <nop-label asp-for="SearchEmployeeName" />
+                                            </div>
+                                            <div class="col-md-8">
+                                                <nop-editor asp-for="SearchEmployeeName" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="text-center col-12">
+                                        <button type="button" id="search-employees" class="btn btn-primary btn-search">
+                                            <i class="fas fa-search"></i>
+                                            @T("Admin.Common.Search")
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-default">
+                        <div class="card-body">
+                            @{
+                                var gridModel = new DataTablesModel
+                                {
+                                    Name = "employees-grid",
+                                    UrlRead = new DataUrl("List", "Employee", null),
+                                    SearchButtonId = "search-employees",
+                                    Length = Model.PageSize,
+                                    LengthMenu = Model.AvailablePageSizes,
+                                    Filters = new List<FilterParameter>
+                                    {
+                                        new FilterParameter(nameof(Model.SearchEmployeeName))
+                                    },
+                                };
+
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeModel.Id))
+                                {
+                                    IsMasterCheckBox = true,
+                                    Render = new RenderCheckBox("checkbox_employees"),
+                                    ClassName = NopColumnClassDefaults.CenterAll,
+                                    Width = "30"
+                                });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeModel.FirstName))
+                                {
+                                    Title = T("Admin.Employees.Fields.FirstName").Text,
+                                    Width = "200"
+                                });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeModel.LastName))
+                                {
+                                    Title = T("Admin.Employees.Fields.LastName").Text,
+                                    Width = "200"
+                                });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeModel.OfficialEmail))
+                                {
+                                    Title = T("Admin.Employees.Fields.OfficialEmail").Text,
+                                    Width = "200"
+                                });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeModel.DesignationName))
+                                {
+                                    Title = T("Admin.Employees.Fields.DesignationId").Text,
+                                    Width = "200"
+                                });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeModel.DepartmentName))
+                                {
+                                    Title = T("Admin.Employees.Fields.DepartmentId").Text,
+                                    Width = "200"
+                                });
+                                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployee, PermissionAction.Edit))
+                                {
+                                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeModel.Id))
+                                    {
+                                        Title = T("Admin.Common.Edit").Text,
+                                        Width = "80",
+                                        ClassName = NopColumnClassDefaults.Button,
+                                        Render = new RenderButtonEdit(new DataUrl("Edit"))
+                                    });
+                                }
+                            }
+                            @await Html.PartialAsync("Table", gridModel)
+
+                            <script>
+                                $(document).ready(function () {
+                                    $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+                                        var postData = {
+                                            selectedIds: selectedIds
+                                        };
+                                        addAntiForgeryToken(postData);
+                                        $.ajax({
+                                            cache: false,
+                                            type: "POST",
+                                            url: "@(Url.Action("DeleteSelected", "Employee"))",
+                                            data: postData,
+                                            error: function (jqXHR, textStatus, errorThrown) {
+                                                showAlert('deleteSelectedFailed', errorThrown);
+                                            },
+                                            complete: function (jqXHR, textStatus) {
+                                                if (jqXHR.status === 204) {
+                                                    showAlert('nothingSelectedAlert', '@T                                                   ("Admin.Common.Alert.NothingSelected")');
+                                                    return;
+                                                }
+                                                updateTable('#employees-grid');
+                                            }
+                                        });
+                                        $('#delete-selected-action-confirmation').modal('toggle');
+                                        return false;
+                                    });
+                                });
+
+                            </script>
+                            <nop-alert asp-alert-id="deleteSelectedFailed" />
+                            <nop-alert asp-alert-id="nothingSelectedAlert" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>

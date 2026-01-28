@@ -1,0 +1,119 @@
+@using App.Web.Areas.Admin.Models.ManageResumes;
+@model CandiatesResumesModel
+
+<style>
+    .center-table {
+        width: 100%;
+        margin: auto;
+        text-align: center;
+        border-collapse: collapse;
+        table-layout: fixed;
+        border-spacing: 0;
+    }
+
+        .center-table th,
+        .center-table td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            /*text-align: left;*/
+        }
+
+        .center-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .center-table td {
+            border: 1px solid #dee2e6;
+            padding: 5px;
+            text-align: center; /* Center content within cells */
+            vertical-align: middle !important;
+            font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        }
+
+    .answer-input {
+        width: 50px;
+        margin: 4px;
+        padding: 4px;
+    }
+</style>
+
+<style>
+    /* Define styles for the table */
+    .address-list {
+        width: 100%;
+        border-collapse: collapse; /* Collapse border spacing */
+    }
+
+        .address-list th, .address-list td {
+            border: 1px solid #ddd; /* Add border to cells */
+            padding: 8px; /* Add padding to cells */
+            text-align: left; /* Align text to the left within cells */
+        }
+
+        .address-list th {
+            background-color: #f2f2f2; /* Set background color for header cells */
+        }
+
+    ul.info li label {
+        font-weight: bold; /* Make labels bold */
+        display: inline-block;
+        font-size: 18px;
+        width: 150px; /* Set label width */
+    }
+</style>
+
+<div class="card-body">
+    @if (Model.resultModel.Count > 0)
+    {
+
+        <table class="center-table">
+            <tr class="result">
+
+                <th><lable>Questions</lable></th>
+                <th><lable>Marks</lable></th>
+            </tr>
+            @foreach (var item in Model.resultModel)
+            {
+                <tr>
+                    <td>
+                        <div>@item.category</div>
+                        <div>@item.Qeations</div>
+                    </td>
+                    <td> @item.Marks </td>
+                </tr>
+            }
+        </table>
+    }
+</div>
+<div class="card-body">
+    @if (Model.resultModel.Count > 0)
+    {
+        var address = Model.resultModel[0];
+
+        <div class="section result-item">
+            <ul class="info">
+                <li class="Communication">
+                    <label>@T("Communication"):</label>
+                    @address.Communication
+                </li>
+                <li class="ConfidentLevel">
+                    <label>@T("ConfidentLevel"):</label>
+                    @address.ConfidentLevel
+                </li>
+                <li class="Feedback">
+                    <label>@T("Feedback"):</label>
+                    @address.Feedback
+                </li>
+                <li class="Resulstatus">
+                    <label>@T("Resulstatus"):</label>
+                    @address.Resulstatus
+                </li>
+            </ul>
+        </div>
+    }
+
+</div>
+
+
+

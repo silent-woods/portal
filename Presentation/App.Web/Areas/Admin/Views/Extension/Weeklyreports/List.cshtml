@@ -1,0 +1,160 @@
+@using App.Web.Areas.Admin.Models.WeeklyReports;
+@model WeeklyReportModel
+@{
+    // Page title
+    ViewBag.PageTitle = T("Admin.HRM.Holidays").Text;
+    // Active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("WeeklyReporting");
+
+    const string hideSearchBlockAttributeName = "HolidayListPage.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+@{
+    const string hideInfoBlockAttributeName = "WeeklyQuestionsDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.DailyUpdate")
+    </h1>
+    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageWeeklyReports, PermissionAction.Add))
+    {
+        <div class="float-right">
+            <a asp-action="WeeklyreportCreate" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </a>
+        </div>
+    }
+</div>
+
+<form asp-controller="WeeklyReporting" asp-action="List" method="post" id="yearly-review-form">
+    <input asp-for="@Model.EmployeeId" id="employeeid" name="employeeid" type="hidden" />
+    @*<section class="content">*@
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="EmployeeName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="EmployeeId" asp-items="Model.Employees" />
+                                            <span asp-validation-for="EmployeeId"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="CreatedOn" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="CreatedOn" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-brands" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @*    </section>*@
+    <section class="content">
+        @foreach (var dateReport in Model.DateWiseReports)
+        {
+            <nop-card asp-name="WeeklyReport- @dateReport.Key.ToString("MM/dd/yyyy")" asp-icon="fas fa-info" asp-title=" @dateReport.Key.ToString("MM/dd/yyyy")" asp-hide-block-attribute-name="WeeklyQuestionsDetails.HideInfoBlock" asp-hide="@hideInfoBlock">
+                <div class="card-body">
+                    @foreach (var report in dateReport.Value)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="question-text">
+                                    @report.QuestionText <!-- Display the question text -->
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                @report.ControlValue <!-- Display the control value -->
+                            </div>
+                        </div>
+                    }
+                    <hr /> <!-- Optional: Add a horizontal rule for better visual separation -->
+                </div>
+            </nop-card>
+        }
+
+    </section>
+</form>
+
+<style>
+    /* CSS for perfect alignment and spacing */
+    .question-text {
+        font-weight: bold;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .row {
+        margin-bottom: 10px;
+    }
+</style>
+
+<script>
+    $(document).ready(function () {
+        $('#search-brands').click(function () {
+            // Get the selected values from the dropdown lists
+            var employeeid = $('#EmployeeId').val();
+            $('#employeeid').val(employeeid);
+
+            // Submit the form
+            $('#yearly-review-form').submit();
+        });
+
+        // Parse the JSON string into a JavaScript object
+        var jsonData = JSON.parse('@Html.Raw(Model.rdata)');
+
+        // Iterate over the array of question objects
+        $.each(jsonData, function (index, question) {
+            // Generate HTML elements dynamically to display each question and its control value
+            var div = $('<div>').addClass('form-group');
+            var label = $('<label>').text(question.QuestionText);
+            div.append(label);
+
+            if (question.ControlValue !== '') {
+                var input = $('<input>').attr({
+                    type: 'text',
+                    class: 'form-control',
+                    value: question.ControlValue,
+                    readonly: 'readonly'
+                });
+                div.append(input);
+            }
+
+            $('#weeklyQuestionsContainer').append(div);
+        });
+    });
+</script>

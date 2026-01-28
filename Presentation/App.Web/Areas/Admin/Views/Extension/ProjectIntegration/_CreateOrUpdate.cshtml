@@ -1,0 +1,31 @@
+﻿@model ProjectIntegrationModel
+
+@{
+    var customer = await workContext.GetCurrentCustomerAsync();
+
+    const string hideInfoBlockAttributeName = "ProjectIntegrationPage.HideInfoBlock";
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+    const string hideProjectIntegrationMappingsBlockAttributeName = "ProjectIntegrationPage.HideProjectIntegrationMappingsBlock";
+    var hideProjectIntegrationMappingsBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="project-integration-cards">
+                <nop-card asp-name="project-integration-info" asp-icon="fas fa-info" asp-title="@T("Admin.System.ProjectIntegration.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock" asp-advanced="false">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/ProjectIntegration/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectIntegrationMappings, PermissionAction.View))
+                {
+                    <nop-card asp-name="project-integration-info" asp-icon="fas fa-info" asp-title="@T("Admin.System.ProjectIntegration.ProjectIntegrationMappings")" asp-hide-block-attribute-name="@hideProjectIntegrationMappingsBlockAttributeName" asp-hide="@hideProjectIntegrationMappingsBlock" asp-advanced="false">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/ProjectIntegration/_CreateOrUpdate.ProjectIntegrationMappings.cshtml", Model)
+                    </nop-card>
+                }
+            </nop-cards>
+        </div>
+    </div>
+</section>

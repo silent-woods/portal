@@ -1,0 +1,80 @@
+﻿@inherits App.Web.Framework.Mvc.Razor.NopRazorPage<TModel>
+
+@inject IGenericAttributeService genericAttributeService
+@inject INopHtmlHelper NopHtml
+@inject IPermissionService permissionService
+@inject IWorkContext workContext
+
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, App.Web.Framework
+
+@using System.Globalization;
+@using System.Net;
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
+@using Microsoft.AspNetCore.Routing
+@using Microsoft.Extensions.Primitives
+@using App.Core
+@using App.Core.Domain.Common
+@using App.Core.Domain.Security
+@using App.Core.Events
+@using App.Core.Infrastructure
+@using App.Services.Common
+@using App.Services.Security
+@using static App.Services.Common.NopLinksDefaults
+@using App.Web.Areas.Admin.Components
+@using App.Web.Areas.Admin.Models.Affiliates
+@using App.Web.Areas.Admin.Models.Blogs
+@using App.Web.Areas.Admin.Models.Cms
+@using App.Web.Areas.Admin.Models.Common
+@using App.Web.Areas.Admin.Models.Customers
+@using App.Web.Areas.Admin.Models.Directory
+@using App.Web.Areas.Admin.Models.ExternalAuthentication
+@using App.Web.Areas.Admin.Models.Forums
+@using App.Web.Areas.Admin.Models.Home
+@using App.Web.Areas.Admin.Models.Localization
+@using App.Web.Areas.Admin.Models.Logging
+@using App.Web.Areas.Admin.Models.Messages
+@using App.Web.Areas.Admin.Models.MultiFactorAuthentication
+@using App.Web.Areas.Admin.Models.News
+@using App.Web.Areas.Admin.Models.Plugins
+@using App.Web.Areas.Admin.Models.Plugins.Marketplace
+@using App.Web.Areas.Admin.Models.Polls
+@using App.Web.Areas.Admin.Models.Security
+@using App.Web.Areas.Admin.Models.Settings
+@using App.Web.Areas.Admin.Models.Stores
+@using App.Web.Areas.Admin.Models.Tasks
+@using App.Web.Areas.Admin.Models.Templates
+@using App.Web.Areas.Admin.Models.Topics
+@using App.Web.Areas.Admin.Models.Holidays
+@using App.Web.Components
+@using App.Web.Extensions
+@using App.Web.Framework
+@using App.Web.Framework.Events
+@using App.Web.Framework.Extensions
+@using App.Web.Framework.Infrastructure
+@using App.Web.Framework.Menu
+@using App.Web.Framework.Models
+@using App.Web.Framework.Models.DataTables
+@using App.Web.Framework.Mvc.Routing
+@using App.Web.Framework.Security.Captcha
+@using App.Web.Framework.Security.Honeypot
+@using App.Web.Framework.Themes
+@using App.Web.Framework.UI
+@using App.Web.Areas.Admin.Models.Designation
+@using App.Web.Areas.Admin.Models.Leavetypes
+@using App.Web.Areas.Admin.Models.LeaveManagement
+@using App.Web.Areas.Admin.Models.Projects
+@using App.Web.Areas.Admin.Models.ProjectEmployeeMappings
+@using App.Web.Areas.Admin.Models.TimeSheets
+@using App.Web.Areas.Admin.Models.PerformanceMeasurements
+@using App.Web.Areas.Admin.Models.EmployeeAttendances
+@using App.Web.Areas.Admin.Models.Employees
+@using App.Web.Areas.Admin.Models.Departments
+@using App.Web.Areas.Admin.Models.ProjectIntegrations
+@using App.Web.Areas.Admin.Models.Extension.UpdateTemplate
+@using App.Web.Areas.Admin.Models.TaskAlerts
+@using App.Web.Areas.Admin.Models.TaskAlerts.TaskAlertConfiguration
+@using App.Web.Areas.Admin.Models.TaskAlerts.TaskAlertReason
+@using App.Web.Areas.Admin.Models.TaskAlerts.TaskAlertReport
+@using Satyanam.Nop.Core.Services

@@ -1,0 +1,22 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Tags
+@model TagsModel
+
+@{
+    const string hideInfoBlockAttributeName = "tagsDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+}
+
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            
+            <nop-cards id="tags-item-cards">
+                <nop-card asp-name="tags-item-info" asp-icon="fas fa-info" asp-title="@T("Plugin.SatyanamCRM.Tags.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">@await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Tags/_CreateOrUpdate.Info.cshtml", Model)</nop-card>
+            </nop-cards>
+        </div>
+    </div>
+</section>

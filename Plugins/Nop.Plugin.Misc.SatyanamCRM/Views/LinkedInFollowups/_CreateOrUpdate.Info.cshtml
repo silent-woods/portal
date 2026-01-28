@@ -1,0 +1,231 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.LinkedInFollowups
+@model LinkedInFollowupsModel
+
+<div class="card-body">
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="FirstName" />
+		</div>
+		<div class="col-md-4">
+			<nop-editor asp-for="FirstName" asp-required="true" />
+			<span asp-validation-for="FirstName"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="LastName" />
+		</div>
+		<div class="col-md-4">
+			<nop-editor asp-for="LastName" asp-required="true" />
+			<span asp-validation-for="LastName"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="Email" />
+		</div>
+		<div class="col-md-4">
+			<nop-editor asp-for="Email" />
+			<span asp-validation-for="Email"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="LinkedinUrl" />
+		</div>
+		<div class="col-md-4">
+			<nop-editor asp-for="LinkedinUrl" />
+			<span asp-validation-for="LinkedinUrl"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="WebsiteUrl" />
+		</div>
+		<div class="col-md-4">
+			<nop-editor asp-for="WebsiteUrl" />
+			<span asp-validation-for="WebsiteUrl"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="LastMessageDate" />
+		</div>
+		<div class="col-md-4">
+			<nop-editor asp-for="LastMessageDate" />
+			<span asp-validation-for="LastMessageDate"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="FollowUp" />
+		</div>
+		<div class="col-md-4">
+			<nop-editor asp-for="FollowUp" />
+			<span asp-validation-for="FollowUp"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="NextFollowUpDate" />
+		</div>
+		<div class="col-md-4">
+			<nop-editor asp-for="NextFollowUpDate" />
+			<span asp-validation-for="NextFollowUpDate"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="DaysUntilNext" />
+		</div>
+		<div class="col-md-4">
+			<input type="text" asp-for="DaysUntilNext" class="form-control" readonly />
+			<span asp-validation-for="DaysUntilNext"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="RemainingFollowUps" />
+		</div>
+		<div class="col-md-4">
+			<input type="text" asp-for="RemainingFollowUps" class="form-control" readonly />
+			<span asp-validation-for="RemainingFollowUps"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="AutoStatus" />
+		</div>
+		<div class="col-md-4">
+			<nop-editor asp-for="AutoStatus" />
+			<span asp-validation-for="AutoStatus"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="StatusId" />
+		</div>
+		<div class="col-md-4">
+			<nop-select asp-for="StatusId" asp-items="Model.Status" />
+			<span asp-validation-for="StatusId"></span>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<nop-label asp-for="Notes" />
+		</div>
+		<div class="col-md-4">
+			<nop-textarea asp-for="Notes" />
+			<span asp-validation-for="Notes"></span>
+		</div>
+	</div>
+</div>
+
+
+<script>
+	(function () {
+		// parse date from different input formats into a LOCAL Date (no timezone shift)
+		function parseLocalDate(value) {
+			if (!value) return null;
+			// If format is yyyy-mm-dd (HTML5 date)
+			if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+				const parts = value.split('-').map(Number);
+				return new Date(parts[0], parts[1] - 1, parts[2]);
+			}
+			// If format is mm/dd/yyyy
+			if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value)) {
+				const parts = value.split('/').map(Number);
+				// parts[0] = month, parts[1] = day, parts[2] = year
+				return new Date(parts[2], parts[0] - 1, parts[1]);
+			}
+			// fallback: try Date constructor but guard timezone issues
+			const d = new Date(value);
+			return isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+		}
+
+		function formatAsInputDate(d) {
+			if (!d) return '';
+			const yyyy = d.getFullYear();
+			const mm = String(d.getMonth() + 1).padStart(2, '0');
+			const dd = String(d.getDate()).padStart(2, '0');
+			return `${mm}/${dd}/${yyyy}`;
+		}
+
+		function initFollowUpAutoCalculation() {
+			// mark computed fields readonly & style
+			$('#NextFollowUpDate, #DaysUntilNext, #RemainingFollowUps, #AutoStatus')
+				.attr('readonly', true)
+				.css({ 'background-color': '#f8f9fa', 'cursor': 'not-allowed' });
+
+			function calculateFollowUpFields() {
+				const followUpRaw = $('#FollowUp').val();
+				const followUp = parseInt(followUpRaw, 10);
+				const lastMessageDateStr = $('#LastMessageDate').val();
+
+				if (!lastMessageDateStr || isNaN(followUp)) {
+					$('#NextFollowUpDate, #DaysUntilNext, #RemainingFollowUps, #AutoStatus').val('');
+					return;
+				}
+
+				const lastMessageDate = parseLocalDate(lastMessageDateStr);
+				if (!lastMessageDate) {
+					$('#NextFollowUpDate, #DaysUntilNext, #RemainingFollowUps, #AutoStatus').val('');
+					return;
+				}
+
+				// addDays map
+				const addDaysMap = [0, 3, 5, 8, 10, 15, 20, 25, 30, 40, 50];
+				const addDays = (followUp >= 1 && followUp <= 10) ? addDaysMap[followUp] : 0;
+
+				// compute next followup as local date (no timezone shift)
+				const nextFollowUpDate = new Date(lastMessageDate.getFullYear(), lastMessageDate.getMonth(), lastMessageDate.getDate());
+				nextFollowUpDate.setDate(nextFollowUpDate.getDate() + addDays);
+
+				// days until next (difference in days using local dates)
+				const today = new Date();
+				const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+				const msPerDay = 24 * 60 * 60 * 1000;
+				const daysUntilNext = Math.round((nextFollowUpDate - todayLocal) / msPerDay);
+
+				// remaining follow-ups
+				const remainingFollowUps = (followUp >= 1 && followUp <= 10) ? (11 - followUp) : 0;
+
+				// auto status
+				let autoStatus = "No follow-up scheduled";
+				if (addDays > 0) {
+					if (daysUntilNext < 0) autoStatus = `Overdue by ${Math.abs(daysUntilNext)} days`;
+					else if (daysUntilNext === 0) autoStatus = "Due Today";
+					else autoStatus = `Scheduled in ${daysUntilNext} days`;
+				}
+
+				// set values (also set attribute value to handle nop-editor re-render)
+				const formattedDate = formatAsInputDate(nextFollowUpDate);
+				$('#NextFollowUpDate').val(formattedDate).attr('value', formattedDate);
+				// numeric fields: set both property and attribute, then trigger change/input to force redraw
+				$('#DaysUntilNext').val(daysUntilNext).attr('value', daysUntilNext).trigger('input').trigger('change');
+				$('#RemainingFollowUps').val(remainingFollowUps).attr('value', remainingFollowUps).trigger('input').trigger('change');
+				$('#AutoStatus').val(autoStatus).attr('value', autoStatus).trigger('input').trigger('change');
+			}
+
+			// delegated listeners (work even if nop-editor re-renders inputs later)
+			$(document).on('change keyup input blur', '#FollowUp, #LastMessageDate', calculateFollowUpFields);
+
+			// run once after a short delay to let nop render editors/spinners
+			setTimeout(calculateFollowUpFields, 300);
+			// and again shortly after (covers slower rendering)
+			setTimeout(calculateFollowUpFields, 800);
+		}
+
+		// run after full window load (ensures nop-editor finished)
+		$(window).on('load', function () {
+			setTimeout(function () {
+				initFollowUpAutoCalculation();
+			}, 200);
+		});
+	})();
+</script>
+
+
+
+
+

@@ -1,0 +1,22 @@
+﻿using System.Threading.Tasks;
+using App.Core.Domain.Customers;
+using App.Services.Caching;
+
+namespace App.Services.Customers.Caching
+{
+    /// <summary>
+    /// Represents a customer attribute cache event consumer
+    /// </summary>
+    public partial class CustomerAttributeCacheEventConsumer : CacheEventConsumer<CustomerAttribute>
+    {
+        /// <summary>
+        /// Clear cache data
+        /// </summary>
+        /// <param name="entity">Entity</param>
+        /// <returns>A task that represents the asynchronous operation</returns>
+        protected override async Task ClearCacheAsync(CustomerAttribute entity)
+        {
+            await RemoveAsync(NopCustomerServicesDefaults.CustomerAttributeValuesByAttributeCacheKey, entity);
+        }
+    }
+}

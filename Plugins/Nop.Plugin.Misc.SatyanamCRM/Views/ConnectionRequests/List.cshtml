@@ -1,0 +1,706 @@
+@using App.Services.Common
+@using App.Web.Framework.Models.DataTables
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.ConnectionRequests
+@using System.ComponentModel.DataAnnotations
+@inject IGenericAttributeService GenericAttributeService
+@inject IWorkContext WorkContext
+
+@model ConnectionRequestSearchModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.ConnectionRequest").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("ConnectionRequest");
+
+    const string hideSearchBlockAttributeName = "connectionRequestListPage.HideSearchBlock";
+    var hideSearchBlock = await GenericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Plugin.SatyanamCRM.ConnectionRequest")
+    </h1>
+    <div class="float-right">
+        <button type="button" id="move-selected" class="btn btn-info" title="Move selected to LinkedIn Followups">
+            <i class="fas fa-exchange-alt"></i> Move
+        </button>
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
+        {
+            <div class="btn-group">
+                <button type="button" class="btn btn-success">
+                    <i class="fas fa-download"></i>
+                    @T("Admin.Common.Export")
+                </button>
+                <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                    <span class="caret"></span>
+                    <span class="sr-only">Toggle Dropdown</span>
+                </button>
+                <form id="export-shared-form" method="post">
+                    <input type="hidden" name="SearchFirstName" />
+                    <input type="hidden" name="SearchLastName" />
+                    <input type="hidden" name="SearchEmail" />
+                    <input type="hidden" name="SearchLinkedinUrl" />
+                    <input type="hidden" name="SearchWebsiteUrl" />
+                    <input type="hidden" name="SearchStatus" />
+                </form>
+
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <button type="button" class="dropdown-item export-btn"
+                                data-action="@Url.Action("ExportToExcel", "ConnectionRequest", new { area = "Admin" })"
+                                data-button-name="exportexcel-all">
+                            <i class="far fa-file-excel"></i>
+                            @T("Admin.Common.ExportToExcel.All")
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" id="exportexcel-selected" class="dropdown-item">
+                            <i class="far fa-file-excel"></i>
+                            @T("Admin.Common.ExportToExcel.Selected")
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn bg-olive dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-upload"></i>
+                    @T("Admin.Common.Import")
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#importexcel-window">
+                            <i class="fas fa-upload"></i>
+                            @T("Admin.Common.Import")
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        }
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Plugin.SatyanamCRM.ConnectionRequest.AddNew")
+            </a>
+        }
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Delete))
+        {
+            <button type="button" id="delete-selected" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete.Selected")
+            </button>
+            <nop-action-confirmation asp-button-id="delete-selected" />
+        }
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchFirstName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchFirstName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchLastName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchLastName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchEmail" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchEmail" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchLinkedinUrl" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchLinkedinUrl" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchWebsiteUrl" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchWebsiteUrl" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchStatus" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchStatus" asp-items="Model.Status" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-connectionRequest" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    // ? Render clickable LinkedIn URL (for display only)
+                                    function renderLinkedInUrl(data, type, row, meta) {
+                        if (!data) return '';
+
+                        if (type === 'display') {
+                            var url = data.startsWith('http') ? data : 'https://' + data;
+
+                            // shorten display text to 35 chars + normal dots (not special character)
+                            var displayText = data.length > 35 ? data.substring(0, 35) + '...' : data;
+
+                            return `<a href="${url}" target="_blank"
+                                        title="${data}"
+                                        style="color:#0077b5;white-space:nowrap;">
+                                        ${displayText}
+                                    </a>`;
+                        }
+
+                        // In edit/filter mode ? return plain text
+                        return data;
+                    }
+
+                    // ? Clean inline editor input to remove HTML anchor tags
+                    (function () {
+                        function extractPlainUrlFromHtml(html) {
+                            if (!html) return '';
+                            if (/<a\b[^>]*>/i.test(html)) {
+                                try {
+                                    var wrapper = document.createElement('div');
+                                    wrapper.innerHTML = html;
+                                    var a = wrapper.querySelector('a');
+                                    if (a) return a.getAttribute('href') || a.textContent || a.innerText || '';
+                                } catch (e) {
+                                    var m = html.match(/href=(?:'|")([^'"]+)(?:'|")/i);
+                                    if (m) return m[1];
+                                }
+                            }
+                            return html.replace(/<[^>]*>/g, '').trim();
+                        }
+
+                        function cleanEditorInput($input) {
+                            try {
+                                var val = $input.val() || '';
+                                if (!val) return;
+                                if (/<[a-z][\s\S]*>/i.test(val)) {
+                                    var plain = extractPlainUrlFromHtml(val);
+                                    if (plain) $input.val(plain);
+                                }
+                            } catch (e) { }
+                        }
+
+                        var selectors = [
+                            'input[name="LinkedinUrl"]',
+                            'input[name="LinkedInUrl"]',
+                            '#connectionRequest-grid input[type="text"]'
+                        ].join(',');
+
+                        // clean when input gains focus
+                        $(document).on('focus', selectors, function () {
+                            cleanEditorInput($(this));
+                        });
+
+                        // clean after DataTable redraw
+                        $('#connectionRequest-grid').on('draw.dt', function () {
+                            setTimeout(function () {
+                                $(selectors).each(function () {
+                                    cleanEditorInput($(this));
+                                });
+                            }, 50);
+                        });
+
+                        // mutation observer fallback (for dynamically added inputs)
+                        (function startObserver() {
+                            var container = document.querySelector('#connectionRequest-grid');
+                            if (!container) return;
+                            var mo = new MutationObserver(function (mutations) {
+                                mutations.forEach(function (m) {
+                                    m.addedNodes.forEach(function (n) {
+                                        if (n.nodeType === 1) {
+                                            var inputs = n.tagName === 'INPUT' ? [n] : n.querySelectorAll('input');
+                                            inputs.forEach(function (inp) {
+                                                setTimeout(function () { cleanEditorInput($(inp)); }, 30);
+                                            });
+                                        }
+                                    });
+                                });
+                            });
+                            mo.observe(container, { childList: true, subtree: true });
+                        })();
+                    })();
+                </script>
+                <!-- Status Bar -->
+                <div id="status-summary"
+                     style="overflow-x:auto;max-width:100%;background-color:#f9f9f9;
+     padding:12px;margin-top:10px;margin-bottom:20px;
+     border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+                </div>
+                <div class="card card-default">
+                    <div class="card-body">
+
+                        @await Html.PartialAsync("Table", new DataTablesModel
+                        {
+                            Name = "connectionRequest-grid",
+                                                UrlRead = new DataUrl("List", "ConnectionRequest", null),
+                                                UrlUpdate = new DataUrl("InlineEdit", "ConnectionRequest", null), // ?? enable inline save
+                                                SearchButtonId = "search-connectionRequest",
+                                                Length = Model.PageSize,
+                                                LengthMenu = Model.AvailablePageSizes,
+                                                Filters = new List<FilterParameter>
+                                                {
+                                                new FilterParameter(nameof(Model.SearchFirstName)),
+                                                new FilterParameter(nameof(Model.SearchLastName)),
+                                                new FilterParameter(nameof(Model.SearchEmail)),
+                                                new FilterParameter(nameof(Model.SearchLinkedinUrl)),
+                                                new FilterParameter(nameof(Model.SearchWebsiteUrl)),
+                                                new FilterParameter(nameof(Model.SearchStatus))
+                                                },
+                                                ColumnCollection = new List<ColumnProperty>
+                                                {
+                                                new ColumnProperty(nameof(ConnectionRequestModel.Id))
+                                                {
+                                                IsMasterCheckBox = true,
+                                                Render = new RenderCheckBox("checkbox_categories"),
+                                                ClassName = NopColumnClassDefaults.CenterAll,
+                                                Width = "50"
+                                                },
+                                                new ColumnProperty(nameof(ConnectionRequestModel.Id))
+                                                {
+                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Edit").Text,
+                                                Width = "80",
+                                                ClassName =  NopColumnClassDefaults.Button,
+                                                Render = new RenderButtonsInlineEdit()
+                                                },
+                                                new ColumnProperty(nameof(ConnectionRequestModel.Id))
+                                                {
+                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.ChangeStatus").Text,
+                                                Width = "120",
+                                                ClassName = NopColumnClassDefaults.Button,
+                                                Render = new RenderCustom("renderStatusPopup")
+                                                },
+                                                new ColumnProperty(nameof(ConnectionRequestModel.LinkedinUrl))
+                                                {
+                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.LinkedinUrl").Text,
+                                                Editable = true,
+                                                EditType = EditType.String,
+                                                Render = new RenderCustom("renderLinkedInUrl")
+                                                },
+                                                new ColumnProperty(nameof(ConnectionRequestModel.FirstName))
+                                                {
+                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.FirstName").Text,
+                                                Editable = true,
+                                                EditType = EditType.String
+                                                },
+                                                new ColumnProperty(nameof(ConnectionRequestModel.LastName))
+                                                {
+                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.LastName").Text,
+                                                Editable = true,
+                                                EditType = EditType.String
+                                                },
+                                                new ColumnProperty(nameof(ConnectionRequestModel.Email))
+                                                {
+                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.Email").Text,
+                                                Editable = true,
+                                                EditType = EditType.String
+                                                },
+                                                new ColumnProperty(nameof(ConnectionRequestModel.WebsiteUrl))
+                                                {
+                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.WebsiteUrl").Text,
+                                                Editable = true,
+                                                EditType = EditType.String
+                                                },
+                                                new ColumnProperty(nameof(ConnectionRequestModel.StatusText))
+                                                {
+                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.Status").Text,
+                                                Editable = true
+                                                },
+                                                new ColumnProperty(nameof(ConnectionRequestModel.CreatedOnUtc))
+                                                {
+                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.CreatedOnUtc").Text,
+                                                Render = new RenderDate()
+                                                },
+                                                new ColumnProperty(nameof(ConnectionRequestModel.UpdatedOnUtc))
+                                                {
+                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.UpdatedOnUtc").Text,
+                                                Render = new RenderDate()
+                                                }
+                                                }
+                                                })
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <button type="submit" id="btnRefreshConnectionRequest" style="display:none"></button>
+
+    <script>
+                function renderStatusPopup(data, type, row, meta) {
+            var statusText = row.StatusName || "Change Status";
+
+            return '<button onclick="javascript:OpenWindow(\'@Url.Action("ChangeStatus", "ConnectionRequest")/'
+                + row.Id + '?btnId=btnRefreshConnectionRequest&formId=ConnectionRequest-form\', 570, 400, true); return false;"'
+                + ' class="btn btn-sm btn-secondary">' + statusText + '</button>';
+        }
+
+    </script>
+    <script>
+        $('#btnRefreshConnectionRequest').on('click', function () {
+            updateTable('#connectionRequest-grid');
+        });
+    </script>
+
+
+
+    <script>
+        // defensive: if inline editor input contains anchor HTML, replace value with href
+        (function () {
+            function cleanupInputVal($input) {
+                var val = $input.val() || '';
+                if (!val) return;
+                if (val.indexOf('<a') !== -1 || val.indexOf('&lt;a') !== -1) {
+                    // create temp element to parse
+                    try {
+                        var parsed = $('<div>').html(val);
+                        var a = parsed.find('a');
+                        if (a.length) {
+                            var href = a.attr('href') || a.text();
+                            $input.val(href);
+                            return;
+                        }
+                    } catch (e) { /* ignore */ }
+                    // fallback strip tags
+                    var stripped = val.replace(/<[^>]*>/g, '');
+                    $input.val(stripped);
+                }
+            }
+
+            // Target inputs by name or data-field used by inline editor
+            $(document).on('focus', 'input[name="LinkedinUrl"], input[data-field="LinkedinUrl"], td input[type="text"]', function () {
+                cleanupInputVal($(this));
+            });
+
+            // Also run when inline editor is opened — listen for DataTables draw (re-run)
+            $('#connectionRequest-grid').on('draw.dt', function () {
+                setTimeout(function () {
+                    $('input[name="LinkedinUrl"], input[data-field="LinkedinUrl"]').each(function () {
+                        cleanupInputVal($(this));
+                    });
+                }, 150);
+            });
+
+            // On page load check existing inputs
+            $(function(){
+                $('input[name="LinkedinUrl"], input[data-field="LinkedinUrl"]').each(function () {
+                    cleanupInputVal($(this));
+                });
+            });
+        })();
+    </script>
+
+
+    <script>
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: selectedIds
+            };
+            addAntiForgeryToken(postData);
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "ConnectionRequest"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204)
+                    {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#connectionRequest-grid');
+
+                }
+            });
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+
+            $('.export-btn').on('click', function (e) {
+                e.preventDefault();
+
+                var button = $(this);
+                var action = button.data('action');
+                var form = $('#export-shared-form');
+
+                // Add hidden input required by [FormValueRequired("exportexcel-all")]
+                form.find('input[name="exportexcel-all"]').remove(); // remove if already exists
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'exportexcel-all',
+                    value: 'true'
+                }).appendTo(form);
+
+                // Set form action to ExportToExcel
+                form.attr('action', action);
+
+                // Copy current search filters
+                form.find('[name=SearchFirstName]').val($('#@Html.IdFor(m => m.SearchFirstName)').val());
+                form.find('[name=SearchLastName]').val($('#@Html.IdFor(m => m.SearchLastName)').val());
+                form.find('[name=SearchEmail]').val($('#@Html.IdFor(m => m.SearchEmail)').val());
+                form.find('[name=SearchLinkedinUrl]').val($('#@Html.IdFor(m => m.SearchLinkedinUrl)').val());
+                form.find('[name=SearchWebsiteUrl]').val($('#@Html.IdFor(m => m.SearchWebsiteUrl)').val());
+                form.find('[name=SearchStatus]').val($('#@Html.IdFor(m => m.SearchStatus)').val());
+                // Submit the form via POST
+                form.submit();
+            });
+
+        });
+    </script>
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+    <div id="importexcel-window" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="importexcel-window-title">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="importexcel-window-title">@T("Admin.Common.ImportFromExcel")</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <form asp-controller="ConnectionRequest" asp-action="ImportFromExcel" method="post" enctype="multipart/form-data">
+                    <div class="form-horizontal">
+                        <div class="modal-body">
+                            <ul class="common-list">
+                                <li>
+                                    <em>@T("Admin.Catalog.Products.List.ImportFromExcelTip")</em>
+                                </li>
+                                <li>
+                                    <em>@T("Admin.Common.ImportFromExcel.ManyRecordsWarning")</em>
+                                </li>
+                            </ul>
+                            <div class="form-group row">
+                                <div class="col-md-2">
+                                    <div class="label-wrapper">
+                                        <label class="col-form-label">
+                                            @T("Admin.Common.ExcelFile")
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <input type="file" id="importFile" name="importFile" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">
+                                @T("Admin.Common.ImportFromExcel")
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <form asp-controller="ConnectionRequest" asp-action="SelectedExportToExcel" method="post" id="export-excel-selected-form">
+        <input type="hidden" id="selectedIds" name="selectedIds" value="" />
+    </form>
+    <script>
+        $(document).ready(function () {
+            $('#exportexcel-selected').click(function (e) {
+                e.preventDefault();
+                var ids = selectedIds.join(",");
+                if (!ids) {
+                    $('#exportExcelSelected-info').text("@T("Admin.Products.NoProducts")");
+                    $("#selectedExportExcel").click();
+                }
+                else {
+                    $('#export-excel-selected-form #selectedIds').val(ids);
+                    $('#export-excel-selected-form').submit();
+                    updateTable('#products-grid');
+                }
+                return false;
+            });
+        });
+    </script>
+    <script>
+        (function ($) {
+            // Ensure selectedIds exists; if not create empty
+            window.selectedIds = window.selectedIds || [];
+
+            $('#move-selected').on('click', function (e) {
+                e.preventDefault();
+
+                if (!window.selectedIds || !window.selectedIds.length) {
+                    // Use your existing nop-alert or fallback alert
+                    if (typeof showAlert === 'function') {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                    } else {
+                        alert('No records selected to move.');
+                    }
+                    return;
+                }
+
+                if (!confirm('Move ' + selectedIds.length + ' selected record(s) to LinkedIn Followups?')) {
+                    return;
+                }
+
+                var postData = { selectedIds: selectedIds.join(',') };
+                if (typeof addAntiForgeryToken === 'function') addAntiForgeryToken(postData);
+
+                $.ajax({
+                    url: '@Url.Action("MoveSelected", "ConnectionRequest", new { area = "Admin" })',
+                    type: 'POST',
+                    data: postData,
+                    success: function (resp) {
+                        if (resp && resp.success) {
+                            // refresh current grid and followups grid if exists on page
+                            try { updateTable('#connectionRequest-grid'); } catch (e) { console.warn(e); }
+                            try { updateTable('#linkedInFollowups-grid'); } catch (e) { /* may be on other page */ }
+                            if (typeof showAlert === 'function') {
+                                showAlert('successAlert', resp.message || ('Moved ' + (resp.movedCount || 0) + ' records.'));
+                            } else {
+                                alert(resp.message || ('Moved ' + (resp.movedCount || 0) + ' records.'));
+                            }
+                            // clear selection array
+                            window.selectedIds = [];
+                        } else {
+                            if (typeof showAlert === 'function') {
+                                showAlert('deleteSelectedFailed', resp && resp.message ? resp.message : 'Move failed.');
+                            } else {
+                                alert(resp && resp.message ? resp.message : 'Move failed.');
+                            }
+                        }
+                    },
+                    error: function (xhr) {
+                        var txt = xhr.responseText || xhr.statusText || 'Server error';
+                        if (typeof showAlert === 'function') {
+                            showAlert('deleteSelectedFailed', 'Move failed: ' + txt);
+                        } else {
+                            alert('Move failed: ' + txt);
+                        }
+                    }
+                });
+            });
+        })(jQuery);
+    </script>
+    <script>
+        async function loadStatusSummary() {
+            try {
+                const response = await fetch('@Url.Action("GetStatusSummary", "ConnectionRequest")');
+                if (!response.ok) throw new Error("Network error");
+
+                const data = await response.json();
+                const container = document.getElementById("status-summary");
+                container.innerHTML = "";
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = "<p>No status summary found.</p>";
+                    return;
+                }
+
+                // Create a full-width table
+                const table = document.createElement("table");
+                table.style.width = "100%";
+                table.style.borderCollapse = "collapse";
+                table.style.background = "#fff";
+
+                const row = document.createElement("tr");
+
+                // First cell (Title) like "QA Process"
+                const titleCell = document.createElement("td");
+                titleCell.innerHTML = "<strong>Status</strong>";
+                titleCell.style.padding = "12px 18px";
+                titleCell.style.border = "1px solid #ddd";
+                titleCell.style.whiteSpace = "nowrap";
+                titleCell.style.background = "#eef3f7";
+                row.appendChild(titleCell);
+
+                // Add each status cell
+                data.forEach(item => {
+                    const cell = document.createElement("td");
+                    cell.style.padding = "12px 18px";
+                    cell.style.border = "1px solid #ddd";
+                    cell.style.cursor = "pointer";
+                    cell.style.whiteSpace = "nowrap";
+                    cell.style.backgroundColor = "#fff";
+
+                    cell.innerHTML = `
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:12px;height:12px;border-radius:50%;background:${item.ColorCode};"></div>
+                            <span>${item.StatusName} (${item.Count})</span>
+                        </div>
+                    `;
+
+                    // Click ? filter table
+                    cell.onclick = () => {
+                        $('#@Html.IdFor(m => m.SearchStatus)').val(item.StatusId).trigger("change");
+                        $('#search-connectionRequest').click();
+                    };
+
+                    row.appendChild(cell);
+                });
+
+                table.appendChild(row);
+                container.appendChild(table);
+
+            } catch (err) {
+                console.error("Status Summary Error:", err);
+                document.getElementById("status-summary").innerHTML =
+                    "<p style='color:red;'>Failed to load status summary.</p>";
+            }
+        }
+
+        // Load on page load
+        document.addEventListener("DOMContentLoaded", loadStatusSummary);
+
+        // Refresh when grid reloads
+        $('#connectionRequest-grid').on('draw.dt', loadStatusSummary);
+    </script>
+</section>

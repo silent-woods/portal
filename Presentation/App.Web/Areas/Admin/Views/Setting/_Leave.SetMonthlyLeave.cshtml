@@ -1,0 +1,25 @@
+﻿@model LeaveSettingsModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SeletedLeaveTypeId_OverrideForStore" asp-input="SeletedLeaveTypeId" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SeletedLeaveTypeId" />
+        </div>
+        <div class="col-md-6">
+            <nop-select asp-for="SeletedLeaveTypeId" asp-items="Model.AvailableLeaveType" />
+            <span asp-validation-for="SeletedLeaveTypeId"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="AddMonthlyLeaveDay_OverrideForStore" asp-input="AddMonthlyLeaveDay" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="AddMonthlyLeaveDay" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="AddMonthlyLeaveDay" />
+            <span asp-validation-for="AddMonthlyLeaveDay"></span>
+        </div>
+    </div>
+</div>

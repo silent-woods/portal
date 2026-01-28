@@ -1,0 +1,89 @@
+﻿@model PaymentTermSearchModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.PaymentTerm.List").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.PaymentTerms");
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.PaymentTerm.List")
+    </h1>
+    @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManagePaymentTerms, PermissionAction.Add))
+    {
+        <div class="float-right">
+            <a asp-action="PaymentTermCreate" asp-controller="AccountManagement" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </a>
+        </div>
+    }
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "payment-terms-grid",
+                                UrlRead = new DataUrl("PaymentTerms", "AccountManagement", null),
+                                UrlDelete = new DataUrl("PaymentTermDelete", "AccountManagement", null),
+                                SearchButtonId = "search-payment-terms",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                },
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(PaymentTermModel.Name))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.PaymentTerm.Fields.Name").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(PaymentTermModel.NumberOfDays))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.PaymentTerm.Fields.NumberOfDays").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(PaymentTermModel.IsActive))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.PaymentTerm.Fields.IsActive").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(PaymentTermModel.DisplayOrder))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.PaymentTerm.Fields.DisplayOrder").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll
+                            });
+                            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManagePaymentTerms, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(PaymentTermModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "100",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonEdit(new DataUrl("~/Admin/AccountManagement/PaymentTermEdit/"))
+                                });
+                            }
+                            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManagePaymentTerms, PermissionAction.Delete))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(PaymentTermModel.Id))
+                                {
+                                    Title = T("Admin.Common.Delete").Text,
+                                    Width = "100",
+                                    Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                                    ClassName = NopColumnClassDefaults.Button
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

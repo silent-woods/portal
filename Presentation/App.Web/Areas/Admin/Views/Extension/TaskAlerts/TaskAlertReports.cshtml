@@ -1,0 +1,201 @@
+﻿@model TaskAlertReportSearchModel
+
+@{
+    ViewBag.PageTitle = T("Admin.TaskAlert.TaskAlertReport.List").Text;
+    NopHtml.SetActiveMenuItemSystemName("Alert Report");
+
+    const string hideSearchBlockAttributeName = "TaskAlertReportListPage.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+
+<script asp-location="Footer">
+    $("#pnlTaskAlertConfigurations").hide();
+    $(document).ready(function () {
+        $("#@Html.IdFor(model => model.SearchTaskAlertTypeId)").change(toggleTaskAlertTypes);
+
+        toggleTaskAlertTypes();
+    });
+
+    function toggleTaskAlertTypes() {
+        var selectedTaskAlertTypeId = $("#@Html.IdFor(model => model.SearchTaskAlertTypeId)").val();
+
+        if (selectedTaskAlertTypeId == 0) {
+            $("#pnlTaskAlertConfigurations").hide();
+            $("#@Html.IdFor(model => model.SearchTaskAlertConfigurationId)").val(0);
+            return;
+        }
+
+        var ddl = $("#@Html.IdFor(model => model.SearchTaskAlertConfigurationId)");
+        ddl.empty();
+
+        $.ajax({
+            cache: false,
+            url: "@Url.Action("SelectedTaskAlertValues", "TaskAlert")",
+            data: { taskAlertTypeId: selectedTaskAlertTypeId },
+            success: function (data) {
+                if (data.length > 0) {
+                    $("#pnlTaskAlertConfigurations").show();
+                    $.each(data, function (i, item) {
+                        ddl.append($("<option>").val(item.id).text(item.name));
+                    });
+                } else {
+                    $("#pnlTaskAlertConfigurations").hide();
+                }
+
+            }
+        });
+    }
+</script>
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.TaskAlert.TaskAlertReport.List")
+    </h1>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchFromDate" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchFromDate" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SelectedEmployeeIds" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SelectedEmployeeIds" asp-items="Model.AvailableEmployees" asp-multiple="true" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row" id="pnlTaskAlertConfigurations">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchTaskAlertConfigurationId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchTaskAlertConfigurationId" asp-items="Model.AvailableTaskAlertConfigurations" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchToDate" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchToDate" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchTaskAlertTypeId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchTaskAlertTypeId" asp-items="Model.AvailableTaskAlertTypes" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-task-alert-reports" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "task-alert-reports-grid",
+                                UrlRead = new DataUrl("TaskAlertReports", "TaskAlert", null),
+                                SearchButtonId = "search-task-alert-reports",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                    new FilterParameter(nameof(Model.SearchFromDate), typeof(DateTime?)),
+                                    new FilterParameter(nameof(Model.SearchToDate), typeof(DateTime?)),
+                                    new FilterParameter(nameof(Model.SelectedEmployeeIds)),
+                                    new FilterParameter(nameof(Model.SearchTaskAlertTypeId)),
+                                    new FilterParameter(nameof(Model.SearchTaskAlertConfigurationId))
+                                },
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertReportModel.EmployeeName))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertReport.Fields.EmployeeName").Text,
+                                Width = "100"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertReportModel.TaskName))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertReport.Fields.TaskName").Text,
+                                Width = "100"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertReportModel.AlertPercentage))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertReport.Fields.AlertPercentage").Text,
+                                Width = "100"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertReportModel.Reason))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertReport.Fields.Reason").Text,
+                                Width = "100"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertReportModel.Comment))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertReport.Fields.Comment").Text,
+                                Width = "100"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertReportModel.ETAHours))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertReport.Fields.ETAHours").Text,
+                                Width = "100"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertReportModel.DeliverOnTime))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertReport.Fields.DeliverOnTime").Text,
+                                Width = "100",
+                                Render = new RenderBoolean(),
+                                ClassName = NopColumnClassDefaults.CenterAll
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertReportModel.CreatedOn))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertReport.Fields.CreatedOn").Text,
+                                Width = "100",
+                                Render = new RenderDate()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertReportModel.Id))
+                            {
+                                Title = T("Admin.Common.View").Text,
+                                Width = "100",
+                                ClassName = NopColumnClassDefaults.Button,
+                                Render = new RenderButtonView(new DataUrl("ViewTaskAlertLogDetails"))
+                            });
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

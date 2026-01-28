@@ -1,0 +1,214 @@
+@model LeaveTransactionLogModel
+
+
+@{
+    Layout = "_AdminPopupLayout";
+}
+
+@if (ViewBag.RefreshPage)
+{
+    <script>
+        try { window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click(); }
+        catch (e) {
+            console.log(e);
+        }
+        window.close();
+    </script>
+}
+else
+{
+    <form asp-controller="LeaveTransactionLog" asp-action="Create" method="post" id="projecttaskform" asp-route-btnId="@Context.Request.Query["btnId"]"
+          asp-route-formId="@Context.Request.Query["formId"]">
+        <div class="content-header clearfix">
+            <h1 class="float-left">
+                @T("Admin.Configuration.LeaveTransactionLogs.AddLeaveLog")
+
+            </h1>
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageLeaveTransaction, PermissionAction.Add))
+            {
+                <div class="float-right">
+                    <button type="submit" name="save" class="btn btn-primary">
+                        <i class="far fa-save"></i>
+                        @T("Admin.Common.Save")
+                    </button>
+                </div>
+            }
+            
+        </div>
+
+
+        <section class="content">
+            <div class="container-fluid">
+                <div class="form-horizontal">
+
+                    @if (ViewBag.RefreshPage == true)
+                    {
+                        <script>
+                            try {
+                                window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click();
+                                window.document.forms['leavemanagement-grid'].btnRefreshList.Click();
+                            }
+                            catch (e) { }
+                            window.close();
+                        </script>
+                    }
+
+
+                    <div class="cards-group">
+                        <div class="card card-default card-popup">
+                            <div class="card-body">
+
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="EmployeeId" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div style="position: relative;">
+                                            <select id="employeeDropdown" name="EmployeeId" class="form-control" style="border: none;
+        box-shadow: none;">
+                                                <option value=""></option>
+                                                @foreach (var employee in Model.AvailableEmployees)
+                                                {
+                                                    <option value="@employee.Value">@employee.Text</option>
+                                                }
+                                            </select>
+                                            <span asp-validation-for="EmployeeId"></span>
+
+                                            <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                                            <span style="color:red;" id="employeeError"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="ApprovedId" />
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <nop-select asp-for="ApprovedId" asp-items="Model.AvailableLeaveTypes" asp-required="true" />
+                                        <span asp-validation-for="ApprovedId"></span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="MonthId" />
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <nop-select asp-for="MonthId" asp-items="Model.Months" asp-required="true" />
+                                        <span asp-validation-for="MonthId"></span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="Year" />
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <nop-select asp-for="Year" asp-items="Model.Years" asp-required="true" />
+                                        <span asp-validation-for="Year"></span>
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="Comment" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <nop-editor asp-for="Comment" id="Comment" asp-required="true" />
+                                        <span asp-validation-for="Comment"></span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="BalanceChange" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <nop-editor asp-for="BalanceChange" id="BalanceChange"  />
+                                        <span asp-validation-for="BalanceChange"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="LeaveBalance" />
+                                    </div>
+                                    <div class="col-md-5">
+
+                                        <input asp-for="LeaveBalance" type="number" id="LeaveBalance" class="form-control text-box single-line" readonly />
+                                        <span asp-validation-for="LeaveBalance"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </form>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize Kendo DropDownList for employees
+            $("#employeeDropdown").kendoDropDownList({
+                optionLabel: "Select an employee",
+                dataTextField: "Text",
+                dataValueField: "Value",
+                filter: "contains",
+                autoBind: false,
+                dataSource: @Html.Raw(Json.Serialize(Model.AvailableEmployees)),
+                change: onValueChange // Trigger AJAX call on change
+            });
+
+            // Attach change event for ApprovedId (Leave Type) and BalanceChange
+            $("#ApprovedId").change(onValueChange);
+            $("#Year").change(onValueChange);
+            $("#MonthId").change(onValueChange);
+
+            $("#ApprovedId").change(onValueChange);
+
+            $("#BalanceChange").on('input click change', onValueChange);
+
+            function onValueChange() {
+                // Get the selected values
+                var employeeId = $("#employeeDropdown").val();
+                var leaveTypeId = $("#ApprovedId").val();
+                var balanceChange = $("#BalanceChange").val();
+                var month = $("#MonthId").val();
+                var year = $("#Year").val();
+
+
+
+                // Check if the required values are selected
+                if (!employeeId || !leaveTypeId || balanceChange === "" || month ==0 || year ==0) {
+                    return; // Exit if values are not sufficient
+                }
+
+                // Make the AJAX call
+                $.ajax({
+                    url: '@Url.Action("UpdateLeaveBalance", "LeaveTransactionLog")', // Adjust to your controller/action
+                    type: 'GET',
+                    data: {
+                        employeeId: employeeId,
+                        leaveTypeId: leaveTypeId,
+                        balanceChange: parseFloat(balanceChange),
+                        monthId:month,
+                        year:year
+                    },
+                 
+                    success: function (response) {
+                        // Update the LeaveBalance input field with the new value
+                        $("#LeaveBalance").val(response.newLeaveBalance);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error updating leave balance: " + error);
+                    }
+                });
+            }
+        });
+    </script>
+
+}

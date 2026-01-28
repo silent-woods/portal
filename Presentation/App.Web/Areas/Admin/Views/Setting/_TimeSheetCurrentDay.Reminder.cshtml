@@ -1,0 +1,27 @@
+﻿@model TimeSheetSettingsModel
+
+<div class="card-body">
+    <!-- Reminder1 From -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="Reminder1_From_OverrideForStore" asp-input="Reminder1_From" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="Reminder1_From" />
+        </div>
+        <div class="col-md-4">
+            <input asp-for="Reminder1_From" id="Reminder1_From" type="time" class="form-control" />
+            <span asp-validation-for="Reminder1_From"></span>
+        </div>
+    </div>
+
+    <!-- Reminder1 To -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="Reminder1_To_OverrideForStore" asp-input="Reminder1_To" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="Reminder1_To" />
+        </div>
+        <div class="col-md-4">
+            <input asp-for="Reminder1_To" id="Reminder1_To" type="time" class="form-control" />
+            <span asp-validation-for="Reminder1_To"></span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,31 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Contacts
+@model ContactsModel
+
+@{
+    const string hideInfoBlockAttributeName = "contactsDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+    const string hideInfoBlockAttributecontactdeals = "contactsdealsDetails.HideInfoBlock";
+    var hideInfoBlockDeals = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributecontactdeals);
+}
+
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">          
+            <nop-cards id="contacts-item-cards">
+                <nop-card asp-name="lead-item-info" asp-icon="fas fa-info" asp-title="@T("Plugin.SatyanamCRM.Contacts.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Contacts/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+                @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageContactDeals, PermissionAction.View))
+                {
+                    <nop-card asp-name="lead-item-deals" asp-icon="fas fa-handshake" asp-title="@T("Plugin.SatyanamCRM.Contacts.Deals")" asp-hide-block-attribute-name="@hideInfoBlockAttributecontactdeals" asp-hide="@hideInfoBlockDeals">
+                        @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Contacts/_ContactDeals.cshtml", Model)
+                    </nop-card>
+                }
+            </nop-cards>
+        </div>
+    </div>
+</section>

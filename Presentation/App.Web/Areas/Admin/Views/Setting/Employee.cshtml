@@ -1,0 +1,54 @@
+﻿
+@{
+}
+@model EmployeeSettingsModel
+
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.Settings.Employee").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Employee settings");
+}
+
+@{
+    const string hideCommonBlockAttributeName = "EmployeeSettingsPage.HideCommonBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideCommonBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCommonBlockAttributeName);
+
+    const string hideCommentsBlockAttributeName = "EmployeeSettingsPage.HideCommentsBlock";
+    var hideCommentsBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCommentsBlockAttributeName);
+}
+
+
+<form asp-controller="Setting" asp-action="Employee" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.Settings.Employee")
+        </h1>
+        <div class="float-right">
+
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+           
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+               
+                <div asp-validation-summary="All"></div>
+
+                <nop-cards id="employeesettings-cards">
+                    <nop-card asp-name="employeesettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.Employee.OnBordingEmail")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_Employee.OnBordingEmail", Model)</nop-card>
+                </nop-cards>
+                <nop-cards id="employeesettings-cards">
+                    <nop-card asp-name="employeesettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.Employee.Coordinator")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_Employee.Coordinator", Model)</nop-card>
+                </nop-cards>
+
+            </div>
+        </div>
+    </section>
+</form>

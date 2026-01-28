@@ -1,0 +1,97 @@
+﻿@model ExperienceModel
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-popup">
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="SelectedEmployeeId" />
+                            </div>
+                            <div class="col-md-4">
+
+                                <div style="position: relative;">
+                                    <nop-select asp-for="SelectedEmployeeId" asp-items="Model.AvailableEmployees" asp-multiple="true" class="form-control" />
+
+                                    <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                                </div>
+                                <script>
+                                    $(document).ready(function () {
+                                        var selectElement = $('#@Html.IdFor(model => model.SelectedEmployeeId)').data("kendoMultiSelect");
+
+
+                                        selectElement.setOptions({
+                                            autoClose: true,
+                                            filter: "contains",
+                                            change: function (e) {
+
+                                                if (this.value().length > 1) {
+
+                                                    var lastItem = this.value()[this.value().length - 1];
+
+                                                    this.value([lastItem]);
+                                                }
+                                            }
+                                        });
+
+
+                                    @if (Model.AvailableEmployees.Count == 0)
+                                    {
+                                        <text>
+                                                selectElement.setOptions({
+                                                    enable: false,
+                                                    placeholder: '@T("Admin.Catalog.Employee.NoEmployee")'
+                                                });
+                                            selectElement._placeholder();
+                                            selectElement._enable();
+                                        </text>
+                                    }
+                                                                                                                                                                            });
+                                </script>
+
+                            </div>
+
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="PreviousCompanyName" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-editor asp-for="PreviousCompanyName" asp-required="true" />
+                                <span asp-validation-for="PreviousCompanyName"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="Designation" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-editor asp-for="Designation" asp-required="true" />
+                                <span asp-validation-for="Designation"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="From" />
+                            </div>
+                            <div class="col-md-5">
+                                <nop-editor asp-for="From" asp-required="true" />
+                                <span asp-validation-for="From"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="To" />
+                            </div>
+                            <div class="col-md-5">
+                                <nop-editor asp-for="To" asp-required="true" />
+                                <span asp-validation-for="To"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

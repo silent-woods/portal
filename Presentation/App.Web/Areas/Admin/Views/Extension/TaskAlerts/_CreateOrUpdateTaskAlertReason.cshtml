@@ -1,0 +1,22 @@
+﻿@model TaskAlertReasonModel
+
+@{
+    var customer = await workContext.GetCurrentCustomerAsync();
+
+    const string hideInfoBlockAttributeName = "TaskAlertReasonPage.HideInfoBlock";
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="task-alert-reasons">
+                <nop-card asp-name="task-alert-reason-info" asp-icon="fas fa-info" asp-title="@T("Admin.TaskAlert.TaskAlertReason.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock" asp-advanced="false">
+                    @await Html.PartialAsync("_CreateOrUpdateTaskAlertReason.Info.cshtml", Model)
+                </nop-card>
+            </nop-cards>
+        </div>
+    </div>
+</section>

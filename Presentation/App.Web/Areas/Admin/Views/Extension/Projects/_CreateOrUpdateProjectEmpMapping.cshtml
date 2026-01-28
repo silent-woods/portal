@@ -1,0 +1,99 @@
+@model ProjectModel
+
+<div class="card-body">
+    @if (Model.Id > 0)
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "projectempmapping-grid",
+                        UrlRead = new DataUrl("List", "ProjectEmployeeMapping", new RouteValueDictionary { [nameof(Model.projectEmployeeMappingSearchModel.ProjectId)] = Model.Id }),
+                        UrlDelete = new DataUrl("Delete", "ProjectEmployeeMapping", new RouteValueDictionary { [nameof(Model.Id)] = Model.ProjectEmployeeMappingModel.FirstOrDefault()?.Id }),
+                        Length = Model.projectEmployeeMappingSearchModel.PageSize,
+                        LengthMenu = Model.projectEmployeeMappingSearchModel.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectEmployeeMappingModel.EmployeeName))
+                    {
+                        Title = T("Admin.ProjectEmpMapping.Fields.EmployeeName").Text,
+                        Width = "200"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectEmployeeMappingModel.Role))
+                    {
+                        Title = T("Admin.ProjectEmpMapping.Fields.Role").Text,
+                        Width = "200"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectEmployeeMappingModel.IsActive))
+                    {
+                        Title = T("Admin.ProjectEmployeeMapping.Fields.IsActive").Text,
+                        Width = "30",
+                        ClassName = NopColumnClassDefaults.CenterAll,
+                        Render = new RenderBoolean()
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectEmployeeMappingModel.CreateOn))
+                    {
+                        Title = T("Admin.ProjectEmpMapping.Fields.CreateOn").Text,
+                        Width = "150",
+                        Render = new RenderDate()
+                    });
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectEmployeeMapping, PermissionAction.Edit))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectEmployeeMappingModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "80",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderCustom("renderColumnEdit")
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectEmployeeMapping, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectEmployeeMappingModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                            ClassName = NopColumnClassDefaults.Button
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+            <script>
+                function renderColumnEdit(data, type, row, meta) {
+                    var projectId = @Model.Id;
+                    var url = '@Url.Action("Edit", "ProjectEmployeeMapping")' + '?projectId=' + projectId + '&id=' + data;
+                    return '<button onclick="javascript:OpenWindow(\'' + url + '&btnId=btnRefreshProjectEmp&formId=project-form\', 800, 800, true); return false;" class="btn btn-default"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit").Text</button>';
+                }
+
+                $(document).ready(function () {
+                    $(window).on('refreshGrid', function () {
+                        updateTable('#projectempmapping-grid');
+                        console.log("Grid refreshed");
+                    });
+                });
+            </script>
+
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectEmployeeMapping, PermissionAction.Add))
+            {
+                <div class="card-body">
+                    <button type="button" id="btnAddNewEmpProjectMapping" class="btn btn-primary" onclick="javascript:OpenWindow('@Url.Action("Create", "ProjectEmployeeMapping", new { projectId = Model.Id, btnId = "btnRefreshProjectEmp", formId = "project-form" })', 800, 800, true); return false;">
+                        <i class="fas fa-plus-square"></i>
+                        @T("Admin.Catalog.Products.ProjectEmployee.AddNew")
+                    </button>
+                    <button type="button" id="btnRefreshProjectEmp" style="display:none"></button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @T("Admin.Catalog.Products.SpecificationAttributes.SaveBeforeEdit")
+            </div>
+        </div>
+    }
+</div>

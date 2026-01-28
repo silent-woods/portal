@@ -1,0 +1,148 @@
+﻿
+ @using App.Core
+@using App.Web.Models.Extensions.LeaveManagement;
+@model IEnumerable<LeaveTypeModel>
+@inject App.Core.IWebHelper webHelper
+@{
+    Layout = "_Root.Head";
+
+    //title
+    NopHtml.AddTitleParts(T("PageTitle.Leave").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-career-result-page");
+}
+
+@* @section left
+{
+    @await Component.InvokeAsync(typeof(CustomerNavigationViewComponent), new { selectedTabId = CustomerNavigationEnum.LeaveCreate })
+} *@
+
+<div class="page registration-page">
+
+    <div class="page-body">
+        <div class="fieldset">
+            <div class="title">
+                @* <strong>@T("Account.Trainee.YourPersonalDetails")</strong> *@
+                <strong>Your Current Year Leave Summery</strong>
+            </div>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                       <th>
+                                    <span>#</span>
+                                </th>
+                                <th>
+                                    Leave Type
+                            </th>
+                                <th>
+                                    Total Allowed
+                                </th>
+                                <th>
+                                    Leave Taken
+                                </th>
+                                <th>
+                                    Balance
+                                </th>
+                    </tr>
+                        </thead>
+                
+                    <tbody>
+
+                          
+               @{
+                var index = 1; 
+                    foreach (var leaveBalance in Model)
+                    {
+                        <tr>
+                            <td><span>@index</span></td>
+                            <td>@leaveBalance.LeaveTypeName</td>
+                            <td>@leaveBalance.TotalLeaves</td>
+                            <td>@leaveBalance.TakenLeaves</td>
+                            <td>@leaveBalance.RemainingLeaves</td>
+                        </tr>
+                            index++;
+                    }
+                    }
+                            </tbody>
+                        
+                    </table>
+                </div>
+
+
+            </div>
+       
+     
+    </div>
+
+
+
+<style>
+
+    .main {
+        display: block;
+    }
+
+    .row {
+        display: flex;
+        justify-content: space-evenly;
+    }
+
+    /* .col-sm-4{
+            margin-left: 2px;
+        } */
+
+    .select1 {
+        min-width: 160px;
+        height: 40px;
+        padding: 6px;
+    }
+
+    .button1 {
+        text-align: center;
+    }
+
+    .btn-search {
+        padding: 8px 25px;
+        border-radius: 10px;
+    }
+
+    .select2 {
+        min-width: 47%;
+        height: 40px;
+        padding: 6px;
+    }
+
+    table {
+        border-collapse: collapse;
+        border-spacing: 0;
+        width: 100%;
+        border: 1px solid #ddd;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2
+    }
+ 
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,88 @@
+﻿@model EmployeeModel
+
+<div class="card-body">
+
+    @if (Model.Id > 0)
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "assets-grid",
+                        UrlRead = new DataUrl("AssetsList", "Employee", new RouteValueDictionary { [nameof(Model.AssetsSearchModel.employeeId)] = Model.Id }),
+                        UrlDelete = new DataUrl("AssetsDelete", "Employee", new RouteValueDictionary { [nameof(Model.Id)] = Model.AssetsModels.FirstOrDefault()?.Id }),
+                        Length = Model.AssetsSearchModel.PageSize,
+                        LengthMenu = Model.AssetsSearchModel.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AssetsModel.EmployeeName))
+                    {
+                        Title = T("Admin.Assets.Fields.EmployeeName").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AssetsModel.Type))
+                    {
+                        Title = T("Admin.Assets.Fields.Type").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AssetsModel.Name))
+                    {
+                        Title = T("Admin.Assets.Fields.Name").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AssetsModel.Description))
+                    {
+                        Title = T("Admin.Assets.Fields.Description").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AssetsModel.DocumentId))
+                    {
+                        Title = T("Admin.Recruitements.Fields.Documents").Text,
+                        ClassName = NopColumnClassDefaults.Button,
+                        Render = new RenderCustom("renderColumnDownloadId")
+                    });
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAssets, PermissionAction.Edit))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AssetsModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "80",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderButtonEdit(new DataUrl("~/Admin/Employee/AssetsEdit?employeeId=" + Model.Id + "&id=" + Model.AssetsModels.FirstOrDefault()?.Id, true))
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAssets, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AssetsModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                            ClassName = NopColumnClassDefaults.Button
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAssets, PermissionAction.Add))
+            {
+                <div class="card-body">
+                    <button type="button" class="btn btn-primary" onclick="location.href = '@Url.Action("AssetsCreate", new { employeeId = Model.Id })'">
+                        <i class="fas fa-plus-square"></i>
+                        @T("Admin.Employee.Experience.AddButton")
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @T("Admin.Employee.Assets.SaveBeforeEdit")
+            </div>
+        </div>
+    }
+</div>
+<script>
+    function renderColumnDownloadId(data, type, row, meta) {
+        return (row.DocumentId > 0) ? '<a class="btn btn-default" href="@Url.Content("~/Admin/Download/DownloadFile")?downloadGuid=' + row.DownloadGuid + '"><i class="fas fa-download"></i>@T("Admin.Orders.OrderNotes.Fields.Download.Link").Text</a>' : '@T("Admin.Orders.OrderNotes.Fields.Download.Link.No").Text';
+    }
+</script>

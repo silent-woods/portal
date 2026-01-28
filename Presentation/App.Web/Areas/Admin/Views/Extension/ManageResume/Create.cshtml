@@ -1,0 +1,30 @@
+@using App.Web.Areas.Admin.Models.ManageResumes;
+@model CandiatesResumesModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.JobPosting.AddNew").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("JobPosting");
+}
+<form asp-controller="CandiatesResumes" asp-action="Create" method="post" enctype="multipart/form-data">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.JobPosting.AddNew")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.Configuration.JobPosting.BackToList")</a>
+            </small>
+        </h1>
+        <div class="float-right">
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+            <button type="submit" name="save-continue" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.SaveContinue")
+            </button>
+        </div>
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/ManageResume/_CreateOrUpdate.cshtml", Model)
+</form>

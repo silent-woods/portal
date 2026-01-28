@@ -1,0 +1,71 @@
+﻿@model EmployeeModel
+
+<div class="card-body">
+    <div id="employee-details-area">
+        <div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="OfficialEmail" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="OfficialEmail" asp-required="true" />
+                    <span asp-validation-for="OfficialEmail"></span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="Location" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="Location" />
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="DepartmentName" />
+                </div>
+                <div class="col-md-9">
+                    <nop-select asp-for="DepartmentId" asp-items="Model.Departments" asp-required="true" />
+                    <span asp-validation-for="DepartmentId"></span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="DesignationName"  />
+                </div>
+                <div class="col-md-9">
+                    <nop-select asp-for="DesignationId" asp-items="Model.Designation" asp-required="true" />
+                    <span asp-validation-for="DesignationId"></span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="DateofJoining"  />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="DateofJoining" asp-required="true" />
+                    <span asp-validation-for="DateofJoining"></span>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="DateOfBirth" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="DateOfBirth" asp-required="true" />
+                    <span asp-validation-for="DateOfBirth"></span>
+                </div>
+            </div>
+            @* <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="CTC" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="CTC" asp-required="true" />
+                    <span asp-validation-for="CTC"></span>
+                </div>
+            </div> *@
+        </div>        
+    </div>
+</div>

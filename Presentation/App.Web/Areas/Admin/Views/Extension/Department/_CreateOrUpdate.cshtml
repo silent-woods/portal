@@ -1,0 +1,32 @@
+﻿@model DepartmentModel
+
+@{
+	const string hideInfoBlockAttributeName = "DepartmentDetails.HideInfoBlock";
+	var customer = await workContext.GetCurrentCustomerAsync();
+	var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+
+<input asp-for="Id" type="hidden" />
+<input asp-for="CreatedOnUtc" type="hidden" />
+
+<section class="content">
+	<div class="container-fluid">
+		<div class="form-horizontal">
+			<nop-cards id="department-cards">
+				<nop-card asp-name="department-info" asp-icon="fas fa-info" asp-title="@T("Admin.Department.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+					<div class="card-body">
+						<div class="form-group row">
+							<div class="col-md-3">
+								<nop-label asp-for="Name" />
+							</div>
+							<div class="col-md-9">
+								<nop-editor asp-for="Name" asp-required="true" />
+								<span asp-validation-for="Name"></span>
+							</div>
+						</div>
+					</div>
+				</nop-card>
+			</nop-cards>
+		</div>
+	</div>
+</section>

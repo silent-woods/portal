@@ -1,0 +1,41 @@
+﻿@inherits App.Web.Framework.Mvc.Razor.NopRazorPage<TModel>
+
+@inject INopHtmlHelper NopHtml
+
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@*we remove the default InputTagHelper to prevent the checkbox duplicating: https://stackoverflow.com/questions/42544961/asp-net-core-custom-input-tag-helper-rendering-duplicate-checkboxes*@
+@removeTagHelper Microsoft.AspNetCore.Mvc.TagHelpers.InputTagHelper, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, App.Web.Framework
+@addTagHelper *, MiniProfiler.AspNetCore.Mvc
+
+@using System.Globalization;
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
+@using Microsoft.Extensions.Primitives
+@using static App.Services.Common.NopLinksDefaults
+@using App.Web.Components
+@using App.Web.Extensions
+@using App.Web.Framework
+@using App.Web.Framework.Events
+@using App.Web.Framework.Extensions
+@using App.Web.Framework.Infrastructure
+@using App.Web.Framework.Models
+@using App.Web.Framework.Mvc.Routing
+@using App.Web.Framework.Security.Captcha
+@using App.Web.Framework.Security.Honeypot
+@using App.Web.Framework.Themes
+@using App.Web.Framework.UI
+@using App.Web.Models.Blogs
+@using App.Web.Models.Boards
+@using App.Web.Models.Cms
+@using App.Web.Models.Common
+@using App.Web.Models.Customer
+@using App.Web.Models.Media
+@using App.Web.Models.News
+@using App.Web.Models.Newsletter
+@using App.Web.Models.Polls
+@using App.Web.Models.PrivateMessages
+@using App.Web.Models.Profile
+@using App.Web.Models.Sitemap
+@using App.Web.Models.Topics
+@using App.Web.Models.Employee

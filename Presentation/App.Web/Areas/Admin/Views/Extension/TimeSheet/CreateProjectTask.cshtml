@@ -1,0 +1,273 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.ProjectTasks
+@model ProjectTaskModel
+
+
+@{
+    Layout = "_AdminPopupLayout";
+}
+
+@if (ViewBag.RefreshPage)
+{
+    <script>
+        try { window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click(); }
+        catch (e) { }
+        window.close();
+    </script>
+}
+else
+{
+    <form asp-controller="Timesheet" asp-action="CreateProjectTask" method="post" id="projecttaskform" asp-route-btnId="@Context.Request.Query["btnId"]"
+          asp-route-formId="@Context.Request.Query["formId"]">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.ProjectTask.AddNew")
+          
+        </h1>
+        <div class="float-right">
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+ 
+        </div>
+    </div>
+        <input asp-for="Id" type="hidden" />
+      
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                  
+                    @if (ViewBag.RefreshPage == true)
+                    {
+                        <script>
+                            try {
+                                window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click();
+                                window.document.forms['designation-grid'].btnRefreshList.Click();
+                            }
+                            catch (e) { }
+                            window.close();
+                        </script>
+                    }
+               
+                       
+                        <div class="cards-group">
+                            <div class="card card-default card-popup">
+                                <div class="card-body">
+
+                            <div class="form-group row">
+                                <div class="col-sm-3">
+                                    <nop-label asp-for="ProjectId" />
+                                </div>
+                                <div class="col-sm-6">
+                                    <nop-select asp-for="ProjectId" asp-items="Model.Projects" asp-required="true" />
+                                    <span asp-validation-for="ProjectId"></span>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="TaskTitle" />
+                                </div>
+                                <div class="col-md-6">
+                                    <nop-editor asp-for="TaskTitle" id="TaskTitle" asp-required="true" />
+                                    <span asp-validation-for="TaskTitle"></span>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="Description" />
+                                </div>
+                                <div class="col-md-6">
+                                    <nop-textarea asp-for="Description" id="Description" />
+                                    <span asp-validation-for="Description"></span>
+                                </div>
+                            </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="Tasktypeid" />
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <nop-select asp-for="Tasktypeid" asp-items="Model.TaskTypeList" asp-required="true" />
+                                        <span asp-validation-for="Tasktypeid"></span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="ParentTaskId" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div style="position: relative;">
+                                            <select id="ParentTaskId" name="ParentTaskId" class="form-control" style="border: none;
+            box-shadow: none;">
+                                                <option value=""></option>
+                                                @foreach (var task in Model.AvailableParentTasks)
+                                                {
+                                                    <option value="@task.Value">@task.Text</option>
+                                                }
+                                            </select>
+                                            <span asp-validation-for="ParentTaskId"></span>
+
+
+                                            <span style="color:red;" id="taskError"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <script>
+                                    $(document).ready(function () {
+
+                                        var initialProjectId     = "@Model.ProjectId";
+                                        var initialParentTaskId  = "@Model.ParentTaskId";
+
+                                        // create empty DropDownList first
+                                        var taskDropdown = $("#ParentTaskId").kendoDropDownList({
+                                            optionLabel: "Select a task",
+                                            dataTextField: "Text",
+                                            dataValueField: "Value",
+                                            filter: "contains"
+                                        }).data("kendoDropDownList");
+
+
+                                        function loadParentTasks(projectId, preselectId) {
+                                            if (!projectId) {
+                                                taskDropdown.dataSource.data([]);
+                                                taskDropdown.value("");
+                                                return;
+                                            }
+
+                                            $.getJSON('/Admin/ProjectTask/GetParentTasksByProjectId',
+                                                      { projectId: projectId },
+                                                      function (data) {
+                                                          taskDropdown.dataSource.data(data);
+                                                          if (preselectId) taskDropdown.value(preselectId);
+                                                      });
+                                        }
+
+
+                                        loadParentTasks(initialProjectId, initialParentTaskId);
+
+
+                                        $('#@Html.IdFor(m => m.ProjectId)').change(function () {
+                                            loadParentTasks($(this).val(), null);
+                                        });
+                                          var taskTypeSelector = $('#@Html.IdFor(m => m.Tasktypeid)');
+                                    var parentTaskSelector = $("#ParentTaskId");
+                                    var parentTaskError = $("#taskError");
+
+                                    function validateParentTask() {
+                                        var taskTypeVal = taskTypeSelector.val();
+                                        var parentTaskVal = parentTaskSelector.val();
+
+                                        if ((taskTypeVal === "3" || taskTypeVal === "4") && (!parentTaskVal || parentTaskVal === "0" || parentTaskVal === "")) {
+                                            parentTaskError.text("Parent task is required when Task Type is Bug or Change Request");
+                                            return false;
+                                        } else {
+                                            parentTaskError.text("");
+                                            return true;
+                                        }
+                                    }
+
+                                    // Re-validate when dropdowns change
+                                    // taskTypeSelector.change(validateParentTask);
+                                    // parentTaskSelector.change(validateParentTask);
+
+                                    // Validate on form submit
+                                    $('form').on('submit', function (e) {
+                                        if (!validateParentTask()) {
+                                            e.preventDefault(); // Prevent form submission
+                                        }
+                                    });
+                                    });
+                                </script>
+
+
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                        <nop-label asp-for="EstimationTimeHHMM" />
+                                </div>
+                                <div class="col-md-4">
+                                        <nop-editor asp-for="EstimationTimeHHMM"/>
+                                        <span asp-validation-for="EstimationTimeHHMM"></span>
+                                </div>
+                            </div>
+                                
+
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="DueDate" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <nop-editor asp-for="DueDate" />
+                                        <span asp-validation-for="DueDate"></span>
+                                    </div>
+                                </div>
+
+                               
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="ProcessWorkflowId" />
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <nop-select asp-for="ProcessWorkflowId" asp-items="Model.AvailableProcessWorkflows" asp-required="true" />
+                                        <span asp-validation-for="ProcessWorkflowId"></span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="IsSync" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <nop-editor asp-for="IsSync" id="IsSync"  />
+                                        <span asp-validation-for="IsSync"></span>
+                                    </div>
+                                </div>
+
+                                @*                                 <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="AssignedEmployee" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <nop-editor asp-for="" htmlAttributes="@(new { disabled = "disabled" })" />
+                                    </div>
+                                </div> *@
+
+                        </div>
+                    
+            </div>
+       </div>
+       </div>
+    </section>
+ </form>
+
+    <script>
+        $(document).ready(function () {
+            $('#@Html.IdFor(model => model.ProjectId)').change(function () {
+                var projectId = $(this).val();
+
+                if (projectId) {
+                    $.ajax({
+                        url: '/Admin/ProjectTask/GetProcessWorkflowsByProjectId',
+                        type: 'GET',
+                        data: { projectId: projectId },
+                        success: function (data) {
+                            var workflowDropdown = $('#@Html.IdFor(model => model.ProcessWorkflowId)');
+                            workflowDropdown.empty();
+
+                            if (data && data.length > 0) {
+                                $.each(data, function (i, item) {
+                                    workflowDropdown.append($('<option></option>').val(item.Value).text(item.Text));
+                                });
+                            }
+                        },
+                        error: function () {
+                            alert('Error loading workflows.');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}
+

@@ -1,0 +1,174 @@
+@model AvgMeasurementModel
+<style>
+    .data {
+    }
+
+    .rating-table{
+        overflow-x: auto; /* Enable horizontal scrolling for the table */
+        
+    }
+    .center-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #ddd; /* Light gray border */
+        text-align: left;
+        
+    }
+
+        .center-table th,
+        .center-table td {
+            padding: 10px;
+            border: 1px solid #ddd; /* Light gray border */
+          
+        }
+
+        .center-table th {
+            background-color: #f2f2f2; /* Light gray background for header */
+            font-weight: bold;
+        }
+
+        .center-table td {
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        .center-table tr:nth-child(even) {
+            background-color: #f9f9f9; /* Alternate row background */
+        }
+
+    .kpi-name {
+        background-color: #e6f2ff; /* Light blue background for KPI names */
+        position: sticky;
+        left: 0; /* Fix the first column to the left */
+        z-index: 2; /* Ensure it stays on top during scroll */
+    }
+
+    .center-table thead th.kpi-name {
+        z-index: 3; /* Ensure the header of the fixed column stays above the body */
+    }
+
+    .rate {
+        background-color: #eaf1dd; /* Light green background for total rate */
+    }
+
+    .avg {
+        background-color: #f9eec1; /* Light yellow background for total average */
+    }
+
+    .name {
+        background-color: #e2e2e2; /* Light gray background for manager names */
+    }
+
+    .manager {
+        background-color: #ffd1b3; /* Light orange background for managers */
+    }
+
+
+
+
+
+    .feedback-table {
+        width: 100%;
+        margin: auto;
+        text-align: left;
+        border-collapse: collapse;
+        border: 1px solid #ddd;
+        margin-top: 30px;
+        overflow-x:auto;
+      
+    }
+
+        .feedback-table th {
+            background-color: #f2f2f2; /* Light gray background for header */
+            font-weight: bold;
+            padding: 10px;
+            border: 1px solid #ddd; /* Light gray border */
+            word-wrap: break-word; /* Breaks long words */
+            overflow-wrap: break-word; /* Ensures compatibility for modern browsers */
+            white-space: normal; /* Allows text to wrap */
+
+        }
+
+        .feedback-table td {
+            padding: 10px;
+            border: 1px solid #ddd; /* Light gray border */
+            word-wrap: break-word; /* Breaks long words */
+            overflow-wrap: break-word; /* Ensures compatibility for modern browsers */
+            white-space: normal; /* Allows text to wrap */
+        }
+
+        .feedback-table tr:nth-child(even) {
+            background-color: #f9f9f9; /* Alternate row background */
+        }
+</style>
+
+<div class="data">
+
+    @if (Model == null)
+    {
+        <p>No data available.</p>
+    }
+    else if (Model.KPIName == null)
+    {
+    }
+    else if (!Model.KPIName.Any())
+    {
+        <p>KPIName is empty</p>
+    }
+    else
+    {
+
+        <div class="rating-table">
+
+        <table class="center-table">
+            <!-- Table headers -->
+            <thead>
+                <tr>
+                    <!-- Fixed KPIName column -->
+                    <th class="kpi-name">KPIName</th>
+                    <!-- Loop through distinct manager names -->
+                    @foreach (var managerName in Model.employeeRatePerKPIs.Select(e => e.ManagerName).Distinct())
+                    {
+                        <th class="manager">@managerName</th>
+                    }
+                    <th class="rate">Total Rate</th>
+                    <th class="avg">Total Average</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table body -->
+                @foreach (var kpi in Model.KPIName)
+                {
+                    <tr>
+                        <td class="kpi-name">@kpi</td>
+                        <!-- Loop through rates for each KPI -->
+                        @foreach (var rate in Model.employeeRatePerKPIs.Where(e => e.KPIName == kpi))
+                        {
+                            <td>@rate.Rate</td>
+                        }
+                        <!-- Display total rate and average rate -->
+                        <td>@Model.employeeTotalAvgRates.FirstOrDefault(item => item.KPIName == kpi)?.TotalRateing</td>
+                        <td>@Model.employeeTotalAvgRates.FirstOrDefault(item => item.KPIName == kpi)?.AvgRateing.ToString("F2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        </div>
+
+        @if (Model.Feedbacks != null && Model.Feedbacks.Count != 0)
+        {
+           
+            
+                <table class="feedback-table">
+
+                    <tr><th>Employee</th> <th>Feedback</th></tr>
+                    @foreach (var feedback in Model.Feedbacks)
+                    {
+                        <tr>
+                            @Html.Raw(feedback)
+                        </tr>
+                    }
+                </table>
+           
+        }
+    }
+</div>

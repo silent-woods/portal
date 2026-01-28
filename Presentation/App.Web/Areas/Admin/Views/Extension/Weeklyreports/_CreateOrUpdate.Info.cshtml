@@ -1,0 +1,141 @@
+﻿@using App.Web.Areas.Admin.Models.WeeklyReports;
+@using Nop.Core.Domain.Catalog;
+@model WeeklyReportModel
+
+<div class="card-body">
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-popup">
+                        <div class="card-body">
+                            <div id="weeklyQuestionsContainer" class="form-group">
+                                @foreach (var question in Model.WeeklyQuestions)
+                                {
+                                    <input asp-for="@question.Id" type="hidden" />
+                                    <div class="form-group">
+                                        <label>@question.QuestionText</label>
+                                        @if (question.ControlTypeId == 1) // TextBox
+                                        {
+                                            <input type="text" class="form-control" name="WeeklyQuestions[@Model.WeeklyQuestions.IndexOf(question)].ControlValue" value="@question.ControlValue" />
+                                        }
+                                        else if (question.ControlTypeId == 2) // Dropdown
+                                        {
+                                            <select class="form-control" name="WeeklyQuestions[@Model.WeeklyQuestions.IndexOf(question)].ControlValue">
+                                                @foreach (var option in question.ControlValue.Split(','))
+                                                {
+                                                    <option value="@option.Trim()">@option.Trim()</option>
+                                                }
+                                            </select>
+                                        }
+                                        else if (question.ControlTypeId == 3) // Radio Buttons
+                                        {
+                                            foreach (var option in question.ControlValue.Split(','))
+                                            {
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="Question[@Model.WeeklyQuestions.IndexOf(question)].ControlValue" value="@option.Trim()">
+                                                    <span class="form-check-label">@option.Trim()</span>
+                                                </div>
+                                            }
+                                        }
+                                        else if (question.ControlTypeId == 4) // Checkboxes
+                                        {
+                                            foreach (var option in question.ControlValue.Split(','))
+                                            {
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="Question[@Model.WeeklyQuestions.IndexOf(question)].ControlValue" value="@option.Trim()">
+                                                    <label class="form-check-label">@option.Trim()</label>
+                                                </div>
+                                            }
+                                        }
+                                        else if (question.ControlTypeId == 5) // Textarea
+                                        {
+                                            <textarea class="form-control" name="Question[@Model.WeeklyQuestions.IndexOf(question)].ControlValue" rows="4" cols="50">@question.ControlValue</textarea>
+                                        }
+                                        else if (question.ControlTypeId == 6) // Button
+                                        {
+                                            <button type="button" class="btn btn-primary" id="button-@Model.WeeklyQuestions.IndexOf(question)">@question.ControlValue</button>
+                                        }
+                                        else if (question.ControlTypeId == 7) // Label
+                                        {
+                                            <label>@question.ControlValue</label>
+                                        }
+                                        else if (question.ControlTypeId == 8) // DatePicker
+                                        {
+                                            <input type="date" class="form-control" name="Question[@Model.WeeklyQuestions.IndexOf(question)].ControlValue">
+                                        }
+                                        else if (question.ControlTypeId == 9) // TimePicker
+                                        {
+                                            <input type="time" class="form-control" name="Question[@Model.WeeklyQuestions.IndexOf(question)].ControlValue">
+                                        }
+                                        else if (question.ControlTypeId == 10) // File Upload
+                                        {
+                                            <input type="file" class="form-control-file" name="Question[@Model.WeeklyQuestions.IndexOf(question)].ControlValue" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                        }
+                                    </div>
+                                }
+                                <input type="hidden" name="ControlValue" asp-for="ControlValue" id="marks" class="answer-input" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+    /* CSS for perfect alignment and spacing */
+    #weeklyQuestionsContainer {
+        display: flex;
+        flex-direction: column;
+        margin: auto;
+    }
+
+        #weeklyQuestionsContainer > div {
+            margin-bottom: 10px; /* Adjust as needed for spacing between controls */
+        }
+
+        #weeklyQuestionsContainer label {
+            margin-bottom: 5px; /* Adjust as needed for spacing between label and control */
+        }
+
+    /* Additional styles for specific control types can be added here if needed */
+</style>
+
+<script>
+    $(document).ready(function () {
+        $('#submitFormBtn').on('click', function () {
+            var formData = []; // Array to store form data
+            $('#weeklyQuestionsContainer .form-group').each(function () {
+                var question = {}; // Object to represent a question
+
+                // Check if it's a radio button question
+                var radioInputs = $(this).find('input[type="radio"]:checked');
+                if (radioInputs.length > 0) {
+                    // For radio button questions, store only the control value
+                    question.ControlValue = radioInputs.val(); // Get selected value
+
+                    // Extract QuestionText from the label text
+                    question.QuestionText = $(this).find('label').text().trim();
+                    alert(question.QuestionText);
+                    // Use entire label text
+                } else {
+                    // For other types of questions, store only the control value
+                    var controlInput = $(this).find('input[type="text"], textarea, select').first();
+                    if (controlInput.length > 0) {
+                        question.ControlValue = controlInput.val(); // Get the value of the control input
+                    } else {
+                        question.ControlValue = ""; // Set ControlValue to empty string if control input not found
+                    }
+                    //alert(controlInput)
+                    // Extract QuestionText from the label text
+                    question.QuestionText = $(this).find('label').text().trim();
+                }
+                formData.push(question); // Add question to form data array
+            });
+            // Serialize the array of objects to JSON string and store in hidden input
+            $('#marks').val(JSON.stringify(formData));
+        });
+    });
+</script>

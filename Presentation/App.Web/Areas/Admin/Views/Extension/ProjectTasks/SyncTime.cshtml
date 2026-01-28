@@ -1,0 +1,292 @@
+﻿@model ProjectTaskModel
+@using App.Web.Areas.Admin.Models.Extension.ProjectTasks
+
+
+@{
+    Layout = "_AdminPopupLayout";
+}
+
+<link rel="stylesheet" href="https://jqwidgets.com/public/jqwidgets/styles/jqx.base.css" type="text/css" />
+<script type="text/javascript" src="https://jqwidgets.com/public/jqwidgets/jqx-all.js"></script>
+@if (ViewBag.RefreshPage)
+{
+    <script>
+        try { window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click(); }
+        catch (e) {
+            console.log(e);
+        }
+        window.close();
+    </script>
+}
+else
+{
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.SyncTime")
+        </h1>
+        <div class="float-right">
+            <button type="button" name="recorrectTime" id="recorrectTime" class="btn btn-primary">
+                
+                @T("Admin.Common.recorrectTime")
+            </button>
+
+        </div>
+    </div>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-search">
+                        <div class="card-body">
+                           
+                            <!-- First  Row: Employee -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-sm-3">
+                                            <nop-label asp-for="From" />
+                                        </div>
+                                        <div class="col-sm-9">
+                                            <nop-editor asp-for="From" asp-required="true" />
+                                            <span asp-validation-for="From"></span>
+                                            <span id="From-error"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+
+                                    <div class="form-group row">
+                                        <div class="col-sm-3">
+                                            <nop-label asp-for="EmployeeId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div style="position: relative;">
+                                                <select id="employeeDropdown" name="SelectedEmployeeId" class="form-control" style="border: none;
+        box-shadow: none;">
+                                                    <option value=""></option>
+                                                    @foreach (var employee in Model.AvailableEmployees)
+                                                    {
+                                                        <option value="@employee.Value">@employee.Text</option>
+                                                    }
+                                                </select>
+                                                <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                                                <span style="color:red;" id="employeeError"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                               
+                            </div>
+                            <!-- First Row: From and Show By -->
+                            <div class="row">
+
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-sm-3">
+                                            <nop-label asp-for="To" />
+                                        </div>
+                                        <div class="col-sm-9">
+                                            <nop-editor asp-for="To" asp-required="true" />
+                                            <span asp-validation-for="To"></span>
+                                            <div id="To-error"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+
+
+                                    <div class="form-group row">
+                                        <div class="col-sm-3">
+                                            <nop-label asp-for="ProjectId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div style="position: relative;">
+                                                <select id="projectDropdown" name="ProjectId" class="form-control" style="border: none;
+        box-shadow: none;">
+                                                    <option value=""></option>
+                                                    @foreach (var project in Model.Projects)
+                                                    {
+                                                        <option value="@project.Value">@project.Text</option>
+                                                    }
+                                                </select>
+                                                <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                                                <span style="color:red;" id="employeeError"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <!-- Search Button -->
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="sync-time-btn" class="btn btn-primary btn-search">Search</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="card card-default hide-before">
+                        <div class="card-body">
+
+                            <div class="table-wrapper">
+                                <table id="timesheet-report-table" class="table">
+                                    <thead>
+                                        <!-- Table header will be dynamically created here -->
+                                    </thead>
+                                    <tbody>
+                                        <!-- Table body will be dynamically created here -->
+                                    </tbody>
+                                    <tfoot>
+                                        <!-- Total row will be dynamically created here -->
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+    
+
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize Kendo DropDownList for employees
+            $("#employeeDropdown").kendoDropDownList({
+                optionLabel: "All",
+                dataTextField: "Text",
+                dataValueField: "Value",
+                filter: "contains",
+                autoBind: false,
+                dataSource: @Html.Raw(Json.Serialize(Model.AvailableEmployees))
+                                                                });
+
+            $("#projectDropdown").kendoDropDownList({
+                optionLabel: "All",
+                dataTextField: "Text",
+                dataValueField: "Value",
+                filter: "contains",
+                autoBind: false,
+                dataSource: @Html.Raw(Json.Serialize(Model.Projects))
+                                                                        });
+            // Initialize jqxGrid
+            $("#timesheet-report-table").jqxGrid({
+                width: "100%",
+                autoheight: true,
+                pageable: true,
+                sortable: true,
+                filterable: true,
+                columnsresize: true,
+                theme: "energyblue",
+                columns: [
+                    { text: "Task ID", datafield: "TaskId", width: 100 },
+                    { text: "Task Name", datafield: "TaskName", width: 200 },
+                    { text: "Project Name", datafield: "ProjectName", width: 200 },
+
+                    { text: "Estimated Time", datafield: "EstimatedTime", width: 150 },
+                    { text: "Actual Time", datafield: "ActualTime", width: 150 },
+                    { text: "Task Time", datafield: "TaskTime", width: 150 }
+                ]
+            });
+
+            // AJAX call when the SyncTime button is clicked
+            $("#sync-time-btn").click(function () {
+                var from = $("#From").val();
+                var to = $("#To").val();
+                var employeeId = $("#employeeDropdown").val();
+                var projectId = $("#projectDropdown").val();
+
+                // Check if required fields are filled
+                if (!from || !to) {
+                    alert("Please select From and To dates.");
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("SearchMismatchEntires", "ProjectTask")', 
+                    type: 'GET',
+                    data: {
+                        from: from,
+                        to: to,
+                        employeeId: employeeId || null, // Send null if empty
+                        projectId: projectId || null
+                    },
+                    success: function (response) {
+                        if (response.mismatches && response.mismatches.length > 0) {
+                            // Load data into jqxGrid
+                            var source = {
+                                datatype: "json",
+                                localdata: response.mismatches,
+                                datafields: [
+                                    { name: "TaskId", type: "int" },
+
+                                    { name: "TaskName", type: "string" },
+                                    { name: "ProjectName", type: "string" },
+
+                                    { name: "EstimatedTime", type: "string" },
+                                    { name: "ActualTime", type: "string" },
+                                    { name: "TaskTime", type: "string" }
+                                ]
+                            };
+                          
+                            var dataAdapter = new $.jqx.dataAdapter(source);
+                         
+                            $("#timesheet-report-table").jqxGrid({ source: dataAdapter });
+                        } else {
+                            $("#timesheet-report-table").jqxGrid('clear');
+
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error syncing time:", error);
+                        alert("Error syncing time. Please try again.");
+                    }
+                });
+
+
+            });
+
+
+            $("#recorrectTime").click(function () {
+                var from = $("#From").val();
+                var to = $("#To").val();
+                var employeeId = $("#employeeDropdown").val();
+                var projectId = $("#projectDropdown").val();
+
+                // Check if required fields are filled
+                if (!from || !to) {
+                    alert("Please select From and To dates.");
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("CorrectMismatchedEntries", "ProjectTask")',
+                    type: 'GET',
+                    data: {
+                        from: from,
+                        to: to,
+                        employeeId: employeeId || null,
+                        projectId: projectId || null
+                    },
+                    success: function (response) {
+                        $("#timesheet-report-table").jqxGrid('clear');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error syncing time:", error);
+                        alert("Error syncing time. Please try again.");
+                    }
+                });
+
+
+            });
+        });
+    </script>
+}

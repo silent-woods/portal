@@ -1,0 +1,80 @@
+﻿@model InvoiceItemModel
+
+<input asp-for="Id" type="hidden" />
+<input asp-for="InvoiceId" type="hidden" />
+
+@if (ViewBag.RefreshPage == true)
+{
+    <script>
+        try {window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click();}
+        catch (e){}
+        window.close();
+    </script>
+}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-popup">
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="Description" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-editor asp-for="Description" asp-required="true" />
+                                <span asp-validation-for="Description"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="Hours" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-editor asp-for="Hours" />
+                                <span asp-validation-for="Hours"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="Rate" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-editor asp-for="Rate" />
+                                <span asp-validation-for="Rate"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="Amount" />
+                            </div>
+                            <div class="col-sm-9">
+                                <nop-editor asp-for="Amount" />
+                                <span asp-validation-for="Amount"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    $(function () {
+        function updateAmount() {
+            var hours = parseFloat($('#Hours').val()) || 0;
+            var rate = parseInt($('#Rate').val()) || 0;
+
+            var amount = hours * rate;
+            var formattedAmount = amount.toFixed(2);
+
+            $("#Amount").data("kendoNumericTextBox").value(formattedAmount);
+        }
+
+        $('#Hours, #Rate').on('input', updateAmount);
+
+        updateAmount();
+    });
+</script>

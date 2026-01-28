@@ -1,0 +1,47 @@
+﻿@using App.Web.Areas.Admin.InterviewQeations.Models;
+@model RecruitementModel
+
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.HRM.Holidays.AddNew").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("InterviewQuestions");
+}
+
+<form asp-controller="InterviewQeations" asp-action="Edit" method="post">
+    <div class="content-header clearfix"> 
+        <h1 class="float-left">
+            @T("Admin.HRM.InterviewQuestions.EditInterviewQuestions")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.Catalog.Question.BackToList")</a>
+            </small>
+        </h1>
+        <div class="float-right">
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageQuestion, PermissionAction.Edit))
+            {
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            }
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageQuestion, PermissionAction.Delete))
+            {
+                <span id="rts-delete" class="btn btn-danger">
+                    <i class="far fa-trash-alt"></i>
+                    @T("Admin.Common.Delete")
+                </span>
+            }
+        </div>
+    </div>
+    <div class="content" style="display:grid">
+        <div class="form-horizontal">
+            @await Html.PartialAsync("/Areas/Admin/Views/Extension/InterviewQeations/_CreateOrUpdate.cshtml",Model)
+        </div>
+    </div>
+</form>
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="rts-delete"/>

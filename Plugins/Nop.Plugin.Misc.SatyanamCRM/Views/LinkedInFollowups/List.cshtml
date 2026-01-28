@@ -1,0 +1,868 @@
+@using App.Services.Common
+@using App.Web.Framework.Models.DataTables
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.LinkedInFollowups
+@using System.ComponentModel.DataAnnotations
+@inject IGenericAttributeService GenericAttributeService
+@inject IWorkContext WorkContext
+
+@model LinkedInFollowupsSearchModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.LinkedInFollowups").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("LinkedInFollowups");
+
+    const string hideSearchBlockAttributeName = "linkedInFollowupsListPage.HideSearchBlock";
+    var hideSearchBlock = await GenericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Plugin.SatyanamCRM.LinkedInFollowups")
+    </h1>
+    <div class="float-right">
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
+        {
+            <div class="btn-group">
+                <button type="button" class="btn btn-success">
+                    <i class="fas fa-download"></i>
+                    @T("Admin.Common.Export")
+                </button>
+                <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                    <span class="caret"></span>
+                    <span class="sr-only">Toggle Dropdown</span>
+                </button>
+                <form id="export-shared-form" method="post">
+                    <input type="hidden" name="SearchFirstName" />
+                    <input type="hidden" name="SearchLastName" />
+                    <input type="hidden" name="SearchEmail" />
+                    <input type="hidden" name="SearchLinkedinUrl" />
+                    <input type="hidden" name="SearchWebsiteUrl" />
+                    <input type="hidden" name="NextFollowUpDate" />
+                    <input type="hidden" name="SearchStatus" />
+                </form>
+
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <button type="button" class="dropdown-item export-btn"
+                                data-action="@Url.Action("ExportToExcel", "LinkedInFollowups", new { area = "Admin" })"
+                                data-button-name="exportexcel-all">
+                            <i class="far fa-file-excel"></i>
+                            @T("Admin.Common.ExportToExcel.All")
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" id="exportexcel-selected" class="dropdown-item">
+                            <i class="far fa-file-excel"></i>
+                            @T("Admin.Common.ExportToExcel.Selected")
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn bg-olive dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-upload"></i>
+                    @T("Admin.Common.Import")
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#importexcel-window">
+                            <i class="fas fa-upload"></i>
+                            @T("Admin.Common.Import")
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        }
+        
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Plugin.SatyanamCRM.LinkedInFollowups.AddNew")
+            </a>
+        }
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Delete))
+        {
+            <button type="button" id="delete-selected" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete.Selected")
+            </button>
+            <nop-action-confirmation asp-button-id="delete-selected" />
+        }
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchFirstName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchFirstName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchLastName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchLastName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchEmail" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchEmail" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchLinkedinUrl" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchLinkedinUrl" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchWebsiteUrl" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchWebsiteUrl" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchLastMessDate" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchLastMessDate" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchStatus" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchStatus" asp-items="Model.Status" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="NextFollowUpDate" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="NextFollowUpDate" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-linkedInFollowups" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    // ? Render clickable LinkedIn URL (for display only)
+                                    function renderLinkedInUrl(data, type, row, meta) {
+                        if (!data) return '';
+
+                        if (type === 'display') {
+                            var url = data.startsWith('http') ? data : 'https://' + data;
+
+                            // shorten display text to 35 chars + normal dots (not special character)
+                            var displayText = data.length > 35 ? data.substring(0, 35) + '...' : data;
+
+                            return `<a href="${url}" target="_blank"
+                                        title="${data}"
+                                        style="color:#0077b5;white-space:nowrap;">
+                                        ${displayText}
+                                    </a>`;
+                        }
+
+                        // In edit/filter mode ? return plain text
+                        return data;
+                    }
+
+                    // ? Clean inline editor input to remove HTML anchor tags
+                    (function () {
+                        function extractPlainUrlFromHtml(html) {
+                            if (!html) return '';
+                            if (/<a\b[^>]*>/i.test(html)) {
+                                try {
+                                    var wrapper = document.createElement('div');
+                                    wrapper.innerHTML = html;
+                                    var a = wrapper.querySelector('a');
+                                    if (a) return a.getAttribute('href') || a.textContent || a.innerText || '';
+                                } catch (e) {
+                                    var m = html.match(/href=(?:'|")([^'"]+)(?:'|")/i);
+                                    if (m) return m[1];
+                                }
+                            }
+                            return html.replace(/<[^>]*>/g, '').trim();
+                        }
+
+                        function cleanEditorInput($input) {
+                            try {
+                                var val = $input.val() || '';
+                                if (!val) return;
+                                if (/<[a-z][\s\S]*>/i.test(val)) {
+                                    var plain = extractPlainUrlFromHtml(val);
+                                    if (plain) $input.val(plain);
+                                }
+                            } catch (e) { }
+                        }
+
+                        var selectors = [
+                            'input[name="LinkedinUrl"]',
+                            'input[name="LinkedInUrl"]',
+                            '#linkedInFollowups-grid input[type="text"]'
+                        ].join(',');
+
+                        // clean when input gains focus
+                        $(document).on('focus', selectors, function () {
+                            cleanEditorInput($(this));
+                        });
+
+                        // clean after DataTable redraw
+                        $('#linkedInFollowups-grid').on('draw.dt', function () {
+                            setTimeout(function () {
+                                $(selectors).each(function () {
+                                    cleanEditorInput($(this));
+                                });
+                            }, 50);
+                        });
+
+                        // mutation observer fallback (for dynamically added inputs)
+                        (function startObserver() {
+                            var container = document.querySelector('#linkedInFollowups-grid');
+                            if (!container) return;
+                            var mo = new MutationObserver(function (mutations) {
+                                mutations.forEach(function (m) {
+                                    m.addedNodes.forEach(function (n) {
+                                        if (n.nodeType === 1) {
+                                            var inputs = n.tagName === 'INPUT' ? [n] : n.querySelectorAll('input');
+                                            inputs.forEach(function (inp) {
+                                                setTimeout(function () { cleanEditorInput($(inp)); }, 30);
+                                            });
+                                        }
+                                    });
+                                });
+                            });
+                            mo.observe(container, { childList: true, subtree: true });
+                        })();
+                    })();
+                </script>
+                <!-- Status Bar -->
+                <div id="status-summary" style="overflow-x:auto;max-width:100%;background-color:#f9f9f9;padding:12px;margin-top:10px;margin-bottom:20px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "linkedInFollowups-grid",
+                                UrlRead = new DataUrl("List", "LinkedInFollowups", null),
+                                UrlUpdate = new DataUrl("InlineEdit", "LinkedInFollowups", null), // ?? enable inline save
+                                SearchButtonId = "search-linkedInFollowups",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                    new FilterParameter(nameof(Model.SearchFirstName)),
+                                    new FilterParameter(nameof(Model.SearchLastName)),
+                                    new FilterParameter(nameof(Model.SearchEmail)),
+                                    new FilterParameter(nameof(Model.SearchLinkedinUrl)),
+                                    new FilterParameter(nameof(Model.SearchWebsiteUrl)),
+                                    new FilterParameter(nameof(Model.SearchLastMessDate)),
+                                    new FilterParameter(nameof(Model.NextFollowUpDate)),
+                                    new FilterParameter(nameof(Model.SearchStatus))
+                                },
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.Id))
+                            {
+                                IsMasterCheckBox = true,
+                                Render = new RenderCheckBox("checkbox_linkedin_followups"),
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "50"
+                            });
+                            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.Id))
+                                {
+                                    Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Edit").Text,
+                                    Width = "80",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonsInlineEdit()
+                                });
+                            }
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.Id))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.ChangeStatus").Text,
+                                Width = "120",
+                                ClassName = NopColumnClassDefaults.Button,
+                                Render = new RenderCustom("renderStatusPopup")
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.LinkedinUrl))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.LinkedinUrl").Text,
+                                Editable = true,
+                                EditType = EditType.String,
+                                Render = new RenderCustom("renderLinkedInUrl")
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.LastMessDate))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.LastMessageDate").Text,
+                                Editable = true,
+                                EditType = EditType.String,
+                                Width = "120"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.FollowUp))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.FollowUp").Text,
+                                Editable = true,
+                                EditType = EditType.Number
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.NextFollowupsDate))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.NextFollowUpDate").Text,
+                                Editable = false,
+                                EditType = EditType.String,
+                                Width = "120"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.FirstName))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.FirstName").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.LastName))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.LastName").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.Email))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.Email").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.WebsiteUrl))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.WebsiteUrl").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.DaysUntilNext))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.DaysUntilNext").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.RemainingFollowUps))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.RemainingFollowUps").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.AutoStatus))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.AutoStatus").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.StatusText))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.StatusText").Text,
+                                Editable = true
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.Notes))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.Notes").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.CreatedOnUtc))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.CreatedOnUtc").Text,
+                                Render = new RenderDate()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.UpdatedOnUtc))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.UpdatedOnUtc").Text,
+                                Render = new RenderDate()
+                            });
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button type="submit" id="btnRefreshLinkedInFollowups" style="display:none"></button>
+
+    <script>
+        function renderStatusPopup(data, type, row, meta) {
+            var statusText = row.StatusName || "Change Status";
+
+            return '<button onclick="javascript:OpenWindow(\'@Url.Action("ChangeStatus", "LinkedInFollowups")/'
+                + row.Id + '?btnId=btnRefreshLinkedInFollowups&formId=LinkedInFollowups-form\', 570, 400, true); return false;"'
+                + ' class="btn btn-sm btn-secondary">' + statusText + '</button>';
+        }
+    </script>
+    <script>
+        $('#btnRefreshLinkedInFollowups').on('click', function () {
+            updateTable('#linkedInFollowups-grid');
+        });
+    </script>
+
+
+    <script src="~/lib/flatpickr/flatpickr.min.js"></script>
+    <link rel="stylesheet" href="~/lib/flatpickr/flatpickr.min.css" />
+
+    <!-- Robust inline datepicker binder: Flatpickr preferred, fallback to jQuery UI -->
+    <!-- Inline Datepicker for LinkedIn Followups Grid -->
+    <script>
+        (function () {
+            // Enable console logs for debugging (set false to silence)
+            var DEBUG = true;
+            function log() { if (DEBUG) console.log.apply(console, arguments); }
+
+            // Attach a date picker to a single input element
+            function attachPickerToInput(el) {
+                if (!el) return;
+                if (el.__pickerAttached) return; // avoid duplicates
+                el.__pickerAttached = true;
+
+                var input = el.nodeType ? el : el[0];
+                log('Attaching datepicker to:', input);
+
+                // ? Prefer Flatpickr if available
+                if (typeof flatpickr !== 'undefined') {
+                    try {
+                        flatpickr(input, {
+                            dateFormat: "Y-m-d",
+                            allowInput: true,
+                            clickOpens: true, // only open when user clicks
+                            closeOnSelect: true, // auto close after select
+                            onChange: function (selectedDates, dateStr, inst) {
+                                input.dispatchEvent(new Event('change', { bubbles: true }));
+                            },
+                            onOpen: function () { log('flatpickr opened for', input); }
+                        });
+                        log('Flatpickr attached successfully to', input);
+                        return;
+                    } catch (e) {
+                        console.warn('Flatpickr attach failed', e);
+                    }
+                }
+
+                // ? Fallback: use jQuery UI datepicker if Flatpickr not available
+                if (window.jQuery && typeof jQuery(input).datepicker === 'function') {
+                    try {
+                        jQuery(input).datepicker({
+                            dateFormat: 'yy-mm-dd',
+                            changeMonth: true,
+                            changeYear: true,
+                            onSelect: function (dateText) {
+                                jQuery(this).trigger('change');
+                            }
+                        });
+                        log('jQuery UI datepicker attached to', input);
+                        return;
+                    } catch (e) {
+                        console.warn('jQuery UI attach failed', e);
+                    }
+                }
+
+                // ?? If no picker libraries found
+                log('No datepicker library found for', input, ' — install flatpickr or jquery-ui.');
+            }
+
+            // Heuristic check if an input looks like a date field
+            function isLikelyDateInput(node) {
+                if (!node) return false;
+                if (node.tagName !== 'INPUT' && node.tagName !== 'TEXTAREA') return false;
+
+                var name = node.getAttribute('name') || '';
+                var placeholder = node.getAttribute('placeholder') || '';
+                var aria = node.getAttribute('aria-label') || '';
+                var cls = node.className || '';
+                var val = node.value || node.defaultValue || '';
+
+                var looksLikeName = /last|next|follow|date|mess/i.test(name + placeholder + aria + cls);
+                var looksLikeValue = /\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4}/.test(val);
+                return looksLikeName || looksLikeValue;
+            }
+
+            // Observe the grid for dynamically added inputs
+            function startObserver() {
+                var container = document.querySelector('#linkedInFollowups-grid');
+                if (!container) {
+                    log('Grid not found, retrying in 500ms');
+                    setTimeout(startObserver, 500);
+                    return;
+                }
+
+                log('Observer attached to #linkedInFollowups-grid');
+
+                var mo = new MutationObserver(function (mutations) {
+                    mutations.forEach(function (m) {
+                        if (m.addedNodes && m.addedNodes.length) {
+                            m.addedNodes.forEach(function (node) {
+                                try {
+                                    if (node.nodeType === 1 && (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA')) {
+                                        if (isLikelyDateInput(node)) attachPickerToInput(node);
+                                    }
+                                    if (node.querySelectorAll) {
+                                        var inputs = node.querySelectorAll('input, textarea');
+                                        inputs.forEach(function (inp) {
+                                            if (isLikelyDateInput(inp)) attachPickerToInput(inp);
+                                        });
+                                    }
+                                } catch (err) {
+                                    console.error('observer loop error', err);
+                                }
+                            });
+                        }
+
+                        if (m.type === 'attributes' && (m.target.tagName === 'INPUT' || m.target.tagName === 'TEXTAREA')) {
+                            var t = m.target;
+                            if (isLikelyDateInput(t)) attachPickerToInput(t);
+                        }
+                    });
+                });
+
+                mo.observe(container, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['class', 'name', 'type', 'value']
+                });
+
+                // Initial scan for existing date inputs
+                setTimeout(function () {
+                    var existing = container.querySelectorAll('input, textarea');
+                    existing.forEach(function (inp) {
+                        if (isLikelyDateInput(inp)) attachPickerToInput(inp);
+                    });
+                }, 200);
+            }
+
+            // Run after DOM is ready
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                startObserver();
+            } else {
+                document.addEventListener('DOMContentLoaded', startObserver);
+            }
+
+            // Manual trigger (for console testing)
+            window.__rebindLinkedInDatePickers = function () {
+                document.querySelectorAll('#linkedInFollowups-grid input, #linkedInFollowups-grid textarea').forEach(function (inp) {
+                    if (isLikelyDateInput(inp)) attachPickerToInput(inp);
+                });
+                log('Manual rebind executed');
+            };
+
+            log('Inline datepicker watcher installed (Flatpickr preferred, click-to-open only).');
+        })();
+    </script>
+
+
+    <script>
+        // defensive: if inline editor input contains anchor HTML, replace value with href
+        (function () {
+            function cleanupInputVal($input) {
+                var val = $input.val() || '';
+                if (!val) return;
+                if (val.indexOf('<a') !== -1 || val.indexOf('&lt;a') !== -1) {
+                    // create temp element to parse
+                    try {
+                        var parsed = $('<div>').html(val);
+                        var a = parsed.find('a');
+                        if (a.length) {
+                            var href = a.attr('href') || a.text();
+                            $input.val(href);
+                            return;
+                        }
+                    } catch (e) { /* ignore */ }
+                    // fallback strip tags
+                    var stripped = val.replace(/<[^>]*>/g, '');
+                    $input.val(stripped);
+                }
+            }
+
+            // Target inputs by name or data-field used by inline editor
+            $(document).on('focus', 'input[name="LinkedinUrl"], input[data-field="LinkedinUrl"], td input[type="text"]', function () {
+                cleanupInputVal($(this));
+            });
+
+            // Also run when inline editor is opened — listen for DataTables draw (re-run)
+            $('#linkedInFollowups-grid').on('draw.dt', function () {
+                setTimeout(function () {
+                    $('input[name="LinkedinUrl"], input[data-field="LinkedinUrl"]').each(function () {
+                        cleanupInputVal($(this));
+                    });
+                }, 150);
+            });
+
+            // On page load check existing inputs
+            $(function(){
+                $('input[name="LinkedinUrl"], input[data-field="LinkedinUrl"]').each(function () {
+                    cleanupInputVal($(this));
+                });
+            });
+        })();
+    </script>
+
+
+    <script>
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: selectedIds
+            };
+            addAntiForgeryToken(postData);
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "LinkedInFollowups"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204)
+                    {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#linkedInFollowups-grid');
+
+                }
+            });
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+
+            $('.export-btn').on('click', function (e) {
+                e.preventDefault();
+
+                var button = $(this);
+                var action = button.data('action');
+                var form = $('#export-shared-form');
+
+                // Add hidden input required by [FormValueRequired("exportexcel-all")]
+                form.find('input[name="exportexcel-all"]').remove(); // remove if already exists
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'exportexcel-all',
+                    value: 'true'
+                }).appendTo(form);
+
+                // Set form action to ExportToExcel
+                form.attr('action', action);
+
+                // Copy current search filters
+                form.find('[name=SearchFirstName]').val($('#@Html.IdFor(m => m.SearchFirstName)').val());
+                form.find('[name=SearchLastName]').val($('#@Html.IdFor(m => m.SearchLastName)').val());
+                form.find('[name=SearchEmail]').val($('#@Html.IdFor(m => m.SearchEmail)').val());
+                form.find('[name=SearchLinkedinUrl]').val($('#@Html.IdFor(m => m.SearchLinkedinUrl)').val());
+                form.find('[name=SearchWebsiteUrl]').val($('#@Html.IdFor(m => m.SearchWebsiteUrl)').val());
+                form.find('[name=NextFollowUpDate]').val($('#@Html.IdFor(m => m.NextFollowUpDate)').val());
+                form.find('[name=SearchStatus]').val($('#@Html.IdFor(m => m.SearchStatus)').val());
+
+
+                // Submit the form via POST
+                form.submit();
+            });
+
+        });
+    </script>
+
+
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+    <div id="importexcel-window" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="importexcel-window-title">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="importexcel-window-title">@T("Admin.Common.ImportFromExcel")</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <form asp-controller="LinkedInFollowups" asp-action="ImportFromExcel" method="post" enctype="multipart/form-data">
+                    <div class="form-horizontal">
+                        <div class="modal-body">
+                            <ul class="common-list">
+                                <li>
+                                    <em>@T("Admin.Catalog.Products.List.ImportFromExcelTip")</em>
+                                </li>
+                                <li>
+                                    <em>@T("Admin.Common.ImportFromExcel.ManyRecordsWarning")</em>
+                                </li>
+                            </ul>
+                            <div class="form-group row">
+                                <div class="col-md-2">
+                                    <div class="label-wrapper">
+                                        <label class="col-form-label">
+                                            @T("Admin.Common.ExcelFile")
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <input type="file" id="importFile" name="importFile" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">
+                                @T("Admin.Common.ImportFromExcel")
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <form asp-controller="LinkedInFollowups" asp-action="SelectedExportToExcel" method="post" id="export-excel-selected-form">
+        <input type="hidden" id="selectedIds" name="selectedIds" value="" />
+    </form>
+    <script>
+        $(document).ready(function () {
+            $('#exportexcel-selected').click(function (e) {
+                e.preventDefault();
+                var ids = selectedIds.join(",");
+                if (!ids) {
+                    $('#exportExcelSelected-info').text("@T("Admin.Products.NoProducts")");
+                    $("#selectedExportExcel").click();
+                }
+                else {
+                    $('#export-excel-selected-form #selectedIds').val(ids);
+                    $('#export-excel-selected-form').submit();
+                    updateTable('#products-grid');
+                }
+                return false;
+            });
+        });
+    </script>
+    <script>
+        async function loadStatusSummary() {
+            try {
+                const response = await fetch('@Url.Action("GetStatusSummary", "LinkedInFollowups")');
+                if (!response.ok) throw new Error("Network error");
+
+                const data = await response.json();
+                const container = document.getElementById("status-summary");
+                container.innerHTML = "";
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = "<p>No status summary found.</p>";
+                    return;
+                }
+
+                // Create a full-width table
+                const table = document.createElement("table");
+                table.style.width = "100%";
+                table.style.borderCollapse = "collapse";
+                table.style.background = "#fff";
+
+                const row = document.createElement("tr");
+
+                // First cell (Title) like "QA Process"
+                const titleCell = document.createElement("td");
+                titleCell.innerHTML = "<strong>Status</strong>";
+                titleCell.style.padding = "12px 18px";
+                titleCell.style.border = "1px solid #ddd";
+                titleCell.style.whiteSpace = "nowrap";
+                titleCell.style.background = "#eef3f7";
+                row.appendChild(titleCell);
+
+                // Add each status cell
+                data.forEach(item => {
+                    const cell = document.createElement("td");
+                    cell.style.padding = "12px 18px";
+                    cell.style.border = "1px solid #ddd";
+                    cell.style.cursor = "pointer";
+                    cell.style.whiteSpace = "nowrap";
+                    cell.style.backgroundColor = "#fff";
+
+                    cell.innerHTML = `
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:12px;height:12px;border-radius:50%;background:${item.ColorCode};"></div>
+                            <span>${item.StatusName} (${item.Count})</span>
+                        </div>
+                    `;
+
+                    // Click ? filter table
+                    cell.onclick = () => {
+                        $('#@Html.IdFor(m => m.SearchStatus)').val(item.StatusId).trigger("change");
+                        $('#search-linkedInFollowups').click();
+                    };
+
+                    row.appendChild(cell);
+                });
+
+                table.appendChild(row);
+                container.appendChild(table);
+
+            } catch (err) {
+                console.error("Status Summary Error:", err);
+                document.getElementById("status-summary").innerHTML =
+                    "<p style='color:red;'>Failed to load status summary.</p>";
+            }
+        }
+
+        // Load on page load
+        document.addEventListener("DOMContentLoaded", loadStatusSummary);
+
+        // Refresh when grid reloads
+        $('#linkedInFollowups-grid').on('draw.dt', loadStatusSummary);
+    </script>
+
+
+</section>

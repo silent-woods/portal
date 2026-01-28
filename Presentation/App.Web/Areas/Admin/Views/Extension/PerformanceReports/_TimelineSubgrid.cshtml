@@ -1,0 +1,38 @@
+@using App.Web.Areas.Admin.Models.Extension.TimesheetReports
+@model List<ActivityEventJsonModel>
+
+<div style="width: 70%; margin: 0 auto;">
+    @* Centered inside parent subgrid row *@
+    <table class="table subgrid-inner-table table-bordered table-striped table-sm mb-0" style="width: 100%;">
+        <thead>
+            <tr>
+                <th style="width: 30%;">Time</th>
+                <th style="width: 40%;">Status</th>
+                <th style="width: 30%;">Duration</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                var statusName = ((Satyanam.Nop.Core.Models.ActivityTrackingEnum)item.StatusId).ToString();
+                <tr class="subgrid-row">
+                    <td>@item.FormattedTime</td>
+                    <td>
+                        @{
+                            var statusParts = item.StatusName?.Split("|||");
+                            var label = statusParts?.ElementAtOrDefault(0) ?? "";
+                            var color = statusParts?.ElementAtOrDefault(1) ?? "#999";
+                        }
+
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <div style="width: 10px; height: 10px; border-radius: 50%; background-color: @color;"></div>
+                            <span>@label</span>
+                        </div>
+                    </td>
+
+                    <td>@item.DurationHHMM</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

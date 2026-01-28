@@ -1,0 +1,104 @@
+﻿@model List<App.Web.Models.Extensions.TimeSheets.TimeSheetModel>
+
+<table class="table table-bordered timesheet-section-table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Spent Time</th>
+            <th>Billable</th>
+            <th style="width:160px;">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null || !Model.Any())
+        {
+            <tr>
+                <td colspan="4" class="text-center no-data">
+                    No data found
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var ts in Model)
+            {
+                <tr data-id="@ts.Id">
+                    <td>
+                        @ts.SpentDate?.ToString("dd MMM yyyy") 
+                        @if (ts.IsQAEntry)
+                        {
+                            <span class="qa-tag">QA</span>
+                        }
+                    </td>
+                    <td>
+                        <span class="view-mode spent-text">@ts.SpentTime</span>
+                        <input type="text"
+                               class="form-control edit-mode spent-input"
+                               value="@ts.SpentTime"
+                               style="display:none;width:100px;" />
+                    </td>
+                    <td class="text-center">
+                        <span class="view-mode billable-text">
+                            @if (ts.Billable)
+                            {
+                                <i class="fa fa-check text-success"></i>
+                            }
+                            else
+                            {
+                                <i class="fa fa-times text-danger"></i>
+                            }
+                        </span>
+                        <input type="checkbox"
+                               class="edit-mode billable-input"
+                               @(ts.Billable ? "checked" : "")
+                               style="display:none;" />
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-primary btn-edit view-mode">
+                            <i class="fa fa-edit">Edit</i> 
+                        </button>
+                        <button class="btn-sm btn-danger btn-delete view-mode">
+                            <i class="fa fa-trash"></i> 
+                        </button>
+                        <button class="btn btn-sm btn-success btn-save edit-mode" style="display:none;">
+                            <i class="fa fa-save"></i> Save
+                        </button>
+                        <button class="btn btn-sm btn-secondary btn-cancel edit-mode" style="display:none;">
+                            <i class="fa fa-times"></i> Cancel
+                        </button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+    <script type="text/template" id="newTimesheetRowTemplate">
+        <tr class="new-timesheet-row">
+            <td>
+                <input type="date" class="form-control form-control-sm ts-date" />
+            </td>
+            <td>
+                <input type="text"
+                       class="form-control form-control-sm ts-spent"
+                       placeholder="HH:MM"
+                       style="width:100px;" />
+            </td>
+            <td class="text-center">
+                <input type="checkbox" class="ts-billable" />
+            </td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-success btn-create-save">
+                    <i class="fa fa-save"></i> Save
+                </button>
+                <button class="btn btn-sm btn-secondary btn-create-cancel">
+                    <i class="fa fa-times"></i> Cancel
+                </button>
+            </td>
+        </tr>
+    </script>
+</table>
+<div class="mt-2">
+    <button id="btnAddTimesheet" class="btn btn-add">
+        <i class="fa fa-plus"></i> ADD
+    </button>
+</div>
+                     

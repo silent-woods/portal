@@ -1,0 +1,226 @@
+@using App.Web.Models.Extensions.UpdateForm
+@model UpdateSubmissionSearchModel
+
+@{
+    Layout = "_ColumnsOne";
+    NopHtml.AddTitleParts("Update Submission List");
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-update-submission-page");
+}
+
+<!-- Styles -->
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+<link rel="stylesheet" href="https://jqwidgets.com/public/jqwidgets/styles/jqx.base.css" type="text/css" />
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
+<script src="https://jqwidgets.com/public/jqwidgets/jqx-all.js"></script>
+
+<div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>Update List</h1>
+</div>
+<br/>
+<div class="content-body">
+    <div class="card card-default card-search">
+        <div class="card-body nop-card-body">
+            <div class="form-horizontal">
+                @* <div class="grid-container">
+                    <div class="grid-item">
+                        <label for="Title">Title</label>
+                        <input id="Title" name="Title" type="text" class="form-control" />
+                    </div>
+
+                    <div class="grid-item">
+                        <label for="IsSubmitted">Submitted</label>
+                        <select id="IsSubmitted" name="IsSubmitted" class="form-control">
+                            <option value="">All</option>
+                            <option value="true">Submitted</option>
+                            <option value="false">Not Submitted</option>
+                        </select>
+                    </div>
+
+                    <div class="grid-item">
+                        <button type="button" id="search-submissions" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div> *@
+            </div>
+        </div>
+    </div>
+
+    <div id="submission-grid-container">
+        <div id="submission-grid"></div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        function loadGrid() {
+            const title = $('#Title').val();
+            const isSubmitted = $('#IsSubmitted').val();
+
+            const source = {
+                datatype: 'json',
+                datafields: [
+                    { name: 'Id' },
+                    { name: 'Title' },
+                    { name: 'PeriodId' },
+                    { name: 'CanSubmit' },
+                    { name: 'CanReview' },
+                    { name: 'IsSubmitted' } 
+                ],
+                url: '@Url.Action("UpdateSubmissionList", "UpdateSubmission")',
+                data: { Title: title, IsSubmitted: isSubmitted }
+            };
+
+            const dataAdapter = new $.jqx.dataAdapter(source);
+
+            $("#submission-grid").jqxGrid({
+                width: '100%',
+                autoheight: true,
+                source: dataAdapter,
+                columnsresize: true,
+                sortable: true,
+                pageable: true,
+                pagesize: 10,
+                columns: [
+                    { text: 'Title', datafield: 'Title', width: '60%' },
+                    {
+                        text: 'Submit',
+                        datafield: 'submitAction', // Changed to a unique datafield
+                        width: '20%',
+                        align: 'center',
+                        cellsalign: 'center',
+                        cellsrenderer: function (row, column, value, defaultHtml, columnSettings, rowData) {
+                            const label = rowData.IsSubmitted ? 'View' : 'Submit';
+                            const periodId = rowData.PeriodId || 0;
+                            const canSubmit = rowData.CanSubmit;
+                            let html = '';
+
+                            if (canSubmit) {
+                                html = `
+                                    <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                                        <button class="btn btn-sm btn-primary submission-btn"
+                                                data-template-id="${rowData.Id}"
+                                                data-period-id="${periodId}"
+                                                title="View Submission">
+                                            <i class="fas fa-eye"></i> ${label}
+                                        </button>
+                                    </div>`;
+                            }
+                            return html;
+                        }
+                    },
+                    {
+                        text: 'Review',
+                        datafield: 'reviewAction', // Changed to a unique datafield
+                        width: '20%',
+                        align: 'center',
+                        cellsalign: 'center',
+                        cellsrenderer: function (row, column, value, defaultHtml, columnSettings, rowData) {
+                            const canReview = rowData.CanReview;
+                            let html = '';
+
+                            if (canReview) {
+                                html = `
+                                    <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                                        <button class="btn btn-sm btn-secondary reviewer-btn"
+                                                data-template-id="${rowData.Id}"
+                                                title="Reviewer Mode">
+                                            <i class="fas fa-user-check"></i> Review
+                                        </button>
+                                    </div>`;
+                            }
+                            return html;
+                        }
+                    }
+                ]
+            });
+        }
+
+        // Initial load
+        loadGrid();
+
+        $(document).on("click", ".submission-btn", function () {
+            const templateId = $(this).data("template-id");
+            const periodId = $(this).data("period-id");
+            const url = `/UpdateSubmission/Submit/${templateId}?periodId=${periodId}`;
+            window.location.href = url;
+        });
+
+        $(document).on("click", ".reviewer-btn", function () {
+            const templateId = $(this).data("template-id");
+            const url = `/UpdateSubmission/List?review=true&selectedTemplateId=${templateId}`;
+            window.location.href = url;
+        });
+    });
+</script>
+
+
+<style>
+    .grid-container {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+
+    .grid-item {
+        flex: 1 1 200px;
+    }
+
+    .jqx-grid-cell span {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    .action-button-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    .submission-btn {
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: background-color 0.2s ease;
+    }
+
+        .submission-btn:hover {
+            background-color: #0056b3;
+            color: #fff;
+        }
+
+    .reviewer-btn {
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: background-color 0.2s ease;
+    }
+
+        .reviewer-btn:hover {
+            background-color: #6c757d;
+            color: #fff;
+        }
+
+    .jqx-grid-column-header-action,
+    .jqx-grid-column-header-action div {
+        text-align: center !important;
+        justify-content: center !important;
+    }
+
+    .action-button-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+
+</style>

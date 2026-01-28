@@ -1,0 +1,128 @@
+﻿@model AccountTransactionModel
+
+<script asp-location="Footer">
+    $(document).ready(function () {
+        $("#@Html.IdFor(model => model.TransactionTypeId)").change(toggleTransactionType);
+
+        toggleTransactionType();
+    });
+
+    function toggleTransactionType() {
+        var selectedTransactionTypeId = $("#@Html.IdFor(model => model.TransactionTypeId)").val();
+
+        var incomeTypeId = "@((int)TransactionTypeEnum.Income)";
+        if (selectedTransactionTypeId == incomeTypeId) {
+            $("#pnlInvoice").show();
+        } else {
+            $("#pnlInvoice").hide();
+        }
+
+        var ddl = $("#@Html.IdFor(model => model.AccountGroupId)");
+        ddl.empty();
+
+        $.ajax({
+            cache: false,
+            url: "@Url.Action("GetAccountGroupsByTransactionType", "AccountManagement")",
+            data: { transactionTypeId: selectedTransactionTypeId },
+            success: function (data) {
+                $.each(data, function (i, item) {
+                    ddl.append($("<option>").val(item.id).text(item.name));
+                });
+            }
+        });
+    }
+
+</script>
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="TransactionTypeId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="TransactionTypeId" asp-items="Model.AvailableTransactionTypes" />
+            <span asp-validation-for="TransactionTypeId"></span>
+        </div>
+    </div>
+    <div class="form-group row" id="pnlInvoice">
+        <div class="col-md-3">
+            <nop-label asp-for="InvoiceId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="InvoiceId" asp-items="Model.AvailableInvoices" />
+            <span asp-validation-for="InvoiceId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="AccountGroupId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="AccountGroupId" asp-items="Model.AvailableAccountGroups" />
+            <span asp-validation-for="AccountGroupId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Amount" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Amount" />
+            <span asp-validation-for="Amount"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Currency" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Currency" />
+            <span asp-validation-for="Currency"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="PaymentMethodId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="PaymentMethodId" asp-items="Model.AvailablePaymentMethods" />
+            <span asp-validation-for="PaymentMethodId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ReferenceNo" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="ReferenceNo" />
+            <span asp-validation-for="ReferenceNo"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Notes" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Notes" />
+            <span asp-validation-for="Notes"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="MonthId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="MonthId" asp-items="Model.AvailableMonths" />
+            <span asp-validation-for="MonthId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="YearId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="YearId" asp-items="Model.AvailableYears" />
+            <span asp-validation-for="YearId"></span>
+        </div>
+    </div>
+</div>

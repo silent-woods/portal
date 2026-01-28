@@ -1,0 +1,210 @@
+﻿@model InvoiceSearchModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.List").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoices");
+
+    const string hideSearchBlockAttributeName = "InvoiceListPage.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.List")
+    </h1>
+    @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoices, PermissionAction.Add))
+    {
+        <div class="float-right">
+            <a asp-action="InvoiceCreate" asp-controller="AccountManagement" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </a>
+        </div>
+    }
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchCreatedOnFrom" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchCreatedOnFrom" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchCreatedOnTo" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchCreatedOnTo" />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchMonthId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchMonthId" asp-items="Model.AvailableMonths" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchInvoiceNumber" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchInvoiceNumber" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchCompanyId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchCompanyId" asp-items="Model.AvailableCompanies" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchStatusId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchStatusId" asp-items="Model.AvailableStatuses" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchYearId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchYearId" asp-items="Model.AvailableYears" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-invoices" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "invoices-grid",
+                                UrlRead = new DataUrl("Invoices", "AccountManagement", null),
+                                UrlDelete = new DataUrl("InvoiceDelete", "AccountManagement", null),
+                                SearchButtonId = "search-invoices",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                    new FilterParameter(nameof(Model.SearchCreatedOnFrom)),
+                                    new FilterParameter(nameof(Model.SearchCreatedOnTo)),
+                                    new FilterParameter(nameof(Model.SearchCompanyId)),
+                                    new FilterParameter(nameof(Model.SearchStatusId)),
+                                    new FilterParameter(nameof(Model.SearchMonthId)),
+                                    new FilterParameter(nameof(Model.SearchYearId)),
+                                    new FilterParameter(nameof(Model.SearchInvoiceNumber))
+                                },
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.InvoiceNumber))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Fields.InvoiceNumber").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.ProjectBillingName))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Fields.ProjectBillingId").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.CompanyName))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Fields.CompanyName").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.TotalPaymentAmount))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Fields.Payment.TotalAmount").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.TotalPaidAmount))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Fields.Paid.TotalAmount").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.MonthId))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Fields.MonthId").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.YearId))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Fields.YearId").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.InvoiceStatus))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Fields.StatusId").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.CreatedOn))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Fields.CreatedOn").Text,
+                                Render = new RenderDate()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.IsActive))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Fields.IsActive").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.DisplayOrder))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Fields.DisplayOrder").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll
+                            });
+                            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoices, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "100",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonEdit(new DataUrl("~/Admin/AccountManagement/InvoiceEdit/"))
+                                });
+                            }
+                            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoices, PermissionAction.Delete))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceModel.Id))
+                                {
+                                    Title = T("Admin.Common.Delete").Text,
+                                    Width = "100",
+                                    Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                                    ClassName = NopColumnClassDefaults.Button
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

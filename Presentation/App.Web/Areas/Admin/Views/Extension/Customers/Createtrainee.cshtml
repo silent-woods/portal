@@ -1,0 +1,243 @@
+﻿@using Nop.Web.Areas.Admin.Models.Customers;
+@model TraineeModel
+
+<style>
+    select {
+        width: 100px;
+        margin: 6px;
+    }
+
+    .gender {
+        padding: 10px;
+    }
+
+    .form-control {
+        width: 98%;
+    }
+
+    .form-horizontal .k-autocomplete, .form-horizontal .k-combobox, .form-horizontal .k-numerictextbox, .form-horizontal .k-dropdown, .form-horizontal .k-selectbox, .form-horizontal .k-textbox, .form-horizontal .k-colorpicker, .form-horizontal .k-timepicker, .form-horizontal .k-datetimepicker, .form-horizontal .k-datepicker {
+        width: 331px !important;
+        max-width: 100%;
+        border-radius: 0;
+        border-color: #d2d6de;
+        height: 38px;
+    }
+</style>
+
+<form asp-controller="Customer" asp-action="Createtrainee" method="post" enctype="multipart/form-data">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Customers.trainee.AddNew")
+            <small>
+                <i class="fa fa-arrow-circle-left"></i>
+                <a asp-action="TraineeList">@T("Admin.Customer.Trainee.BackToList")</a>
+            </small>
+        </h1>
+        <div class="float-right">
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+            @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.CustomerDetailsButtons, additionalData = Model })
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="panel-body">
+                        <div class="search-body">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="Gender" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="gender">
+                                                <span class="male">
+                                                    <input type="radio" asp-for="Gender" value="M" checked="checked" id="gender-male" style="height:15px;width:15px;" />
+                                                    <label class="forcheckbox" for="gender-male">@T("Account.Fields.Gender.Male")</label>
+                                                </span>
+                                                <span class="female">
+                                                    <input type="radio" asp-for="Gender" value="F" checked="@(Model.Gender == "F")" id="gender-female" style="height:15px;width:15px;" />
+                                                    <label class="forcheckbox" for="gender-female">@T("Account.Fields.Gender.Female")</label>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="FirstName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="FirstName" asp-required="true" />
+                                            <span asp-validation-for="FirstName"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="LastName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="LastName" asp-required="true" />
+                                            <span asp-validation-for="LastName"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="DateOfBirth" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="DateOfBirth" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="Email" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="Email" asp-required="true" />
+                                            <span asp-validation-for="Email"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="CollegeName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="CollegeName" asp-required="true" />
+                                            <span asp-validation-for="CollegeName"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="Degree" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="Degree" asp-required="true" />
+                                            <span asp-validation-for="Degree"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row number">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="CompletedYear" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="CompletedYear" asp-required="true" />
+                                            <span asp-validation-for="CompletedYear"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row number">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="Percentage" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="Percentage" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="ResumeUrl" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="file-upload">
+                                                <div class="outer">
+                                                    <div class="upload_button_outer clearfix">
+                                                        <div class="uploadbtn">
+                                                            <input type="file" id="file" name="file" />
+                                                        </div>
+                                                        <div class="filename"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="Skill" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="Skill" asp-required="true" />
+                                            <span asp-validation-for="Skill"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row number">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="MobileNumber" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="MobileNumber" asp-required="true" />
+                                            <span asp-validation-for="MobileNumber"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="StreetAddress" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="StreetAddress" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="StreetAddress2" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="StreetAddress2" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row number">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="ZipPostalCode" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="ZipPostalCode" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="City" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="City" asp-required="true" />
+                                            <span asp-validation-for="City"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="AboutYourSelf" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="AboutYourSelf" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+
+
+<script>
+    $(function () {
+        $('.number').on('keydown', '#MobileNumber', function (e) { -1 !== $.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) || (/65|67|86|88/.test(e.keyCode) && (e.ctrlKey === true || e.metaKey === true)) && (!0 === e.ctrlKey || !0 === e.metaKey) || 35 <= e.keyCode && 40 >= e.keyCode || (e.shiftKey || 48 > e.keyCode || 57 < e.keyCode) && (96 > e.keyCode || 105 < e.keyCode) && e.preventDefault() });
+    })
+
+    $(function () {
+        $('.number').on('keydown', '#Percentage', function (e) { -1 !== $.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) || (/65|67|86|88/.test(e.keyCode) && (e.ctrlKey === true || e.metaKey === true)) && (!0 === e.ctrlKey || !0 === e.metaKey) || 35 <= e.keyCode && 40 >= e.keyCode || (e.shiftKey || 48 > e.keyCode || 57 < e.keyCode) && (96 > e.keyCode || 105 < e.keyCode) && e.preventDefault() });
+    })
+
+    $(function () {
+        $('.number').on('keydown', '#CompletedYear', function (e) { -1 !== $.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) || (/65|67|86|88/.test(e.keyCode) && (e.ctrlKey === true || e.metaKey === true)) && (!0 === e.ctrlKey || !0 === e.metaKey) || 35 <= e.keyCode && 40 >= e.keyCode || (e.shiftKey || 48 > e.keyCode || 57 < e.keyCode) && (96 > e.keyCode || 105 < e.keyCode) && e.preventDefault() });
+    })
+
+    $(function () {
+        $('.number').on('keydown', '#ZipPostalCode', function (e) { -1 !== $.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) || (/65|67|86|88/.test(e.keyCode) && (e.ctrlKey === true || e.metaKey === true)) && (!0 === e.ctrlKey || !0 === e.metaKey) || 35 <= e.keyCode && 40 >= e.keyCode || (e.shiftKey || 48 > e.keyCode || 57 < e.keyCode) && (96 > e.keyCode || 105 < e.keyCode) && e.preventDefault() });
+    })
+</script>

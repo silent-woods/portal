@@ -1,0 +1,88 @@
+﻿
+@model LeaveTransactionLogModel
+
+
+@{
+    Layout = "_AdminPopupLayout";
+}
+
+@if (ViewBag.RefreshPage)
+{
+    <script>
+        try { window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click(); }
+        catch (e) { 
+            console.log(e);
+        }
+        window.close();
+    </script>
+}
+else
+{
+    <form asp-controller="LeaveTransactionLog" asp-action="AddMonthlyLeave" method="post" id="projecttaskform" asp-route-btnId="@Context.Request.Query["btnId"]"
+          asp-route-formId="@Context.Request.Query["formId"]">
+        <div class="content-header clearfix">
+            <h1 class="float-left">
+                @T("Admin.Configuration.LeaveTransactionLogs.AddLeave")
+
+            </h1>
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageLeaveTransaction, PermissionAction.Add))
+            {
+                <div class="float-right">
+                    <button type="submit" name="save" class="btn btn-primary">
+                        <i class="far fa-save"></i>
+                        @T("Admin.Common.Save")
+                    </button>
+                </div>
+            }
+        </div>
+    
+
+        <section class="content">
+            <div class="container-fluid">
+                <div class="form-horizontal">
+
+                    @if (ViewBag.RefreshPage == true)
+                    {
+                        <script>
+                            try {
+                                window.opener.document.forms['@(Context.Request.Query["formId"])'].@(Context.Request.Query["btnId"]).click();
+                                window.document.forms['leavemanagement-grid'].btnRefreshList.Click();
+                            }
+                            catch (e) { }
+                            window.close();
+                        </script>
+                    }
+
+
+                    <div class="cards-group">
+                        <div class="card card-default card-popup">
+                            <div class="card-body">
+
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="MonthId" />
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <nop-select asp-for="MonthId" asp-items="Model.Months" asp-required="true" />
+                                        <span asp-validation-for="MonthId"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="Year" />
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <nop-select asp-for="Year" asp-items="Model.Years" asp-required="true" />
+                                        <span asp-validation-for="Year"></span>
+                                    </div>
+                                </div>
+                
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+          </div>
+        </section>
+    </form>
+}

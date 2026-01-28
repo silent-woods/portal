@@ -1,0 +1,42 @@
+﻿@model ProjectModel
+
+@{
+    var showTour = ViewBag.ShowTour ?? false;
+
+    const string hideInfoBlockAttributeName = "ProjectPage.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+    const string hideProjectEmpMappingBlockAttributeName = "ProjectEmpMappingPage.HideProjectEmpMappingBlock";
+    var hideProjectEmpMappBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideProjectEmpMappingBlockAttributeName);
+
+    const string hideProjectTaskCategoryMappingBlockAttributeName = "ProjectTaskCategoryMappingPage.HideProjectTaskCategoryMappingBlock";
+    var hideProjectTaskCategoryMappingBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideProjectTaskCategoryMappingBlockAttributeName);
+
+}
+
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="Project-cards">
+                <nop-card asp-name="Projects-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Project.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock" asp-advanced="false">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Projects/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectEmployeeMapping, PermissionAction.View))
+                {
+                    <nop-card asp-name="Projects-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.ProjectEmpMapping")" asp-hide-block-attribute-name="@hideProjectEmpMappingBlockAttributeName" asp-hide="@hideProjectEmpMappBlock" asp-advanced="false">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/Projects/_CreateOrUpdateProjectEmpMapping.cshtml", Model)
+                    </nop-card>
+                }
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectTaskCategoryMapping, PermissionAction.View))
+                {
+                     <nop-card asp-name="Projects-taskcategory" asp-icon="fas fa-tasks" asp-title="@T("Admin.Configuration.ProjectTaskCategoryMapping")" asp-hide-block-attribute-name="@hideProjectTaskCategoryMappingBlockAttributeName" asp-hide="@hideProjectTaskCategoryMappingBlock" asp-advanced="false">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/Projects/_CreateOrUpdateProjectTaskCategoryMapping.cshtml", Model)
+                    </nop-card>
+                }
+            </nop-cards>
+        </div>
+    </div>
+</section>

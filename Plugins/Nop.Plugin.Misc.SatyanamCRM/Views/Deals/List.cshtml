@@ -1,0 +1,212 @@
+@using App.Services.Common
+@using App.Web.Framework.Models.DataTables
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Deals
+@inject IGenericAttributeService GenericAttributeService
+@inject IWorkContext WorkContext
+
+@model DealsSearchModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.Deals").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Deals");
+
+    const string hideSearchBlockAttributeName = "dealsListPage.HideSearchBlock";
+    var hideSearchBlock = await GenericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Plugin.SatyanamCRM.Deals")
+    </h1>
+    <div class="float-right">
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageDeals, PermissionAction.Add))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Plugin.SatyanamCRM.Deals.AddNew")
+            </a>
+        }
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageDeals, PermissionAction.Delete))
+        {
+            <button type="button" id="delete-selected" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete.Selected")
+            </button>
+            <nop-action-confirmation asp-button-id="delete-selected" />
+        }
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="DealName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="DealName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="Amount" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="Amount" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="ClosingDate" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="ClosingDate" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="StageId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="StageId" asp-items="Model.Stages" />
+                                            <span asp-validation-for="StageId"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="text-center col-12">
+                                <button type="button" id="search-deals" class="btn btn-primary btn-search">
+                                    <i class="fas fa-search"></i>
+                                    @T("Admin.Common.Search")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-default">
+                <div class="card-body">
+                    @{
+                        var gridModel = new DataTablesModel
+                        {
+                            Name = "deals-grid",
+                            UrlRead = new DataUrl("List", "Deals", null),
+                            SearchButtonId = "search-deals",
+                            Length = Model.PageSize,
+                            LengthMenu = Model.AvailablePageSizes,
+                            Filters = new List<FilterParameter>
+                            {
+                                new FilterParameter(nameof(Model.DealName)),
+                                new FilterParameter(nameof(Model.Amount)),
+                                new FilterParameter(nameof(Model.StageId)),
+                                new FilterParameter(nameof(Model.ClosingDate))
+                            },
+                        };
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(DealsModel.Id))
+                        {
+                            IsMasterCheckBox = true,
+                            Render = new RenderCheckBox("checkbox_deals"),
+                            ClassName = NopColumnClassDefaults.CenterAll,
+                            Width = "50"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(DealsModel.DealName))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Deals.Fields.DealName").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(DealsModel.Amount))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Deals.Fields.Amount").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(DealsModel.Date))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Deals.Fields.Date").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(DealsModel.StageName))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Deals.Fields.StageName").Text,
+                            Width = "100"
+                        });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(DealsModel.CreatedOnUtc))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Deals.Fields.CreatedOn").Text,
+                            Width = "100",
+                            Render = new RenderDate()
+                        });
+                        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageDeals, PermissionAction.Edit))
+                        {
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(DealsModel.Id))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Deals.Edit").Text,
+                                Width = "100",
+                                ClassName = NopColumnClassDefaults.Button,
+                                Render = new RenderButtonEdit(new DataUrl("Edit"))
+                            });
+                        }
+                    }
+                    @await Html.PartialAsync("Table", gridModel)
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: selectedIds
+            };
+            addAntiForgeryToken(postData);
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "Deals"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204) {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#deals-grid');
+
+                }
+            });
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+    
+</section>

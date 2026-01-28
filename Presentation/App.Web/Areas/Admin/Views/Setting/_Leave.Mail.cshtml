@@ -1,0 +1,65 @@
+﻿@model LeaveSettingsModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendEmailToAllProjectLeaders_OverrideForStore" asp-input="SendEmailToAllProjectLeaders" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendEmailToAllProjectLeaders" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendEmailToAllProjectLeaders" />
+            <span asp-validation-for="SendEmailToAllProjectLeaders"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendEmailToAllProjectManager_OverrideForStore" asp-input="SendEmailToAllProjectManager" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendEmailToAllProjectManager" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendEmailToAllProjectManager" />
+            <span asp-validation-for="SendEmailToAllProjectManager"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendEmailToEmployeeManager_OverrideForStore" asp-input="SendEmailToEmployeeManager" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendEmailToEmployeeManager" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendEmailToEmployeeManager" />
+            <span asp-validation-for="SendEmailToEmployeeManager"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="HrEmail_OverrideForStore" asp-input="HrEmail" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="HrEmail" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="HrEmail"  asp-required="true"/>
+            <span asp-validation-for="HrEmail"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="CommonEmails_OverrideForStore" asp-input="CommonEmails" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="CommonEmails" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="CommonEmails" />
+            <span asp-validation-for="CommonEmails"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="LeaveTestDate_OverrideForStore" asp-input="LeaveTestDate" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="LeaveTestDate" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="LeaveTestDate" />
+          
+        </div>
+    </div>
+</div>

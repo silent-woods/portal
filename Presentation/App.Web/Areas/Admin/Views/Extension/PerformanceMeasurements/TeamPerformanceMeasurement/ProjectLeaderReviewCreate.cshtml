@@ -1,0 +1,126 @@
+@model TeamPerformanceMeasurementModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.TeamPerformanceMeasurement.ProjectLeaderReview").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("ProjectLeaderReview");
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.System.ProjectLeaderReview")
+    </h1>
+</div>
+<form asp-controller="TeamPerformanceMeasurement" asp-action="ProjectLeaderReviewCreate" method="post">
+    <input type="hidden" asp-for="@Model.Id" />
+    <input type="hidden" id="monthId" name="monthId" />
+    <input type="hidden" id="managerId" name="managerId" />
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-popup">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                <div class="col-sm-3">
+                                    <nop-label asp-for="MonthName" />
+                                        </div>
+                                <div class="col-sm-7">
+                                    <nop-select asp-for="MonthId" asp-items="Model.Months" />
+                                    <span asp-validation-for="MonthName"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                <div class="col-sm-3">
+                                    <nop-label asp-for="Year" />
+                                        </div>
+                                <div class="col-sm-7">
+                                    <nop-select asp-for="Year" asp-items="Model.Years" />
+                                    <span asp-validation-for="Year"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-3">
+                                            <nop-label asp-for="SelectedManagerId" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <div style="position: relative;">
+                                                <nop-select asp-for="SelectedManagerId" asp-items="Model.AvailableManagers" asp-multiple="true" class="form-control" id="SelectedManagerId" />
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <script>
+                                        $(document).ready(function () {
+                                            var selectElement = $('#SelectedManagerId').data("kendoMultiSelect");
+
+                                            selectElement.setOptions({
+                                                autoClose: true,
+                                                filter: "contains",
+                                                change: function (e) {
+                                                    if (this.value().length > 1) {
+                                                        var lastItem = this.value()[this.value().length - 1];
+                                                        this.value([lastItem]);
+                                                    }
+
+                                                }
+                                            });
+
+                                            @if (Model.AvailableManagers.Count == 0)
+                                            {
+                                                <text>
+                                                        selectElement.setOptions({
+                                                            enable: false,
+                                                            placeholder: '@T("Admin.Catalog.Manager.NoManager")'
+                                                        });
+                                                    selectElement._placeholder();
+                                                    selectElement._enable();
+                                                </text>
+                                            }
+                                        });
+                                    </script>
+
+                                </div>
+                                
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="submit" id="search-brands" class="btn btn-primary btn-search" style="display: inline-block; margin-right: 10px;">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+
+                                    <a asp-action="ProjectLeaderReviewCreate" class="btn btn-danger" style="margin-top: 10px;">
+                                        @T("Admin.PerformanceMeasurement.Reset")
+                                    </a>
+                                </div>
+                            </div>
+                            </br>
+                            </br>
+                            @await Html.PartialAsync("/Areas/Admin/Views/Extension/PerformanceMeasurements/TeamPerformanceMeasurement/_ProjectLeaderReviewList.cshtml", Model.measurementModel)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+<script>
+    $(document).ready(function () {
+        $('#search-brands').click(function () {
+            // Get the selected values from the dropdown lists
+            var monthId = $('#MonthId').val();
+            var manager = $('#SelectedManagerId').val();
+
+            // Set the values of the hidden input fields
+            $('#monthId').val(monthId);
+            $('#managerId').val(manager);
+
+            // Submit the form
+            $('#leader-review-form').submit();
+        });
+    });
+</script>

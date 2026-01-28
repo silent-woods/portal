@@ -1,0 +1,105 @@
+@using App.Web.Areas.Admin.Models.CheckListMappings
+@using App.Web.Areas.Admin.Models.Extension.TaskCategories
+@model TaskCategoryModel
+
+<div class="card-body">
+    @if (Model.Id > 0)
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "taskcategory-checklistmapping-grid",
+                        UrlRead = new DataUrl("List", "CheckListMapping", new RouteValueDictionary { ["taskCategoryId"] = Model.Id }),
+                        UrlDelete = new DataUrl("Delete", "CheckListMapping", new RouteValueDictionary { ["taskCategoryId"] = Model.Id }),
+                        Length = 10,
+                        LengthMenu = "10, 20, 50",
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(CheckListMappingModel.StatusName))
+                    {
+                        Title = T("Admin.CheckListMapping.Fields.Status").Text,
+                        Width = "150"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(CheckListMappingModel.CheckListName))
+                    {
+                        Title = T("Admin.CheckListMapping.Fields.Status").Text,
+                        Width = "200"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(CheckListMappingModel.OrderBy))
+                    {
+                        Title = T("Admin.CheckListMapping.Fields.Status").Text,
+                        Width = "100"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(CheckListMappingModel.IsMandatory))
+                    {
+                        Title = T("Admin.CheckListMapping.Fields.Status").Text,
+                        Width = "100",
+                        Render = new RenderBoolean(),
+                        ClassName = NopColumnClassDefaults.CenterAll
+                    });
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTaskCategoryChecklists, PermissionAction.Edit))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskCategoryModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "80",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderCustom("renderCheckListMappingEdit")
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTaskCategoryChecklists, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskCategoryModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                            ClassName = NopColumnClassDefaults.Button
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+
+            <script>
+                function renderCheckListMappingEdit(data, type, row, meta) {
+                    var taskCategoryId = @Model.Id;
+                    var url = '@Url.Action("Edit", "CheckListMapping")'
+                              + '?taskCategoryId=' + taskCategoryId
+                              + '&id=' + data;
+                    return '<button onclick="javascript:OpenWindow(\''
+                           + url + '&btnId=btnRefreshCheckListMapping&formId=taskcategory-form\', 800, 600, true); return false;" class="btn btn-default"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit").Text</button>';
+                }
+
+                $(document).ready(function () {
+                    $(window).on('refreshGrid', function () {
+                        updateTable('#taskcategory-checklistmapping-grid');
+                        console.log("TaskCategory CheckListMapping Grid refreshed");
+                    });
+                });
+            </script>
+
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTaskCategoryChecklists, PermissionAction.Add))
+            {
+                <div class="card-body">
+                    <button type="button" id="btnAddNewCheckListMapping" class="btn btn-primary"
+                            onclick="javascript:OpenWindow('@Url.Action("Create", "CheckListMapping", new { taskCategoryId = Model.Id, btnId = "btnRefreshCheckListMapping", formId = "taskcategory-form" })', 800, 600, true); return false;">
+                        @T("Admin.CheckListMapping.AddNew")
+                    </button>
+
+                    <button type="button" id="btnRefreshCheckListMapping" style="display:none"></button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @T("Admin.CheckListMapping.SaveBeforeEdit")
+            </div>
+        </div>
+    }
+</div>

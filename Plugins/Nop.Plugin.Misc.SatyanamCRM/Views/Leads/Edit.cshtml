@@ -1,0 +1,50 @@
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Leads
+@model LeadModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.Lead.EditLeadDetails").Text;
+     //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Lead");
+}
+ 
+
+<form asp-controller="Lead" asp-action="Edit" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Plugin.SatyanamCRM.Lead.EditLeadDetails") @* - @Model.Name *@
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Plugin.SatyanamCRM.Lead.BackToList")</a>
+            </small>
+        </h1>
+        <div class="float-right">
+            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+            {
+                <button type="submit" name="convert" class="btn btn-success" onclick="javascript:OpenWindow('@(Url.Action("ConvertLead", "Lead", new { leadId = @Model.Id }))', 800, 570, true); return false;">
+                    <i class="fas fa-exchange-alt"></i>
+                    @T("Plugin.SatyanamCRM.Lead.Convert")
+                </button>
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            }
+            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Delete))
+            {
+                <span id="lead-delete" class="btn btn-danger">
+                    <i class="far fa-trash-alt"></i>
+                    @T("Admin.Common.Delete")
+                </span>
+            }
+        </div>
+    </div>
+    @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Leads/_CreateOrUpdate.cshtml", Model)
+</form>
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="lead-delete" />

@@ -1,0 +1,57 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model TeamPerformanceSettingsModel
+
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.Settings.TeamPerformanceSettings").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("TeamPerformanceSettings");
+}
+
+@{
+    const string hideCommonBlockAttributeName = "TeamPerformanceSettings.HideCommonBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideCommonBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCommonBlockAttributeName);
+
+    const string hideCommentsBlockAttributeName = "TeamPerformanceSettings.HideCommentsBlock";
+    var hideCommentsBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCommentsBlockAttributeName);
+}
+
+
+<form asp-controller="Setting" asp-action="TeamPerformance" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.Settings.TeamPerformanceSettings")
+        </h1>
+        <div class="float-right">
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+      
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+             
+                <div asp-validation-summary="All"></div>
+
+                <nop-cards id="blogsettings-cards">
+                    
+                    <nop-card asp-name="blogsettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.TeamPerformanceSettings.ShowFeedBack")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_TeamPerformanceSettings.ShowFeedBack", Model)</nop-card>
+
+                    <nop-card asp-name="blogsettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.TeamPerformanceSettings.Reminder")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_TeamPerformanceSettings.Reminder", Model)</nop-card>
+
+
+                    
+                </nop-cards>
+            </div>
+        </div>
+    </section>
+</form>

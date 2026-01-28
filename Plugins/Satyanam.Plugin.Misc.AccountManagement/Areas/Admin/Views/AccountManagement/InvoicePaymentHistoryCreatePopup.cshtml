@@ -1,0 +1,27 @@
+﻿@model InvoicePaymentHistoryModel
+
+@{
+    Layout = "_AdminPopupLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoicePaymentHistory.AddNewInvoicePaymentHistory").Text;
+}
+
+<form asp-controller="AccountManagement" asp-action="InvoicePaymentHistoryCreatePopup"
+      asp-route-invoiceId="@Context.Request.Query["invoiceId"]"
+      asp-route-btnId="@Context.Request.Query["btnId"]"
+      asp-route-formId="@Context.Request.Query["formId"]">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoicePaymentHistory.AddNewInvoicePaymentHistory")
+        </h1>
+        @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoicePaymentHistories, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("_CreateOrUpdateInvoicePaymentHistory", Model)
+</form>

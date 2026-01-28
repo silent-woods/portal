@@ -1,0 +1,64 @@
+﻿@using App.Core
+@using App.Web.Models.Employee
+@model EmployeeEducationModel
+@inject App.Core.IWebHelper webHelper
+@{
+    Layout = "_ColumnsTwo";
+
+    //title
+    NopHtml.AddTitleParts(T("PageTitle.Account").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-customer-info-page");
+}
+
+@section left
+{
+    @await Component.InvokeAsync(typeof(CustomerNavigationViewComponent), new { selectedTabId = CustomerNavigationEnum.EmployeeEducation })
+}
+
+<div class="page account-page address-list-page">
+    <div class="page-title">
+        <h1>@T("Account.MyAccount") - @T("Account.EmployeeEducations")</h1>
+    </div>
+    <div class="page-body">
+        @if (Model.Educations.Count > 0)
+        {
+            <div class="address-list">
+                @for (var i = 0; i < Model.Educations.Count; i++)
+                {
+                    var education = Model.Educations[i];
+                    <div class="section address-item">
+                        <div class="title">
+                            <strong>@education.EmployeeName</strong>
+                        </div>
+                        <ul class="info">                           
+                            <li class="course">
+                                <label>@T("Account.Educations.Fields.Course"):</label>
+                                @education.Course
+                            </li>
+                            <li class="institutionname">
+                                <label>@T("Account.Educations.Fields.InstitutionName"):</label>
+                                @education.InstitutionName
+                            </li>
+                            <li class="marksscored">
+                                <label>@T("Account.Educations.Fields.MarksScored"):</label>
+                                @education.MarksScored
+                            </li>
+                            <li class="yearofcompletion">
+                                <label>@T("Account.Educations.Fields.YearOfCompletion"):</label>
+                                @education.YearOfCompletion
+                            </li>                            
+                        </ul>                      
+                    </div>
+                }
+            </div>           
+        }
+        else
+        {
+            <div class="no-data">
+                @T("Account.Employee.Educations.NoEducations")
+            </div>
+        }        
+    </div>
+</div>

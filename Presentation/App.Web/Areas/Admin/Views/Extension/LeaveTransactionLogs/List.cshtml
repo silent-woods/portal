@@ -1,0 +1,289 @@
+@model LeaveTransactionLogSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.LeaveTransactionLog").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("LeaveTransactionLog");
+
+    const string hideSearchBlockAttributeName = "LeaveTransactionLog.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<form id="LeaveTransactionLog-form">
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.LeaveTransactionLog")
+    </h1>
+    <div class="float-right">
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageLeaveTransaction, PermissionAction.Add))
+        {
+            <button id="btnAddLeaveLog" class="btn btn-primary" onclick="javascript:OpenWindow('@(Url.Action("Create", "LeaveTransactionLog", new { btnId = "btnRefreshMonthlyLeave", formId = "LeaveTransactionLog-form" }))', 770, 400, true); return false;">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </button>
+            <button id="btnAddMonthlyLeave" class="btn btn-primary" onclick="javascript:OpenWindow('@(Url.Action("AddMonthlyLeave", "LeaveTransactionLog", new { btnId = "btnRefreshMonthlyLeave", formId = "LeaveTransactionLog-form" }))', 770, 300, true); return false;">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Catalog.LeaveTransactionLog.monthlyAdd")
+            </button>
+        }
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageLeaveTransaction, PermissionAction.Delete))
+        {
+            <button type="button" id="delete-selected" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete.Selected")
+            </button>
+            <nop-action-confirmation asp-button-id="delete-selected" />
+            <button type="button" id="delete-all" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete.All")
+            </button>
+            <nop-action-confirmation asp-button-id="delete-all" />
+        }
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="EmployeeName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="EmployeeName" />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="From" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="From" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="To" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="To" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchComment" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchComment" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchLeaveId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchLeaveId" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="StatusId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="StatusId" asp-items="Model.AvailableStatus" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchLeaveTypeId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchLeaveTypeId" asp-items="Model.AvailableLeaveType" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-brands" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                    Name = "leavemanagement-grid",
+                                    UrlRead = new DataUrl("List", "LeaveTransactionLog", null),
+                                    SearchButtonId = "search-brands",
+                                    Length = Model.PageSize,
+                                    LengthMenu = Model.AvailablePageSizes,
+                                    Filters = new List<FilterParameter>
+                                    {
+                                        new FilterParameter(nameof(Model.From), typeof(DateTime?)),
+                                        new FilterParameter(nameof(Model.To), typeof(DateTime?)),
+                                        new FilterParameter(nameof(Model.SearchLeaveId)),
+                                        new FilterParameter(nameof(Model.StatusId)),
+                                        new FilterParameter(nameof(Model.EmployeeName)),
+                                        new FilterParameter(nameof(Model.SearchComment)),
+                                        new FilterParameter(nameof(Model.SearchLeaveTypeId)),
+                                    },
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.Id))
+                            {
+                                IsMasterCheckBox = true,
+                                Render = new RenderCheckBox("checkbox_leavemanagement"),
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "30"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.LeaveId))
+                            {
+                                Title = T("Admin.Extension.LeaveTransactionLog.Fields.LeaveId").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.EmployeeName))
+                            {
+                                    Title = T("Admin.Extension.LeaveTransactionLog.Fields.EmployeeName").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.StatusName))
+                            {
+                                Title = T("Admin.Extension.LeaveTransactionLog.Fields.StatusName").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.LeaveTypeName))
+                            {
+                                Title = T("Admin.Extension.LeaveTransactionLog.Fields.LeaveTypeName").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.BalanceChangeString))
+                            {
+                                Title = T("Admin.Extension.LeaveTransactionLog.Fields.BalanceChange").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.LeaveBalance))
+                            {
+                                Title = T("Admin.Extension.LeaveTransactionLog.Fields.LeaveBalance").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.Comment))
+                            {
+                                Title = T("Admin.Extension.LeaveTransactionLog.Fields.Comments").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.BalanceMonthYearString))
+                            {
+                                Title = T("Admin.Extension.LeaveTransactionLog.Fields.BalanceMonthYearString").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.CreatedOnUTC))
+                            {
+                                Title = T("Admin.Extension.LeaveTransactionLog.Fields.CreatedOnUTC").Text,
+                                Render = new RenderDate()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.IsEdited))
+                            {
+                                Title = T("Admin.Extension.LeaveTransactionLog.Fields.IsEdited").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageLeaveTransaction, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveTransactionLogModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "80",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderCustom("renderColumnEdit")
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                    <script>
+                        function renderColumnEdit(data, type, row, meta) {
+                            return '<button onclick=\"javascript:OpenWindow(\'@Url.Content("~/Admin/LeaveTransactionLog/Edit/")' + row.Id + '?btnId=btnRefreshMonthlyLeave&formId=LeaveTransactionLog-form\', 770,570, true); return false;\" class="btn btn-default"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit").Text</button>';
+                        }
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+        <button type="submit" id="btnRefreshMonthlyLeave" style="display:none"></button>
+    <script>
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: selectedIds
+            };
+            addAntiForgeryToken(postData);
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "LeaveTransactionLog"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204) {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#leavemanagement-grid');
+
+                }
+            });
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+    <script>
+        $('#delete-all-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: 0
+            };
+            addAntiForgeryToken(postData);
+            
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteAll", "LeaveTransactionLog"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('allSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                  
+                    updateTable('#leavemanagement-grid');
+
+                }
+            });
+            $('#delete-all-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="allSelectedFailed" />
+
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+</section>
+</form>
+
+
+                        

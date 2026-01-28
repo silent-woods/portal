@@ -1,0 +1,60 @@
+﻿@using App.Core
+@using App.Web.Models.Employee
+@model EmployeeAssetsModel
+@inject App.Core.IWebHelper webHelper
+@{
+    Layout = "_ColumnsTwo";
+
+    //title
+    NopHtml.AddTitleParts(T("PageTitle.Account").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-customer-info-page");
+}
+
+@section left
+{
+    @await Component.InvokeAsync(typeof(CustomerNavigationViewComponent), new { selectedTabId = CustomerNavigationEnum.EmployeeAssets })
+}
+
+<div class="page account-page address-list-page">
+    <div class="page-title">
+        <h1>@T("Account.MyAccount") - @T("Account.EmployeeAssets")</h1>
+    </div>
+    <div class="page-body">
+        @if (Model.Assets.Count > 0)
+        {
+            <div class="address-list">
+                @for (var i = 0; i < Model.Assets.Count; i++)
+                {
+                    var asset = Model.Assets[i];
+                    <div class="section address-item">
+                        <div class="title">
+                            <strong>@asset.EmployeeName</strong>
+                        </div>
+                        <ul class="info">                            
+                            <li class="type">
+                                <label>@T("Account.Employee.Assets.Fields.Type"):</label>
+                                @asset.Type
+                            </li>
+                            <li class="asset-name">
+                                <label>@T("Account.Employee.Assets.Fields.Name"):</label>
+                                @asset.Name
+                            </li>
+                            <li class="asset-description">
+                                <label>@T("Account.Employee.Assets.Fields.Description"):</label>
+                                @asset.Description
+                            </li>                            
+                        </ul>                      
+                    </div>
+                }
+            </div>           
+        }
+        else
+        {
+            <div class="no-data">
+                @T("Account.Employee.Assets.NoAssets")
+            </div>
+        }        
+    </div>
+</div>

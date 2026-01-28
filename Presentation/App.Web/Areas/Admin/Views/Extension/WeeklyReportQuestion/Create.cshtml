@@ -1,0 +1,43 @@
+﻿@using App.Web.Areas.Admin.Models.WeeklyQuestions;
+@model App.Web.Areas.Admin.Models.WeeklyQuestions.WeeklyQuestionsModel
+
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Catalog.WeeklyQuestion.AddNew").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("WeeklyQuestions");
+}
+
+<form asp-controller="WeeklyQuestion" asp-action="Create" method="post" id="Rec-form">
+
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Catalog.WeeklyQuestion.AddNew")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.Catalog.WeeklyQuestion.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageWeeklyQuestions, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="button" value="Upload" name="save" class="btn btn-primary" id="Documentupload">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" id="Documentupload" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/WeeklyReportQuestion/_CreateOrUpdate.cshtml", Model)
+
+</form>
+<script>
+    $("#submitFormBtn").click(function () {
+        $("#weeklyreport").submit();
+    });
+</script>

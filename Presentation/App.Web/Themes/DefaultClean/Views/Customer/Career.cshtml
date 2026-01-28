@@ -1,0 +1,376 @@
+﻿@using Nop.Web.Models.Customer;
+@model TraineeModel
+@{
+    Layout = "_ColumnsOne";
+
+    //title
+    NopHtml.AddTitleParts(T("PageTitle.Career").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-Career-page");
+}
+<style>
+    .qeations {
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        font-family: inherit;
+        line-height: 1.2;
+        margin: 5px;
+    }
+
+    textarea {
+        min-height: 150px;
+        padding-right: 250px;
+    }
+
+    .html-Career-page .gender {
+        text-align: center;
+    }
+
+    .html-Career-page .fieldset,
+    .html-Career-page .section {
+        margin-bottom: 0;
+    }
+
+    .html-Career-page .file-upload {
+        text-align: right;
+        margin-top: 10px;
+        margin-left: 0;
+    }
+
+    .forum-actions, .topic-actions {
+        margin: 0 35px 30px 35px;
+        font-size: 0;
+    }
+
+    .topic-post:last-child {
+        border-bottom: 1px solid #ddd;
+        border-left: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+    }
+
+    .topic-post {
+        border-top: 1px solid #ddd;
+        border-left: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+    }
+
+    .search-input .fieldset {
+        margin: 0 35px 30px 35px;
+    }
+
+    .forum-page .forum-info {
+        margin: 0 35px 30px 35px;
+    }
+
+    .forum-page .forum-name, .forum-topic-page .topic-name {
+        margin: 0 0px 25px 0px;
+        border-bottom: 1px solid #ddd;
+        padding: 0 10px 10px;
+    }
+
+    .forums-table-section {
+        margin: 0 35px 50px 35px;
+    }
+
+    .forum-edit-page .page-title,
+    .move-topic-page .page-title,
+    .private-message-send-page .page-title {
+        margin: 0 35px -1px 35px;
+    }
+
+    .fieldset, .section {
+        position: relative;
+    }
+
+    .sculpt-img-top {
+        margin-left: 15%;
+    }
+
+    .information > .footer-block {
+        display: none;
+    }
+
+    .html-Career-page .page-body .page-title,
+    .html-career-result-page .page-title {
+        border: none;
+    }
+
+    .html-career-result-page .result {
+        color: #37499e;
+        font-size: 1.5vw;
+        font-weight: bold;
+    }
+
+    .html-career-result-page .page-title h1,
+    .html-Career-page .page-body .page-title h1 {
+        font-family: montserrat-bold;
+        color: #37499e;
+        font-size: 3vw;
+        text-align: center;
+        line-height: 2;
+    }
+
+    .html-Career-page .buttons {
+        padding: 0 0 30px;
+        margin: 0px;
+    }
+
+    .html-Career-page .gender {
+        width: 400px;
+        text-align: left;
+    }
+
+    .html-Career-page .file-upload {
+        width: 400px;
+        display: inline-block;
+        text-align: left;
+        margin-left: 5px;
+    }
+
+    .html-Career-page .gender {
+        text-align: center;
+    }
+
+    .html-Career-page .fieldset,
+    .html-Career-page .section {
+        margin-bottom: 0;
+    }
+
+    .html-Career-page .file-upload {
+        text-align: right;
+        margin-top: 10px;
+        margin-left: 0;
+    }
+
+    .html-career-result-page .page-title h1, .html-Career-page .page-body .page-title h1 {
+        font-family: montserrat-bold;
+        color: #f60e;
+        text-align: center;
+        line-height: 2;
+    }
+
+    .fieldset .title strong, .section .title strong {
+        font-family: montserrat-regular;
+        color: #37499e;
+    }
+
+    .fieldset .title, .section .title {
+        margin: 0 0 15px;
+        padding: 0 10px;
+        font-size: 25px;
+        color: #444;
+    }
+
+    .html-Career-page .page-body, .html-career-result-page .page-body {
+        background-color: #f1f9fe;
+    }
+
+    .html-Career-page .form-fields {
+        background-color: unset;
+        border: 0;
+    }
+
+    .fieldset .title strong, .section .title strong {
+        font-family: montserrat-regular;
+        color: #37499e;
+    }
+</style>
+<div class="page registration-page">
+
+    <div class="page-body">
+        <div class="page-title">
+            <h1>@T("Account.Career")</h1>
+        </div>
+        <form asp-action="Career" asp-controller="Customer" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="message-error"></div>
+            <div class="fieldset">
+                <div class="title">
+                    <strong>@T("Account.Trainee.YourPersonalDetails")</strong>
+                </div>
+                <div class="form-fields">
+                    <div class="inputs">
+                        <label>@T("Account.Fields.Gender"):</label>
+                        <div class="gender">
+                            <span class="male">
+                                <input type="radio" asp-for="Gender" value="M" checked="@(Model.Gender == "M")" id="gender-male" />
+                                <label class="forcheckbox" for="gender-male">@T("Account.Fields.Gender.Male")</label>
+                            </span>
+                            <span class="female">
+                                <input type="radio" asp-for="Gender" value="F" checked="@(Model.Gender == "F")" id="gender-female" />
+                                <label class="forcheckbox" for="gender-female">@T("Account.Fields.Gender.Female")</label>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="FirstName" asp-postfix=":"></label>
+                        <input asp-for="FirstName" />
+                        <nop-required />
+                        <span asp-validation-for="FirstName"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="LastName" asp-postfix=":"></label>
+                        <input asp-for="LastName" />
+                        <nop-required />
+                        <span asp-validation-for="LastName"></span>
+                    </div>
+                    <div class="inputs date-of-birth">
+                        <label>@T("Account.Fields.DateOfBirth"):</label>
+                        <nop-date-picker asp-day-name="@Html.NameFor(x => x.DateOfBirthDay)"
+                                         asp-month-name="@Html.NameFor(x => x.DateOfBirthMonth)"
+                                         asp-year-name="@Html.NameFor(x => x.DateOfBirthYear)"
+                                         asp-begin-year="@(DateTime.Now.AddYears(-110))"
+                                         asp-end-year="@(DateTime.UtcNow)"
+                                         asp-selected-date="@Model.ParseDateOfBirth()" />
+
+
+                        <nop-required />
+
+                        <span asp-validation-for="DateOfBirthDay"></span>
+                        <span asp-validation-for="DateOfBirthMonth"></span>
+                        <span asp-validation-for="DateOfBirthYear"></span>
+                    </div>
+
+                    <div class="inputs">
+                        <label asp-for="Email" asp-postfix=":"></label>
+                        <input asp-for="Email" />
+                        <nop-required />
+                        <span asp-validation-for="Email"></span>
+                    </div>
+
+                </div>
+            </div>
+            <div class="fieldset">
+                <div class="title">
+                    <strong>@T("Account.Trainee.CollegeDetails")</strong>
+                </div>
+                <div class="form-fields">
+                    <div class="inputs">
+                        <label asp-for="CollegeName" asp-postfix=":"></label>
+                        <input asp-for="CollegeName" />
+                        <nop-required />
+                        <span asp-validation-for="CollegeName"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="Degree" asp-postfix=":"></label>
+                        <input asp-for="Degree" />
+                        <nop-required />
+                        <span asp-validation-for="Degree"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="CompletedYear" asp-postfix=":"></label>
+                        <input asp-for="CompletedYear" />
+                        <nop-required />
+                        <span asp-validation-for="CompletedYear"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="Percentage" asp-postfix=":"></label>
+                        <input asp-for="Percentage" />
+                        <span asp-validation-for="Percentage"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="Skill" asp-postfix=":"></label>
+                        <input asp-for="Skill" />
+                        <nop-required />
+                        <span asp-validation-for="Skill"></span>
+                    </div>
+                    <div class="inputs">
+                        <label>@T("Trainee.UploadResume"):</label>
+                        <div class="file-upload">
+                            <div class="outer">
+                                <div class="upload_button_outer clearfix">
+                                    <div class="uploadbtn">
+                                        <input type="file" id="file" name="file" />
+                                    </div>
+                                    <div class="filename"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fieldset">
+                <div class="title">
+                    <strong>@T("Account.Trainee.YourAddress")</strong>
+                </div>
+                <div class="form-fields">
+                    <div class="inputs">
+                        <label asp-for="StreetAddress" asp-postfix=":"></label>
+                        <input asp-for="StreetAddress" />
+                        <span asp-validation-for="StreetAddress"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="StreetAddress2" asp-postfix=":"></label>
+                        <input asp-for="StreetAddress2" />
+                        <span asp-validation-for="StreetAddress2"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="ZipPostalCode" asp-postfix=":"></label>
+                        <input asp-for="ZipPostalCode" />
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="MobileNumber" asp-postfix=":"></label>
+                        <input asp-for="MobileNumber" />
+                        <nop-required />
+                        <span asp-validation-for="MobileNumber"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="City" asp-postfix=":"></label>
+                        <input asp-for="City" />
+                        <nop-required />
+                        <span asp-validation-for="City"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="AboutYourSelf" asp-postfix=":"></label>
+                        <input asp-for="AboutYourSelf" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-fields">
+                @if (Model.Addresses.Count > 0)
+                {
+
+                    <table class="center-table" style="text-align:center">
+                        <tr class="result">
+
+                            <th><lable>Questions</lable></th>
+                        </tr>
+                        @foreach (var item in Model.Addresses)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="qeations">@item.Question</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+
+                                    <div>
+                                        <textarea></textarea>
+                                    </div>
+                                </td>
+
+                            </tr> 
+                        }
+                    </table>
+                }
+            </div>
+            @if (Model.DisplayCaptcha)
+            {
+                <div class="captcha-box">
+                    <nop-captcha />
+                </div>
+            }
+            <div class="buttons">
+                <input type="submit" id="register-button" class="button-1 register-next-step-button" value="@T("Account.Trainee.Button")" name="register-button" />
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $(function () {
+        $('.inputs').on('keydown', '#MobileNumber', function (e) { -1 !== $.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) || (/65|67|86|88/.test(e.keyCode) && (e.ctrlKey === true || e.metaKey === true)) && (!0 === e.ctrlKey || !0 === e.metaKey) || 35 <= e.keyCode && 40 >= e.keyCode || (e.shiftKey || 48 > e.keyCode || 57 < e.keyCode) && (96 > e.keyCode || 105 < e.keyCode) && e.preventDefault() });
+    })
+</script>
+

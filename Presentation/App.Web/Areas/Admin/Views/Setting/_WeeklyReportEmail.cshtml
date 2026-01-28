@@ -1,0 +1,101 @@
+﻿@model MonthlyReportSettingsModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="DayTime_From_OverrideForStore" asp-input="DayTime_From" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="DayTime_From" />
+        </div>
+        <div class="col-md-4">
+            <input asp-for="DayTime_From" id="DayTime_From" type="time" class="form-control" />
+            <span asp-validation-for="DayTime_From"></span>
+        </div>
+    </div>
+
+  
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="DayTime_To_OverrideForStore" asp-input="DayTime_To" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="DayTime_To" />
+        </div>
+        <div class="col-md-4">
+            <input asp-for="DayTime_To" id="DayTime_To" type="time" class="form-control" />
+            <span asp-validation-for="DayTime_To"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="WeekDay_OverrideForStore" asp-input="WeekDay" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="WeekDay" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="WeekDay" asp-items="Model.WeekDayList" />
+            <span asp-validation-for="WeekDay"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendReportToEmployee_OverrideForStore" asp-input="SendReportToEmployee" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendReportToEmployee" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendReportToEmployee" />
+            <span asp-validation-for="SendReportToEmployee"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendReportToManager_OverrideForStore" asp-input="SendReportToManager" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendReportToManager" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendReportToManager" />
+            <span asp-validation-for="SendReportToManager"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendReportToHR_OverrideForStore" asp-input="SendReportToHR" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendReportToHR" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendReportToHR" />
+            <span asp-validation-for="SendReportToHR"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendReportToProjectLeader_OverrideForStore" asp-input="SendReportToProjectLeader" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendReportToProjectLeader" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendReportToProjectLeader" />
+            <span asp-validation-for="SendReportToProjectLeader"></span>
+        </div>
+    </div>
+
+   
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="ShowOnlyNotDOT_OverrideForStore" asp-input="ShowOnlyNotDOT" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="ShowOnlyNotDOT" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="ShowOnlyNotDOT" />
+            <span asp-validation-for="ShowOnlyNotDOT"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="LearningProjectId_OverrideForStore" asp-input="LearningProjectId" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="LearningProjectId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="LearningProjectId" asp-items="Model.ProjectList" />
+            <span asp-validation-for="LearningProjectId"></span>
+        </div>
+    </div>
+</div>

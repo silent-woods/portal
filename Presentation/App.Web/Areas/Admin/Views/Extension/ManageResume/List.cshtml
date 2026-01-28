@@ -1,0 +1,337 @@
+@using App.Web.Areas.Admin.Models.ManageResumes;
+@model CandiatesResumesSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.CandiatesResumes").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("CandiatesResumes");
+
+    const string hideSearchBlockAttributeName = "CandiatesResumes.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.CandiatesResumes")
+    </h1>
+    <div class="float-right">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus-square"></i>
+            @T("Admin.Common.AddNew")
+        </a>
+        <button type="button" id="delete-selected" class="btn btn-danger">
+            <i class="far fa-trash-alt"></i>
+            @T("Admin.Common.Delete.Selected")
+        </button>
+        <nop-action-confirmation asp-button-id="delete-selected" />
+    </div>
+
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <nop-label asp-for="FirstName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="FirstName" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <nop-label asp-for="Email" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="Email" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="LastName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="LastName" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="MobileNo" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="MobileNo" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <nop-label asp-for="Degree" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="Degree" />
+                                        </div>
+                                    </div>
+                                   
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <nop-label asp-for="InterviewerId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SelectedInterviewer" asp-items="Model.AvailableInterviewer" asp-multiple="true" />
+                                            <script>
+                                                $(document).ready(function () {
+                                                    var InterviewerIdsInput =
+                                                        $('#@Html.IdFor(model => model.SelectedInterviewer)')
+                                                            .data("kendoMultiSelect");
+                                                    InterviewerIdsInput.setOptions({
+                                                        autoClose: false,
+                                                        filter: "contains"
+                                                    });
+
+                                                @if (Model.AvailableInterviewer.Count == 0)
+                                                {
+                                                    <text>
+                                                            InterviewerIdsInput.setOptions({
+                                                                enable: false,
+                                                                placeholder:
+                                                                    '@T("Admin.JobPosting.Fields.InterviewerId")'
+                                                            });
+                                                        InterviewerIdsInput._placeholder();
+                                                        InterviewerIdsInput._enable();
+                                                    </text>
+                                                }
+                                                                                                                                            });
+                                            </script>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <nop-label asp-for="AppliedForId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="AppliedForId" asp-items="Model.AvailableApplyFor" asp-required="true" />
+                                            <span asp-validation-for="AppliedForId"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+
+                                    <div class="form-group row">
+                                    <div class="col-md-4">
+                                    <nop-label asp-for="StatusId" />
+                                    </div>
+                                    <div class="col-md-8">
+                                    <nop-select asp-for="StatusId" asp-items="Model.AvailableStatus" asp-required="true" />
+                                    <span asp-validation-for="StatusId"></span>
+                                    </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="TechnicalRoundDate" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="TechnicalRoundDate" />
+                                        </div>
+                                    </div>
+                                     <div class="form-group row">
+                                    <div class="col-md-4">
+                                    <nop-label asp-for="PracticalRoundDate" />
+                                    </div>
+                                    <div class="col-md-8">
+                                    <nop-editor asp-for="PracticalRoundDate" />
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="text-center col-12">
+                                <button type="button" id="search-CandiatesResumes" class="btn btn-primary
+                                         btn-search">
+                                    <i class="fas fa-search"></i>
+                                    @T("Admin.Common.Search")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+
+                @await Html.PartialAsync("Table", new DataTablesModel
+                {
+                Name = "CandiatesResumes-grid",
+                UrlRead = new DataUrl("List", "CandiatesResumes", null),
+                SearchButtonId = "search-CandiatesResumes",
+                Length = Model.PageSize,
+                LengthMenu = Model.AvailablePageSizes,
+                Filters = new List<FilterParameter>
+                {
+                new FilterParameter(nameof(Model.Email)),
+                new FilterParameter(nameof(Model.FirstName)),
+                new FilterParameter(nameof(Model.LastName)),
+                new FilterParameter(nameof(Model.MobileNo)),
+                new FilterParameter(nameof(Model.Degree)),
+                new FilterParameter(nameof(Model.StatusId)),
+                new FilterParameter(nameof(Model.SelectedInterviewer)),
+                new FilterParameter(nameof(Model.AppliedForId)),
+                new FilterParameter(nameof(Model.PracticalRoundDate),typeof(DateTime?)),
+                new FilterParameter(nameof(Model.TechnicalRoundDate),typeof(DateTime?))
+                },
+                ColumnCollection = new List<ColumnProperty>
+                {
+                new ColumnProperty(nameof(CandiatesResumesModel.Id))
+                {
+                IsMasterCheckBox = true,
+                Render = new RenderCheckBox("checkbox_categories"),
+                ClassName =  NopColumnClassDefaults.CenterAll,
+                Width = "30"
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.FirstName))
+                {
+                Title = T("Admin.Customers.Candidate.Fields.FirstName").Text,
+                Width = "100",
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.LastName))
+                {
+                Title = T("Admin.Customers.Candidate.Fields.LastName").Text,
+                Width = "100"
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.Email))
+                {
+                Title = T("Admin.Customers.Candidate.Fields.Email").Text,
+                Width = "100"
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.Degree))
+                {
+                Title = T("Admin.Customers.Candidate.Fields.Degree").Text,
+                Width = "200",
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.Percentages))
+                {
+                Title = T("Admin.Customers.Candidate.Fields.Percentage").Text,
+                Width = "100"
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.MobileNumber))
+                {
+                Title = T("Admin.Customers.Candidate.Fields.MobileNumber").Text,
+                Width = "100"
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.AppliedFor))
+                {
+                Title = T("Admin.CandiatesResumes.Fields.AppliedFor").Text
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.Status))
+                {
+                Title = T("Admin.CandiatesResumes.Fields.Status").Text
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.Interviewer))
+                {
+                Title = T("Admin.CandiatesResumes.Fields.Interviewer").Text
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.PracticalRoundDate))
+                {
+                Title = T("Admin.CandiatesResumes.Fields.PracticalRoundDate").Text,
+                Render = new RenderDate()
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.TechnicalRoundDate))
+                {
+                Title = T("Admin.CandiatesResumes.Fields.TechnicalRoundDate").Text,
+                Render = new RenderDate()
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.CreatedOnUTC))
+                {
+                Title = T("Admin.CandiatesResumes.Fields.CreatedOnUTC").Text,
+                Render = new RenderDate()
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.Id))
+                {
+                Title = T("Admin.Common.Edit").Text,
+                Width ="80",
+                ClassName =  NopColumnClassDefaults.Button,
+                Render = new RenderButtonEdit(new DataUrl("Edit"))
+                },
+                new ColumnProperty(nameof(CandiatesResumesModel.Id))
+                {
+                    Title = T("Admin.Common.takeInterview").Text,
+                Width = "80",
+                ClassName = NopColumnClassDefaults.Button,
+               
+                Render = new RenderButtonCustom(NopButtonClassDefaults.Default, T   ("Admin.Common.takeInterview").Text)
+                {
+                OnClickFunctionName = "takeInterview"
+                }
+               
+                },
+                }
+                })
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: selectedIds
+            };
+            addAntiForgeryToken(postData);
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "CandiatesResumes"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204) {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#CandiatesResumes-grid');
+
+                }
+            });
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+    <script type="text/javascript">
+
+                            function takeInterview(Id) {
+                                $.ajax({
+                                    cache: false,
+                                    type: "GET",
+                url: "@Url.Action("TakeInterview", "CandiatesResumes")",
+                                    data: { Id: Id },
+                                    success: function (data) {
+                                        //if (data.Success)
+                    //console.log("Id:", Id);
+                        var url = "/Admin/CandiatesResumes/TakeInterview?Id=" + Id;
+                                                window.open(url)
+                    
+                                        }
+                                });
+                            }
+
+                        </script>
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+</section>

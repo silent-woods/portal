@@ -1,0 +1,112 @@
+@model TeamPerformanceMeasurementModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.TeamPerformanceMeasurement.MonthlyRatingReview").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("MonthlyReview");
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.System.AvgMeasurement")
+    </h1>
+
+
+</div>
+
+<form asp-controller="TeamPerformanceMeasurement" asp-action="AvgCreate" method="post">
+<input type="hidden" asp-for="@Model.Id" />
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-popup">
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <div class="col-sm-3">
+                                    <nop-label asp-for="MonthName" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <nop-select asp-for="MonthId" asp-items="Model.Months" />
+                                    <span asp-validation-for="MonthName"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-3">
+                                    <nop-label asp-for="Year" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <nop-select asp-for="Year" asp-items="Model.Years" />
+                                    <span asp-validation-for="Year"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-3">
+                                    <nop-label asp-for="SelectedEmployeeId" />
+                                </div>
+                                <div class="col-md-4">
+                                    <div style="position: relative;">
+                                        <nop-select asp-for="SelectedEmployeeId" asp-items="Model.AvailableEmployees" asp-multiple="true" class="form-control" />
+
+                                    </div>
+                                    <script>
+                                        $(document).ready(function () {
+                                            var selectElement = $('#@Html.IdFor(model => model.SelectedEmployeeId)').data("kendoMultiSelect");
+
+
+                                            selectElement.setOptions({
+                                                autoClose: true,
+                                                filter: "contains",
+                                                change: function (e) {
+
+                                                    if (this.value().length > 1) {
+
+                                                        var lastItem = this.value()[this.value().length - 1];
+
+                                                        this.value([lastItem]);
+                                                    }
+                                                }
+                                            });
+
+                                        @if (Model.AvailableEmployees.Count == 0)
+                                        {
+                                            <text>
+                                                    selectElement.setOptions({
+                                                        enable: false,
+                                                        placeholder: '@T("Admin.Catalog.Employee.NoEmployee")'
+                                                    });
+                                                selectElement._placeholder();
+                                                selectElement._enable();
+                                            </text>
+                                        }
+                                                                                                                                            });
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12 text-center" >
+                                    <button type="submit" id="search-brands" class="btn btn-primary btn-search" style="display: inline-block; margin-right: 10px;">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                              
+
+                                    <a asp-action="AvgCreate" class="btn btn-danger" style="margin-top: 10px;">
+                                       
+                                        @T("Admin.PerformanceMeasurement.Reset")
+                                    </a>
+                                    
+                                </div>
+                            </div>
+
+                            </br>
+                            </br>
+                            @await Html.PartialAsync("/Areas/Admin/Views/Extension/PerformanceMeasurements/TeamPerformanceMeasurement/_AvgList.cshtml", Model.measurementModel)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+</form>

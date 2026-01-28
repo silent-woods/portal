@@ -1,0 +1,64 @@
+﻿@using App.Core
+@using App.Web.Models.Employee
+@model EmployeeExperienceModel
+@inject App.Core.IWebHelper webHelper
+@{
+    Layout = "_ColumnsTwo";
+
+    //title
+    NopHtml.AddTitleParts(T("PageTitle.Account").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-customer-info-page");
+}
+
+@section left
+{
+    @await Component.InvokeAsync(typeof(CustomerNavigationViewComponent), new { selectedTabId = CustomerNavigationEnum.EmployeeExperience })
+}
+
+<div class="page account-page address-list-page">
+    <div class="page-title">
+        <h1>@T("Account.MyAccount") - @T("Account.EmployeeExperiences")</h1>
+    </div>
+    <div class="page-body">
+        @if (Model.Experiences.Count > 0)
+        {
+            <div class="address-list">
+                @for (var i = 0; i < Model.Experiences.Count; i++)
+                {
+                    var experience = Model.Experiences[i];
+                    <div class="section address-item">
+                        <div class="title">
+                            <strong>@experience.EmployeeName</strong>
+                        </div>
+                        <ul class="info">                            
+                            <li class="previouscompanyname">
+                                <label>@T("Account.Employee.Experience.Fields.PreviousCompanyName"):</label>
+                                @experience.PreviousCompanyName
+                            </li>
+                            <li class="designation">
+                                <label>@T("Account.Employee.Experience.Fields.Designation"):</label>
+                                @experience.Designation
+                            </li>
+                            <li class="from">
+                                <label>@T("Account.Employee.Experience.Fields.From"):</label>
+                                @experience.Froms 
+                            </li>
+                            <li class="to">
+                                <label>@T("Account.Employee.Experience.Fields.To"):</label>
+                                @experience.Tos
+                            </li>                            
+                        </ul>                      
+                    </div>
+                }
+            </div>           
+        }
+        else
+        {
+            <div class="no-data">
+                @T("Account.Employee.Experience.NoExperiences")
+            </div>
+        }        
+    </div>
+</div>

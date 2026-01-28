@@ -1,0 +1,32 @@
+@model EmployeeAttendanceModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.EmployeeAttendance.AddNew").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("EmployeeAttendance");
+}
+<form asp-controller="EmployeeAttendance" asp-action="Create" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.EmployeeAttendance.AddNew")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.Configuration.EmployeeAttendance.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAttendance, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/EmployeeAttendances/_CreateOrUpdate.Info.cshtml", Model)
+</form>

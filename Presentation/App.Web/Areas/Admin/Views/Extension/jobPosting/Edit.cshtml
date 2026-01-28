@@ -1,0 +1,41 @@
+@using App.Web.Areas.Admin.Models.JobPostings;
+@model JobPostingModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.JobPosting.EditJobPostingDetails").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("JobPostings");
+}
+<form asp-controller="jobPostings" asp-action="Edit" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.JobPosting.EditJobPosting")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.Configuration.JobPosting.BackToList")</a>
+            </small>
+        </h1>
+        <div class="float-right">
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageJobPosting, PermissionAction.Edit))
+            {
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            }
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageJobPosting, PermissionAction.Delete))
+            {
+                <span id="JobPosting-delete" class="btn btn-danger">
+                    <i class="far fa-trash-alt"></i>
+                    @T("Admin.Common.Delete")
+                </span>
+            }
+        </div>
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/JobPosting/_CreateOrUpdate.cshtml", Model)
+</form>
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="JobPosting-delete" />

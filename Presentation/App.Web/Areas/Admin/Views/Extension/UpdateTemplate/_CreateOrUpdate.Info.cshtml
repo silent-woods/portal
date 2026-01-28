@@ -1,0 +1,388 @@
+﻿@using System.Web
+@model UpdateTemplateModel
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+@{
+    var repeatTypes = new List<SelectListItem>
+    {
+        new SelectListItem { Text = "Day", Value = "Day", Selected = Model.RepeatType == "Day" },
+        new SelectListItem { Text = "Week", Value = "Week", Selected = Model.RepeatType == "Week" },
+        new SelectListItem { Text = "Month", Value = "Month", Selected = Model.RepeatType == "Month" }
+    };
+}
+<style>
+.large-asterisk {
+    font-size: 1.5rem; /* Adjust this value as needed to match the title asterisk */
+    
+}
+</style>
+<input type="hidden" asp-for="updateTemplateQuestionSearchModel.UpdateTemplateId"/>
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CreatedByUserId" />
+        </div>
+        <div class="col-md-3">
+            <nop-select asp-for="CreatedByUserId" asp-items="Model.AvailableUser"  />
+            <span asp-validation-for="CreatedByUserId"></span>
+        </div>
+    </div>
+ <!-- Submitters -->
+<div class="form-group row">
+    <div class="col-md-3">
+        <nop-label asp-for="SelectedSubmitterIds" />
+    </div>
+    <div class="col-md-4">
+        <select id="submitterMultiSelect" multiple="multiple" required class="form-control" ></select>
+        <input type="hidden" name="SelectedSubmitterIds" id="SelectedSubmitterIds" />
+        <span asp-validation-for="SelectedSubmitterIds" class="text-danger"></span>
+    </div>
+    <div class="col-md-1 text-danger large-asterisk">*</div>
+</div>
+
+<!-- Viewers -->
+<div class="form-group row">
+    <div class="col-md-3">
+        <nop-label asp-for="SelectedViewerIds" />
+    </div>
+    <div class="col-md-4">
+        <select id="viewerMultiSelect" multiple="multiple" required class="form-control"></select>
+        <input type="hidden" name="SelectedViewerIds" id="SelectedViewerIds" />
+        <span asp-validation-for="SelectedViewerIds" class="text-danger"></span>
+    </div>
+    <div class="col-md-1 text-danger large-asterisk">*</div>
+</div>
+<script>
+    $(document).ready(function () {
+        // Submitters
+        var submitterData = @Html.Raw(Json.Serialize(Model.SubmitterUsers));
+        var submitterPreselected = @Html.Raw(Json.Serialize(Model.SelectedSubmitterIds));
+        var submitterMultiSelect = $("#submitterMultiSelect").kendoMultiSelect({
+            dataTextField: "Text",
+            dataValueField: "Value",
+            dataSource: submitterData,
+            value: submitterPreselected,
+            autoClose: false,
+            filter: "contains",
+            change: function () {
+                $("#SelectedSubmitterIds").val(this.value().join(",")).trigger("change");
+            }
+        }).data("kendoMultiSelect");
+        $("#SelectedSubmitterIds").val(submitterMultiSelect.value().join(",")).trigger("change");
+
+        // Viewers
+        var viewerData = @Html.Raw(Json.Serialize(Model.ViewerUsers));
+        var viewerPreselected = @Html.Raw(Json.Serialize(Model.SelectedViewerIds));
+        var viewerMultiSelect = $("#viewerMultiSelect").kendoMultiSelect({
+            dataTextField: "Text",
+            dataValueField: "Value",
+            dataSource: viewerData,
+            value: viewerPreselected,
+            autoClose: false,
+            filter: "contains",
+            change: function () {
+                $("#SelectedViewerIds").val(this.value().join(",")).trigger("change");
+            }
+        }).data("kendoMultiSelect");
+        $("#SelectedViewerIds").val(viewerMultiSelect.value().join(",")).trigger("change");
+    });
+</script>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Title" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Title" asp-required="true" />
+            <span asp-validation-for="Title"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Description" />
+        </div>
+        <div class="col-md-7">
+            <nop-textarea asp-for="Description" />
+            <span asp-validation-for="Description"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="FrequencyId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="FrequencyId" asp-items="Model.AvailableFrequencies" asp-required="true"/>
+            <span asp-validation-for="FrequencyId"></span>
+        </div>
+    </div>
+
+    <div class="form-group row" id="due-date-wrapper">
+        <div class="col-md-3">
+            <nop-label asp-for="DueDate" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="DueDate" asp-required="true"/>
+            <span asp-validation-for="DueDate"></span>
+        </div>
+    </div>
+
+    <div class="form-group row" id="repeat-every-wrapper">
+    <div class="col-md-3">
+        <nop-label asp-for="RepeatEvery" />
+    </div>
+    <div class="col-md-2">
+        <input type="number" min="1" class="form-control" asp-for="RepeatEvery" />
+    </div>
+    <div class="col-md-3">
+        <nop-select asp-for="RepeatType" asp-items="Model.AvailableRepeatTypes" />
+    </div>
+</div>
+
+
+
+    <div class="form-group row" id="on-day-wrapper" style="display:none;">
+        <div class="col-md-3">
+            <nop-label asp-for="OnDay" />
+        </div>
+        <div class="col-md-1">
+            <select class="form-control" id="OnDay" name="OnDay">
+                @for (int i = 1; i <= 31; i++)
+                {
+                    var isSelected = Model.OnDay == i ? "selected=\"selected\"" : "";
+                    @:<option value="@i" @Html.Raw(isSelected)>@i</option>
+                }
+            </select>
+        </div>
+    </div>
+    <!-- Weekly Day Selector -->
+    <div class="form-group row" id="weekly-days-wrapper" style="display: none;">
+        <div class="col-md-3">
+            <nop-label asp-for="SelectedWeekdays" />
+        </div>
+        <div class="col-md-9">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary weekday-btn" data-day="0">S</button>
+                <button type="button" class="btn btn-outline-primary weekday-btn" data-day="1">M</button>
+                <button type="button" class="btn btn-outline-primary weekday-btn" data-day="2">T</button>
+                <button type="button" class="btn btn-outline-primary weekday-btn" data-day="3">W</button>
+                <button type="button" class="btn btn-outline-primary weekday-btn" data-day="4">T</button>
+                <button type="button" class="btn btn-outline-primary weekday-btn" data-day="5">F</button>
+                <button type="button" class="btn btn-outline-primary weekday-btn" data-day="6">S</button>
+               <div class="col-md-1 text-danger large-asterisk">*</div>
+            </div>
+        <span asp-validation-for="SelectedWeekdays" class="text-danger"></span>
+        </div>
+        <input type="hidden" asp-for="SelectedWeekdays" id="SelectedWeekDays" />
+    </div>
+
+    <!-- Hidden input to store selected days if needed for POST -->
+    <input type="hidden" id="SelectedWeekDays" name="SelectedWeekDays" />
+
+
+
+    <!-- DueTime -->
+    <div class="form-group row" id="due-time-wrapper">
+    <div class="col-md-3">
+        <nop-label asp-for="DueTime" />
+    </div>
+    <div class="col-md-3">
+        <input asp-for="DueTime" type="time" value="@Model.DueTime" class="form-control"step="60"required />
+        <span asp-validation-for="DueTime"></span>
+    </div>
+    <div class="col-md-1 text-danger large-asterisk">*</div>
+</div>
+
+    <!-- Reminder Split -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ReminderBefore" />
+        </div>
+        <div class="col-md-3" id="reminder-days-wrapper">
+            <input type="number" id="ReminderBeforeDays" name="ReminderBeforeDays" value="@Model.ReminderBeforeDays" class="form-control" /> Days
+        </div>
+        <div class="col-md-3">
+            <input type="number" id="ReminderBeforeHours" name="ReminderBeforeHours" value="@Model.ReminderBeforeHours" class="form-control" /> Hours
+        </div>
+        <div class="col-md-3">
+            <input type="number" id="ReminderBeforeMinutesOnly" name="ReminderBeforeMinutesOnly" value="@Model.ReminderBeforeMinutesOnly" class="form-control" /> Minutes
+        </div>
+    </div>
+
+    <!-- Display Summary -->
+    <div class="form-group row">
+        <div class="col-md-6 offset-md-3">
+            <div id="due-summary-text" style="color:red; font-size:100%; font-weight:bold;" class="mb-1"></div>
+            <div id="reminder-summary-text" style="color:red; font-size:100%;" class="small"></div>
+        </div>
+    </div>
+
+    <!-- File Attachment Required -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsFileAttachmentRequired" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="IsFileAttachmentRequired" />
+            <span asp-validation-for="IsFileAttachmentRequired"></span>
+        </div>
+    </div>
+
+    <!-- Editing Allowed -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsEditingAllowed" />
+        </div>
+        <div class="col-md-3">
+            <nop-editor asp-for="IsEditingAllowed" />
+            <span asp-validation-for="IsEditingAllowed"></span>
+        </div>
+    </div>
+
+    @* <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ReminderBeforeMinutes" />
+        </div>
+        <div class="col-md-3">
+            <nop-editor asp-for="ReminderBeforeMinutes" />
+            <span asp-validation-for="ReminderBeforeMinutes"></span>
+        </div>
+    </div> *@
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsActive" />
+        </div>
+        <div class="col-md-3">
+            <nop-editor asp-for="IsActive" />
+            <span asp-validation-for="IsActive"></span>
+        </div>
+    </div>
+</div>
+<script>
+    function updateSummaryAndToggleFields() {
+        const freq = $('#FrequencyId').val();
+        const repeatEvery = $('#RepeatEvery').val() || 1;
+        const repeatType = $('#RepeatType').val() || "Day";
+        const dueTime = $('#DueTime').val();
+        const dueDate = $('#DueDate').val();
+        const onDay = $('#OnDay').val();
+
+        const days = parseInt($('#ReminderBeforeDays').val()) || 0;
+        const hours = parseInt($('#ReminderBeforeHours').val()) || 0;
+        const minutes = parseInt($('#ReminderBeforeMinutesOnly').val()) || 0;
+
+        const isOneTime = freq === "1";
+
+        // Show/hide relevant fields
+        $('#due-date-wrapper').toggle(isOneTime);
+        $('#reminder-days-wrapper').toggle(isOneTime);
+        $('#repeat-every-wrapper').toggle(!isOneTime);
+        $('#weekly-days-wrapper').toggle(!isOneTime && repeatType === "Week");
+        $('#on-day-wrapper').toggle(!isOneTime && repeatType === "Month");
+
+        // Due Summary
+        if (isOneTime) {
+            if (dueDate && dueTime) {
+                const dt = new Date(`${dueDate}T${dueTime}`);
+                if (!isNaN(dt)) {
+                    const formatted = dt.toLocaleString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric',
+                        hour: 'numeric', minute: '2-digit', hour12: true
+                    });
+                    $('#due-summary-text').text(`Due ${formatted}`);
+                }
+            } else {
+                $('#due-summary-text').text('');
+            }
+        } else {
+            let dueLine = `Due every ${repeatEvery} ${repeatType.toLowerCase()}${repeatEvery > 1 ? 's' : ''}`;
+
+            if (repeatType === "Week") {
+                const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const selectedDays = $('.weekday-btn.active').map(function () {
+                    return dayNames[$(this).data('day')];
+                }).get();
+                if (selectedDays.length > 0) {
+                    dueLine += ` on ${selectedDays.join(', ')}`;
+                }
+            }
+
+            if (repeatType === "Month" && onDay) {
+                dueLine += ` on day ${onDay}`;
+            }
+
+            if (dueTime) {
+                const formattedTime = new Date(`1970-01-01T${dueTime}`).toLocaleTimeString('en-US', {
+                    hour: 'numeric', minute: '2-digit', hour12: true
+                });
+                dueLine += ` at ${formattedTime}`;
+            }
+
+            $('#due-summary-text').text(dueLine);
+        }
+
+        // Reminder Summary
+        const parts = [];
+        if (days > 0 && isOneTime) parts.push(`${days} day${days > 1 ? 's' : ''}`);
+        if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+        if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+
+        $('#reminder-summary-text').text(
+            parts.length > 0 ? `Will remind submitters ${parts.join(', ')} before due time` : ''
+        );
+    }
+
+    $(document).ready(function () {
+        // Automatically set RepeatType only when Frequency changes
+        $('#FrequencyId').on('change', function () {
+            const freq = $(this).val();
+            let defaultRepeatType = "";
+
+            if (freq === "2") defaultRepeatType = "Day";
+            else if (freq === "3") defaultRepeatType = "Week";
+            else if (freq === "4") defaultRepeatType = "Month";
+
+            $('#RepeatType').val(defaultRepeatType);
+
+            updateSummaryAndToggleFields();
+        });
+
+        // Allow user to change repeat type anytime
+        $('#RepeatType, #RepeatEvery, #DueDate, #DueTime, #OnDay, #ReminderBeforeDays, #ReminderBeforeHours, #ReminderBeforeMinutesOnly')
+            .on('change input blur', updateSummaryAndToggleFields);
+
+        // Weekday buttons toggle and update hidden field
+        $('.weekday-btn').on('click', function () {
+            $(this).toggleClass('active');
+
+            const selectedDays = $('.weekday-btn.active')
+                .map(function () { return $(this).data('day'); })
+                .get()
+                .join(',');
+            $('#SelectedWeekDays').val(selectedDays);
+
+            updateSummaryAndToggleFields();
+        });
+
+        // ✅ NEW: Activate weekday buttons on page load based on SelectedWeekDays
+        var selectedDaysString = '@(Model.SelectedWeekdays ?? "")';
+        if (selectedDaysString) {
+            var selectedDays = selectedDaysString.split(',');
+            selectedDays.forEach(function (day) {
+                $('.weekday-btn[data-day="' + day + '"]').addClass('active');
+            });
+            $('#SelectedWeekDays').val(selectedDays.join(','));
+        }
+
+        // Initial run
+        updateSummaryAndToggleFields();
+    });
+</script>
+<style>
+    .weekday-btn.active {
+        background-color: #007bff;
+        color: white;
+    }
+</style>
+
+
+

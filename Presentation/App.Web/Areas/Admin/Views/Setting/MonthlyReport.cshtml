@@ -1,0 +1,57 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model MonthlyReportSettingsModel
+
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.Settings.MonthlyReportSetting").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("MonthlyReport Settings");
+}
+
+@{
+    const string hideCommonBlockAttributeName = "MonthlyReportSettings.HideCommonBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideCommonBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCommonBlockAttributeName);
+
+    const string hideCommentsBlockAttributeName = "MonthlyReportSettings.HideCommentsBlock";
+    var hideCommentsBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCommentsBlockAttributeName);
+}
+
+
+<form asp-controller="Setting" asp-action="MonthlyReport" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.MonthlyReportsettings")
+        </h1>
+        <div class="float-right">
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+            @*   @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.BlogSettingsButtons, additionalData = Model }) *@
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                @*   @await Component.InvokeAsync(typeof(StoreScopeConfigurationViewComponent))
+                @await Component.InvokeAsync(typeof(SettingModeViewComponent)) *@
+                <div asp-validation-summary="All"></div>
+
+                <nop-cards id="blogsettings-cards">
+                    <nop-card asp-name="blogsettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.MonthlyReport")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_MonthlyReport", Model)</nop-card>
+
+                    <nop-card asp-name="blogsettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.WeeklyReportEmail")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_WeeklyReportEmail", Model)</nop-card>
+
+                    <nop-card asp-name="blogsettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.OverdueEmail")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_OverdueEmail", Model)</nop-card>
+               
+                </nop-cards>
+            </div>
+        </div>
+    </section>
+</form>

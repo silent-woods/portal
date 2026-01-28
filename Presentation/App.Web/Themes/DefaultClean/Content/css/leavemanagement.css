@@ -1,0 +1,29 @@
+
+@media (max-width: 425px) {
+
+    .page-title {
+        display: flex;
+       align-items:center;
+        flex-direction:column;
+    }
+    .take-leave-btn{
+        width:90%;
+
+    }
+
+    .take-leave-btn {
+         margin:20px 0 0 0 !important; 
+    }
+    .inputs-row{
+        display:flex;
+        flex-direction:column;
+    }
+}
+
+/* Style for labels with required fields */
+.required-label::after {
+    content: " *"; /* Asterisk */
+    color: red; /* Red color for asterisk */
+    margin-left: 5px; /* Space between label text and asterisk */
+    font-weight: bold; /* Optional: Make asterisk bold */
+}

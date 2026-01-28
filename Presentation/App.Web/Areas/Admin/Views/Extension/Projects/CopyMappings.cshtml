@@ -1,0 +1,34 @@
+@using App.Web.Areas.Admin.Models.ProjectTaskCategoryMappings
+@model ProjectTaskCategoryMappingModel
+@{
+    Layout = "_AdminPopupLayout";
+}
+
+@if (ViewBag.RefreshPage == true)
+{
+    <script>
+        try {
+            var event = new Event('refreshGrid');
+            window.opener.dispatchEvent(event);
+            window.close();
+        }
+        catch (e) {
+            console.log("Error triggering event: " + e.message);
+        }
+    </script>
+}
+else
+{
+    <form asp-action="CopyMappings" asp-controller="ProjectTaskCategoryMapping" method="post">
+        <input type="hidden" asp-for="TargetProjectId" />
+
+        <div class="form-group">
+            <nop-label asp-for="SourceProjectId" />
+            <nop-select asp-for="SourceProjectId" asp-items="Model.AvailableProjects" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">@T("Admin.Common.Copy")</button>
+        </div>
+    </form>
+}

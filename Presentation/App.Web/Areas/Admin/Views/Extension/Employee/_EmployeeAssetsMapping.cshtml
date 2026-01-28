@@ -1,0 +1,109 @@
+﻿@model AssetsModel
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-popup">
+                    <div class="card-body">
+                       
+                       
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="SelectedEmployeeId" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-select asp-for="SelectedEmployeeId" asp-items="Model.AvailableEmployees" asp-multiple="true" />
+                                <script>
+                                    $(document).ready(function () {
+                                        var selectElement = $('#@Html.IdFor(model => model.SelectedEmployeeId)').data("kendoMultiSelect");
+
+                                        // Configure MultiSelect options
+                                        selectElement.setOptions({
+                                            autoClose: true,
+                                            filter: "contains",
+                                            change: function (e) {
+                                                // Ensure only one item is selected
+                                                if (this.value().length > 1) {
+                                                    // Get the last selected item
+                                                    var lastItem = this.value()[this.value().length - 1];
+                                                    // Set the value to only the last selected item
+                                                    this.value([lastItem]);
+                                                }
+                                            }
+                                        });
+
+                                        // Disable MultiSelect if no options are available
+                                    @if (Model.AvailableEmployees.Count == 0)
+                                    {
+                                        <text>
+                                                selectElement.setOptions({
+                                                    enable: false,
+                                                    placeholder: '@T("Admin.Catalog.Products.CustomerRoles.NoCustomerRolesAvailable")'
+                                                });
+                                            selectElement._placeholder();
+                                            selectElement._enable();
+                                        </text>
+                                    }
+                                                                                                                                        });
+                                </script>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="Type" />
+                            </div>
+                            <div class="col-md-7">
+                                <nop-select asp-for="TypeId" asp-items="Model.Types" asp-required="true" />
+                                <span asp-validation-for="TypeId" ></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="Name" />
+                            </div>
+                            <div class="col-md-7">
+                                <nop-editor asp-for="Name" asp-required="true" />
+                                <span asp-validation-for="Name"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row" id="btnDownloadFile">
+                            <div class="col-md-3">
+                                <nop-label asp-for="DocumentId" />
+                            </div>
+                            <div class="col-md-7">
+                                <nop-editor asp-for="DocumentId"  />
+                                <span asp-validation-for="DocumentId"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="Description" />
+                            </div>
+                            <div class="col-md-7">
+                                <nop-textarea asp-for="Description" asp-required="true" />
+                                <span asp-validation-for="Description"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#@Html.IdFor(model => model.TypeId)").change(toggleSource);
+        toggleSource();
+
+    });
+    function toggleSource() {
+        var source = $("#@Html.IdFor(model => model.TypeId)").val();
+        if (source == 1) {
+            $("#btnDownloadFile").hide();
+        }
+        else {
+            $("#btnDownloadFile").show();
+        }
+    }
+</script>

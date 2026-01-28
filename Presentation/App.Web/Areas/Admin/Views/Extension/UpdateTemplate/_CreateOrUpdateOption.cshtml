@@ -1,0 +1,127 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.UpdateTemplateQuestion
+@using Satyanam.Nop.Core.Domains
+@model UpdateTemplateQuestionModel
+
+<input type="hidden" asp-for="Id" />
+
+@if (Model.Id > 0)
+{
+    <div class="card-body">
+        @{
+            var gridModel = new DataTablesModel
+            {
+                Name = "updateTemplateOption-grid",
+                UrlRead = new DataUrl("QuestionOptionList", "UpdateTemplate", new RouteValueDictionary { ["updateTemplateQuestionId"] = Model.Id }),
+                UrlDelete = new DataUrl("QuestionOptionDelete", "UpdateTemplate", null),
+                Length = Model.updateQuestionOptionSearchModel.PageSize,
+                LengthMenu = Model.updateQuestionOptionSearchModel.AvailablePageSizes,
+                Filters = new List<FilterParameter>()
+            };
+
+            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateQuestionOptionModel.Name))
+            {
+                Title = T("Admin.UpdateQuestionOptionModel.Fields.Name").Text,
+            });
+            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateQuestionOptionModel.IsPreSelected))
+            {
+                Title = T("Admin.UpdateQuestionOptionModel.Fields.IsPreSelected").Text,
+                Width = "150",
+                ClassName = NopColumnClassDefaults.CenterAll,
+                Render = new RenderBoolean()
+            });
+            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateQuestionOptionModel.DisplayOrder))
+            {
+                Title = T("Admin.UpdateQuestionOptionModel.Fields.DisplayOrder").Text,
+                Width = "150",
+                ClassName = NopColumnClassDefaults.CenterAll,
+            });
+            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateQuestionOptionModel.IsRequired))
+            {
+                Title = T("Admin.UpdateQuestionOptionModel.Fields.IsRequired").Text,
+                Width = "150",
+                ClassName = "is-required-col " + NopColumnClassDefaults.CenterAll,
+                Render = new RenderBoolean()
+            });
+            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionOptionTemplate, PermissionAction.Edit))
+            {
+                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateQuestionOptionModel.Id))
+                {
+                    Title = T("Admin.Common.Edit").Text,
+                    Width = "100",
+                    ClassName = NopColumnClassDefaults.Button,
+                    Render = new RenderCustom("renderUpdateQuestionOptionEditColumn")
+                });
+            }
+            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionOptionTemplate, PermissionAction.Delete))
+            {
+                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateQuestionOptionModel.Id))
+                {
+                    Title = T("Admin.Common.Delete").Text,
+                    Width = "100",
+                    Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                    ClassName = NopColumnClassDefaults.Button
+                });
+            }
+        }
+        @await Html.PartialAsync("Table", gridModel)
+        <script>
+            function renderUpdateQuestionOptionEditColumn(data, type, row, meta) {
+                var updateTemplateQuestionId = '@Model.Id'; // get parent question ID from model
+
+                var url = '@Url.Action("UpdateQuestionAttributeValueEditPopup", "UpdateTemplate")' +
+                          '?id=' + data +
+                          '&updateTemplateQuestionId=' + updateTemplateQuestionId +
+                          '&btnId=btnRefresh&formId=productattribute-form';
+
+                return '<button onclick="javascript:OpenWindow(\'' + url + '\', 800, 750, true); return false;" class="btn btn-default">' +
+                       '<i class="fas fa-pencil-alt"></i> @T("Admin.Common.Edit").Text</button>';
+            }
+        </script>
+    </div>
+
+    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionOptionTemplate, PermissionAction.Add))
+    {
+        <div class="card-footer">
+            <button type="submit" id="btnAddNewValue"
+                    onclick="javascript:OpenWindow('@(Url.Action("UpdateQuestionAttributeCreatePopup", "UpdateTemplate", new { updateTemplateQuestionId = Model.Id, btnId = "btnRefresh", formId = "productattribute-form" }))', 800, 750, true); return false;"
+                    class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Catalog.Products.ProductAttributes.Attributes.Values.AddNew")
+            </button>
+            <button type="submit" id="btnRefresh" style="display: none"></button>
+            <script>
+                $(document).ready(function () {
+                    $('#btnRefresh').click(function () {
+                        updateTable('#updateTemplateOption-grid');
+                        return false;
+                    });
+                });
+            </script>
+        </div>
+    }
+}
+else
+{
+    <div class="card-body">
+        @T("Admin.Catalog.Products.ProductAttributes.Attributes.Values.SaveBeforeEdit")
+    </div>
+}
+<script>
+    $(document).ready(function () {
+
+        var table = $('#updateTemplateOption-grid').DataTable();
+
+        function toggleIsRequiredColumn() {
+            var isCheckbox = $('#ControlTypeId').val() == '@((int)ControlTypeEnum.Checkboxes)';
+            table.column('.is-required-col').visible(isCheckbox);
+        }
+
+        // Initial toggle
+        toggleIsRequiredColumn();
+
+        // On control type change
+        $('#ControlTypeId').change(function () {
+            toggleIsRequiredColumn();
+        });
+    });
+</script>

@@ -1,0 +1,170 @@
+﻿@model TrackerAPILogSearchModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.TrackerAPI.Admin.TrackerAPILog.ListOfTrackerAPILogs").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.TrackerAPI.Admin.TrackerAPILog");
+
+    const string hideSearchBlockAttributeName = "TrackerAPILogPage.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+
+<form asp-controller="TrackerAPI" asp-action="List" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Satyanam.Plugin.Misc.TrackerAPI.Admin.TrackerAPILog.ListOfTrackerAPILogs")
+        </h1>
+        @if (await permissionService.AuthorizeAsync(TrackerAPIPermissionProvider.ManageTrackerAPILog, PermissionAction.Delete))
+        {
+            <div class="float-right">
+                <button type="button" id="delete-selected" name="delete-selected" class="btn btn-danger">
+                    <i class="far fa-trash-alt"></i>
+                    @T("Admin.System.Log.DeleteSelected")
+                </button>
+                <nop-action-confirmation asp-button-id="delete-selected" />
+                <button type="submit" id="clearall" name="clearall" class="btn btn-danger">
+                    <i class="far fa-trash-alt"></i>
+                    @T("Admin.System.Log.ClearLog")
+                </button>
+                <nop-action-confirmation asp-button-id="clearall" asp-action="ClearAll" />
+            </div>
+        }
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-search">
+                        <div class="card-body">
+                            <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                                <div class="search-text">@T("Admin.Common.Search")</div>
+                                <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                                <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                            </div>
+                            <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group row">
+                                            <div class="col-md-4">
+                                                <nop-label asp-for="SearchStartDate" />
+                                            </div>
+                                            <div class="col-md-8">
+                                                <nop-editor asp-for="SearchStartDate" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group row">
+                                            <div class="col-md-4">
+                                                <nop-label asp-for="SearchEndDate" />
+                                            </div>
+                                            <div class="col-md-8">
+                                                <nop-editor asp-for="SearchEndDate" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="text-center col-12">
+                                        <button type="button" id="search-tracker-api-logs" class="btn btn-primary btn-search"><i class="fas fa-search"></i>@T("Admin.Common.Search")</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-default">
+                        <div class="card-body">
+                            @{
+                                var gridModel = new DataTablesModel
+                                {
+                                    Name = "tracker-api-logs-grid",
+                                    UrlRead = new DataUrl("List", "TrackerAPI", null),
+                                    SearchButtonId = "search-tracker-api-logs",
+                                    Length = Model.PageSize,
+                                    LengthMenu = Model.AvailablePageSizes,
+                                    Filters = new List<FilterParameter>
+                                    {
+                                        new FilterParameter(nameof(Model.SearchStartDate), typeof(DateTime?)),
+                                        new FilterParameter(nameof(Model.SearchEndDate), typeof(DateTime?))
+                                    },
+                                };
+
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TrackerAPILogModel.Id))
+                                {
+                                    IsMasterCheckBox = true,
+                                    Render = new RenderCheckBox("checkbox_tarcker_api_logs"),
+                                    ClassName = NopColumnClassDefaults.CenterAll,
+                                    Width = "50"
+                                });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TrackerAPILogModel.EmployeeEmail))
+                                {
+                                    Title = T("Satyanam.Plugin.Misc.TrackerAPI.Admin.TrackerAPILog.Fields.EmployeeEmail").Text
+                                });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TrackerAPILogModel.EndPoint))
+                                {
+                                    Title = T("Satyanam.Plugin.Misc.TrackerAPI.Admin.TrackerAPILog.Fields.EndPoint").Text
+                                });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TrackerAPILogModel.RequestJson))
+                                {
+                                    Title = T("Satyanam.Plugin.Misc.TrackerAPI.Admin.TrackerAPILog.Fields.RequestJson").Text
+                                });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TrackerAPILogModel.ResponseJson))
+                                {
+                                    Title = T("Satyanam.Plugin.Misc.TrackerAPI.Admin.TrackerAPILog.Fields.ResponseJson").Text
+                                });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TrackerAPILogModel.Success))
+                                {
+                                    Title = T("Satyanam.Plugin.Misc.TrackerAPI.Admin.TrackerAPILog.Fields.Success").Text,
+                                    Width = "100",
+                                    ClassName = NopColumnClassDefaults.CenterAll,
+                                    Render = new RenderBoolean()
+                                });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TrackerAPILogModel.CreatedOn))
+                                {
+                                    Title = T("Satyanam.Plugin.Misc.TrackerAPI.Admin.TrackerAPILog.Fields.CreatedOn").Text,
+                                    Width = "120",
+                                    Render = new RenderDate()
+                                });
+                            }
+                            @await Html.PartialAsync("Table", gridModel)
+
+                            <script>
+                                $(document).ready(function () {
+                                    $("#delete-selected-action-confirmation-submit-button").bind("click", function () {
+                                        var postData = {
+                                            selectedIds: selectedIds
+                                        };
+                                        addAntiForgeryToken(postData);
+                                        $.ajax({
+                                            cache: false,
+                                            type: "POST",
+                                            url: "@(Url.Action("DeleteSelected", "TrackerAPI"))",
+                                            data: postData,
+                                            traditional: true,
+                                            error: function (jqXHR, textStatus, errorThrown) {
+                                                showAlert('deleteSelectedFailed', errorThrown);
+                                            },
+                                            complete: function (jqXHR, textStatus) {
+                                                if (jqXHR.status === 204) {
+                                                    showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                                                    return;
+                                                }
+                                                updateTable('#tracker-api-logs-grid');
+                                            }
+                                        });
+                                        $('#delete-selected-action-confirmation').modal('toggle');
+                                        return false;
+                                    });
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+<nop-alert asp-alert-id="deleteSelectedFailed" />
+<nop-alert asp-alert-id="nothingSelectedAlert" />

@@ -1,0 +1,70 @@
+﻿@model ConfigurationModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration");
+
+    const string hidePluginConfigurationBlockAttributeName = "AccountManagementPluginConfigurationPage.HideAccountManagementPluginConfigurationBlock";
+    var hidePluginConfigurationBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hidePluginConfigurationBlockAttributeName);
+}
+
+<form asp-controller="AccountManagement" asp-action="Configure" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration") - @T("Satyanam.Plugin.Misc.AccountManagement.MainMenu.Title")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List" asp-controller="Plugin">@T("Admin.Configuration.Plugins.Misc.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageAccountManagementConfiguration, PermissionAction.Edit))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+            </div>
+        }
+    </div>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <nop-cards id="configure-cards">
+                    <nop-card asp-name="configure-card" asp-icon="fas fa-cogs" asp-title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration")" asp-hide-block-attribute-name="@hidePluginConfigurationBlockAttributeName" asp-hide="@hidePluginConfigurationBlock" asp-advanced="false">
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="EnablePlugin" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="EnablePlugin" />
+                                    <span asp-validation-for="EnablePlugin"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="InvoiceNumber" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="InvoiceNumber" />
+                                    <span asp-validation-for="InvoiceNumber"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="InvoiceLogoId" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="InvoiceLogoId" />
+                                    <span asp-validation-for="InvoiceLogoId"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </nop-card>
+                </nop-cards>
+            </div>
+        </div>
+    </section>
+</form>

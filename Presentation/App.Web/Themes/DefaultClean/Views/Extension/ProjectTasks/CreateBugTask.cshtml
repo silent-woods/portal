@@ -1,0 +1,60 @@
+﻿@using App.Web.Models.Extensions.ProjectTasks
+@model ProjectTaskModel
+
+@{
+    Layout = "_Root.Head";
+    NopHtml.AddTitleParts(T("PageTitle.Leave").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-career-result-page");
+}
+
+<div class="page registration-page">
+    <div class="page-body">
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="ParentTaskId" type="hidden" />
+        <div>
+            <div class="form-container">
+                <div class="form-fields">
+                 
+                    <div class="inputs-popup">
+                        <label asp-for="TaskTitle" asp-postfix=":" class="required-label"></label>
+                        <input asp-for="TaskTitle" class="form-control input-field" id="BugTitle" />
+                        <span asp-validation-for="TaskTitle"></span>
+                    </div>
+                    <div class="inputs-popup">
+                        <label asp-for="Description" asp-postfix=":" class="required-label"></label>
+                        <nop-textarea asp-for="Description" class="form-control input-field" id="BugDescription" />
+                        <span asp-validation-for="Description"></span>
+                    </div>
+                    <div class="inputs-popup">
+                        <label asp-for="EstimationTimeHHMM" asp-postfix=":" class="required-label"></label>
+                        <input asp-for="EstimationTimeHHMM" class="form-control input-field" placeholder="HH:MM" id="BugEstimation"/>
+                        <span asp-validation-for="EstimationTimeHHMM"></span>
+                    </div>
+
+                    <div class="inputs-popup">
+                        <label asp-for="DueDate" asp-postfix=":" class="required-label"></label>
+                        <input asp-for="DueDate" class="form-control input-field" type="date" id="BugDueDate" />
+                        <span asp-validation-for="DueDate"></span>
+                    </div>
+ 
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                        <label asp-for="IsSync" style="font-weight: bold; margin: 0;">@Html.DisplayNameFor(model => model.IsSync)</label>
+                        <input asp-for="IsSync" type="checkbox" style="margin: 0;" id="BugIsSync" />
+                    </div>
+                </div>
+                <div class=""><p class="validation-error-message" style="color:red;"></p></div>
+            
+            </div>
+            </div>
+            <div class="text-center col-12 button1">
+                <div class="buttons">
+                    <button type="button" id="save-info-button" name="save-info-button" class="save-btn-popup">@T("Common.Save")</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+

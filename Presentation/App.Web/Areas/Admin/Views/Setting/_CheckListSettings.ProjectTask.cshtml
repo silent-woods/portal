@@ -1,0 +1,13 @@
+﻿@model ProjectTaskSettingsModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="IsShowSelctAllCheckList_OverrideForStore" asp-input="IsShowSelctAllCheckList" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="IsShowSelctAllCheckList" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="IsShowSelctAllCheckList" />
+        </div>
+    </div>
+</div>

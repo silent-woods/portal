@@ -1,0 +1,16 @@
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Unsubscribes
+@model UnsubscribeModel
+
+<h2>Unsubscribe</h2>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <p>@Model.Message</p>
+}
+
+<p>Your email: <strong>@Model.Email</strong></p>
+
+<form method="get" action="@Url.Action("Resubscribe", "Unsubscribe")">
+    <input type="hidden" name="email" value="@Model.Email" />
+    <button type="submit">Resubscribe</button>
+</form>

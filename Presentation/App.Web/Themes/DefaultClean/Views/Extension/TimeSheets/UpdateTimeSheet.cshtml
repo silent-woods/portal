@@ -1,0 +1,1247 @@
+﻿@model App.Web.Models.Extensions.TimeSheets.TimeSheetModel
+@{
+    Layout = "_ColumnsOne";
+
+    NopHtml.AddTitleParts(T("PageTitle.UpdateTimesheet").Text);
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-customer-info-page");
+}
+<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/updatetimesheet.css")" />
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<div id="notification-container"></div>
+<section class="content">
+    <div id="popupDialog" class="custom-modal" style="display:none;">
+        <div class="custom-modal-dialog">
+            <div class="custom-modal-content">
+                <div class="custom-modal-header">
+                    <h3 class="custom-modal-title">Add Project Task</h3>
+                    <span class="custom-modal-close" onclick="closeModal()">&times;</span>
+                </div>
+                <div class="custom-modal-body">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-popup">
+                    <div class="card-body">
+                        <form asp-action="SaveNew" method="post" id="timeSheetForm">
+                            <div class="form-group">
+                                <div class="spentdate-container">
+                                    <div class="spentdate-block">
+                                        <label asp-for="SpentDate" asp-postfix=":"></label>
+                                        <input asp-for="SpentDate" type="date" />
+                                        <span id="dateError" style="color:red;"></span>
+                                    </div>
+                                    <button type="button" id="fetchRecentBtn" class="fetch-recent-btn" onclick="fetchRecentEntries()">Recent Entries</button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="searchButton" class="btn-search">
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="tableContainer" style="display: none; margin-top:3%; overflow-x: auto;">
+                                <div class="table-responsive" style="margin-bottom:1%; overflow-x: auto;">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>@Html.DisplayNameFor(model => model.TimeSheetRows.First().ProjectId)</th>
+                                                <th>@Html.DisplayNameFor(model => model.TimeSheetRows.First().TaskId)</th>
+                                                <th>@Html.DisplayNameFor(model => model.TimeSheetRows.First().ActivityName)</th>
+                                                <th>@Html.DisplayNameFor(model => model.TimeSheetRows.First().EstimatedHours)</th>
+                                                <th>@Html.DisplayNameFor(model => model.TimeSheetRows.First().TotalSpent)</th>
+                                                <th>@Html.DisplayNameFor(model => model.TimeSheetRows.First().SpentTime)</th>
+                                                <th>@Html.DisplayNameFor(model => model.TimeSheetRows.First().Billable)</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="timeSheetTableBody">
+                                        </tbody>
+                                    </table>
+                                    <div id="dropdownContainer"></div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-md-6">
+                                        <button type="button" class="add-btn" id="addRowButton" >Add Row</button>
+                                        <button type="button" class="add-btn button-1 save-customer-info-button" onclick="openProjectTaskPopup()">Add Task</button>  
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <button class="btn-search" id="SaveNew" onclick="disableButton(this)">
+                                            Submit
+                                        </button>
+                                    </div>
+                                    <script>
+                                        function disableButton(button) {
+                                            button.disabled = true;
+                                            button.classList.add("focused");
+                                            setTimeout(() => {
+                                                button.disabled = false;
+                                                button.classList.remove("focused");
+                                                button.focus(); 
+                                            }, 1000);
+                                        }
+                                    </script>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function openProjectTaskPopup() {
+            $.ajax({
+                url: '/TimeSheet/CreateProjectTask',
+                type: 'GET',
+                dataType: 'html',
+                success: function (data) {
+                    $('#popupDialog .custom-modal-body').html($(data).find('.page-body').html());
+                    $('#popupDialog').fadeIn();
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error loading the popup content: ", error);
+                }
+            });
+        }
+        function closeModal() {
+            $('#popupDialog').fadeOut();
+        }
+
+        $(document).on('click', '#save-info-button', function (e) {
+            e.preventDefault();
+
+            var ProjectId = $('#ProjectId').val(); 
+            var EmployeeId = $('#EmployeeId').val();
+            var TaskTitle = $('input[name="TaskTitle"]').val();
+            var Description = $('textarea[name="Description"]').val();
+            var EstimationTimeHHMM = $('input[name="EstimationTimeHHMM"]').val(); 
+            var DueDate = $('#DueDate').val();
+            var Tasktypeid = $('#Tasktypeid').val();
+            var ProcessWorkflowId = $('#ProcessWorkflowId').val();
+            var TaskCategoryId = $('#TaskCategoryId').val();
+            var IsSync = $('#IsSync').is(':checked');
+            var IsQARequired = $('#IsQARequired').is(':checked');
+            var parentTaskId = $('#ParentTaskId').val();
+
+            $('.validation-error-message').hide().text("");
+            var postData = {
+                projectId: ProjectId, 
+                employeeId :EmployeeId,
+                taskTitle: TaskTitle,
+                description: Description,
+                estimatedTimeHHMM: EstimationTimeHHMM,
+                dueDate:DueDate,
+                taskTypeid: Tasktypeid,
+                isQARequired: IsQARequired,
+                processWorkflowId: ProcessWorkflowId,
+                taskCategoryId:TaskCategoryId,
+                parentTaskId : parentTaskId,
+                isSync: IsSync
+            }
+            addAntiForgeryToken(postData);
+            $.ajax({
+                url: '@Url.Action("InsertProjectTask", "TimeSheet")', 
+                type: 'POST', 
+                data: postData,
+                success: function (response) {
+                    if (response.success) {
+                        $('#popupDialog').fadeOut();
+                    } else {
+                        const errorMessage = response.message || "An error occurred. Please try again.";
+                        $('.validation-error-message').text(errorMessage).show();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $('.validation-error-message').text("An error occurred: " + error).show();
+                }
+            });
+        });
+
+        function fetchRecentEntries() {
+            var spentDate = $('input[name="SpentDate"]').val();
+            $.ajax({
+                url: '@Url.Action("GetRecentEntries", "TimeSheet")',
+                type: 'GET',
+                data: { spentDate: spentDate },
+                success: function (data) {
+                    $('#timeSheetTableBody').empty();  
+                    if (data.length > 0) {
+                        $.each(data, function (index, row) {
+                            $('#addRowButton').click();  
+                            var lastRow = $('#timeSheetTableBody tr:last');  
+                            var projectDropdown = lastRow.find('select[name$=".ProjectId"]').data("kendoDropDownList");
+                            var taskDropdown = lastRow.find('select[name$=".TaskId"]').data("kendoDropDownList");
+                            if (projectDropdown && taskDropdown) {
+                                projectDropdown.value(row.ProjectId);
+                                projectDropdown.trigger('change');
+                                projectDropdown.refresh();
+
+                                $.ajax({
+                                    url: '@Url.Action("GetTasksByProject", "TimeSheet")',
+                                    type: 'GET',
+                                    data: { projectId: row.ProjectId },
+                                    success: function (taskData) {
+                                        taskDropdown.setDataSource(taskData);  
+                                        taskDropdown.value(row.TaskId); 
+                                        taskDropdown.trigger('change');
+                                        taskDropdown.refresh();
+                                        lastRow.find(`input[name$=".ActivityName"]`).val(row.ActivityName);
+                                    },
+                                    error: function (xhr, status, error) {
+                                        console.log("Error fetching tasks: " + error);
+                                    }
+                                });
+
+                                $.ajax({
+                                    url: '@Url.Action("GetEstimatedTimeByTask", "TimeSheet")',
+                                    type: 'GET',
+                                    data: { taskId: row.TaskId, projectId: row.ProjectId },
+                                    success: function (estData) {
+                                        lastRow.find(`input[name$=".EstimatedHours"]`).val(estData.EstimatedTime);
+                                        lastRow.find(`input[name$=".TotalSpent"]`).val(estData.TotalSpent);
+                                        lastRow.find(`input[name$=".ActivityName"]`).val(row.ActivityName);
+                                    },
+                                    error: function (xhr, status, error) {
+                                        console.log("Error fetching estimated time: " + error);
+                                    }
+                                });
+                                lastRow.find(`input[name$=".Billable"]`).prop('checked', row.Billable);
+                            } else {
+                                console.error("Dropdowns are not properly initialized for row " + index);
+                            }
+                        });
+                    }
+                    else {
+                        $('#addRowButton').click();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error fetching recent entries: " + error);
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            $(document).on('change', '#ProjectId', function (e) {
+                var projectId = $(this).val();
+                console.log("called")
+                if (projectId) {
+                    $.ajax({
+                        url: '/TimeSheet/GetProcessWorkflowsByProjectId',
+                        type: 'GET',
+                        data: { projectId: projectId },
+                        success: function (data) {
+                            var workflowDropdown = $('#ProcessWorkflowId');
+                            workflowDropdown.empty();
+
+                            if (data && data.length > 0) {
+                                $.each(data, function (i, item) {
+                                    workflowDropdown.append($('<option></option>').val(item.Value).text(item.Text));
+                                });
+                            }
+                        },
+                        error: function () {
+                            alert('Error loading workflows.');
+                        }
+                    });
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            $('#addRowButton').hide();
+            function initializeDropdowns(index, projectId, taskId, SpentTime) {
+                var projectDropdown = $(`#projectDropdown${index}`).kendoDropDownList({
+                    optionLabel: "Select a project",
+                    dataTextField: "Text",
+                    dataValueField: "Value",
+                    filter: "contains",
+                    autoBind: false,
+                    dataSource: @Html.Raw(Json.Serialize(Model.Projects)),
+                    change: function () {
+                        var projectId = this.value();
+                        var originalProjectId = $(`input[name="TimeSheetRows[${index}].prevProjectId"]`).val();
+                        if (projectId !== originalProjectId) {
+                            $(`input[name="TimeSheetRows[${index}].ActivityName"]`).val("");
+                        }
+                        $(`input[name="TimeSheetRows[${index}].ProjectId"]`).val(projectId); 
+                        $(`input[name="TimeSheetRows[${index}].EstimatedHours"]`).val(0);
+                        $(`input[name="TimeSheetRows[${index}].TotalSpent"]`).val("");
+                        $(`input[name="TimeSheetRows[${index}].TaskId"]`).val(0);
+                        
+                        $.ajax({
+                            url: '@Url.Action("GetTasksByProject", "TimeSheet")',
+                            type: 'GET',
+                            data: { projectId: projectId },
+                            success: function (data) {
+                                var taskDropdown = $(`#taskDropdown${index}`).data("kendoDropDownList");
+                                taskDropdown.dataSource.data(data);
+                                taskDropdown.refresh();
+                            },
+                            error: function (xhr, status, error) {
+                                console.log("Error fetching tasks: " + error);
+                            }
+                        });
+                    },
+                }).data("kendoDropDownList");
+
+                var taskDropdown = $(`#taskDropdown${index}`).kendoDropDownList({
+                    optionLabel: "Select a task",
+                    dataTextField: "Text",
+                    dataValueField: "Value",
+                    filter: "contains",
+                    autoBind: false,
+                    dataSource: [],
+                    change: function () {
+                        var taskId = this.value();
+                        $(`input[name="TimeSheetRows[${index}].TaskId"]`).val(taskId);
+                        var originalTaskId = $(`input[name="TimeSheetRows[${index}].prevTaskId"]`).val();
+                        if (taskId !== originalTaskId) {
+                            $(`input[name="TimeSheetRows[${index}].ActivityName"]`).val("");
+                        }
+                        $.ajax({
+                            url: '@Url.Action("GetEstimatedTimeByTask", "TimeSheet")',
+                            type: 'GET',
+                            data: { taskId: taskId },
+                            success: function (data) {
+                                console.log(data);
+                                $(`input[name="TimeSheetRows[${index}].EstimatedHours"]`).val(data.EstimatedTime);
+                                $(`input[name="TimeSheetRows[${index}].TotalSpent"]`).val(data.TotalSpent);
+                            },
+                            error: function (xhr, status, error) {
+                                console.log("Error fetching estimated time: " + error);
+                            }
+                        });
+                    }
+                }).data("kendoDropDownList");
+
+                if (projectId) {
+                    projectDropdown.value(projectId);
+                }
+
+                if (taskId) {
+                    $.ajax({
+                        url: '@Url.Action("GetTasksByProject", "TimeSheet")',
+                        type: 'GET',
+                        data: { projectId: projectId },
+                        success: function (data) {
+                            taskDropdown.dataSource.data(data);
+                            taskDropdown.refresh();
+                            taskDropdown.value(taskId);
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error fetching tasks: " + error);
+                        }
+                    });
+                }
+                if (taskId > 0) {
+                    var row = $(this).closest('tr');
+                    row.find(`input[name="TimeSheetRows[${index}].prevTaskId"]`).val(taskId);
+                }
+                if (SpentTime) {
+                    row.find(`input[name="TimeSheetRows[${index}].prevSpentTime"]`).val(SpentTime);
+                }
+            }
+            var prevrowIndex = 0;
+            $('#addRowButton').click(function () {
+                var rowIndex = $('#timeSheetTableBody tr').length;
+                if (rowIndex <= prevrowIndex) {
+                    rowIndex = prevrowIndex + 1;
+                }
+                console.log("rowIndex", rowIndex);
+                var newRow = `<tr data-index="${rowIndex}" data-new="true">
+                                                                            <td class="col-md-2">
+
+                   <input type="hidden" name="TimeSheetRows[${rowIndex}].ProjectId" value="" />
+                                                                                                <select id="projectDropdown${rowIndex}" name="TimeSheetRows[${rowIndex}].ProjectId" class="form-control project-dropdown"  style = "border: none; box-shadow: none; width: 200px;"></select>
+                                  <span class="projectError" style="color:red;"></span>
+                                                                            </td>
+                         <td class="col-md-4">
+                                    <input type="hidden" name="TimeSheetRows[${rowIndex}].TaskId" value="" />
+                                                                                        <select id="taskDropdown${rowIndex}" name="TimeSheetRows[${rowIndex}].TaskId" class="form-control task-dropdown"  style = "border: none; box-shadow: none; width: 450px;"></select>
+                                          <span class="taskError" style="color:red;"></span>
+                                                                            </td>
+                                                                            <td class="col-md-4">
+                    <input type="text" id="activitySearchInput${rowIndex}" name="TimeSheetRows[${rowIndex}].ActivityName"
+                        class="form-control activity-search-input "
+                        placeholder="Search or enter a new activity" autocomplete="off" />
+                    <div id="activityContainer${rowIndex}" style="position: relative;">
+                        <ul id="activitySuggestions${rowIndex}" class="list-group activity-suggestions" style="display: none;"></ul>
+                    </div>
+                    <span class="activityError" style="color:red;"></span>
+                </td>
+                        
+                                                                      
+                
+                <td class="col-md-1">
+                                                                                        <input type="text" name="TimeSheetRows[${rowIndex}].EstimatedHours" class="form-control col-sm-9 readonly-input" readonly="readonly" />
+                                                                            </td>
+                                                                                    <td class="col-md-1">
+                                                                                                        <input type="text" name="TimeSheetRows[${rowIndex}].TotalSpent"  class="form-control col-sm-9 readonly-input" style="" readonly="readonly" />
+                                                                                    </td>
+                                                                            <td class="col-md-3">
+                                                                                                <input type="text" name="TimeSheetRows[${rowIndex}].SpentTime"
+               class="form-control col-sm-12 spentTimeInput"
+               style="width: 72px; text-align: center;"
+               maxlength="5"
+               placeholder="HH:MM"
+                       autocomplete="off" />
+                                         <span class="spentTimeError" style="color:red;"></span>
+                                                                            </td>
+                                                                            <td class="col-md-1" style="text-align: center; vertical-align: middle;">
+                                                                                <input type="checkbox" name="TimeSheetRows[${rowIndex}].Billable" value="true" style="width: 16px; height: 16px;" />
+                                                                            </td>
+                                                                                            <input type="hidden" name="TimeSheetRows[${rowIndex}].IsNewEntry" value="true" />
+                                                                            <td class="col-md-1">
+                                                                  <button type="button" class="btn btn-danger remove-row">X</button>
+                                                                            </td>
+                                                                        </tr>`;
+                $('#timeSheetTableBody').append(newRow);
+
+                prevrowIndex = rowIndex;
+                initializeDropdowns(rowIndex);
+                initializeActivitySearch(rowIndex);
+            });
+
+            function initializeActivitySearch(rowIndex) {
+                const activityInput = $(`#activitySearchInput${rowIndex}`);
+                const suggestionsContainer = $(`#activitySuggestions${rowIndex}`);
+
+                activityInput.on("input", function () {
+                    const taskId = $(`#taskDropdown${rowIndex}`).val();
+                    const query = $(this).val().trim();
+                    console.log("taskId", taskId);
+                    if (query.length > 0) {
+                        $.ajax({
+                            url: '@Url.Action("SearchActivities", "TimeSheet")',
+                            type: 'GET',
+                            data: { searchText: query, taskId: taskId },
+                            success: function (data) {
+                                suggestionsContainer.empty().hide();
+                                if (data && data.length > 0) {
+                                    data.forEach(activity => {
+                                        const suggestionItem = $(
+                                            `<li class="list-group-item list-group-item-action" style="cursor: pointer;">
+                                                    ${activity.Text}
+                                                </li>`
+                                        );
+                                        suggestionItem.on("click", function () {
+                                            activityInput.val(activity.Text); 
+                                            suggestionsContainer.empty().hide();
+                                        });
+                                        suggestionsContainer.append(suggestionItem);
+                                    });
+                                    suggestionsContainer.show();
+                                }
+                            },
+                            error: function () {
+                                console.error("Failed to fetch activities.");
+                            }
+                        });
+                    } else {
+                        suggestionsContainer.empty().hide(); 
+                    }
+                });
+
+                $(document).on("click", function (e) {
+                    if (!$(e.target).closest(`#activitySearchInput${rowIndex}, #activitySuggestions${rowIndex}`).length) {
+                        suggestionsContainer.hide();
+                    }
+                });
+            }
+
+            $(document).on('click', '.remove-row', function () {
+                var row = $(this).closest('tr');
+                var id = row.find('input[name^="TimeSheetRows["][name$="].Id"]').val();
+                removeRow(row, id);
+            });
+
+            $('#searchButton').click(function () {
+                var spentDate = $('input[name="SpentDate"]').val();
+                var today = new Date();
+                if (!spentDate) {
+                    $('#dateError').text('Please enter a spent date.');
+                } else {
+                    var spentDateObj = new Date(spentDate);
+                    if (spentDateObj > today) {
+                        $('#dateError').text('Spent date cannot be in the future.');
+                    } else {
+                        $('#dateError').text('');
+                    }
+                }
+                if (spentDate && spentDateObj <= today) {
+                    $.ajax({
+                        url: '@Url.Action("GetPreviousEntries", "TimeSheet")',
+                        type: 'GET',
+                        data: { spentDate: spentDate },
+                        success: function (data) {
+                            $('#timeSheetTableBody').empty();
+                            if (data.length > 0) {
+                                $.each(data, function (index, row) {
+                                
+                                    var newRow = ` <tr data-index="${index}" data-new="false" style="background-color: #fafafa;" data-original-project-id="${row.ProjectId}" data-original-task-id="${row.TaskId}" data-original-spent-time="${row.SpentTime}" data-original-activity-name="${row.ActivityName}" data-original-billable="${row.Billable}" data-original-estimated-hours="${row.EstimatedHours}" data-original-total-spent="${row.TotalSpent}">
+
+                      <input type="hidden" name="TimeSheetRows[${index}].Id" value="${row.Id}" />
+                      <td class="col-md-2">
+                        <input type="hidden" name="TimeSheetRows[${index}].ProjectId" value="${row.ProjectId}" class="col-md-1" />
+                        <select id="projectDropdown${index}" name="TimeSheetRows[${index}].ProjectId" class="form-control project-dropdown" disabled style="width:200px; border: none; box-shadow: none;"></select>
+                        <span class="projectError" style="color:red;"></span>
+                      </td>
+                      <td class="col-md-4">
+                        <input type="hidden" name="TimeSheetRows[${index}].TaskId" value="${row.TaskId}" />
+                        <select id="taskDropdown${index}" name="TimeSheetRows[${index}].TaskId" class="form-control task-dropdown" disabled style="width: 450px; border: none; box-shadow: none;"></select>
+                        <span class="taskError" style="color:red;"></span>
+                        <input type="hidden" name="TimeSheetRows[${index}].prevTaskId" value="${row.TaskId}" />
+                      </td>
+
+                                             <td class="col-md-4" >
+                                      <input type="text" id="activitySearchInput${index}" name="TimeSheetRows[${index}].ActivityName" class="form-control activity-search-input readonly-input" placeholder="Search or enter a new activity" autocomplete="off" value="${row.ActivityName}" readonly="readonly" />
+                                            <div id="activityContainer${index}" style="position: relative;">
+                                             <ul id="activitySuggestions${index}" class="list-group activity-suggestions" style="display: none; "></ul>
+                                            </div>
+                                    <input type="hidden" name="TimeSheetRows[${index}].prevActivityName" value="${row.ActivityName}" />
+                            <span class="activityError" style="color:red;"></span>
+                        </td>
+
+
+
+                      <td class="col-md-3">
+                                <input type="text" name="TimeSheetRows[${index}].EstimatedHours" class="form-control col-sm-9 readonly-input" value="${row.EstimatedHoursHHMM}" readonly="readonly" />
+                      </td>
+                      <td class="col-md-3">
+                        <input type="text" name="TimeSheetRows[${index}].TotalSpent" class="form-control col-sm-9 readonly-input" style="width:75px;" value="${row.TotalSpent}" readonly="readonly" />
+                      </td>
+         <td class="col-md-3">
+            <input type="text" name="TimeSheetRows[${index}].SpentTime"
+                        class="form-control col-sm-12 spentTimeInput readonly-input"
+                style="width: 72px; text-align: center;"
+                maxlength="5"
+                placeholder="HH:MM"
+                autocomplete="off"
+                        value="${row.SpentTime}" readonly="readonly" /> <!-- Ensure the value is populated -->
+
+            <input type="hidden" name="TimeSheetRows[${index}].prevSpentTime" value="${row.SpentTime}" />
+        </td>
+                      </td>
+                      <td class="col-md-1" style="text-align: center; vertical-align: middle;">
+                        <input type="checkbox" name="TimeSheetRows[${index}].Billable" value="true" style="width: 16px; height: 16px;" ${row.Billable ? 'checked="checked"' : ''} disabled />
+                      </td>
+                      <td class="col-md-1" style="white-space: nowrap;">
+                        <button type="button" class="btn-edit edit-row" style="display: inline-block; margin-right: 5px;">Edit</button>
+                        <button type="button" class="btn btn-danger remove-row delete-button" style="display: inline-block;">X</button>
+                      </td>undefined
+                    </tr>undefined<input type="hidden" name="TimeSheetRows[${index}].IsNewEntry" value="false" />undefined<input type="hidden" name="TimeSheetRows[${index}].Id" value="${row.Id}" />undefined<input type="hidden" name="TimeSheetRows[${index}].TaskId" value="${row.TaskId}" />`;
+
+                                    $('#timeSheetTableBody').append(newRow);
+                                    setTimeout(function () {
+                                        $('#timeSheetTableBody tr').find('select').each(function () {
+                                            var dropdown = $(this).data("kendoDropDownList");
+                                            if (dropdown) {
+                                                dropdown.enable(false);
+                                                $(this).attr('readonly', 'readonly');
+                                                $(this).attr('disabled', 'disabled');
+                                            }
+                                        });
+                                    }, 100);
+                                
+                                    initializeDropdowns(index, row.ProjectId, row.TaskId, row.SpentTime);
+                                    initializeActivitySearch(index);
+                                });
+                                $('#fetchRecentBtn').hide();
+
+                            } else {
+                                $('#addRowButton').click();
+                                $('#fetchRecentBtn').show();
+                                // fetchRecentEntries();
+                            }
+                            $('#tableContainer').show();
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error fetching previous entries: " + error);
+                        }
+                    });
+                } else {
+                    Console.Error("Please select both Employee and Spent Date.");
+
+                }
+            });
+           
+            $('input[name="SpentDate"]').on('change', function () {
+                var spentDate = $(this).val();
+                if (spentDate && spentDate !== '') {
+                    $('#dateError').text('');
+                } else {
+                    $('#dateError').text('Please enter a valid spent date.');
+                }
+            });
+
+            $(document).on('input', '.spentTimeInput', function () {
+                var inputVal = $(this).val().replace(/[^0-9:]/g, ''); 
+                var timeParts = inputVal.split(":");
+                if (timeParts.length > 2) {
+                    inputVal = timeParts[0] + ":" + timeParts[1].slice(0, 2); 
+                }
+                var isValid = timeParts.length === 2 && timeParts[0].length > 0 && timeParts[1].length > 0;
+                if (isValid && parseInt(timeParts[1], 10) > 59) {
+                    timeParts[1] = "59"; 
+                }
+                if (!isValid) {
+                    $('#SpentTimeValidation').text("Invalid format. Use HH:MM");
+                } else {
+                    $('#SpentTimeValidation').text("");
+                }
+                $(this).val(timeParts.join(":"));
+            });
+
+            $(document).on('input', '.EstimationTimeHHMM', function () {
+                var inputVal = $(this).val().replace(/[^0-9:]/g, ''); 
+                var timeParts = inputVal.split(":");
+                if (timeParts.length > 2) {
+                    inputVal = timeParts[0] + ":" + timeParts[1].slice(0, 2); 
+                }
+                var isValid = timeParts.length === 2 && timeParts[0].length > 0 && timeParts[1].length > 0;
+                if (isValid && parseInt(timeParts[1], 10) > 59) {
+                    timeParts[1] = "59"; 
+                }
+                if (!isValid) {
+                    $('.validation-error-message').text("Invalid format. Use HH:MM");
+                } else {
+                    $('.validation-error-message').text("");
+                }
+                $(this).val(timeParts.join(":"));
+            });
+
+            $('select[name^="TimeSheetRows["][name$=".ProjectId"]').on('change', function () {
+                var projectId = $(this).val();
+                var row = $(this).closest('tr');
+                var taskDropdown = row.find('select[name$=".TaskId"]');
+                var taskId = taskDropdown.val();
+                taskDropdown.val('');
+                if (!taskId || taskId === '' || taskId == 0) {
+                    row.find('span.taskError').text('Please select a valid task.');
+                } else {
+                    row.find('span.taskError').text('');
+                }
+            });
+            $('select[name^="TimeSheetRows["][name$=".TaskId"]').on('change', function () {
+                var taskId = $(this).val();
+                if (taskId && taskId !== '' && taskId !== 0) {
+                    $(this).closest('tr').find('span.taskError').text('');
+                    var row = $(this).closest('tr');
+                    var index = row.data('index');
+                    var projectId = row.find('input[name$=".ProjectId"]').val();
+                    if (projectId && projectId !== '') {
+                        $.ajax({
+                            url: '@Url.Action("GetEstimatedTimeByTask", "TimeSheet")',
+                            type: 'GET',
+                            data: { taskId: taskId, projectId: projectId },
+                            success: function (data) {
+                                row.find(`input[name="TimeSheetRows[${index}].EstimatedHours"]`).val(data.EstimatedTime);
+                                row.find(`input[name="TimeSheetRows[${index}].TotalSpent"]`).val(data.TotalSpent);
+                            },
+                            error: function (xhr, status, error) {
+                                console.log("Error fetching estimated time: " + error);
+                            }
+                        });
+                    }
+                } else {
+                    $(this).closest('tr').find('span.taskError').text('Please select a valid task.');
+                }
+            });
+
+            $('#SaveNew').on('click', function (e) {
+                var timeSheetRows = [];
+              
+                var spentDate = $('input[name="SpentDate"]').val();
+                e.preventDefault();
+
+                $('#timeSheetTableBody tr').each(function () {
+                    var row = $(this);
+                    var timeSheetRow = {
+                        SpentDate: spentDate,
+                        ProjectId: row.find('input[name$=".ProjectId"]').val(),
+                        TaskId: parseInt(row.find('input[name$=".TaskId"]').val()),
+                        ActivityName: row.find('input[name$=".ActivityName"]').val(),
+                        EstimatedHours: row.find('input[name$=".EstimatedHours"]').val(),
+                        TotalSpent: row.find('input[name$=".TotalSpent"]').val(),
+                        SpentTime: row.find('input[name$=".SpentTime"]').val(),
+                        Billable: row.find('input[name$=".Billable"]').is(':checked'),
+                        IsNewEntry: row.data('new') === true
+                    };
+
+                    timeSheetRows.push(timeSheetRow);
+                });
+
+                var isValid = true;
+
+                $.each(timeSheetRows, function (index, timeSheetRow) {
+                    if (timeSheetRow.IsNewEntry) {
+                        var row = $('#timeSheetTableBody tr').eq(index);
+                        var inputField = row.find('input[name$=".SpentTime"]');
+
+                        if (!timeSheetRow.ProjectId || timeSheetRow.ProjectId === '' || timeSheetRow.ProjectId == 0) {
+                            row.find('span.projectError').text('Please select a valid project.');
+                            isValid = false;
+                            e.preventDefault();
+                        } else {
+                            row.find('span.projectError').text('');
+                        }
+
+                        if (!timeSheetRow.TaskId || timeSheetRow.TaskId === '' || timeSheetRow.TaskId == 0) {
+                            row.find('span.taskError').text('Please select a valid task.');
+                            isValid = false;
+                            e.preventDefault();
+                        } else {
+                            row.find('span.taskError').text('');
+                        }
+
+                        var spentTimePattern = /^([0-9]{1,2}):([0-5][0-9])$/;
+                        if (!spentTimePattern.test(timeSheetRow.SpentTime)) {
+                            row.find('span.spentTimeError').text('Invalid time format. Use HH:MM.');
+                            isValid = false;
+                            e.preventDefault();
+                        } else {
+                            row.find('span.spentTimeError').text('');
+                        }
+                    }
+                });
+
+                async function saveTimeSheetEntries(timeSheetRows) {
+                    if (isValid) {
+                        const postData = {
+                            timeSheetEntries: timeSheetRows
+                                .filter(timeSheetRow => timeSheetRow.IsNewEntry) 
+                                .map(timeSheetRow => ({
+                                    EmployeeId: parseInt(timeSheetRow.EmployeeId),
+                                    SpentDate: timeSheetRow.SpentDate,
+                                    ProjectId: parseInt(timeSheetRow.ProjectId),
+                                    TaskId: parseInt(timeSheetRow.TaskId),
+                                    ActivityName: timeSheetRow.ActivityName,
+                                    EstimatedHours: parseFloat(timeSheetRow.EstimatedHours),
+                                    TotalSpent: timeSheetRow.TotalSpent,
+                                    SpentTime: timeSheetRow.SpentTime,
+                                    Billable: timeSheetRow.Billable
+                                }))
+                        };
+
+                        if (postData.timeSheetEntries.length > 0) {
+                            addAntiForgeryToken(postData);
+
+                            try {
+                                const response = await $.ajax({
+                                    cache: false,
+                                    type: 'POST',
+                                    url: '@Url.Action("SaveNewChanges", "TimeSheet")',
+                                    data: postData,
+                                    error: function (jqXHR) {
+                                        console.log("Error saving changes: ", jqXHR.responseText);
+                                    }
+                                });
+
+                                showNotification("New Timesheet Records Are Added Successfully.", "success");
+                                $('#searchButton').trigger('click');
+
+                            } catch (error) {
+                                console.log("Error saving changes: ", error);
+                            }
+                        } else {
+                            console.log("No new entries to save.");
+                        }
+                    }
+                }
+                saveTimeSheetEntries(timeSheetRows);
+            });
+
+            $(document).on('click', '.edit-row', function () {
+                var row = $(this).closest('tr');
+                var isEditable = $(this).text() === 'Edit';
+
+                if (isEditable) {
+                    isEditing = true;
+                }
+
+                row.find('input[name$=".SpentTime"]').prop('readonly', function (index, attr) {
+                    return !isEditable;
+                }).toggleClass('readonly-input', !isEditable);
+
+                row.find('input[name$=".ActivityName"]').prop('readonly', function (index, attr) {
+                    return !isEditable;
+                }).toggleClass('readonly-input', !isEditable);
+                row.find('select').each(function () {
+                    var dropdown = $(this).data("kendoDropDownList");
+                    if (dropdown) {
+                        dropdown.enable(isEditable);
+                    }
+                });
+                row.find('input[name$=".Billable"]').prop('disabled', !isEditable); 
+                $(this).text(isEditable ? 'Save' : 'Edit');
+                row.data('editButtonClicked', true);
+                row.find('.delete-button').hide();
+
+                if (isEditable) {
+                    var cancelButton = $('<button type="button" class="cancel-row">Cancel</button>');
+                    row.find('.edit-row').after(cancelButton);
+                } else {
+                    row.find('.cancel-row').remove();
+                }
+            });
+
+            $(document).on('change', 'input[name$=".SpentTime"]', function () {
+                var row = $(this).closest('tr');
+                if (!row.find('.edit-row').text() === 'Save') {
+                    var index = row.data('index');
+                    var SpentTime = $(this).val();
+                    row.find(`input[name="TimeSheetRows[${index}].prevSpentTime"]`).val(SpentTime);
+                }
+            });
+
+            $(document).on('change', 'input[name$=".ActivityName"]', function () {
+                var row = $(this).closest('tr');
+                if (!row.find('.edit-row').text() === 'Save') {
+                    var index = row.data('index');
+                    var activityName = $(this).val();
+                    row.find(`input[name="TimeSheetRows[${index}].prevActivityName"]`).val(activityName);
+                }
+            });
+
+            $(document).on('change', 'input[name$=".TaskId"]', function () {
+                var row = $(this).closest('tr');
+                if (!row.find('.edit-row').text() === 'Save') {
+                    var index = row.data('index');
+                    var taskId = $(this).val();
+                    row.find(`input[name="TimeSheetRows[${index}].prevTaskId"]`).val(taskId);
+                }
+            });
+
+            $(document).on('click', '.edit-row:contains("Save")', function () {
+
+                var row = $(this).closest('tr');
+                var index = row.data('index');
+                var id = row.find('input[name^="TimeSheetRows["][name$="].Id"]').val();
+                var projectId = parseInt(row.find(`input[name="TimeSheetRows[${index}].ProjectId"]`).val());
+                var taskId = parseInt(row.find(`input[name="TimeSheetRows[${index}].TaskId"]`).val());
+                var estimatedHours = parseFloat(row.find(`input[name="TimeSheetRows[${index}].EstimatedHours"]`).val());
+                var totalSpent = row.find(`input[name="TimeSheetRows[${index}].TotalSpent"]`).val();
+                var activityName = row.find(`input[name="TimeSheetRows[${index}].ActivityName"]`).val();
+                var prevActivityName = row.find(`input[name="TimeSheetRows[${index}].prevActivityName"]`).val();
+                var spentTime = row.find(`input[name="TimeSheetRows[${index}].SpentTime"]`).val();
+                var prevSpentTime = row.find(`input[name="TimeSheetRows[${index}].prevSpentTime"]`).val();
+                var prevTaskId = parseInt(row.find(`input[name="TimeSheetRows[${index}].prevTaskId"]`).val());
+                var billable = row.find(`input[name="TimeSheetRows[${index}].Billable"]`).is(':checked');
+             
+                if (projectId == 0) {
+                    taskId = 0;
+                }
+                saveRow(row, id, projectId, taskId, prevTaskId, activityName, prevActivityName, estimatedHours, totalSpent, spentTime, prevSpentTime, billable, index);
+            });
+            var inputField = $('input[name$=".SpentTime"]');
+            inputField.on('input', function () {
+                if (inputField.val()) {
+                    applyValidationState(inputField, true);
+                }
+            });
+            var inputField = $('input[name$=".ActivityName"]');
+            inputField.on('input', function () {
+                if (inputField.val()) {
+                    applyValidationState(inputField, true);
+                }
+            });
+            function applyValidationState(inputField, isValid) {
+                if (isValid) {
+                    inputField.removeClass('validation-error');
+                } else {
+                    inputField.addClass('validation-error');
+                }
+            }
+            function fetchRecentEntries(spentDate) {
+                $.ajax({
+                    url: '@Url.Action("GetRecentEntries", "TimeSheet")',
+                    type: 'GET',
+                    data: {spentDate: spentDate },
+                    success: function (data) {
+                        $('#timeSheetTableBody').empty();
+                        if (data.length > 0) {
+                            $.each(data, function (index, row) {
+                                $('#addRowButton').click();  
+                                var lastRow = $('#timeSheetTableBody tr:last');  
+                                var projectDropdown = lastRow.find('select[name$=".ProjectId"]').data("kendoDropDownList");
+                                var taskDropdown = lastRow.find('select[name$=".TaskId"]').data("kendoDropDownList");
+                                if (projectDropdown && taskDropdown) {
+                                    projectDropdown.value(row.ProjectId);
+                                    projectDropdown.trigger('change');
+                                    projectDropdown.refresh();
+                                    $.ajax({
+                                        url: '@Url.Action("GetTasksByProject", "TimeSheet")',
+                                        type: 'GET',
+                                        data: { projectId: row.ProjectId },
+                                        success: function (taskData) {
+                                            taskDropdown.setDataSource(taskData); 
+                                            taskDropdown.value(row.TaskId); 
+                                            taskDropdown.trigger('change');
+                                            taskDropdown.refresh();
+                                        },
+                                        error: function (xhr, status, error) {
+                                            console.log("Error fetching tasks: " + error);
+                                        }
+                                    });
+
+                                    $.ajax({
+                                        url: '@Url.Action("GetEstimatedTimeByTask", "TimeSheet")',
+                                        type: 'GET',
+                                        data: { taskId: row.TaskId, projectId: row.ProjectId },
+                                        success: function (estData) {
+                                            lastRow.find(`input[name$=".EstimatedHours"]`).val(estData.EstimatedTime);
+                                            lastRow.find(`input[name$=".TotalSpent"]`).val(estData.TotalSpent);
+                                        },
+                                        error: function (xhr, status, error) {
+                                            console.log("Error fetching estimated time: " + error);
+                                        }
+                                    });
+                                    lastRow.find(`input[name$=".Billable"]`).prop('checked', row.Billable);
+                                } else {
+                                    console.error("Dropdowns are not properly initialized for row " + index);
+                                }
+                            });
+                        }
+
+                        else {
+                            $('#addRowButton').click();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error fetching recent entries: " + error);
+                    }
+                });
+            }
+            function saveRow(row, id, projectId, taskId, prevTaskId, activityName, prevActivityName, estimatedHours, totalSpent, spentTime, prevspentTime, billable, index) {
+          
+                var isValidate = true;
+                if (!projectId || projectId === '' || projectId == 0) {
+                    row.find('span.projectError').text('Please select a valid project.');
+                    isValidate = false;
+
+                } else {
+                    row.find('span.projectError').text('');
+                }
+
+                if (!taskId || taskId === '' || taskId == 0) {
+                    row.find('span.taskError').text('Please select a valid task.');
+                    isValidate = false;
+                } else {
+                    row.find('span.taskError').text('');
+                }
+                if (spentTime == null ||spentTime == "") {
+                    $(this).val(''); 
+                    $(this).focus();
+                    showNotification('Please enter a valid spent hours value.', 'error');
+                    isValidate = false;
+                }
+                var spentTimePattern = /^([0-9]{1,2}):([0-5][0-9])$/;
+                if (!spentTimePattern.test(spentTime)) {
+                    $(this).val(''); 
+                    $(this).focus();
+                    isValidate = false;
+                    showNotification('Please enter a valid spent time value in HH:MM format.', 'error');
+                }
+
+                if (!isValidate) {
+                    row.find('input[name$=".SpentTime"]').prop('readonly', false);
+                    row.find('input[name$=".ActivityName"]').prop('readonly', false);
+                    row.find('select').each(function () {
+                        var dropdown = $(this).data("kendoDropDownList");
+                        if (dropdown) {
+                            dropdown.enable(true);
+                        }
+                    });
+                    row.find('input[name$=".Billable"]').prop('disabled', false);
+                    row.find('.edit-row').click();
+                    return;
+                }
+
+                row.find(`input[name="TimeSheetRows[${index}].prevSpentTime"]`).val(spentTime);
+                row.find(`input[name="TimeSheetRows[${index}].prevTaskId"]`).val(taskId);
+                row.find(`input[name="TimeSheetRows[${index}].prevActivityName"]`).val(activityName);
+                row.find(`input[name="TimeSheetRows[${index}].EstimatedHours"]`).val(estimatedHours);
+                row.find(`input[name="TimeSheetRows[${index}].TotalSpent"]`).val(totalSpent);
+
+                $.ajax({
+                    url: '@Url.Action("GetEstimatedTimeByTask", "TimeSheet")',
+                    type: 'GET',
+                    data: { taskId: taskId },
+                    success: function (data) {
+                        estimatedHours = data.EstimatedTime; 
+                        totalSpent = data.TotalSpent;
+                        row.find(`input[name="TimeSheetRows[${index}].EstimatedHours"]`).val(estimatedHours);
+                        row.find(`input[name="TimeSheetRows[${index}].TotalSpent"]`).val(totalSpent);
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error fetching estimated time: " + error);
+                    }
+                });
+                var taskId = row.find('input[name$=".TaskId"]').val();
+                $('#timeSheetTableBody tr').each(function () {
+                    var row = $(this);
+                    var rowTaskId = row.find('input[name$=".TaskId"]').val();
+                    if (rowTaskId === taskId) {
+                        var totalSpent = row.find('input[name$=".TotalSpent"]').val();
+                        $.ajax({
+                            url: '@Url.Action("GetEstimatedTimeByTask", "TimeSheet")',
+                            type: 'GET',
+                            data: { taskId: taskId },
+                            success: function (data) {
+                                estimatedHours = data.EstimatedTime; 
+                                totalSpent = data.TotalSpent
+                                row.find(`input[name="TimeSheetRows[${index}].EstimatedHours"]`).val(estimatedHours);
+                                row.find(`input[name="TimeSheetRows[${index}].TotalSpent"]`).val(totalSpent);
+                                row.find('input[name$=".TotalSpent"]').val(totalSpent);
+                            },
+                            error: function (xhr, status, error) {
+                                console.log("Error updating TotalSpent: " + error);
+                            }
+                        });
+                    }
+                });
+                var postData = { id: id, projectId: projectId, taskId: taskId, prevTaskId: prevTaskId, activityName: activityName, prevActivityName: prevActivityName, estimatedHours: estimatedHours, totalSpent: totalSpent, spentTime: spentTime, prevspentTime: prevspentTime, billable: billable }
+                addAntiForgeryToken(postData);
+                $.ajax({
+                    cache:false,
+                    url: '@Url.Action("UpdateRow", "TimeSheet")',
+                    type: 'POST',
+                    data: postData,
+                    success: function (response) {
+                        row.data('original-project-id', projectId);
+                        row.data('original-task-id', taskId);
+                        row.data('original-activity-name', activityName);
+                        row.data('original-spent-time', spentTime);
+                        row.data('original-billable', billable);
+                        row.data('original-estimated-hours', estimatedHours);
+                        row.data('original-total-spent', response.updatedTotalSpent);
+                        row.find('input[name$=".spentTime"]').prop('readonly', true).addClass('readonly-input');
+                        row.find('input[name$=".ActivityName"]').prop('readonly', true).addClass('readonly-input');
+                        row.find('input[name$=".TotalSpent"]').val(response.updatedTotalSpent);
+                        row.find('select').each(function () {
+                            var dropdown = $(this).data("kendoDropDownList");
+                            if (dropdown) {
+                                dropdown.enable(false);
+                            }
+                        });
+                        row.find('input[name$=".Billable"]').prop('disabled', true);
+                        row.find('.edit-row').text('Edit');
+                        row.find('.delete-button').show();
+                        showNotification("Timesheet Record has beed updated successfully", "success");
+                        console.log("Row updated successfully.");
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error updating row: " + error);
+                    }
+                });
+            }
+            function deleteRow(row, index, id) {
+                var postData = { id: id };
+                addAntiForgeryToken(postData);
+                $.ajax({
+                    url: '@Url.Action("DeleteRow", "TimeSheet")',
+                    type: 'POST',
+                    data: postData,
+                    success: function (response) {
+                        row.remove();
+                        if (id != undefined)
+                            showNotification("Timesheet Record has beed deleted successfully", "error");
+                        var taskId = row.find('input[name$=".TaskId"]').val();
+                        $('#timeSheetTableBody tr').each(function () {
+                            var row = $(this);
+                            var rowTaskId = row.find('input[name$=".TaskId"]').val();
+                            if (rowTaskId === taskId && row.data('index') != index) {
+                                var totalSpent = row.find('input[name$=".TotalSpent"]').val();
+                                $.ajax({
+                                    url: '@Url.Action("GetEstimatedTimeByTask", "TimeSheet")',
+                                    type: 'GET',
+                                    data: { taskId: taskId },
+                                    success: function (response) {
+                                        row.find('input[name$=".TotalSpent"]').val(response.TotalSpent);
+                                    },
+                                    error: function (xhr, status, error) {
+                                        console.log("Error updating TotalSpent: " + error);
+                                    }
+                                });
+                            }
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error deleting row: " + error);
+                    }
+                });
+            }
+
+            function removeRow(row, id) {
+                if (id != undefined) {
+                    if (confirm("Are you sure you want to delete this row?")) {
+                        var index = row.data('index');
+                        deleteRow(row, index, id);
+                    }
+                } else {
+                    var index = row.data('index');
+                    deleteRow(row, index, id);
+                }
+            }
+            function showNotification(message, type) {
+                var existingNotifications = document.querySelectorAll('.notification');
+                existingNotifications.forEach(function (notification) {
+                    notification.remove();
+                });
+                const notification = document.createElement('div');
+                notification.classList.add('notification', type);
+                notification.innerHTML = `<span class="Container-notification"><span class="notification-content">${message}</span><span class="close-button">×</span></span>`;
+
+                notification.querySelector('.close-button').addEventListener('click', () => {
+                    notification.remove();
+                });
+
+                document.getElementById('notification-container').appendChild(notification);
+                notification.style.width = '100%'; 
+                notification.style.top = '0'; 
+                notification.style.textAlign = 'left'; 
+                notification.style.whiteSpace = 'nowrap'; 
+                notification.style.overflow = 'hidden'; 
+                notification.style.textOverflow = 'ellipsis'; 
+                notification.style.height = '50px'; 
+                notification.style.lineHeight = '30px'; 
+                notification.style.padding = '0 10px';
+                notification.style.color = 'white'; 
+                if (type === 'error') {
+                    notification.style.backgroundColor = '#dc3545';
+                    notification.style.borderColor = '#FF0000'; 
+                } else if (type === 'success') {
+                    notification.style.backgroundColor = '#17b76d'; 
+                    notification.style.borderColor = '#008000';
+                }
+            }
+
+            $(document).on('click', '.cancel-row', function () {
+                var row = $(this).closest('tr');
+                row.find('span.taskError').text('');
+                row.find('span.projectError').text('');
+                var originalProjectId = row.data('original-project-id');
+                var originalTaskId = row.data('original-task-id');
+                var originalSpentTime = row.data('original-spent-time');
+                console.log("originalSpentTime", originalSpentTime);
+                var originalBillable = row.data('original-billable');
+                var originalEstimatedHours = row.data('original-estimated-hours');
+                var originalTotalSpent = row.data('original-total-spent');
+                var originalActivityName = row.data('original-activity-name');
+                row.find('input[name$=".ProjectId"]').val(originalProjectId);
+                row.find('select[name$=".ProjectId"]').data("kendoDropDownList").value(originalProjectId);
+                row.find('select[name$=".ProjectId"]').data("kendoDropDownList").refresh();
+                row.find('.delete-button').show();
+                $.ajax({
+                    url: '@Url.Action("GetTasksByProject", "TimeSheet")',
+                    type: 'GET',
+                    data: { projectId: originalProjectId },
+                    success: function (data) {
+                        row.find('select[name$=".TaskId"]').data("kendoDropDownList").dataSource.data(data);
+                        row.find('select[name$=".TaskId"]').data("kendoDropDownList").refresh();
+                        row.find('select[name$=".TaskId"]').data("kendoDropDownList").value(originalTaskId); // Select the original task value from the new list
+                        row.find('select[name$=".TaskId"]').data("kendoDropDownList").trigger('change');
+                        row.find('select[name$=".TaskId"]').data("kendoDropDownList").refresh();
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error fetching tasks: " + error);
+                    }
+                });
+
+                row.find('input[name$=".SpentTime"]').val(originalSpentTime);
+                row.find('input[name$=".Billable"]').prop('checked', originalBillable);
+                row.find('input[name$=".EstimatedHours"]').val(originalEstimatedHours);
+                row.find('input[name$=".TotalSpent"]').val(originalTotalSpent);
+                row.find('input[name$=".ActivityName"]').val(originalActivityName);
+                row.find('input[name$=".SpentTime"]').prop('readonly', true).addClass('readonly-input');
+                row.find('input[name$=".ActivityName"]').prop('readonly', true).addClass('readonly-input');
+                row.find('select').each(function () {
+                    var dropdown = $(this).data("kendoDropDownList");
+                    if (dropdown) {
+                        dropdown.enable(false);
+                    }
+                });
+                row.find('input[name$=".Billable"]').prop('disabled', true);
+                $(this).remove();
+                row.find('.edit-row').text('Edit');
+            });
+            $('#timeSheetTableBody tr').each(function () {
+                var index = $(this).data('index');
+                var projectId = $(this).find('input[name$=".ProjectId"]').val();
+                var taskId = $(this).find('input[name$=".TaskId"]').val();
+                initializeDropdowns(index, projectId, taskId);                
+                $(this).find('input[name$=".SpentTime"]').prop('readonly', true).addClass('readonly-input')
+                $(this).find('input[name$=".ActivityName"]').prop('readonly', true).addClass('readonly-input')
+            });
+
+            $('#searchButton').click(function () {
+                $('#addRowButton').show();
+                $('#saveChangesButton').show();
+            });
+            $('#searchButton').trigger('click');
+        });
+        $(document).on('click', 'button', function () {
+            $(this).blur();
+        });
+
+        function checkRowsExist() {
+            var rowsExist = $('#timeSheetTableBody tr').length > 0;
+            if (rowsExist) {
+                return 'Are you sure you want to leave this page? Ensure that all changes are saved.';
+            }
+        }
+        $(window).on('beforeunload', function () {
+            return checkRowsExist();
+        });
+    </script>
+</section>
+
+<style>
+    .activity-suggestions {
+        position: relative; 
+        z-index: 1050;
+        background-color: #fff; 
+        border: 1px solid #ccc; 
+        border-radius: 4px; 
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        max-height: 100px; 
+        overflow-y: auto; 
+        list-style: none; 
+        margin: 0;
+        padding: 0; 
+        width: 100%; 
+    }
+        .activity-suggestions li {
+            padding: 8px 12px; 
+            cursor: pointer; 
+            transition: background-color 0.2s; 
+        }
+            .activity-suggestions li:hover {
+                background-color: #f8f9fa; 
+            }
+
+            .activity-suggestions li:active {
+                background-color: #e9ecef; 
+            }
+
+            .activity-suggestions li + li {
+                border-top: 1px solid #ddd; 
+            }
+
+    .activity-search-input{
+        width:300px;
+        margin-left:4px;
+    }
+
+</style>

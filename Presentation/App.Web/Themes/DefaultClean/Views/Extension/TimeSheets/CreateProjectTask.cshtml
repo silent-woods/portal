@@ -1,0 +1,203 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.ProjectTasks
+@model ProjectTaskModel
+
+@{
+    Layout = "_Root.Head";
+    NopHtml.AddTitleParts(T("PageTitle.Leave").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-career-result-page");
+}
+
+<div class="page registration-page">
+    <div class="page-body">
+        <input asp-for="Id" type="hidden" />
+        <div>
+            <div class="form-container">
+                <div class="form-fields">
+                    <div class="inputs-popup">
+                            <label asp-for="ProjectId" asp-postfix=":" class="required-label"></label>
+                        <select id="ProjectId" name="ProjectId" class="form-control input-field" style="border: none; box-shadow: none; height:35px; width:100%; "></select>
+                            <span style="color:red; " id="dateError"></span>
+                    </div>
+                    <div class="inputs-popup">
+                        <label asp-for="TaskTitle" asp-postfix=":" class="required-label"></label>
+                        <input asp-for="TaskTitle" class="form-control input-field" />
+                        <span asp-validation-for="TaskTitle"></span>
+                    </div>
+                    <div class="inputs-popup">
+                        <label asp-for="Description" asp-postfix=":" class="required-label"></label>
+                        <nop-textarea asp-for="Description" class="form-control input-field" />
+                        <span asp-validation-for="Description"></span>
+                    </div>
+                    <div class="inputs-popup">
+                        <label asp-for="TaskCategoryId" asp-postfix=":" class="required-label"></label>
+                        <nop-select asp-for="TaskCategoryId" id="TaskCategoryId" class="form-control input-field" asp-items="Model.AvailableTaskCategories" />
+                        <span asp-validation-for="TaskCategoryId"></span>
+                    </div>
+
+                    <div class="inputs-popup">
+                        <label asp-for="EstimationTimeHHMM" asp-postfix=":" class="required-label"></label>
+                        <input asp-for="EstimationTimeHHMM" class="form-control input-field" placeholder="HH:MM" />
+                        <span asp-validation-for="EstimationTimeHHMM"></span>
+                    </div>
+
+                    <div class="inputs-popup">
+                        <label asp-for="DueDate" asp-postfix=":" class="required-label"></label>
+                        <input asp-for="DueDate" class="form-control input-field" type="date" />
+                        <span asp-validation-for="DueDate"></span>
+                    </div>
+
+                    <div class="inputs-popup">
+                        <label asp-for="Tasktypeid" asp-postfix=":" class="required-label"></label>
+                        <nop-select asp-for="Tasktypeid" class="form-control input-field"  asp-items="Model.TaskTypeList" />
+                        <span asp-validation-for="Tasktypeid"></span>
+                    </div>
+                    <div class="inputs-popup">
+                        <label asp-for="ParentTaskId" asp-postfix=":" class=""></label>
+                            <select id="ParentTaskId" name="ParentTaskId" class="form-control input-field" style="border: none; box-shadow: none; height:35px; width:100%; ">
+                                    <option value=""></option>
+                                    @foreach (var task in Model.AvailableParentTasks)
+                                    {
+                                        <option value="@task.Value">@task.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="ParentTaskId"></span>
+                                <span style="color:red;" id="taskError"></span>
+                            </div>
+                    <script>
+                        $(document).ready(function () {
+
+                            var initialProjectId     = "@Model.ProjectId";
+                            var initialParentTaskId  = "@Model.ParentTaskId";
+
+                            var taskDropdown = $("#ParentTaskId").kendoDropDownList({
+                                optionLabel: "Select a task",
+                                dataTextField: "Text",
+                                dataValueField: "Value",
+                                filter: "contains"
+                            }).data("kendoDropDownList");
+
+                            function loadParentTasks(projectId, preselectId) {
+                                if (!projectId) {
+                                    taskDropdown.dataSource.data([]);
+                                    taskDropdown.value("");
+                                    return;
+                                }
+                                $.getJSON('/ProjectTask/GetParentTasksByProjectId',
+                                          { projectId: projectId },
+                                          function (data) {
+                                              taskDropdown.dataSource.data(data);
+                                              if (preselectId) taskDropdown.value(preselectId);
+                                          });
+                            }
+
+                            function loadTaskCategory(projectId){
+                          $.ajax({
+                            url: '/ProjectTask/GetTaskCategoryByProjectId',
+                            type: 'GET',
+                            data: { projectId: projectId !=null ? projectId:0 },
+                            success: function (data) {
+                                var taskCategoryDropdown = $('#@Html.IdFor(model => model.TaskCategoryId)');
+                                taskCategoryDropdown.empty();
+
+                                if (data && data.length > 0) {
+                                    $.each(data, function (i, item) {
+                                        taskCategoryDropdown.append($('<option></option>').val(item.Value).text(item.Text));
+                                    });
+                                }
+                            },
+                            error: function () {
+                                alert('Error loading workflows.');
+                            }
+                        });
+                            }
+
+                            loadParentTasks(initialProjectId, initialParentTaskId);
+
+                            $('#@Html.IdFor(m => m.ProjectId)').change(function () {
+                                loadParentTasks($(this).val(), null);
+                                loadTaskCategory($(this).val());
+                       
+                            });
+                              var taskTypeSelector = $('#@Html.IdFor(m => m.Tasktypeid)');
+                        var parentTaskSelector = $("#ParentTaskId");
+                        var parentTaskError = $("#taskError");
+
+                        function validateParentTask() {
+                            var taskTypeVal = taskTypeSelector.val();
+                            var parentTaskVal = parentTaskSelector.val();
+
+                            if ((taskTypeVal === "3" || taskTypeVal === "4") && (!parentTaskVal || parentTaskVal === "0" || parentTaskVal === "")) {
+                                parentTaskError.text("Parent task is required when Task Type is Bug.");
+                                return false;
+                            } else {
+                                parentTaskError.text("");
+                                return true;
+                            }
+                        }
+
+                        $('form').on('submit', function (e) {
+                            if (!validateParentTask()) {
+                                e.preventDefault(); 
+                            }
+                        });
+
+                            var projectDropdown = $(`#ProjectId`).kendoDropDownList({
+                            optionLabel: "Select an project",
+
+                            dataTextField: "Text",
+                            dataValueField: "Value",
+                            filter: "contains",
+                            autoBind: false,
+                            autoWidth: false,
+                                    dataSource: @Html.Raw(Json.Serialize(Model.Projects)),
+
+                        }).data("kendoDropDownList");
+                        projectDropdown.value(@Model.ProjectId);
+
+                        var employeeDropdown = $(`#EmployeeId`).kendoDropDownList({
+                            optionLabel: "Select an employee",
+                            dataTextField: "Text",
+                            dataValueField: "Value",
+                            filter: "contains",
+                            autoBind: false,
+                            autoWidth: false,
+                            dataSource: @Html.Raw(Json.Serialize(Model.AvailableAssigntoEmployees)),
+
+                        }).data("kendoDropDownList");
+                        employeeDropdown.value(@Model.EmployeeId);
+                        });
+                    </script>
+                    
+                    <div class="inputs-popup">
+                        <label  asp-postfix=":" class="required-label">Assigned To:</label>
+                        <select id="EmployeeId" name="EmployeeId" class="form-control input-field" style="border: none; box-shadow: none; height:35px; width:100%; "></select>
+                        <span style="color:red; " id="employeeError"></span>
+                    </div>
+                   
+                    <div class="inputs-popup">
+                        <label asp-for="ProcessWorkflowId" asp-postfix=":" class="required-label"></label>
+                        <nop-select asp-for="ProcessWorkflowId" id="ProcessWorkflowId" class="form-control input-field" asp-items="Model.AvailableProcessWorkflows" />
+                        <span asp-validation-for="ProcessWorkflowId"></span>
+                    </div>
+
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                        <label asp-for="IsSync" style="font-weight: bold; margin: 0;">@Html.DisplayNameFor(model => model.IsSync)</label>
+                        <input asp-for="IsSync" type="checkbox" style="margin: 0;" />
+                    </div>
+                </div>
+                <div class=""><p class="validation-error-message" style="color:red;"></p></div>
+            
+            </div>
+            </div>
+            <div class="text-center col-12 button1">
+                <div class="buttons">
+                    <button type="button" id="save-info-button" name="save-info-button" class="save-btn-popup">@T("Common.Save")</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+

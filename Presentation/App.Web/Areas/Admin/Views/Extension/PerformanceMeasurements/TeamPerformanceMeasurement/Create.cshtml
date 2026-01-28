@@ -1,0 +1,29 @@
+@model TeamPerformanceMeasurementModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.TeamPerformanceMeasurement").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("AddRating");
+}
+<form asp-controller="TeamPerformanceMeasurement" asp-action="Create" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.TeamPerformanceMeasurement")
+        </h1>
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAddRating, PermissionAction.View))
+        {
+            <div class="float-right">
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus-square"></i>
+                    @T("Admin.PerformanceMeasurement.AddNew")
+                </a>
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/PerformanceMeasurements/TeamPerformanceMeasurement/_CreateOrUpdate.Info.cshtml", Model)
+</form>
+

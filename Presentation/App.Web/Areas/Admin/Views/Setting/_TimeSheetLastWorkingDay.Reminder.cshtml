@@ -1,0 +1,104 @@
+﻿@model TimeSheetSettingsModel
+
+<div class="card-body">
+
+    <!-- Reminder2 From -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="Reminder2_From_OverrideForStore" asp-input="Reminder2_From" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="Reminder2_From" />
+        </div>
+        <div class="col-md-4">
+            <input asp-for="Reminder2_From" id="Reminder2_From" type="time" class="form-control" />
+            <span asp-validation-for="Reminder2_From"></span>
+        </div>
+    </div>
+
+    <!-- Reminder2 To -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="Reminder2_To_OverrideForStore" asp-input="Reminder2_To" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="Reminder2_To" />
+        </div>
+        <div class="col-md-4">
+            <input asp-for="Reminder2_To" id="Reminder2_To" type="time" class="form-control" />
+            <span asp-validation-for="Reminder2_To"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="CommonEmails_OverrideForStore" asp-input="CommonEmails" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="CommonEmails" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="CommonEmails" />
+            <span asp-validation-for="CommonEmails"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendEmailToHr_OverrideForStore" asp-input="SendEmailToHr" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendEmailToHr" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendEmailToHr" />
+            <span asp-validation-for="SendEmailToHr"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendEmailToAllProjectLeaders_OverrideForStore" asp-input="SendEmailToAllProjectLeaders" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendEmailToAllProjectLeaders" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendEmailToAllProjectLeaders" />
+            <span asp-validation-for="SendEmailToAllProjectLeaders"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendEmailToAllProjectManager_OverrideForStore" asp-input="SendEmailToAllProjectManager" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendEmailToAllProjectManager" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendEmailToAllProjectManager" />
+            <span asp-validation-for="SendEmailToAllProjectManager"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendEmailToEmployeeManager_OverrideForStore" asp-input="SendEmailToEmployeeManager" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendEmailToEmployeeManager" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendEmailToEmployeeManager" />
+            <span asp-validation-for="SendEmailToEmployeeManager"></span>
+        </div>
+    </div>
+
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="ConsiderBeforeDay_OverrideForStore" asp-input="ConsiderBeforeDay" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="ConsiderBeforeDay" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="ConsiderBeforeDay" />
+            <span asp-validation-for="ConsiderBeforeDay"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SendWithCCAfterDay_OverrideForStore" asp-input="SendWithCCAfterDay" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SendWithCCAfterDay" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SendWithCCAfterDay" />
+            <span asp-validation-for="SendWithCCAfterDay"></span>
+        </div>
+    </div>
+
+
+</div>

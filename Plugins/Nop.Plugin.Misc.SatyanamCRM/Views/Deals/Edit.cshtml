@@ -1,0 +1,46 @@
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Deals
+@model DealsModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.Deals.EditDealsDetails").Text;
+     //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Deals");
+}
+ 
+
+<form asp-controller="Deals" asp-action="Edit" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Plugin.SatyanamCRM.Deals.EditDealsDetails") @* - @Model.Name *@
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Plugin.SatyanamCRM.Deals.BackToList")</a>
+            </small>
+        </h1>
+        <div class="float-right">
+            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageDeals, PermissionAction.Edit))
+            {
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            }
+            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageDeals, PermissionAction.Delete))
+            {
+                <span id="deals-delete" class="btn btn-danger">
+                    <i class="far fa-trash-alt"></i>
+                    @T("Admin.Common.Delete")
+                </span>
+            }
+        </div>
+    </div>
+    @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Deals/_CreateOrUpdate.cshtml", Model)
+</form>
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="deals-delete" />

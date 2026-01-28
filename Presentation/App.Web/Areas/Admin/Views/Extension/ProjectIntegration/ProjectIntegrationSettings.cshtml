@@ -1,0 +1,61 @@
+﻿@model ProjectIntegrationSettingsSearchModel
+
+@{
+    ViewBag.PageTitle = T("Admin.System.ProjectIntegration.ListOfProjectIntegrationSettings").Text;
+    NopHtml.SetActiveMenuItemSystemName("Project Integration");
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.System.ProjectIntegration.ListOfProjectIntegrationSettings")
+        <small>
+            <i class="fas fa-arrow-circle-left"></i>
+            <a asp-action="Edit" asp-route-id="@Model.ProjectIntegrationId">@T("Admin.System.ProjectIntegration.ProjectIntegrationSettings.BackToProjectIntegrationDetails")</a>
+        </small>
+    </h1>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "project-integration-settings-grid",
+                                UrlRead = new DataUrl("ProjectIntegrationSettings", "ProjectIntegration", new RouteValueDictionary { [nameof(Model.ProjectIntegrationMappingId)] = Model.ProjectIntegrationMappingId }),
+                                UrlUpdate = new DataUrl("ProjectIntegrationSettingsUpdate", "ProjectIntegration", null),
+                                SearchButtonId = "search-project-integration-settings",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                },
+                            };
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectIntegrationSettingsModel.SettingsName))
+                            {
+                                Title = T("Admin.System.ProjectIntegration.ProjectIntegrationSettings.Fields.SettingsName").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectIntegrationSettingsModel.Value))
+                            {
+                                Title = T("Admin.System.ProjectIntegration.ProjectIntegrationSettings.Fields.Value").Text
+                            });
+                            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectIntegrationSettings, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectIntegrationSettingsModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "100",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonsInlineEdit()
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,196 @@
+﻿@model ConfigurationModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.TrackerAPI.Admin.Configuration").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.TrackerAPI.Admin.Configuration");
+
+    const string hidePluginConfigurationBlockAttributeName = "AbandonedCartPluginConfigurationPage.HideAbandonedCartPluginConfigurationBlock";
+    var hidePluginConfigurationBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hidePluginConfigurationBlockAttributeName);
+}
+
+<form asp-controller="TrackerAPI" asp-action="Configure" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Satyanam.Plugin.Misc.TrackerAPI.Admin.Configuration") - @T("Satyanam.Plugin.Misc.TrackerAPI.MainMenu.Title")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List" asp-controller="Plugin">@T("Admin.Configuration.Plugins.Misc.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(TrackerAPIPermissionProvider.ManageTrackerAPIConfiguration, PermissionAction.Edit))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+            </div>
+        }
+    </div>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <nop-cards id="configure-cards">
+                    <nop-card asp-name="configure-card" asp-icon="fas fa-cogs" asp-title="@T("Satyanam.Plugin.Misc.TrackerAPI.Admin.Configuration")" asp-hide-block-attribute-name="@hidePluginConfigurationBlockAttributeName" asp-hide="@hidePluginConfigurationBlock" asp-advanced="false">
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="APIKey" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="APIKey" />
+                                    <span asp-validation-for="APIKey"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="APISecretKey" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="APISecretKey" />
+                                    <span asp-validation-for="APISecretKey"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="EnableKeyboardClick" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="EnableKeyboardClick" />
+                                    <span asp-validation-for="EnableKeyboardClick"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="EnableMouseClick" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="EnableMouseClick" />
+                                    <span asp-validation-for="EnableMouseClick"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="MinimumKeyboardMouseClick" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="MinimumKeyboardMouseClick" />
+                                    <span asp-validation-for="MinimumKeyboardMouseClick"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="EnableScreenShot" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="EnableScreenShot" />
+                                    <span asp-validation-for="EnableScreenShot"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="LastAwayCount" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="LastAwayCount" />
+                                    <span asp-validation-for="LastAwayCount"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="TrackingDuration" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="TrackingDuration" />
+                                    <span asp-validation-for="TrackingDuration"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="AlertDuration" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="AlertDuration" />
+                                    <span asp-validation-for="AlertDuration"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="AlertMinimumDuration" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="AlertMinimumDuration" />
+                                    <span asp-validation-for="AlertMinimumDuration"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="SwitchTaskDuration" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="SwitchTaskDuration" />
+                                    <span asp-validation-for="SwitchTaskDuration"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="EnableLogging" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="EnableLogging" />
+                                    <span asp-validation-for="EnableLogging"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="ClientId" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="ClientId" />
+                                    <span asp-validation-for="ClientId"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="ClientSecret" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="ClientSecret" />
+                                    <span asp-validation-for="ClientSecret"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="TenantId" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="TenantId" />
+                                    <span asp-validation-for="TenantId"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="UserId" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="UserId" />
+                                    <span asp-validation-for="UserId"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="UploadTimeTrackerId" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="UploadTimeTrackerId" />
+                                    <span asp-validation-for="UploadTimeTrackerId"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </nop-card>
+                </nop-cards>
+            </div>
+        </div>
+    </section>
+</form>

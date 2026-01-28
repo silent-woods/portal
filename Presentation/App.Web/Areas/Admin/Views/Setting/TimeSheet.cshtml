@@ -1,0 +1,57 @@
+﻿
+@{
+}
+@model TimeSheetSettingsModel
+
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.Settings.TimeSheet").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("TimeSheet settings");
+}
+
+@{
+    const string hideCommonBlockAttributeName = "TimeSheetSettingsPage.HideCommonBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideCommonBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCommonBlockAttributeName);
+
+    const string hideCommentsBlockAttributeName = "TimeSheetSettingsPage.HideCommentsBlock";
+    var hideCommentsBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCommentsBlockAttributeName);
+}
+
+
+<form asp-controller="Setting" asp-action="TimeSheet" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.Settings.TimeSheet")
+        </h1>
+        <div class="float-right">
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+            @*   @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.BlogSettingsButtons, additionalData = Model }) *@
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                @*   @await Component.InvokeAsync(typeof(StoreScopeConfigurationViewComponent))
+                @await Component.InvokeAsync(typeof(SettingModeViewComponent)) *@
+                <div asp-validation-summary="All"></div>
+
+                <nop-cards id="blogsettings-cards">
+                    <nop-card asp-name="blogsettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.TimeSheet.CurrentDayReminder")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_TimeSheetCurrentDay.Reminder", Model)</nop-card>
+                </nop-cards>
+
+                <nop-cards id="blogsettings-cards">
+                    <nop-card asp-name="blogsettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.TimeSheet.LastWorkingDayReminder")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_TimeSheetLastWorkingDay.Reminder", Model)</nop-card>
+                </nop-cards>
+                <nop-cards id="blogsettings-cards">
+                    <nop-card asp-name="blogsettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.TimeSheet.TimeSheetExcludeDepartment")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_TimeSheetExcludeDepartment.Reminder", Model)</nop-card>
+                </nop-cards>
+            </div>
+        </div>
+    </section>
+</form>

@@ -1,0 +1,90 @@
+@model AvgMeasurementModel
+<style>
+    .center-table {
+        width: 100%;
+        margin: auto;
+        text-align: left;
+        border-collapse: collapse;
+        border: 1px solid #ddd; /* Light gray border */
+    }
+
+        .center-table th {
+            background-color: #f2f2f2; /* Light gray background for header */
+            font-weight: bold;
+            padding: 10px;
+            border: 1px solid #ddd; /* Light gray border */
+        }
+
+        .center-table td {
+            padding: 10px;
+            border: 1px solid #ddd; /* Light gray border */
+        }
+
+        .center-table tr:nth-child(even) {
+            background-color: #f9f9f9; /* Alternate row background */
+        }
+
+    .kpi-name {
+        background-color: #e6f2ff; /* Light blue background for KPI names */
+    }
+
+    .rate {
+        background-color: #eaf1dd; /* Light green background for total rate */
+    }
+
+    .avg {
+        background-color: #f9eec1; /* Light yellow background for total average */
+    }
+
+    .name {
+        background-color: #e2e2e2; /* Light gray background for manager names */
+    }
+
+    .manager {
+        background-color: #ffd1b3; /* Light orange background for managers */
+    }
+</style>
+<div class="data">
+    @if (Model == null)
+    {
+        <p>No data available.</p>
+    }
+    else if (Model.KPIName == null)
+    {
+    }
+    else if (!Model.KPIName.Any())
+    {
+
+    }
+    else
+    {
+        var distinctEmployeeNames = Model.employeeRatePerKPIs.Select(e => e.EmployeeName).Distinct().ToList();
+
+        <table class="center-table">
+            <tr>
+                <th class="name">KPIName</th>
+                @foreach (var employeeName in distinctEmployeeNames)
+                {
+                    <th class="manager">@employeeName</th>
+                }
+            </tr>
+            @foreach (var kpi in Model.KPIName)
+            {
+                <tr>
+                    <td class="kpi-name">@kpi</td>
+                    @foreach (var employeeName in distinctEmployeeNames)
+                    {
+                        var rate = Model.employeeRatePerKPIs
+                        .FirstOrDefault(e => e.KPIName == kpi && e.EmployeeName == employeeName);
+
+                        <td>@(rate?.Rate.ToString() ?? string.Empty)</td>
+
+
+                    }
+                </tr>
+            }
+        </table>
+
+    }
+</div>
+

@@ -1,0 +1,168 @@
+﻿@model App.Web.Areas.Admin.InterviewQeations.Models.RecruitementModel
+
+
+<input asp-for="Id" type="hidden" />
+<input asp-for="Id" type="hidden" />
+<div class="card-body">
+<div class="cards-group">
+    <div class="card card-default">
+        <div class="card-body">
+            <div class="col-md-12">
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="Question" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="Question" asp-required="true"/>
+                        <span asp-validation-for="Question"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="Question_answers" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="Question_answers" asp-required="true"/>
+                        <span asp-validation-for="Question_answers"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+
+                    <div class="col-md-3">
+                        <nop-label asp-for="Category" />
+
+                    </div>
+
+                    <div class="col-md-9">
+                        <nop-select asp-for="CategoryId" asp-items="@Model.AvailableCategory" asp-required="true" />
+                        <span asp-validation-for="CategoryId"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="questiontype" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-select asp-for="questiontypeId" asp-items="@Model.AvailablequestiontypeId" asp-required="true"/>
+                        <span asp-validation-for="questiontypeId"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="DownloadId" />
+                    </div>
+                    <div class="col-md-9">
+                        <p>i.e can be used to upload practical requirements documents</p>
+                        <div id="pnlAddOrderNoteDownloadId">
+                            <nop-editor asp-for="DownloadId" />
+                            <span asp-validation-for="DownloadId"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="QuestionLevel" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-select asp-for="QuestionLevelId" asp-items="@Model.AvailableQuestionLevelId" asp-required="true" />
+                        <span asp-validation-for="QuestionLevelId"></span>
+                    </div>
+
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="DisplayOrder" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="DisplayOrder" />
+                        <span asp-validation-for="DisplayOrder"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="Published" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="Published" />
+                        <span asp-validation-for="Published"></span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        $('#file').change(function () {
+            $('.filename').html($(this).val());
+        });
+
+        $('.adminTitle').css('display', 'none');
+        //$('#file').css('width', '81px');
+        $("[id^=cbUseDownloadURL]").each(function (index) {
+            var id = "#" + this.id;
+            $(id).css("display", "none");
+
+        });
+        $('.adminContent').css('margin-top', '10px');
+        //$("[id^=download]").each(function (index) {
+        //    var id = "#" + this.id;
+        //    $(id).css("display", "none");
+
+        //});
+    });
+
+
+    $(document).ready(function () {
+        $('#Documentupload').click(function () {
+            //var formData = new FormData();
+            //var fileInput = $('#file-input')[0].files[0]; // Get the selected file from the input
+            //formData.append('file', fileInput);
+
+            var DocumentsDownloadId = 0;
+            if ($('#@Html.IdFor(model => model.DocumentsDownload)').is(':checked')) {
+                DocumentsDownloadId = $("#@Html.IdFor(model => model.DownloadId)").val();
+            }
+
+            var postData = {
+                downloadId: DocumentsDownloadId,
+                Id: '@Model.Id'
+            };
+            addAntiForgeryToken(postData);
+
+            formData.append('postData', JSON.stringify(postData)); // Append the additional data as JSON
+
+            $('#Documentupload').attr('disabled', true);
+
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("Create", "Recruitement"))",
+                data: postData,
+                contentType: false, // Set the content type to false to prevent jQuery from setting the Content-Type header
+                processData: false, // Set processData to false to prevent jQuery from processing the data
+                success: function (data, textStatus, jqXHR) {
+                    if (data.Result) {
+                        //reload grid
+                        updateTable('#Recruitement-rate-grid');
+                    } else {
+                        //display errors if returned
+                        display_nop_error(data);
+                    }
+                },
+                complete: function (jqXHR, textStatus) {
+                    $('#Documentupload').attr('disabled', false);
+                }
+            });
+        });
+    });
+
+</script>
+
+

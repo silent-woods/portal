@@ -1,0 +1,23 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.LeadSources
+@model LeadSourceModel
+
+@{
+    const string hideInfoBlockAttributeName = "leadSourcesDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+}
+
+@* <div asp-validation-summary="All"></div> *@
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            
+            <nop-cards id="leadSources-item-cards">
+                <nop-card asp-name="leadSources-item-info" asp-icon="fas fa-info" asp-title="@T("Plugin.SatyanamCRM.LeadSources.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">@await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/LeadSources/_CreateOrUpdate.Info.cshtml", Model)</nop-card>
+            </nop-cards>
+        </div>
+    </div>
+</section>

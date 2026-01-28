@@ -1,0 +1,94 @@
+﻿@model InvoiceModel
+
+@if (Model.Id > 0)
+{
+    <div class="card-body">
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "invoice-items-grid",
+                        UrlRead = new DataUrl("InvoiceItems", "AccountManagement", new RouteValueDictionary { [nameof(Model.InvoiceItemSearchModel.InvoiceId)] = Model.Id }),
+                        UrlDelete = new DataUrl("InvoiceItemDelete", "AccountManagement", null),
+                        Length = Model.InvoiceItemSearchModel.PageSize,
+                        LengthMenu = Model.InvoiceItemSearchModel.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceItemModel.Description))
+                    {
+                        Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoiceItem.Fields.Description").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceItemModel.Hours))
+                    {
+                        Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoiceItem.Fields.Hours").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceItemModel.Rate))
+                    {
+                        Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoiceItem.Fields.Rate").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceItemModel.Amount))
+                    {
+                        Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoiceItem.Fields.Amount").Text,
+                    });
+                    @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoiceItems, PermissionAction.Edit))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceItemModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "100",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderCustom("renderColumnEditInvoiceItem")
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoiceItems, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InvoiceItemModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text)
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoiceItems, PermissionAction.Add))
+            {
+                <div class="card-footer">
+                    <div width="100%">
+                        <button type="submit" id="btnAddNewInvoiceItem"
+                                onclick="javascript:OpenWindow('@(Url.Action("InvoiceItemCreatePopup", "AccountManagement", new { invoiceId = Model.Id, btnId = "btnInvoiceItemRefresh", formId = "invoice-form" }))', 800, 450, true); return false;"
+                                class="btn btn-primary">
+                            <i class="fas fa-plus-square"></i>
+                            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.AddNewInvoiceItem")
+                        </button>
+                        <button type="submit" id="btnInvoiceItemRefresh" style="display: none"></button>
+                        <script>
+                            $(document).ready(function () {
+                                $('#btnInvoiceItemRefresh').click(function () {
+                                    updateTable('#invoice-items-grid');
+                                    return false;
+                                });
+                            });
+                        </script>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="card-body">
+        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.InvoiceItem.SaveBeforeEdit")
+    </div>
+}
+
+
+<script>
+    function renderColumnEditInvoiceItem(data, type, row, meta) {
+        return '<button onclick=\"javascript:OpenWindow(\'@Url.Content("~/Admin/AccountManagement/InvoiceItemEditPopup/")' + data + '?btnId=btnInvoiceItemRefresh&formId=invoice-form\', 800, 400, true); return false;\" class="btn btn-default"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit").Text</button>';
+    }
+</script>

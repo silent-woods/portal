@@ -1,0 +1,44 @@
+﻿@model TimeSheetSettingsModel
+
+<div class="card-body">
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SelectedDepartmentIds" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="SelectedDepartmentIds" asp-items="Model.AvailableDepartments" asp-multiple="true" />
+            <script>
+                $(document).ready(function () {
+                    var rolesIdsInput =
+                        $('#@Html.IdFor(model => model.SelectedDepartmentIds)')
+                            .data("kendoMultiSelect");
+                    rolesIdsInput.setOptions({
+                        autoClose: true,
+                        filter: "contains"
+                    });
+
+                @if (Model.AvailableDepartments.Count == 0)
+                {
+                    <text>
+                            rolesIdsInput.setOptions({
+                                enable: false,
+                                placeholder:
+                                    '@T("Admin.Catalog.Products.CustomerRoles.NoCustomerRolesAvailable")'
+                            });
+                        rolesIdsInput._placeholder();
+                        rolesIdsInput._enable();
+                    </text>
+                }
+                                                                                                                            });
+            </script>
+        </div>
+    </div>
+
+
+
+
+</div>
+
+
+

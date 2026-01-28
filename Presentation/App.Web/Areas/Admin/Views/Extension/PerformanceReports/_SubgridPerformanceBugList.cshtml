@@ -1,0 +1,78 @@
+@using App.Web.Areas.Admin.Models.Extension.MonthlyPerformanceReports
+@model IList<MonthlyPerformanceReportModel>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Task Name</th>
+            <th>Task Type</th>
+            <th>Status</th>
+            <th>Due Date</th>
+
+            <th>Esti. Time</th>
+            <th>Spent Time</th>
+            <th>Extra Time</th>
+
+            <th>QA Time</th>
+            
+
+            <th>D.O.T</th>
+
+            
+            
+        
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td onclick="window.open('/ProjectTask/Edit?id=@item.TaskId', '_blank')" class="task-cell">
+                    @item.TaskName
+                </td>
+
+
+
+                <td>@item.TaskTypeName</td>
+                 <td>
+                    @{
+                        var statusParts = item.StatusName?.Split("|||");
+                        var label = statusParts?.ElementAtOrDefault(0) ?? "";
+                        var color = statusParts?.ElementAtOrDefault(1) ?? "#999";
+                    }
+
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 10px; height: 10px; border-radius: 50%; background-color: @color;"></div>
+                        <span>@label</span>
+                    </div>
+                </td>
+                <td>@Html.Raw(item.DueDateFormat)</td>
+
+                <td>@item.EstimatedTimeFormat</td>
+                <td>@item.SpentTimeFormat</td>
+                <td>@item.ExtraTime</td>
+
+                <td>@item.QaTimeFormat</td>
+
+             
+                <td>
+                    @if (item.DeliveredOnTime)
+                    {
+                        <i class="fa fa-check true-icon" aria-hidden="true" style="color: #007bff;"></i>
+                    }
+                    else
+                    {
+                        <i class="fa fa-times false-icon" aria-hidden="true" style="color: red;"></i>
+                    }
+
+                    @if (item.DOTPercentage != null)
+                    {
+                        <span style="margin-left: 5px;">(@item.DOTPercentage)%</span>
+                    }
+                </td>
+                
+            
+            </tr>
+        }
+    </tbody>
+</table>

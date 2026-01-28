@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Misc",
+  "FriendlyName": "SatyanamNopCore",
+  "SystemName": "Misc.SatyanamNopCore",
+  "Version": "1.60",
+  "SupportedVersions": [ "4.60" ],
+  "Author": "Satyanam team",
+  "DisplayOrder": 1,
+  "FileName": "Satyanam.Nop.Core.dll",
+  "Description": " "
+}

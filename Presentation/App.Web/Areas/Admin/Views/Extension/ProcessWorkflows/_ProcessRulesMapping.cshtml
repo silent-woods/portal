@@ -1,0 +1,86 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.ProcessRules
+
+@model ProcessRulesModel
+
+@if (ViewBag.RefreshPage == true)
+{
+    <script>
+        try {
+            // Trigger the custom event in the parent page
+            var event = new Event('refreshGrid');
+            window.opener.dispatchEvent(event);
+            window.close();
+        }
+        catch (e) {
+            console.log("Error triggering event: " + e.message);
+        }
+    </script>
+}
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-popup">
+                    <div class="card-body">
+                        <input asp-for="Id" type="hidden" />
+                        <input asp-for="CreatedOn" type="hidden" />
+                        <input asp-for="ProcessWorkflowId" type="hidden" />
+
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="FromStateId" />
+                            </div>
+                            <div class="col-sm-6">
+                                <nop-select asp-for="FromStateId" asp-items="Model.StateList" asp-required="true" />
+                                <span asp-validation-for="FromStateId"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="ToStateId" />
+                            </div>
+                            <div class="col-sm-6">
+                                <nop-select asp-for="ToStateId" asp-items="Model.StateList" asp-required="true" />
+                                <span asp-validation-for="ToStateId"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="IsCommentRequired" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-editor asp-for="IsCommentRequired" />
+                                <span asp-validation-for="IsCommentRequired"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="CommentTemplate" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="CommentTemplate" asp-template="RichEditor" />
+                                <span asp-validation-for="CommentTemplate"></span>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="IsActive" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-editor asp-for="IsActive" />
+                                <span asp-validation-for="IsActive"></span>
+                            </div>
+                        </div>
+
+                     
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

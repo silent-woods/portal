@@ -1,0 +1,649 @@
+@using App.Web.Models.Extensions.UpdateForm
+@model SubmitUpdateFormModel
+<script src="~/lib/jquery/jquery.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    $(function () {
+        $.validator.unobtrusive.parse('form');
+    });
+</script>
+@{
+    Layout = "_ColumnsOne";
+    NopHtml.AddTitleParts("Submit Update");
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-update-form-page");
+}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .card-box {
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        background-color: #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+    .question-label {
+        font-weight: 600;
+        font-size: 17px;
+        margin-bottom: 8px;
+        display: block;
+        color: #333;
+    }
+    .question-hint {
+        font-size: 13px;
+        color: #888;
+        margin-bottom: 10px;
+    }
+    .form-control,
+    select {
+        height: 40px;
+        padding: 6px 12px;
+        font-size: 15px;
+        border-radius: 8px;
+        box-shadow: none;
+        border: 1px solid #ced4da;
+    }
+    .form-check {
+        margin-bottom: 6px;
+    }
+    .form-check-input {
+        margin-right: 10px;
+    }
+    .text-danger {
+        font-size: 13px;
+        margin-top: 6px;
+        display: block;
+    }
+    .form-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #2c3e50;
+    }
+    .btn-primary {
+        border: 0;
+        background-color: #4ab2f1;
+        color: #fff;
+        font-size: 18px;
+        padding: 10px;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+    }
+    .text-input-box {
+        height: 36px;
+        width: 100%;
+    }
+    .mt-2 {
+        margin-top: 12px;
+    }
+    .d-grid {
+        display: grid;
+    }
+    .gap-2 {
+        gap: 12px;
+    }
+    .w-100 {
+        width: 100%;
+    }
+    .text-muted {
+        color: #6c757d !important;
+    }
+    .back-to-list-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+        border-radius: 6px;
+        background-color: #6c757d;
+        color: white;
+        text-decoration: none;
+        transition: background-color 0.2s ease;
+    }
+        .back-to-list-btn:hover {
+            background-color: #5a6268;
+            color: white;
+        }
+    .comment-item {
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+    }
+        .comment-item + .comment-item {
+            margin-top: 15px;
+        }
+    textarea.form-control {
+        resize: vertical;
+    }
+    .container mt-4 {
+        padding-bottom: 10px;
+        padding-top: 10px;
+    }
+    .period-sidebar {
+        width: 220px;
+        padding-top: 49px;
+    }
+    .sidebar-title {
+        margin-bottom: 15px;
+        font-size: initial;
+    }
+    .period-list {
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+    }
+    .period-item {
+        background: #f8fff5;
+        border: 1px solid #d7f3d0;
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+    }
+    .period-date {
+        font-weight: 600;
+        color: #2d7a2d;
+        font-size: 14px;
+    }
+    .period-status {
+        color: #3c9a3c;
+        font-size: 13px;
+    }
+    .clear-file-btn {
+        border-radius: 4px;
+        padding: 3px 13px;
+        margin-left: 5px;
+    }
+
+    .checkbox-label {
+        display: inline-flex !important;
+        align-items: center;
+    }
+
+    .required-star {
+        color: red;
+        margin-left: 4px;
+        font-weight: bold;
+    }
+
+    .checkbox-error {
+        color: #dc3545; 
+        display: block;
+        text-align: center;
+        margin-top: 6px;
+        font-size: 0.875rem;
+    }
+
+</style>
+<div class="container my-4" style="display: flex; gap: 24px;">
+    <!-- Sidebar -->
+    <div class="period-sidebar">
+        <div class="card-box">
+            <h5 class="sidebar-title">Periods</h5>
+            <ul class="period-list">
+                @foreach (var period in Model.Periods)
+                {
+                    <li class="period-item">
+                        <div class="period-date">
+                            @if (period.SubmittedOnUtc.HasValue)
+                            {
+                                @period.SubmittedOnUtc.Value.ToString("dd MMM, yyyy")
+                            }
+                        </div>
+                        <span class="period-status">
+                            Submitted
+                        </span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    <!-- Form main area -->
+    <div style="flex: 1;">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+            <a href="@Url.Action("SubmissionList", "UpdateSubmission")" class="btn btn-secondary back-to-list-btn">
+                Back to List
+            </a>
+        </div>
+        <div class="card-box">
+            <div class="form-title">@Model.Title</div>
+            <div class="text-muted mb-3" style="margin-bottom: 15px;margin-top: 15px;">
+                @Model.Description
+            </div>
+            <form asp-controller="UpdateSubmission"
+                  asp-action="Submit"
+                  asp-route-id="@Model.UpdateTemplateId"
+                  asp-route-periodId="@Model.PeriodId"
+                  method="post"
+                  enctype="multipart/form-data"
+                  id="updateForm">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="UpdateTemplateId" />
+                <input type="hidden" name="periodId" asp-for="PeriodId" />
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                @for (int i = 0; i < Model.Questions.Count; i++)
+                {
+                    var question = Model.Questions[i];
+                    var hasMin = question.MinLength.HasValue && question.MinLength > 0;
+                    var hasMax = question.MaxLength.HasValue && question.MaxLength > 0;
+                    <div class="card-box">
+                        <input type="hidden" name="Questions[@i].QuestionId" value="@question.QuestionId" />
+                        <input type="hidden" name="Questions[@i].ControlType" value="@question.ControlType" />
+                        <label class="question-label">
+                            @question.QuestionText
+                        </label>
+                        <div class="mt-2">
+                            @switch (question.ControlType)
+                            {
+                                case "TextBox":
+                                        <input type="text"name="Questions[@i].AnswerText"class="form-control text-input-box"value="@question.AnswerText"data-val="true"
+                                               @if (question.IsRequired)
+                                               {
+                                                 <text> data-val-required="This field is required" </text>
+                                               }
+                                        @if (question.MinLength > 0 || question.MaxLength > 0)
+                                        {
+                                            <text>
+                                                minlength="@question.MinLength"
+                                                maxlength="@question.MaxLength"
+                                                data-val-length="Must be between @question.MinLength and @question.MaxLength characters"
+                                                data-val-length-min="@question.MinLength"
+                                                data-val-length-max="@question.MaxLength"
+                                            </text>
+                                        }
+                                        />
+                                        @* Only show the hint text if limits exist *@
+                                        @if (question.MinLength > 0 || question.MaxLength > 0)
+                                        {
+                                            <span class="text-muted small">
+                                                @if (question.MinLength > 0)
+                                                {
+                                                    <text>Min @question.MinLength characters</text>
+                                                }
+                                                @if (question.MinLength > 0 && question.MaxLength > 0)
+                                                {
+                                                    <text> | </text>
+                                                }
+                                                @if (question.MaxLength > 0)
+                                                {
+                                                    <text>Max @question.MaxLength characters</text>
+                                                }
+                                            </span>
+                                        }
+                                        <span class="text-danger"data-valmsg-for="Questions[@i].AnswerText"data-valmsg-replace="true"></span>
+                                break;
+                                case "MultilineTextbox":
+                                
+                                        <textarea name="Questions[@i].AnswerText"class="form-control text-input-box"rows="3"data-val="true"
+                                            @if (question.IsRequired)
+                                            {
+                                              <text> data-val-required="This field is required" </text>
+                                            }
+                                            @if (question.MinLength > 0 || question.MaxLength > 0)
+                                            {
+                                              <text>
+                                              minlength="@question.MinLength"
+                                              maxlength="@question.MaxLength"
+                                              data-val-length="Must be between @question.MinLength and @question.MaxLength characters"
+                                              data-val-length-min="@question.MinLength"
+                                              data-val-length-max="@question.MaxLength"
+                                              </text>
+                                            }
+                                            @* Submission state logic *@
+                                            @(Model.HasAlreadySubmitted && !Model.AllowEditingAfterSubmit ? "readonly disabled" : "")>@question.AnswerText
+                                        </textarea>
+                                        @* Only show hint label if Min or Max values exist *@
+                                        @if (question.MinLength > 0 || question.MaxLength > 0)
+                                        {
+                                            <span class="text-muted small">
+                                                @if (question.MinLength > 0)
+                                                {
+                                                    <text>Min @question.MinLength characters</text>
+                                                }
+                                                @if (question.MinLength > 0 && question.MaxLength > 0)
+                                                {
+                                                    <text> | </text>
+                                                }
+                                                @if (question.MaxLength > 0)
+                                                {
+                                                    <text>Max @question.MaxLength characters</text>
+                                                }
+                                            </span>
+                                        }
+                                        <span class="text-danger"data-valmsg-for="Questions[@i].AnswerText"data-valmsg-replace="true"></span>
+                                break;
+                                case "DropdownList":
+                                    {
+                                        var hasValue = !string.IsNullOrEmpty(question.AnswerText);
+                                        var canDisable = hasValue &&
+                                        !ViewData.ModelState.ContainsKey($"Questions[{i}].AnswerText");
+
+                                        <select name="Questions[@i].AnswerText"
+                                                class="form-control"
+                                                data-val="true"
+                                                @if (question.IsRequired)
+                                                {
+                                    <text> data-val-required="Please select an option" </text>
+                            }
+                            @if (canDisable)
+                            {
+                                    <text> disabled="disabled" </text>
+                            }
+                >
+
+                        <option value="">-- Select --</option>
+
+                        @foreach (var opt in question.Options)
+                        {
+                                if (opt.Value == question.AnswerText)
+                                {
+                                        <option value="@opt.Value" selected="selected">@opt.Text</option>
+                                }
+                                else
+                                {
+                                        <option value="@opt.Value">@opt.Text</option>
+                                }
+                        }
+                    </select>
+
+                                        @if (canDisable)
+                                        {
+                                            <input type="hidden"
+                                                   name="Questions[@i].AnswerText"
+                                                   value="@question.AnswerText" />
+                                        }
+
+                                        <span class="text-danger"
+                                              data-valmsg-for="Questions[@i].AnswerText"
+                                              data-valmsg-replace="true"></span>
+                                    }
+                                    break;
+
+
+
+
+                                case "RadioList":
+                                    <div class="form-group">
+                                        @foreach (var opt in question.Options)
+                                        {
+                                            <div class="form-check">
+                                                <input class="form-check-input"type="radio"name="Questions[@i].AnswerText"value="@opt.Value"
+                                                       @(opt.Value == question.AnswerText ? "checked" : "")
+                                                       @(question.IsRequired? "data-val='true' data-val-required='Please select an option'": "")
+                                                       @(Model.HasAlreadySubmitted && !Model.AllowEditingAfterSubmit ? "disabled" : "") />
+                                                <label class="form-check-label">@opt.Text</label>
+                                            </div>
+                                        }
+                                        @if (question.IsRequired)
+                                        {
+                                            <input type="hidden"name="Questions[@i].AnswerText"data-val="true"data-val-required="Please select an option" />
+                                        }
+                                        <span class="text-danger"data-valmsg-for="Questions[@i].AnswerText"data-valmsg-replace="true"></span>
+                                    </div>
+                                break;
+                                case "Checkboxes":
+                                    {
+                                        <div class="form-group checkbox-question"
+                                             data-question-index="@i">
+
+                                            @foreach (var opt in question.Options)
+                                            {
+                                                var isRequired = question.RequiredOptionValues.Contains(opt.Value);
+
+                                                <div class="form-check">
+                                                    <input class="form-check-input checkbox-option"
+                                                           type="checkbox"
+                                                           name="Questions[@i].AnswerText"
+                                                           value="@opt.Value"
+                                                           data-required="@isRequired.ToString().ToLower()"
+                                                           @(opt.Selected ? "checked" : "") />
+
+                                                    <label class="form-check-label checkbox-label">
+                                                        <span>@opt.Text</span>
+
+                                                        @if (isRequired)
+                                                        {
+                                                            <span class="required-star">*</span>
+                                                        }
+                                                    </label>
+                                                </div>
+                                            }
+
+                                            <span class="text-danger validation-message"
+                                                  data-valmsg-for="Questions[@i].AnswerText"></span>
+                                        </div>
+                                        break;
+                                    }
+    
+
+
+
+
+
+
+                                case "Datepicker":
+                                    <div class="form-group">
+                                        <input type="date"name="Questions[@i].AnswerText"class="form-control"value="@question.AnswerText"
+                                               @(question.IsRequired? "data-val='true' data-val-required=\"Please select a date\" required": "")
+                                               @(Model.HasAlreadySubmitted && !Model.AllowEditingAfterSubmit ? "readonly disabled" : "") />
+                                             <span class="text-danger"data-valmsg-for="@( $"Questions[{i}].AnswerText")"data-valmsg-replace="true"></span>
+                                    </div>
+                                break;
+                                case "FileUpload":
+                                    <div class="form-group">
+                                        @* Show existing file *@
+                                        @if (!string.IsNullOrEmpty(question.FileName))
+                                        {
+                                            <div class="mb-2 p-2" style="background-color:#f5f5f5;border-radius:6px;">
+                                                @question.FileName
+                                            </div>
+                                            <input type="hidden" name="Questions[@i].FileName" value="@question.FileName" />
+                                            <input type="hidden" name="Questions[@i].FilePath" value="@question.ExistingFilePath" />
+                                        }
+                                        @if (!Model.HasAlreadySubmitted || Model.AllowEditingAfterSubmit)
+                                        {
+                                            var maxFileSizeKb = question.MaximumFileSizeKb;
+                                            var allowedExtensions = question.AllowedFileExtensions;
+                                            var isRequired = question.IsRequired && string.IsNullOrEmpty(question.FileName);
+                                            <input type="file"name="Questions[@i].UploadedFile"class="form-control file-input"data-max-size="@maxFileSizeKb"data-allowed-ext="@allowedExtensions"
+                                                   @(isRequired? "data-val='true' data-val-required='Please upload a file' required": "") />
+                                            <button type="button"class="btn btn-sm btn-outline-secondary ms-2 clear-file-btn">
+                                                <i class="fa fa-times me-1"></i> Clear file
+                                            </button>
+                                            <span class="text-danger"data-valmsg-for="Questions[@i].UploadedFile"data-valmsg-replace="true"></span>
+                                        }
+                                    </div>
+                                break;
+                                case "ReadonlyCheckboxes":
+                                    foreach (var opt in question.Options)
+                                    {
+                                        var isChecked = question.AnswerText?.Split(',').Contains(opt.Value) == true;
+                                        <div class="form-check">
+                                            <input class="form-check-input"type="checkbox"value="@opt.Value"checked="@isChecked"disabled />
+                                            <label class="form-check-label">@opt.Text</label>
+                                        </div>
+                                    }
+                                    @Html.Hidden($"Questions[{i}].AnswerText", question.AnswerText)
+                                break;
+                                default:
+                                    <input name="Questions[@i].AnswerText" class="form-control" />
+                                    <div class="text-danger small">[Unknown ControlType: @question.ControlType]</div>
+                                break;
+                            }
+                        </div>
+                    </div>
+                }
+                @if (!Model.HasAlreadySubmitted || Model.AllowEditingAfterSubmit)
+                {
+                    <div style="margin-top: 30px; text-align: center;">
+                        <button type="submit" class="btn btn-primary">SUBMIT</button>
+                    </div>
+                }
+                <div class="container mt-4">
+                    <h4 class="mb-3" style="padding-bottom:12px;">Comments</h4>
+                    <div class="card shadow-sm p-3" style="background-color: #f8f9fa;">
+                        <div id="comments-container-@Model.Id">
+                            @await Html.PartialAsync("~/Themes/DefaultClean/Views/Extension/UpdateForm/_CommentsPartial.cshtml",
+                            Model.Comments, new ViewDataDictionary(ViewData) { { "CanReply", true }, { "SubmissionId", Model.Id } })
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+        document.querySelector('#updateForm').addEventListener('submit', e => {
+      console.log('Form is being submitted');
+    });
+</script>
+<script>
+   // Submit Reply
+    $(document).on('click', '.submit-reply-btn', function () {
+        var parentId = $(this).data('parent-id');
+        var submissionId = $(this).data('submission-id'); // pass this in button HTML
+        var replyText = $('#reply-text-' + parentId).val().trim();
+
+        if (!replyText) {
+            alert('Reply cannot be empty.');
+            return;
+        }
+
+        $.post('@Url.Action("AddComment", "UpdateSubmission")', {
+            UpdateSubmissionId: submissionId,
+            CommentText: replyText,
+            ParentCommentId: parentId
+        }, function (html) {
+            $('#comments-container-' + submissionId).html(html);
+        }).fail(function () { alert('Error adding reply'); });
+    });
+</script>
+<script>
+    document.addEventListener("change", function (e) {
+        if (e.target.matches(".file-input")) {
+            const fileInput = e.target;
+            const maxSizeKb = parseInt(fileInput.dataset.maxSize || "0");
+            const rawExt = fileInput.dataset.allowedExt || "";
+            const allowedExt = rawExt
+                .split(",")
+                .map(x => x.trim().toLowerCase())
+                .filter(x => x);
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                // ? Size check
+                if (maxSizeKb > 0 && file.size > maxSizeKb * 1024) {
+                    alert(`File size must not exceed ${maxSizeKb} KB`);
+                    fileInput.value = "";
+                    return;
+                }
+                // ? Extension check
+                    // Extension check
+                if (allowedExt.length > 0) {
+                        const fileExt = file.name.split(".").pop().toLowerCase();
+                    if (!allowedExt.includes(fileExt)) {
+                        alert(`Invalid file type.\nYou can only upload: ${allowedExt.join(", ")}`);
+                        fileInput.value = "";
+                        return;
+                    }
+                }
+            }
+        }
+    });
+        document.addEventListener("click", function (e) {
+        if (e.target.matches(".clear-file-btn")) {
+            const container = e.target.closest(".form-group");
+            const fileInput = container.querySelector(".file-input");
+            fileInput.value = "";   // Clear file
+            const existingFileDiv = container.querySelector(".mb-2");
+        if (existingFileDiv) existingFileDiv.innerHTML = "No file chosen";
+        }
+    });
+</script>
+<script>
+    (function () {
+
+        const form = document.getElementById("updateForm");
+        if (!form) return;
+
+        form.addEventListener("submit", function (e) {
+
+            let isFormValid = true;
+
+            // 1? Let MVC validation run first
+            if (window.jQuery && !$(form).valid()) {
+                isFormValid = false;
+            }
+
+            // 2? Checkbox validation
+            form.querySelectorAll(".checkbox-question").forEach(function (group) {
+
+                const checkboxes = group.querySelectorAll(".checkbox-option");
+                const validationSpan = group.querySelector(".validation-message");
+
+                if (!checkboxes.length || !validationSpan)
+                    return;
+
+                const requiredCheckboxes = Array.from(checkboxes)
+                    .filter(cb => cb.dataset.required === "true");
+
+                // No required options
+                if (requiredCheckboxes.length === 0) {
+                    validationSpan.innerHTML = "";
+                    return;
+                }
+
+                const selectedRequired = requiredCheckboxes.filter(cb => cb.checked);
+
+                //  must select ALL required checkboxes
+                if (selectedRequired.length !== requiredCheckboxes.length) {
+                    validationSpan.innerHTML =
+                        '<span class="checkbox-error">Please select all required options.</span>';
+                    isFormValid = false;
+                } else {
+                    validationSpan.innerHTML = "";
+                }
+            });
+
+            if (!isFormValid) {
+                e.preventDefault();
+                return false;
+            }
+
+            return true;
+        });
+
+        form.querySelectorAll(".checkbox-question").forEach(function (group) {
+
+            group.addEventListener("change", function () {
+
+                const checkboxes = group.querySelectorAll(".checkbox-option");
+                const validationSpan = group.querySelector(".validation-message");
+
+                if (!checkboxes.length || !validationSpan)
+                    return;
+
+                const requiredCheckboxes = Array.from(checkboxes)
+                    .filter(cb => cb.dataset.required === "true");
+
+                if (requiredCheckboxes.length === 0) {
+                    validationSpan.innerHTML = "";
+                    return;
+                }
+
+                const selectedRequired = requiredCheckboxes.filter(cb => cb.checked);
+
+                // FIX HERE ALSO
+                if (selectedRequired.length === requiredCheckboxes.length) {
+                    validationSpan.innerHTML = "";
+                }
+            });
+        });
+
+    })();
+</script>
+
+
+
+
+
+

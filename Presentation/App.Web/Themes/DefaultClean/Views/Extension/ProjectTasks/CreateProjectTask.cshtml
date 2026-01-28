@@ -1,0 +1,63 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.ProjectTasks
+@model ProjectTaskModel
+
+@{
+    Layout = "_Root.Head";
+    NopHtml.AddTitleParts(T("PageTitle.Leave").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-career-result-page");
+}
+
+<div class="page registration-page">
+    <div class="page-body">
+        <input asp-for="Id" type="hidden" />
+
+        <div>
+            <div class="form-container">
+                <div class="form-fields">
+                    @* <div class="inputs-popup">
+                        <label asp-for="ProjectId" asp-postfix=":" class="required-label"></label>
+                        <nop-select asp-for="ProjectId" class="form-control input-field" asp-items="Model.Projects" />
+                        <span asp-validation-for="ProjectId"></span>
+                    </div> *@
+                    <div class="inputs-popup">
+                      
+                            <label asp-for="ProjectId" asp-postfix=":" class="required-label"></label>
+
+
+                        <select id="ProjectId" name="ProjectId" class="form-control input-field" style="border: none; box-shadow: none; height:35px; width:100%; "></select>
+                            <span style="color:red; " id="dateError"></span>
+                        
+                    </div>
+                    <div class="inputs-popup">
+                        <label asp-for="TaskTitle" asp-postfix=":" class="required-label"></label>
+                        <input asp-for="TaskTitle" class="form-control input-field" />
+                        <span asp-validation-for="TaskTitle"></span>
+                    </div>
+                    <div class="inputs-popup">
+                        <label asp-for="Description" asp-postfix=":" ></label>
+                        <nop-textarea asp-for="Description" class="form-control input-field" />
+                        <span asp-validation-for="Description"></span>
+                    </div>
+                    <div class="inputs-popup">
+                        <label asp-for="EstimationTimeHHMM" asp-postfix=":" class="required-label"></label>
+                        <input asp-for="EstimationTimeHHMM" class="form-control input-field" placeholder="HH:MM" />
+                        <span asp-validation-for="EstimationTimeHHMM"></span>
+                    </div>
+
+                </div>
+                <div class=""><p class="validation-error-message" style="color:red;"></p></div>
+            </div>
+            </div>
+
+            <div class="text-center col-12 button1">
+                <div class="buttons">
+                    <button type="button" id="save-info-button" name="save-info-button" class="save-btn-popup">@T("Common.Save")</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

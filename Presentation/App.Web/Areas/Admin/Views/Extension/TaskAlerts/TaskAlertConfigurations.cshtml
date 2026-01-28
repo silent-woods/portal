@@ -1,0 +1,160 @@
+﻿@model TaskAlertConfigurationSearchModel
+
+@{
+    ViewBag.PageTitle = T("Admin.TaskAlert.TaskAlertConfiguration.List").Text;
+    NopHtml.SetActiveMenuItemSystemName("Alert Configuration");
+
+    const string hideSearchBlockAttributeName = "TaskAlertConfigurationListPage.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.TaskAlert.TaskAlertConfiguration.List")
+    </h1>
+    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAlertConfiguration, PermissionAction.Add))
+    {
+        <div class="float-right">
+            <a asp-action="TaskAlertConfigurationCreate" asp-controller="TaskAlert" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </a>
+        </div>
+    }
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchTaskAlertTypeId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchTaskAlertTypeId" asp-items="Model.AvailableTaskAlertTypes" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-task-alert-configurations" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "task-alert-configurations-grid",
+                                UrlRead = new DataUrl("TaskAlertConfigurations", "TaskAlert", null),
+                                UrlDelete = new DataUrl("TaskAlertConfigurationDelete", "TaskAlert", null),
+                                SearchButtonId = "search-task-alert-configurations",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                    new FilterParameter(nameof(Model.SearchTaskAlertTypeId))
+                                },
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.TaskAlertType))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertConfiguration.Fields.TaskAlertTypeId").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.Percentage))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertConfiguration.Fields.Percentage").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.EnableComment))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertConfiguration.Fields.EnableComment").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.EnableReason))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertConfiguration.Fields.EnableReason").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.EnableDeveloperMail))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertConfiguration.Fields.EnableDeveloperMail").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.EnableCoordinatorMail))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertConfiguration.Fields.EnableCoordinatorMail").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.EnableLeaderMail))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertConfiguration.Fields.EnableLeaderMail").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.EnableManagerMail))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertConfiguration.Fields.EnableManagerMail").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.IsActive))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertConfiguration.Fields.IsActive").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.DisplayOrder))
+                            {
+                                Title = T("Admin.TaskAlert.TaskAlertConfiguration.Fields.DisplayOrder").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll
+                            });
+                            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAlertConfiguration, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "100",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonEdit(new DataUrl("~/Admin/TaskAlert/TaskAlertConfigurationEdit/"))
+                                });
+                            }
+                            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAlertConfiguration, PermissionAction.Delete))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(TaskAlertConfigurationModel.Id))
+                                {
+                                    Title = T("Admin.Common.Delete").Text,
+                                    Width = "100",
+                                    Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                                    ClassName = NopColumnClassDefaults.Button
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

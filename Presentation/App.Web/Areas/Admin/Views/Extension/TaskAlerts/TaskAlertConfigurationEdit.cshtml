@@ -1,0 +1,32 @@
+﻿@model TaskAlertConfigurationModel
+
+@{
+    ViewBag.PageTitle = T("Admin.TaskAlert.TaskAlertConfiguration.Edit").Text;
+    NopHtml.SetActiveMenuItemSystemName("Alert Configuration");
+}
+
+<form asp-controller="TaskAlert" asp-action="TaskAlertConfigurationEdit" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.TaskAlert.TaskAlertConfiguration.Edit")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="TaskAlertConfigurations" asp-controller="TaskAlert">@T("Admin.TaskAlert.TaskAlertConfiguration.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAlertConfiguration, PermissionAction.Edit))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/TaskAlerts/_CreateOrUpdateTaskAlertConfiguration.cshtml", Model)
+</form>

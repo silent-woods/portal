@@ -1,0 +1,33 @@
+﻿@model InvoiceModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Add").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoices");
+}
+
+<form asp-controller="AccountManagement" asp-action="InvoiceCreate" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.Add")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="Invoices" asp-controller="AccountManagement">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageInvoices, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("_CreateOrUpdateInvoice.cshtml", Model)
+</form>

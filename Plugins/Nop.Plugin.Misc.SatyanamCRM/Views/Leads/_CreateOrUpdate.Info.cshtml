@@ -1,0 +1,332 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Leads
+@model LeadModel
+<input type="hidden" asp-for="AddressId" />
+<input type="hidden" asp-for="TagsId" />
+<input type="hidden" asp-for="CreatedOnUtc" />
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CustomerId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="CustomerId" asp-items="Model.Customers" />
+            <span asp-validation-for="CustomerId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="FirstName" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="FirstName" asp-required="true" />
+            <span asp-validation-for="FirstName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="LastName" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="LastName" asp-required="true" />
+            <span asp-validation-for="LastName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CompanyName" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="CompanyName" />
+            <span asp-validation-for="CompanyName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="TitleId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="TitleId" asp-items="Model.Titles" />
+            <span asp-validation-for="TitleId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Phone" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Phone" />
+            <span asp-validation-for="Phone"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Email" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Email" />
+            <span asp-validation-for="Email"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EmailStatusId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="EmailStatusId" asp-items="Model.EmailStatus" />
+            <span asp-validation-for="EmailStatusId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="WebsiteUrl" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="WebsiteUrl" />
+            <span asp-validation-for="WebsiteUrl"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IndustryId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="IndustryId" asp-items="Model.Industrys" />
+            <span asp-validation-for="IndustryId"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="LeadSourceId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="LeadSourceId" asp-items="Model.LeadSources" />
+            <span asp-validation-for="LeadSourceId"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="LeadStatusId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="LeadStatusId" asp-items="Model.LeadStatus" />
+            <span asp-validation-for="LeadStatusId"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="NoofEmployee" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="NoofEmployee" />
+            <span asp-validation-for="NoofEmployee"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="AnnualRevenue" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="AnnualRevenue" />
+            <span asp-validation-for="AnnualRevenue"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CategoryId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="CategoryId" asp-items="Model.Categorys" />
+            <span asp-validation-for="CategoryId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SecondaryEmail" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="SecondaryEmail" />
+            <span asp-validation-for="SecondaryEmail"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SkypeId" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="SkypeId" />
+            <span asp-validation-for="SkypeId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Twitter" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Twitter" />
+            <span asp-validation-for="Twitter"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="LinkedinUrl" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="LinkedinUrl" />
+            <span asp-validation-for="LinkedinUrl"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Facebookurl" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Facebookurl" />
+            <span asp-validation-for="Facebookurl"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CountryId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="CountryId" asp-items="Model.Countrys" />
+            <span asp-validation-for="CountryId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="StateId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="StateId" asp-items="Model.States" />
+            <span asp-validation-for="StateId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="City" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="City" />
+            <span asp-validation-for="City"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Address1" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Address1" />
+            <span asp-validation-for="Address1"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Address2" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Address2" />
+            <span asp-validation-for="Address2"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ZipCode" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="ZipCode" />
+            <span asp-validation-for="ZipCode"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SelectedTagIds" />
+        </div>
+        <div class="col-md-4">
+            <select id="tagsDropdown" name="SelectedTagIds" multiple="multiple">
+                @foreach (var tag in Model.Tags)
+                {
+                    <option value="@tag.Value" selected="@(Model.SelectedTagIds.Contains(int.Parse(tag.Value)) ? "selected" : null)">
+                        @tag.Text
+                    </option>
+                }
+            </select>
+            <span asp-validation-for="SelectedTagIds"></span>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            var tagsDropdown = $("#tagsDropdown").kendoMultiSelect({
+                placeholder: "Select Tags...",
+                autoClose: false,
+                filter: "contains"
+            }).data("kendoMultiSelect");
+
+        @if (Model.Tags.Count == 0)
+        {
+            <text>
+                    tagsDropdown.setOptions({
+                        enable: false,
+                        placeholder: "No tags available"
+                    });
+                tagsDropdown._placeholder();
+                tagsDropdown._enable();
+            </text>
+        }
+                            });
+    </script>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EmailOptOut" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="EmailOptOut" />
+        </div>
+    </div>
+
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Description" />
+        </div>
+        <div class="col-md-4">
+            <nop-textarea asp-for="Description" asp-required="true" />
+            <span asp-validation-for="Description"></span>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#@Html.IdFor(model => model.CountryId)").change(function () {
+            var selectedItem = $(this).val();
+            var ddlStates = $("#@Html.IdFor(model => model.StateId)");
+
+            var postData = {
+                countryId: selectedItem,
+                addSelectStateItem: "true"
+            };
+
+            $.ajax({
+                cache: false,
+                type: "GET",
+                url: "@(Url.Action("GetStatesByCountryId", "Country"))",
+                data: postData,
+                success: function (data, textStatus, jqXHR) {
+                    ddlStates.html('');
+                    $.each(data, function (id, option) {
+                        ddlStates.append($('<option></option>').val(option.id).html(option.name));
+                    });
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    $("#statesAlert").click();
+                }
+            });
+        });
+    });
+</script>

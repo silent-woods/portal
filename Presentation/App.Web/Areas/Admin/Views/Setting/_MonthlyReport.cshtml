@@ -1,0 +1,24 @@
+﻿@model MonthlyReportSettingsModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="AllowedVariations_OverrideForStore" asp-input="AllowedVariations" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="AllowedVariations" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="AllowedVariations" />
+            <span asp-validation-for="ActiveStoreScopeConfiguration"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="AllowedQABillableHours_OverrideForStore" asp-input="AllowedQABillableHours" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="AllowedQABillableHours" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="AllowedQABillableHours" />
+            <span asp-validation-for="ActiveStoreScopeConfiguration"></span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Satyanam Info Solutions",
+  "FriendlyName": "Tracker API",
+  "SystemName": "Misc.TrackerAPI",
+  "Version": "1.0.0",
+  "SupportedVersions": [ "4.60" ],
+  "Author": "Satyanam Info Solutions",
+  "DisplayOrder": 1,
+  "FileName": "Satyanam.Plugin.Misc.TrackerAPI.dll",
+  "Description": "This plugin allows you to call this plugin API's in a tracker level."
+}

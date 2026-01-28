@@ -1,0 +1,298 @@
+@model LeaveManagementSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.LeaveManagement").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("LeaveManagement");
+
+    const string hideSearchBlockAttributeName = "LeaveManagement.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.LeaveManagementRequest")
+    </h1>
+    <div class="float-right">
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageLeaveManagement, PermissionAction.Add))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </a>
+            <button type="button" id="approve-selected" class="btn btn-success">
+                <i class="fas fa-check-square"></i>
+                @T("Admin.Common.ApproveSelected")
+            </button>
+        }
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageLeaveManagement, PermissionAction.Delete))
+        {
+            <button type="button" id="delete-selected" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete.Selected")
+            </button>
+            <nop-action-confirmation asp-button-id="delete-selected" />
+        }
+    </div>
+
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="EmployeeName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="EmployeeName" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchLeaveTypeId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchLeaveTypeId" asp-items="Model.AvailableLeaveType" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="StatusId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="StatusId" asp-items="Model.AvailableStatus" />
+                                        </div>
+                                    </div>
+                                </div>
+                              
+                               
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-sm-4">
+                                            <nop-label asp-for="SearchPeriodId" />
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <nop-select asp-for="SearchPeriodId" asp-items="Model.PeriodList" />
+                                            <span asp-validation-for="SearchPeriodId"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row" style="display:none;" id="from-container">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="From" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="From" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row" style="display:none;" id="to-container">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="To" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="To" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-brands" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <script>
+                    $(document).ready(function () {
+                        $('#SearchPeriodId').on('change', function () {
+                        var periodId = $(this).val();
+
+                        $.ajax({
+                          url: "@(Url.Action("GetPeriodDateRange", "Reports"))",
+                            type: 'GET',
+                            data: { periodId: periodId },
+                            success: function (data) {
+                                if (data.from && data.to) {
+
+                                    // Not custom, auto-fill and hide custom fields
+                                    $('#From').val(data.from);
+                                    $('#To').val(data.to);
+                                    $('#from-container').hide();
+                                    $('#to-container').hide();
+                                 
+                                } else {
+                                    // Custom selected
+                                    $('#From').val('');
+                                    $('#To').val('');
+                                    $('#from-container').show();
+                                    $('#to-container').show();
+                       
+                                }
+                            }
+                        });
+                    });
+                     $('#SearchPeriodId').trigger('change');
+                    });
+                </script>
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "leavemanagement-grid",
+                                UrlRead = new DataUrl("List", "LeaveManagement", null),
+                                SearchButtonId = "search-brands",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                    new FilterParameter(nameof(Model.EmployeeName)),
+                                    new FilterParameter(nameof(Model.From), typeof(DateTime?)),
+                                    new FilterParameter(nameof(Model.To), typeof(DateTime?)),
+                                    new FilterParameter(nameof(Model.SearchLeaveTypeId)),
+                                    new FilterParameter(nameof(Model.StatusId)),
+                                },
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveManagementModel.Id))
+                            {
+                                IsMasterCheckBox = true,
+                                Render = new RenderCheckBox("checkbox_leavemanagement"),
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "30"
+                            });
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveManagementModel.Id))
+                            {
+                                Title = T("Admin.Extension.LeaveManagement.Fields.LeaveId").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveManagementModel.EmployeeName))
+                            {
+                                Title = T("Admin.Extension.LeaveManagement.Fields.EmployeeName").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveManagementModel.DateFrom))
+                            {
+                                Title = T("Admin.Extension.LeaveManagement.Fields.From").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveManagementModel.DateTo))
+                            {
+                                Title = T("Admin.Extension.LeaveManagement.Fields.To").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveManagementModel.LeaveType))
+                            {
+                                Title = T("Admin.Extension.LeaveManagement.Fields.LeaveType").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveManagementModel.NoOfDays))
+                            {
+                                Title = T("Admin.Extension.LeaveManagement.Fields.NoOfDays").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveManagementModel.ReasonForLeave))
+                            {
+                                Title = T("Admin.Extension.LeaveManagement.Fields.ReasonForLeave").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveManagementModel.Status))
+                            {
+                                Title = T("Admin.Extension.LeaveManagement.Fields.Status").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveManagementModel.CreatedOnUTC))
+                            {
+                                Title = T("Admin.Extension.LeaveManagement.Fields.CreatedOnUTC").Text,
+                                Render = new RenderDate()
+                            });
+                            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageLeaveManagement, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeaveManagementModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "80",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonEdit(new DataUrl("Edit"))
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: selectedIds
+            };
+            addAntiForgeryToken(postData);
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "LeaveManagement"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204) {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#leavemanagement-grid');
+
+                }
+            });
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+</section>
+
+
+ <script>
+
+    $('#approve-selected').click(function (e) {
+        e.preventDefault();
+
+        var postData = {
+            selectedIds: selectedIds
+        };
+        addAntiForgeryToken(postData);
+
+        $.ajax({
+            cache: false,
+            type: "POST",
+            url: "@(Url.Action("ApproveSelected", "LeaveManagement"))",
+            data: postData,
+            traditional: true,
+            error: function (jqXHR, textStatus, errorThrown) {
+                showAlert('approveSelectedFailed', errorThrown);
+            },
+            complete: function (jqXHR, textStatus) {
+                if (jqXHR.status === 204) {
+                    showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                    return;
+                }
+                updateTable('#leavemanagement-grid');
+            }
+        });
+        return false;
+    });
+
+
+                        </script>

@@ -1,0 +1,21 @@
+﻿@using App.Web.Areas.Admin.Models.JobPostings;
+@model JobPostingModel
+
+@{
+    var customer = await workContext.GetCurrentCustomerAsync();
+    const string hideInfoBlockAttributeName = "JobPostingDetails.HideInfoBlock";
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+
+<input asp-for="Id" type="hidden" />
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="timeSheet-item-cards">
+                <nop-card asp-name="JobPosting-item-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.JobPosting.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/JobPosting/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+           </nop-cards>
+        </div>
+    </div>
+</section>

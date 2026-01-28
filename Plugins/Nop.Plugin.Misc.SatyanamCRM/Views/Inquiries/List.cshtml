@@ -1,0 +1,232 @@
+﻿@using App.Services.Common
+@using App.Web.Framework.Models.DataTables
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Inquiries
+@inject IGenericAttributeService GenericAttributeService
+@inject IWorkContext WorkContext
+
+@model InquirySearchModel
+
+@{
+    Layout = "_AdminLayout";
+}
+
+@{
+    // Page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.Inquiries").Text;
+
+    // Active menu item
+    NopHtml.SetActiveMenuItemSystemName("Inquiries");
+
+    const string hideSearchBlockAttributeName = "inquiryListPage.HideSearchBlock";
+    var hideSearchBlock = await GenericAttributeService.GetAttributeAsync<bool>(
+        await WorkContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Plugin.SatyanamCRM.Inquiries")
+    </h1>
+    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageInquiries, PermissionAction.Delete))
+    {
+        <div class="float-right">
+            <button type="button" id="delete-selected" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete.Selected")
+            </button>
+            <nop-action-confirmation asp-button-id="delete-selected" />
+        </div>
+    }
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchEmail" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchEmail" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchContactNo" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchContactNo" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchSourceId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchSourceId" asp-items="Model.AvailableSources" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchCompany" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchCompany" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-inquiries" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "inquiries-grid",
+                                UrlRead = new DataUrl("List", "Inquiry", null),
+                                SearchButtonId = "search-inquiries",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                    new FilterParameter(nameof(Model.SearchName)),
+                                    new FilterParameter(nameof(Model.SearchEmail)),
+                                    new FilterParameter(nameof(Model.SearchSourceId)),
+                                    new FilterParameter(nameof(Model.SearchContactNo)),
+                                    new FilterParameter(nameof(Model.SearchCompany))
+                                },
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.Id))
+                            {
+                                IsMasterCheckBox = true,
+                                Render = new RenderCheckBox("checkbox_inquiries"),
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "50"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.FirstName))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.FirstName").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.LastName))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.LastName").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.Email))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.Email").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.ContactNo))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.ContactNo").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.Company))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.Company").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.Source))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.Source").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.WantToHire))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.WantToHire").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.ProjectType))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.ProjectType").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.EngagementDuration))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.EngagementDuration").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.TimeCommitment))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.TimeCommitment").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.Budget))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.Budget").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.Describe))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.Describe").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(InquiryModel.CreatedOnUtc))
+                            {
+                                Title = T("Plugin.SatyanamCRM.Inquiries.Fields.CreatedOnUtc").Text
+                            });
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = { selectedIds: selectedIds };
+            addAntiForgeryToken(postData);
+
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "Inquiry"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204) {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#inquiries-grid');
+                }
+            });
+
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+</section>

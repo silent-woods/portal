@@ -1,0 +1,41 @@
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Contacts
+@model ContactsDealsModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.Deals.EditDealsDetails").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Deals");
+}
+
+<form asp-controller="Contacts" asp-action="ContactsDealsEdit" method="post">
+    <input asp-for="Id" type="hidden" />
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Plugin.SatyanamCRM.Deals.EditDealsDetails")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-controller="Contacts" asp-action="Edit" asp-route-id="@Model.ContactId">@T("Admin.Contacts.Deals.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageContactDeals, PermissionAction.Edit))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Contacts/_ContactsDealsMapping.cshtml", Model)
+</form>
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="Address-delete" />
+
+

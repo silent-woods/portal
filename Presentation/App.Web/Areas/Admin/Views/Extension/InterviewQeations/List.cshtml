@@ -1,0 +1,174 @@
+@using App.Web.Areas.Admin.InterviewQeations.Models;
+@model App.Web.Areas.Admin.InterviewQeations.Models.RecruitementSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.InterviewQuestions").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("InterviewQuestions");
+
+    const string hideSearchBlockAttributeName = "TimeSheet.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.InterviewQuestions")
+    </h1>
+    <div class="float-right">
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageQuestion, PermissionAction.Add))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </a>
+        }
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageQuestion, PermissionAction.Delete))
+        {
+            <button type="button" id="delete-selected" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete.Selected")
+            </button>
+            <nop-action-confirmation asp-button-id="delete-selected" />
+        }
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "Recruitement-rate-grid",
+                                UrlRead = new DataUrl("List", "InterviewQeations", null),
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                    new FilterParameter(nameof(Model.Category))
+                                },
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.Id))
+                            {
+                                IsMasterCheckBox = true,
+                                Render = new RenderCheckBox("checkbox_interview_questions"),
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "30"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.Question))
+                            {
+                                Title = T("Admin.Recruitement.Fields.Question").Text,
+                                Width = "200"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.Question_answers))
+                            {
+                                Title = T("Admin.Recruitements.Fields.Question_answers").Text,
+                                Width = "200"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.Category))
+                            {
+                                Title = T("Admin.Recruitement.Fields.Category").Text,
+                                Width = "200"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.questiontype))
+                            {
+                                Title = T("Admin.Recruitements.Fields.QuestionType").Text,
+                                Width = "200"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.DownloadId))
+                            {
+                                Title = T("Admin.Recruitements.Fields.Documents").Text,
+                                Width = "200",
+                                ClassName = NopColumnClassDefaults.Button,
+                                Render = new RenderCustom("renderColumnDownloadId")
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.QuestionLevel))
+                            {
+                                Title = T("Admin.Recruitements.Fields.QuestionLevel").Text,
+                                Width = "200"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.DisplayOrder))
+                            {
+                                Title = T("Admin.Recruitements.Fields.DisplayOrder").Text,
+                                Width = "200"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.Published))
+                            {
+                                Title = T("Admin.Recruitements.Fields.Published").Text,
+                                Width = "200",
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.CreatedOn))
+                            {
+                                Title = T("Admin.Recruitement.Fields.CreatedOn").Text,
+                                Width = "200",
+                                Render = new RenderDate()
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.UpdatedOnUtc))
+                            {
+                                Title = T("Admin.Recruitement.Fields.UpdatedOn").Text,
+                                Width = "200",
+                                Render = new RenderDate()
+                            });
+                            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageQuestion, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(RecruitementModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "80",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonEdit(new DataUrl("Edit"))
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+
+                        <script>
+                            $(document).ready(function () {
+                                $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+                                    var postData = {
+                                        selectedIds: selectedIds
+                                    };
+                                    addAntiForgeryToken(postData);
+                                    $.ajax({
+                                        cache: false,
+                                        type: "POST",
+                                        url: "@(Url.Action("DeleteSelected", "InterviewQeations"))",
+                                        data: postData,
+                                        error: function (jqXHR, textStatus, errorThrown) {
+                                            showAlert('deleteSelectedFailed', errorThrown);
+                                        },
+                                        complete: function (jqXHR, textStatus) {
+                                            if (jqXHR.status === 204) {
+                                                showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                                                return;
+                                            }
+                                            updateTable('#Recruitement-rate-grid');
+                                        }
+                                    });
+                                    $('#delete-selected-action-confirmation').modal('toggle');
+                                    return false;
+                                });
+                            });
+
+                        </script>
+                        <script>
+                                function renderColumnDownloadId(data, type, row, meta) {
+                                    return (row.DownloadId > 0) ? '<a class="btn btn-default" href="@Url.Content("~/Admin/Download/DownloadFile")?downloadGuid=' + row.DownloadGuid + '"><i class="fas fa-download"></i>@T("Admin.Orders.OrderNotes.Fields.Download.Link").Text</a>' : '@T("Admin.Orders.OrderNotes.Fields.Download.Link.No").Text';
+                                }
+                        </script>
+                        <nop-alert asp-alert-id="deleteSelectedFailed" />
+                        <nop-alert asp-alert-id="nothingSelectedAlert" />
+
+                        <div class="card-footer">
+                            <button type="submit" name="save" id="btnRefresh" class="btn btn-default" style="display: none"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

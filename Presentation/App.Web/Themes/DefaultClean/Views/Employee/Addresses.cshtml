@@ -1,0 +1,92 @@
+﻿@using App.Core
+@using App.Web.Models.Employee
+@model List<EmployeeAddressModel>
+@inject App.Core.IWebHelper webHelper
+@{
+    Layout = "_ColumnsTwo";
+
+    //title
+    NopHtml.AddTitleParts(T("PageTitle.Account").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-customer-info-page");
+}
+
+@section left
+{
+    @await Component.InvokeAsync(typeof(CustomerNavigationViewComponent), new { selectedTabId = CustomerNavigationEnum.EmployeeAddresses })
+}
+
+<div class="page account-page address-list-page">
+    <div class="page-title">
+        <h1>@T("Account.MyAccount") - @T("Account.EmployeeAddresses")</h1>
+    </div>
+    <div class="page-body">
+        @if (Model.Count > 0)
+        {
+            <div class="address-list">
+                @for (var i = 0; i < Model.Count; i++)
+                {
+                    var address = Model[i];
+                    <div class="section address-item">
+                        <div class="title">
+                            <strong>@address.FirstName @address.LastName</strong>
+                        </div>
+                        <ul class="info">
+                            <li class="email">
+                                <label>@T("Address.Fields.Email"):</label>
+                                @address.Email
+                            </li>
+                            <li class="phone">
+                                <label>@T("Address.Fields.PhoneNumber"):</label>
+                                @address.PhoneNumber
+                            </li>
+                            <li class="fax">
+                                <label>@T("Address.Fields.FaxNumber"):</label>
+                                @address.FaxNumber
+                            </li>
+                            <li class="company">@address.Company</li>
+                            <li class="address1">
+                                @address.Address1
+                            </li>
+                            <li class="address2">
+                                @address.Address2
+                            </li>
+                            @{
+                                var addressLine = string.Empty;
+                                addressLine += address.City;
+                                if (address.City != null)
+                                {
+                                    addressLine += ", ";
+                                }
+                                addressLine += address.County;
+                                if (address.County != null)
+                                {
+                                    addressLine += ", ";
+                                }
+                                addressLine += address.StateProvinceName;
+                                if (address.StateProvinceName != null)
+                                {
+                                    addressLine += ", ";
+                                }
+                                addressLine += address.ZipPostalCode;
+                            }
+                            <li class="city-state-zip">
+                                @addressLine
+                            </li>
+                            <li class="country">
+                                @address.CountryName
+                            </li>
+                        </ul>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="no-data">
+                @T("Account.CustomerAddresses.NoAddresses")
+            </div>
+        }
+    </div>
+</div>

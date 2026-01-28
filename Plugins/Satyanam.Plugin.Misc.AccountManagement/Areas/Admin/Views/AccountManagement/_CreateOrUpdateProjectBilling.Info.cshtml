@@ -1,0 +1,94 @@
+﻿@model ProjectBillingModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="BillingName" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="BillingName" asp-required="true" />
+            <span asp-validation-for="BillingName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ProjectId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="ProjectId" asp-items="Model.AvailableProjects" />
+            <span asp-validation-for="ProjectId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CompanyId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="CompanyId" asp-items="Model.AvailableCompanies" />
+            <span asp-validation-for="CompanyId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="PaymentTermId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="PaymentTermId" asp-items="Model.AvailablePaymentTerms" />
+            <span asp-validation-for="PaymentTermId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="BillingTypeId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="BillingTypeId" asp-items="Model.AvailableBillingTypes" />
+            <span asp-validation-for="BillingTypeId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="BillingRate" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="BillingRate" />
+            <span asp-validation-for="BillingRate"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="PrimaryCurrencyId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="PrimaryCurrencyId" asp-items="Model.AvailableCurrencies" />
+            <span asp-validation-for="PrimaryCurrencyId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="PaymentCurrencyId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="PaymentCurrencyId" asp-items="Model.AvailableCurrencies" />
+            <span asp-validation-for="PaymentCurrencyId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsActive" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="IsActive" />
+            <span asp-validation-for="IsActive"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="DisplayOrder" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="DisplayOrder" />
+            <span asp-validation-for="DisplayOrder"></span>
+        </div>
+    </div>
+</div>

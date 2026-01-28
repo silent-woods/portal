@@ -1,0 +1,60 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.ConnectionRequests
+@model ConnectionRequestModel
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminPopupLayout.cshtml";
+}
+
+@if (ViewBag.RefreshPage != null && (bool)ViewBag.RefreshPage)
+{
+    <script>
+        try {
+            window.opener.document.getElementById('btnRefreshConnectionRequest').click();
+        } catch (e) { console.error('Parent refresh failed', e); }
+        window.close();
+    </script>
+}
+
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Plugin.SatyanamCRM.ConnectionRequest.ChangeStatus")
+    </h1>
+</div>
+
+<form asp-controller="ConnectionRequest" asp-action="ChangeStatus" method="post">
+    <input type="hidden" asp-for="Id" />
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="card-body">
+
+                    <!-- Status Selection -->
+                    <div class="form-group row align-items-center">
+                        <div class="col-md-3">
+                            <nop-label asp-for="StatusId" />
+                        </div>
+                        <div class="col-md-6">
+                            <nop-select asp-for="StatusId" asp-items="Model.Status" />
+                            <span asp-validation-for="StatusId"></span>
+                        </div>
+                    </div>
+                    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+                    {
+                        <!-- Buttons -->
+                        <div class="form-group row">
+                            <div class="col-sm-9 offset-sm-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-check"></i> @T("Admin.Common.Save")
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="window.close();">
+                                    <i class="fas fa-times"></i> @T("Admin.Common.Cancel")
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+</form>

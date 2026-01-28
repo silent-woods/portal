@@ -1,0 +1,85 @@
+﻿@model EmployeeModel
+<input type="hidden" asp-for="Id" />
+<div class="card-body">
+
+    @if (Model.Id > 0)
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "address-grid",
+                        UrlRead = new DataUrl("AddressList", "Employee", new RouteValueDictionary { [nameof(Model.EmpAddressSearchModels.employeeId)] = Model.Id }),
+                        UrlDelete = new DataUrl("AddressDelete", "Employee", new RouteValueDictionary { [nameof(Model.Id)] = Model.EmpAddressModels.FirstOrDefault()?.Id }),
+                        Length = Model.EmpAddressSearchModels.PageSize,
+                        LengthMenu = Model.EmpAddressSearchModels.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.FirstName))
+                    {
+                        Title = T("Admin.Address.Fields.FirstName").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.LastName))
+                    {
+                        Title = T("Admin.Address.Fields.LastName").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.Email))
+                    {
+                        Title = T("Admin.Address.Fields.Email").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.PhoneNumber))
+                    {
+                        Title = T("Admin.Address.Fields.PhoneNumber").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.Address1))
+                    {
+                        Title = T("Admin.Address.Fields.Address1").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.FaxNumber))
+                    {
+                        Title = T("Admin.Address.Fields.FaxNumber").Text,
+                    });
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress, PermissionAction.Edit))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "80",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderButtonEdit(new DataUrl("~/Admin/Employee/AddressEdit?employeeId=" + Model.Id + "&id=" + Model.EmpAddressModels.FirstOrDefault()?.Id, true))
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                            ClassName = NopColumnClassDefaults.Button
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress, PermissionAction.Add))
+            {
+                <div class="card-body">
+                    <button type="button" class="btn btn-primary" onclick="location.href = '@Url.Action("AddressCreate", new { employeeId = Model.Id })'">
+                        <i class="fas fa-plus-square"></i>
+                        @T("Admin.Employee.Address.AddButton")
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @T("Admin.Employee.Address.SaveBeforeEdit")
+            </div>
+        </div>
+    }
+</div>

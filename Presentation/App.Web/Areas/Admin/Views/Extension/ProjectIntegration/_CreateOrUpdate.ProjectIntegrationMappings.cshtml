@@ -1,0 +1,92 @@
+﻿@model ProjectIntegrationModel
+
+@if (Model.Id > 0)
+{
+    <div class="card-body">
+        <div class="card-body">
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="SelectedProjectIds" />
+                </div>
+                <div class="col-md-4">
+                    <nop-select asp-for="SelectedProjectIds" asp-items="Model.AvailableProjects" asp-multiple="true" />
+                    <script>
+                        $(document).ready(function () {
+                            var projectIdsInput = $('#@Html.IdFor(model => model.SelectedProjectIds)').data("kendoMultiSelect");
+                            projectIdsInput.setOptions({
+                                autoClose: false,
+                                filter: "contains"
+                            });
+
+                            @if (Model.AvailableProjects.Count == 0)
+                            {
+                                <text>
+                                    projectIdsInput.setOptions({
+                                        enable: false,
+                                        placeholder: '@T("Admin.System.ProjectIntegration.ProjectIntegrationMappings.NoProjectsAvailable")'
+                                    });
+                                    projectIdsInput._placeholder();
+                                    projectIdsInput._enable();
+                                </text>
+                            }
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+        
+
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "project-integration-mappings-grid",
+                        UrlRead = new DataUrl("ProjectIntegrationMappings", "ProjectIntegration", new RouteValueDictionary { [nameof(Model.ProjectIntegrationMappingsSearchModel.ProjectIntegrationId)] = Model.Id }),
+                        UrlDelete = new DataUrl("DeleteProjectIntegrationMapping", "ProjectIntegration", null),
+                        Length = Model.ProjectIntegrationMappingsSearchModel.PageSize,
+                        LengthMenu = Model.ProjectIntegrationMappingsSearchModel.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectIntegrationMappingsModel.ProjectName))
+                    {
+                        Title = T("Admin.System.ProjectIntegration.ProjectIntegrationMappings.Fields.ProjectName").Text
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectIntegrationMappingsModel.CreatedOn))
+                    {
+                        Title = T("Admin.System.ProjectIntegration.ProjectIntegrationMappings.Fields.CreatedOn").Text,
+                        Width = "200",
+                        Render = new RenderDate()
+                    });
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectIntegrationSettings, PermissionAction.View))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectIntegrationMappingsModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "100",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderButtonEdit(new DataUrl("~/Admin/ProjectIntegration/ProjectIntegrationSettings/"))
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectIntegrationMappings, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectIntegrationMappingsModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text)
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card-body">
+        @T("Admin.System.ProjectIntegration.ProjectIntegrationMappings.SaveBeforeEdit")
+    </div>
+}

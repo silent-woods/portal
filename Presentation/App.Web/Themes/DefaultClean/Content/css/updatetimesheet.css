@@ -1,0 +1,767 @@
+
+
+
+#timeSheetTableBody td {
+    text-align: center;
+    vertical-align: middle;
+    padding-bottom: 5px;
+}
+
+#tableContainer th:last-child {
+    padding-left: 5px;
+}
+
+.k-dropdown-wrap select {
+    border: none;
+    box-shadow: none;
+}
+
+.k-dropdown-wrap {
+    display: inline-block;
+}
+
+    .k-dropdown-wrap .k-select {
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+        .k-dropdown-wrap .k-select .k-i-arrow-s {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+        }
+
+.k-input-value-text{
+    padding:4px;
+}
+#notification-container {
+    /* changed to fixed to stick to top of screen */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999;
+    text-align: center;
+}
+
+.notification {
+    margin: 0;
+    border-radius: 0;
+}
+#SpentDate{
+    width:210px;
+
+}
+.notification-content {
+    margin-right: 30px;
+}
+.dis-block{
+    display:block !important;
+
+}
+.close-button {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.Container-notification {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px;
+}
+
+.close-button:hover {
+    color: #000;
+}
+
+.validation-error {
+    border: solid 1.5px Red;
+}
+
+/* Hide the spinner for webkit browsers (Chrome, Safari) */
+.spentHours::-webkit-inner-spin-button,
+.spentHours::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Hide the spinner for Firefox */
+.spentHours {
+    -moz-appearance: textfield;
+}
+
+
+.add-btn {
+    border: 0;
+    background-color: #4ab2f1;
+    padding: 8px 18px;
+    text-align: center;
+    font-size: 12px;
+    color: #fff;
+    text-transform: uppercase;
+    margin: 1%;
+}
+
+    .add-btn:hover {
+        background-color: #248ece;
+    }
+
+.btn-edit {
+    border: 0;
+    background-color: #4ab2f1;
+    padding: 10px 24px;
+    text-align: center;
+    font-size: 10px;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+    .btn-edit:hover {
+        background-color: #248ece;
+    }
+/* newadded  */
+
+/* Form group */
+.form-group {
+    margin-bottom: 15px;
+}
+
+    /* Form group label */
+    .form-group label {
+        display: inline-block;
+        width: 100px;
+        font-weight: bold;
+    }
+
+    /* Form group input and select */
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+        /* Form group select multiple */
+        .form-group select[multiple] {
+            height: auto;
+        }
+.readonly-input {
+    background-color: #ccc !important; /* Adjust this color to your preference */
+    color: #000; /* Optional: Change text color for better contrast */
+}
+
+/* Row */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+/* Column */
+.col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding: 10px;
+}
+
+/* Button search */
+.btn-search {
+    min-width: 105px;
+    border: 0;
+    background-color: #4ab2f1;
+    padding: 10px 24px;
+    text-align: center;
+    font-size: 15px;
+    color: #fff;
+    text-transform: uppercase;
+    margin: 1%;
+}
+
+    .btn-search:hover {
+        background-color: #248ece;
+    }
+
+/* Button search hover */
+
+
+/* Text center */
+.text-center {
+    text-align: center;
+}
+
+/* Kendo dropdown wrap select */
+.k-dropdown-wrap select {
+    border: none;
+    box-shadow: none;
+}
+
+/* Pagination container */
+.pagination-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Pagination button */
+.pagination-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+    /* Pagination button hover */
+    .pagination-button:hover {
+        background-color: #0056b3;
+    }
+
+    /* Pagination button disabled */
+    .pagination-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+/* Page info */
+.page-info {
+    margin: 0 10px;
+}
+
+/* Timesheet table */
+#timesheet-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+    /* Timesheet table th and td */
+    #timesheet-table th, #timesheet-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    /* Timesheet table th */
+    #timesheet-table th {
+        background-color: #f0f0f0;
+    }
+
+/* Notification container */
+#notification-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999;
+    text-align: center;
+}
+textarea{
+    min-height:100px;
+}
+/* Notification */
+.notification {
+    margin: 0;
+    border-radius: 0;
+}
+
+/* Notification content */
+.notification-content {
+    margin-right: 30px;
+}
+
+/* Close button */
+.close-button {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+    /* Close button hover */
+    .close-button:hover {
+        color: #000;
+    }
+
+/* Container notification */
+.Container-notification {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px;
+}
+
+/* Validation error */
+.validation-error {
+    border: solid 1.5px Red;
+}
+
+/* Spent hours */
+.spentHours::-webkit-inner-spin-button,
+.spentHours::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Spent hours Firefox */
+.spentHours {
+    -moz-appearance: textfield;
+}
+
+
+
+
+
+
+/* col-md-2 */
+.col-md-2 {
+    flex: 0 0 16.666667%;
+    max-width: 16.666667%;
+}
+
+/* col-md-4 */
+.col-md-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+}
+
+/* col-md-3 */
+.col-md-3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+}
+
+/* col-md-1 */
+.col-md-1 {
+    flex: 0 0 8.333333%;
+    max-width: 8.333333%;
+}
+
+/* form-control */
+.form-control {
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    /*border-radius: 0.25rem;*/
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* form-control-sm */
+.form-control-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.2rem;
+}
+
+/* btn */
+.btn {
+    display: inline-block;
+    font-weight: 400;
+    color: #212529;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background-color: transparent;
+    border: 1px solid transparent;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.25rem;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* btn-primary */
+.btn-primary {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+/* btn-danger */
+.btn-danger {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+/* btn-sm */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+
+/* text-center */
+.text-center {
+    text-align: center;
+}
+
+/* text-nowrap */
+.text-nowrap {
+    white-space: nowrap;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* form-control-sm */
+.form-control-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.2rem;
+}
+
+/* btn-sm */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+
+/* text-center */
+.text-center {
+    text-align: center;
+}
+
+/* text-nowrap */
+.text-nowrap {
+    white-space: nowrap;
+}
+
+/* btn-primary */
+.btn-primary {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+/* btn-danger */
+.btn-danger {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+/* btn-secondary */
+.btn-secondary {
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+/* validation-error */
+.validation-error {
+    border: solid 1.5px Red;
+}
+
+/* spentHours */
+.spentHours::-webkit-inner-spin-button,
+.spentHours::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* spentHours Firefox */
+.spentHours {
+    -moz-appearance: textfield;
+}
+
+/* project-dropdown */
+.project-dropdown {
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    margin-right:4px !important;
+}
+
+/* task-dropdown */
+.task-dropdown {
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* projectError */
+.projectError {
+    color: red;
+}
+
+/* taskError */
+.taskError {
+    color: red;
+}
+
+/* edit-row */
+.edit-row {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+/* remove-row */
+.remove-row {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+/* delete-button */
+.delete-button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+/* cancel-row */
+.cancel-row {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-transform: uppercase;
+    background-color: #aaa;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+    .cancel-row:hover {
+        background-color: #bbb;
+    }
+
+
+
+
+.btn-search.focused {
+    outline: 1px solid #d6d6d6 ; /* Light gray border to indicate focus */
+ 
+    color: #a1a1a1; /* Gray text for disabled appearance */
+    cursor: not-allowed; /* Change cursor to indicate non-clickable */
+    background-color: #248ece !important;
+}
+#SaveNew {
+    min-width: 105px;
+    border: 0;
+    background-color: #4ab2f1;
+    padding: 10px 24px;
+    text-align: center;
+    font-size: 15px;
+    color: #fff;
+    text-transform: uppercase;
+    margin: 1%;
+    float: right;
+}
+
+    #SaveNew:hover {
+        background-color: #248ece;
+    }
+
+input[name$=".EstimatedHours"] {
+    width: 65px;
+}
+
+input[name$=".TotalSpent"] {
+    width: 65px !important;
+    margin-right: 6px;
+}
+
+
+/* popup */
+/* Modal background */
+.custom-modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Background with transparency */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Modal content */
+.custom-modal-dialog {
+    background-color: #fff;
+    border-radius: 5px;
+    width: 500px;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.custom-modal-content {
+    position: relative;
+    padding: 20px 20px 0px 20px;
+}
+
+.custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.custom-modal-title {
+    margin: 0;
+}
+
+.custom-modal-close {
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* Modal body */
+.custom-modal-body {
+    margin-top: 10px;
+    padding: 10px;
+}
+
+
+button {
+    padding: 8px 12px;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+/*    button:hover {
+            background-color: #0056b3;
+        } */
+
+
+#popupDialog {
+    z-index: 1000;
+}
+
+.inputs-popup {
+    margin-bottom: 10px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the inputs */
+}
+
+    .inputs-popup label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        width: 100%;
+        text-align: center; /* Center the label text */
+    }
+
+.save-btn-popup {
+    min-width: 105px;
+    border: 0;
+    background-color: #4ab2f1;
+    padding: 10px 24px;
+    text-align: center;
+    font-size: 15px;
+    color: #fff;
+    text-transform: uppercase;
+    margin: 1%;
+    margin-top: 5%;
+}
+
+    .save-btn-popup:hover {
+        background-color: #248ece;
+    }
+
+     .header{
+        z-index:0;
+    }
+    .header-menu{
+        z-index:0;
+    }
+.footer-lower {
+    z-index: 0 !important;
+}
+.footer{
+    z-index:0;
+}
+
+
+/* Style for labels with required fields */
+.required-label::after {
+    content: " *"; /* Asterisk */
+    color: red; /* Red color for asterisk */
+    margin-left: 5px; /* Space between label text and asterisk */
+    font-weight: bold; /* Optional: Make asterisk bold */
+}
+
+.spentdate-container {
+    display: grid;
+    grid-template-columns: 1fr auto; /* Date input takes most space, button auto-sized */
+    align-items: end; /* Aligns button with input field */
+    width: 100%;
+}
+.spentdate-block {
+    display: flex;
+    flex-direction: column; /* Places label above input */
+  
+}
+
+#fetchRecentBtn {
+    padding: 0.40rem 0.7rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-transform: uppercase;
+    background-color: #bbb;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+    #fetchRecentBtn:hover {
+        background-color: #aaa;
+    }

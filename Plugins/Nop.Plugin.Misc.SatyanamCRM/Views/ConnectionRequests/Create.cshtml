@@ -1,0 +1,33 @@
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.ConnectionRequests
+@model ConnectionRequestModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.ConnectionRequest.Create").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("ConnectionRequest");
+}
+
+<form asp-controller="ConnectionRequest" asp-action="Create" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Plugin.SatyanamCRM.ConnectionRequest.Create")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Plugin.SatyanamCRM.ConnectionRequest.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/ConnectionRequests/_CreateOrUpdate.cshtml", Model)
+</form>

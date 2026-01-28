@@ -1,0 +1,100 @@
+@model TimeSheetModel
+<style>
+    .center-table {
+        width: 100%;
+        margin: auto;
+        text-align: left;
+        border-collapse: collapse;
+        border: 1px solid #ddd; /* Light gray border */
+    }
+
+        .center-table th {
+            background-color: #f2f2f2; /* Light gray background for header */
+            font-weight: bold;
+            padding: 10px;
+            border: 1px solid #ddd; /* Light gray border */
+        }
+
+        .center-table td {
+            padding: 10px;
+            border: 1px solid #ddd; /* Light gray border */
+        }
+
+        .center-table tr:nth-child(even) {
+            background-color: #f9f9f9; /* Alternate row background */
+        }
+
+    .kpi-name {
+        background-color: #e6f2ff; /* Light blue background for KPI names */
+    }
+
+    .rate {
+        background-color: #eaf1dd; /* Light green background for total rate */
+    }
+
+    .avg {
+        background-color: #f9eec1; /* Light yellow background for total average */
+    }
+
+    .name {
+        background-color: #e2e2e2; /* Light gray background for manager names */
+    }
+
+    .manager {
+        background-color: #ffd1b3; /* Light orange background for managers */
+    }
+</style>
+
+<div class="data">
+    @if (Model.report == null)
+    {
+        <p>No data available.</p>
+    }
+    else if (Model.report == null)
+    {
+    }
+    else if (!Model.report.Any())
+    {
+        <p></p>
+    }
+    else 
+    {
+        <table class="center-table" >
+            <!-- Table headers -->
+            <tr>
+                <th class="manager"><span>Date</span></th>
+                <th class="manager"><span>ProjectName</span></th>
+                <th class="manager"><span>Task</span></th>
+                <th class="manager"><span>EstimatedHours</span></th>
+                <th class="manager"><span>Productive Hours</span></th>
+                <th class="manager"><span>R&D Hours</span></th>
+                <th class="manager"><span>Total</span></th>
+                <th class="manager"><span>ProductivityRatio</span></th>
+               
+              
+            </tr>
+            <!-- Table body -->
+           
+                <tr>
+                   
+                    <!-- Loop through rates for each KPI -->
+                @foreach (var rate in Model.report)
+                {
+                <tr>
+                    <!-- Start a new row for each record -->
+                    <td>@rate.Date</td>
+                    <td>@rate.ProjectName</td>
+                    <td>@rate.Task</td>
+                    <td>@rate.EstimatedHours</td>
+                    <td>@rate.ProductiveHours</td>
+                    <td>@rate.RNDHours</td>
+                    <td>@rate.Total</td>
+                    <td>@rate.ProductivityRatio</td>
+                </tr>
+                }
+                  
+                </tr>
+           @* }*@
+        </table>
+    }
+</div>

@@ -1,0 +1,81 @@
+﻿@model EmployeeModel
+
+<div class="card-body">
+    @if (Model.Id > 0)
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "education-grid",
+                        UrlRead = new DataUrl("EducationList", "Employee", new RouteValueDictionary { [nameof(Model.EducationSearchModel.employeeId)] = Model.Id }),
+                        UrlDelete = new DataUrl("EducationDelete", "Employee", new RouteValueDictionary { [nameof(Model.Id)] = Model.EducationModel.FirstOrDefault()?.Id }),
+                        Length = Model.EducationSearchModel.PageSize,
+                        LengthMenu = Model.EducationSearchModel.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.EmployeeName))
+                    {
+                        Title = T("Admin.Educations.Fields.EmployeeName").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.Course))
+                    {
+                        Title = T("Admin.Educations.Fields.Course").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.InstitutionName))
+                    {
+                        Title = T("Admin.Educations.Fields.InstitutionName").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.MarksScored))
+                    {
+                        Title = T("Admin.Educations.Fields.MarksScored").Text,
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.YearOfCompletion))
+                    {
+                        Title = T("Admin.Educations.Fields.YearOfCompletion").Text,
+                    });
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation, PermissionAction.Edit))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "80",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderButtonEdit(new DataUrl("~/Admin/Employee/EducationEdit?employeeId=" + Model.Id + "&id=" + Model.EducationModel.FirstOrDefault()?.Id, true))
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                            ClassName = NopColumnClassDefaults.Button
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation, PermissionAction.Add))
+            {
+                <div class="card-body">
+                    <button type="button" class="btn btn-primary" onclick="location.href = '@Url.Action("EducationCreate", new { employeeId = Model.Id })'">
+                        <i class="fas fa-plus-square"></i>
+                        @T("Admin.Employee.Education.AddButton")
+                    </button>
+                </div>
+            }
+            
+        </div>
+    }
+    else
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @T("Admin.Catalog.Employee.Education.SaveBeforeEdit")
+            </div>
+        </div>
+    }
+</div>

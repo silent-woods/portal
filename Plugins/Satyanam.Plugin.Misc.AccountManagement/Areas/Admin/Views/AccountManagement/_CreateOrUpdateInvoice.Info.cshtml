@@ -1,0 +1,196 @@
+﻿@model InvoiceModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="InvoiceNumber" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="InvoiceNumber" />
+            <span asp-validation-for="InvoiceNumber"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Title" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Title" />
+            <span asp-validation-for="Title"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ProjectBillingId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="ProjectBillingId" asp-items="Model.AvailableProjectBillings" />
+            <span asp-validation-for="ProjectBillingId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="AccountGroupId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="AccountGroupId" asp-items="Model.AvailableAccountGroups" />
+            <span asp-validation-for="AccountGroupId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="StatusId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="StatusId" asp-items="Model.AvailableStatuses" />
+            <span asp-validation-for="StatusId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="BankAccountId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="BankAccountId" asp-items="Model.AvailableBankAccounts" />
+            <span asp-validation-for="BankAccountId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SubTotalAmount" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="SubTotalAmount" />
+            <span asp-validation-for="SubTotalAmount"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="TaxAmount" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="TaxAmount" />
+            <span asp-validation-for="TaxAmount"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="DiscountAmount" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="DiscountAmount" />
+            <span asp-validation-for="DiscountAmount"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="TotalPrimaryAmount" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="TotalPrimaryAmount" />
+            <span asp-validation-for="TotalPrimaryAmount"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="TotalPaymentAmount" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="TotalPaymentAmount" />
+            <span asp-validation-for="TotalPaymentAmount"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="InvoiceFileId" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="InvoiceFileId" />
+            <span asp-validation-for="InvoiceFileId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="TimeSheetFileId" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="TimeSheetFileId" />
+            <span asp-validation-for="TimeSheetFileId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="MonthId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="MonthId" asp-items="Model.AvailableMonths" />
+            <span asp-validation-for="MonthId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="YearId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="YearId" asp-items="Model.AvailableYears" />
+            <span asp-validation-for="YearId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Notes" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Notes" asp-template="RichEditor" />
+            <span asp-validation-for="Notes"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsActive" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="IsActive" />
+            <span asp-validation-for="IsActive"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="DisplayOrder" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="DisplayOrder" />
+            <span asp-validation-for="DisplayOrder"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        function updateTotalPrimaryAmount() {
+            var subTotal = parseFloat($('#SubTotalAmount').val()) || 0;
+            var tax = parseFloat($('#TaxAmount').val()) || 0;
+            var discount = parseFloat($('#DiscountAmount').val()) || 0;
+
+            var total = subTotal + tax - discount;
+            var formattedTotal = total.toFixed(2);
+
+            $("#TotalPrimaryAmount").data("kendoNumericTextBox").value(formattedTotal);
+
+            $.ajax({
+                cache: false,
+                url: "@Url.Action("ConvertedCurrencyAmount", "AccountManagement")",
+                data: { invoiceId: @Model.Id, amountInPaymentCurrency: formattedTotal },
+                success: function (data) {
+                    if (data.result && data.convertedAmount !== undefined) {
+                        $("#TotalPaymentAmount").data("kendoNumericTextBox").value(data.convertedAmount);
+                    }
+                }
+            });
+        }
+
+        $('#SubTotalAmount, #TaxAmount, #DiscountAmount').on('input', updateTotalPrimaryAmount);
+
+        updateTotalPrimaryAmount();
+    });
+</script>

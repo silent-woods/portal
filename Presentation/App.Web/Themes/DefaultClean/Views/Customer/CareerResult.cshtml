@@ -1,0 +1,27 @@
+﻿@using Nop.Web.Models.Customer;
+@model TraineeResultModel
+@{
+    Layout = "_ColumnsOne";
+
+    //title
+    NopHtml.AddTitleParts(T("PageTitle.Career").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-career-result-page");
+}
+<form asp-route="CareerResult" asp-route-returnurl="@Context.Request.Query["ReturnUrl"]" method="post">
+    <div asp-validation-summary="ModelOnly" class="message-error"></div>
+    <div class="page registration-result-page">
+       
+        <div class="page-body">
+            <div class="page-title">
+                <h1>@T("Account.Register")</h1>
+            </div>
+            <div class="result">
+                @Model.TraineeResult
+            </div>
+            <div class="buttons">
+                <input type="submit" name="register-continue" class="button-1 register-continue-button" value="@T("Account.Register.Result.Continue")" />
+            </div>
+        </div>
+    </div>
+</form>

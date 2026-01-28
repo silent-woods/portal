@@ -1,0 +1,57 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model EmployeeAttendanceSettingsModel
+
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.Settings.EmployeeAttendance").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Employee Attendance settings");
+}
+
+@{
+    const string hideCommonBlockAttributeName = "EmployeeAttendanceSettingsPage.HideCommonBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideCommonBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCommonBlockAttributeName);
+
+    const string hideCommentsBlockAttributeName = "EmployeeAttendanceSettingsPage.HideCommentsBlock";
+    var hideCommentsBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCommentsBlockAttributeName);
+}
+
+
+<form asp-controller="Setting" asp-action="EmployeeAttendance" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.Settings.EmployeeAttendance")
+        </h1>
+        <div class="float-right">
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+          @*   @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.BlogSettingsButtons, additionalData = Model }) *@
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+              @*   @await Component.InvokeAsync(typeof(StoreScopeConfigurationViewComponent))
+                @await Component.InvokeAsync(typeof(SettingModeViewComponent)) *@
+                <div asp-validation-summary="All"></div>
+
+                <nop-cards id="blogsettings-cards">
+                    <nop-card asp-name="blogsettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.EmployeeAttendance.OfficeTime")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_EmployeeAttendance.OfficeTime", Model)</nop-card>
+
+
+                 
+                    <nop-action-confirmation asp-button-id="resetleave" />
+                 @*    @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.BlogDetailsBlock, additionalData = Model }) *@
+                </nop-cards>
+            </div>
+        </div>
+    </section>
+</form>

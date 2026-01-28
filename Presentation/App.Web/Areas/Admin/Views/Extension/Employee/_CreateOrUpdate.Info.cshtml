@@ -1,0 +1,178 @@
+﻿@model EmployeeModel
+<input type="hidden" asp-for="Id" />
+<div class="card-body">
+    <div id="employee-details-area">
+        <div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="FirstName" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="FirstName" asp-required="true" />
+                    <span asp-validation-for="FirstName"></span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="LastName" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="LastName" asp-required="true" />
+                    <span asp-validation-for="LastName"></span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="PersonalEmail" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="PersonalEmail" asp-required="true" />
+                    <span asp-validation-for="PersonalEmail"></span>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="Password" />
+                </div>
+                <div class="col-md-9">
+                    <div class="input-group">
+                        <nop-editor asp-for="Password" html-attributes="@(new { autocomplete = "new-password" })" />
+                        <div class="input-group-append">
+                            @if (Model.Id > 0)
+                            {
+                                <button type="submit" name="changepassword" class="btn btn-info">
+                                    @T("Admin.Customers.Customers.Fields.Password.Change")
+                                </button>
+                            }
+                            <button type="button" id="generatePasswordButton" class="btn btn-secondary">
+                                Generate Password
+                            </button>
+                        </div>
+                    </div>
+                    <span asp-validation-for="Password"></span>
+                </div>
+            </div>
+
+            <script>
+    $(document).ready(function () {
+        // Generate a random password
+        function generateRandomPassword(length) {
+            const charset = "abcdefghijklmnopqrstuvwxydzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let password = "";
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * charset.length);
+                password += charset[randomIndex];
+            }
+            return password;
+        }
+
+        // Handle click event for Generate Password button
+        $('#generatePasswordButton').on('click', function () {
+            const randomPassword = generateRandomPassword(8); // Generate a 12-character password
+            $('input[name="Password"]').val(randomPassword); // Set the password in the input field
+        });
+    });
+</script>
+
+
+            <div class="form-group row" >
+                <div class="col-md-3">
+                    <nop-label asp-for="Gender"  />  
+                    <span asp-validation-for="Gender"></span>
+                </div>
+                <div class="col-md-9">
+                    <div class="raw">
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input" name="Gender" id="Gender_Male" value="M" @(Model.Gender == "M" ? Html.Raw("checked") : null)>
+                            <label class="form-check-label" for="Gender_Male">
+                                @T("Admin.Customers.Customers.Fields.Gender.Male")
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input" name="Gender" id="Gender_Female" value="F" @(Model.Gender == "F" ? Html.Raw("checked") : null)>
+                            <label class="form-check-label" for="Gender_Female">
+                                @T("Admin.Customers.Customers.Fields.Gender.Female")
+                            </label>
+                        </div>
+                       
+                    </div>
+                </div>
+               
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="MobileNo" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="MobileNo" asp-required="true" />
+                    <span asp-validation-for="MobileNo"></span>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-sm-3">
+                    <nop-label asp-for="SelectedManagerId" />
+                </div>
+                <div class="col-md-4">
+                    <div style="position: relative;">
+                        <nop-select asp-for="SelectedManagerId" asp-items="Model.AvailableManager" asp-multiple="true" class="form-control" />
+
+                    </div>
+                    <script>
+                        $(document).ready(function () {
+                            var selectElement = $('#@Html.IdFor(model => model.SelectedManagerId)').data("kendoMultiSelect");
+
+
+                            selectElement.setOptions({
+                                autoClose: true,
+                                filter: "contains",
+                                change: function (e) {
+
+                                    if (this.value().length > 1) {
+
+                                        var lastItem = this.value()[this.value().length - 1];
+
+                                        this.value([lastItem]);
+                                    }
+                                }
+                            });
+
+                        @if (Model.AvailableManager.Count == 0)
+                        {
+                            <text>
+                                    selectElement.setOptions({
+                                        enable: false,
+                                        placeholder: '@T("Admin.Catalog.Employee.NoEmployee")'
+                                    });
+                                selectElement._placeholder();
+                                selectElement._enable();
+                            </text>
+                        }
+                                                                                                                            });
+                    </script>
+                </div>
+            </div>
+
+
+            <div class="form-group row" id="ExistingPicture" style="display:none;">
+                <div class="col-md-3" style="font-weight:bold">
+                    <nop-label asp-for="PictureUrl"  />
+                </div>
+                <div class="col-md-7">
+                    <img id="BgPictureUrl" src="@(Model.PictureUrl)" alt="avatar" /><br />
+                </div>
+            </div>
+            <div class="form-group row" id="PictureUploader">
+                <div class="col-md-3" style="font-weight:bold">
+                    <nop-label asp-for="PictureId"  />
+                 
+                </div>
+                <div class="col-md-7">
+                    <nop-editor asp-for="PictureId"/>
+                    <span asp-validation-for="PictureId"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

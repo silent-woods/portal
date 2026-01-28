@@ -1,0 +1,148 @@
+﻿@using System.Web
+@using App.Web.Areas.Admin.Models.Extension.UpdateTemplateQuestion
+@model UpdateTemplateQuestionModel
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<input type="hidden" asp-for="UpdateTemplateId"/>
+<div class="card-body">
+    <!-- Question Text -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="QuestionText" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="QuestionText" asp-required="true" />
+            <span asp-validation-for="QuestionText" class="text-danger"></span>
+        </div>
+    </div>
+    <!-- IsRequired -->
+    @if (Model.ControlTypeId != (int)Satyanam.Nop.Core.Domains.ControlTypeEnum.ReadonlyCheckboxes &&
+        Model.ControlTypeId != (int)Satyanam.Nop.Core.Domains.ControlTypeEnum.Checkboxes)
+    {
+        <div class="form-group row" id="pnlIsRequired">
+            <div class="col-md-3">
+                <nop-label asp-for="IsRequired" />
+            </div>
+            <div class="col-md-3">
+                <nop-editor asp-for="IsRequired" />
+                <span asp-validation-for="IsRequired"></span>
+            </div>
+        </div>
+    }
+    <!-- Control Type -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ControlTypeId" />
+        </div>
+        <div class="col-md-3">
+            <nop-select asp-for="ControlTypeId" asp-items="Model.AvailableControlTypes" />
+            <span asp-validation-for="ControlTypeId"></span>
+        </div>
+    </div>
+    <!-- Display Order -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="DisplayOrder" />
+        </div>
+        <div class="col-md-3">
+            <nop-editor asp-for="DisplayOrder" />
+            <span asp-validation-for="DisplayOrder"></span>
+        </div>
+    </div>
+    <!-- Conditional Fields -->
+    <div class="form-group row" id="pnlValidationMinLength" style="display:none;">
+        <div class="col-md-3">
+            <nop-label asp-for="ValidationMinLength" />
+        </div>
+        <div class="col-md-3">
+            <nop-editor asp-for="ValidationMinLength" />
+        </div>
+    </div>
+    <div class="form-group row" id="pnlValidationMaxLength" style="display:none;">
+        <div class="col-md-3">
+            <nop-label asp-for="ValidationMaxLength" />
+        </div>
+        <div class="col-md-3">
+            <nop-editor asp-for="ValidationMaxLength" />
+        </div>
+    </div>
+    <div class="form-group row" id="pnlValidationFileSize" style="display:none;">
+        <div class="col-md-3">
+            <nop-label asp-for="ValidationFileMaximumSize" />
+        </div>
+        <div class="col-md-3">
+            <nop-editor asp-for="ValidationFileMaximumSize" />
+        </div>
+    </div>
+    <div class="form-group row" id="pnlValidationExtensions" style="display:none;">
+        <div class="col-md-3">
+            <nop-label asp-for="ValidationFileAllowedExtensions" />
+        </div>
+        <div class="col-md-3">
+            <nop-editor asp-for="ValidationFileAllowedExtensions" />
+        </div>
+    </div>
+    <div class="form-group row" id="pnlDefaultValue" style="display:none;">
+        <div class="col-md-3">
+            <nop-label asp-for="DefaultValue" />
+        </div>
+        <div class="col-md-3">
+            <nop-editor asp-for="DefaultValue" />
+        </div>
+    </div>
+</div>
+<!-- JavaScript for dynamic control behavior -->
+<script>
+    $(document).ready(function () {
+        $("#@Html.IdFor(model => model.ControlTypeId)").change(function () {
+            toggleControlTypeFields();
+            toggleOptionGrid(); // Add here for dynamic updates
+        });
+        toggleControlTypeFields(); // Initial render
+        toggleOptionGrid();        // Initial render
+    });
+    function toggleControlTypeFields() {
+        var selected = parseInt($("#@Html.IdFor(model => model.ControlTypeId)").val());
+        // Hide all panels by default
+        $('#pnlValidationMinLength, #pnlValidationMaxLength, #pnlValidationFileSize, #pnlValidationExtensions, #pnlDefaultValue').hide();
+        $('[data-card-name="question-options-values"]').hide();
+        // Show fields based on type
+        if (selected === 4 || selected === 10) {
+            // TextBox or MultilineTextbox
+            $('#pnlValidationMinLength, #pnlValidationMaxLength, #pnlDefaultValue').show();
+        }
+        else if (selected === 30) {
+            // FileUpload
+            $('#pnlValidationFileSize, #pnlValidationExtensions').show();
+        }
+        else if ([1, 2, 3, 40, 45, 50].includes(selected)) {
+            // Dropdown, Radio, Checkboxes, ReadonlyChecks
+            $('[data-card-name="question-options-values"]').show();
+        }
+        // Hide IsRequired ONLY for ReadonlyCheckboxes
+        if (selected === 40 || selected === 3) {
+            $('#pnlIsRequired').hide();
+        } else {
+            $('#pnlIsRequired').show();
+        }
+    }
+        function toggleOptionGrid() {
+            var selected = parseInt($("#@Html.IdFor(model => model.ControlTypeId)").val());
+            if ([4, 10, 20, 30].includes(selected)) {
+                $('#question-option-grid-wrapper').hide();
+            } else {
+                $('#question-option-grid-wrapper').show();
+            }
+        }
+</script>
+<script>
+    $(document).ready(function () {
+        $("form").submit(function () {
+            var question = $("#@Html.IdFor(model => model.QuestionText)").val().trim();
+            if (!question) {
+                alert("Please provide the question.");
+                return false; // stop form submission
+            }
+        });
+    });
+</script>

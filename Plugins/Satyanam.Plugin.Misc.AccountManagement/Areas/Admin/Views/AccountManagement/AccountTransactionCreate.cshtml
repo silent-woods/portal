@@ -1,0 +1,29 @@
+﻿@model AccountTransactionModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Add").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransactions");
+}
+
+<form asp-controller="AccountManagement" asp-action="AccountTransactionCreate" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Add")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="AccountTransactions" asp-controller="AccountManagement">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageTransactions, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("_CreateOrUpdateAccountTransaction.cshtml", Model)
+</form>

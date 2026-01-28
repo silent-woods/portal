@@ -1,0 +1,114 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Leads
+@model LeadModel
+
+@{
+    Layout = "_AdminPopupLayout";
+}
+
+@if (ViewBag.RefreshPage == true)
+{
+    <script>
+        try {
+            window.opener.location.href = '@Url.Action("List", "Lead")'; // Redirect parent
+        } catch (e) { }
+        window.close(); // Close the popup
+    </script>
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Plugin.SatyanamCRM.Lead.ConvertLead")
+    </h1>
+</div>
+
+<form asp-controller="Lead" asp-action="ConvertLead" method="post">
+    <input type="hidden" asp-for="Id" value="@Model.Id" />
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="card-body">
+                    <!-- Create New Company -->
+                    <div class="form-group row align-items-center">
+                        <label class="col-sm-3 col-form-label font-weight-bold">Create New Company:</label>
+                        <div class="col-sm-6 d-flex align-items-center">
+                            <span>@Model.CompanyName</span>
+                        </div>
+                    </div>
+                    <!-- Create New Contact -->
+                    <div class="form-group row align-items-center">
+                        <label class="col-sm-3 col-form-label font-weight-bold">Create New Contact:</label>
+                        <div class="col-sm-6 d-flex align-items-center">
+                            <span>@Model.Name</span>
+                        </div>
+                    </div>
+                    <!-- Create Deal Checkbox -->
+                    <div class="form-group row">
+                        <div class="col-md-9 offset-md-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="createDeal" name="createDeal" value="true"/>
+                                <label class="form-check-label" for="createDeal">Create a new Deal for this Account.</label>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Deal Fields (Hidden Initially) -->
+                    <div id="dealFields" style="display: none;">
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="@Model.DealsModels.Amount" />
+                            </div>
+                            <div class="col-md-6">
+                                <nop-editor asp-for="@Model.DealsModels.Amount" />
+                                <span asp-validation-for="@Model.DealsModels.Amount"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="@Model.DealsModels.DealName" />
+                            </div>
+                            <div class="col-md-6">
+                                <nop-editor asp-for="@Model.DealsModels.DealName" />
+                                <span asp-validation-for="@Model.DealsModels.DealName"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="@Model.DealsModels.ClosingDate" />
+                            </div>
+                            <div class="col-md-6">
+                                <nop-editor asp-for="@Model.DealsModels.ClosingDate" />
+                                <span asp-validation-for="@Model.DealsModels.ClosingDate"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="@Model.DealsModels.StageId" />
+                            </div>
+                            <div class="col-md-6">
+                                <nop-select asp-for="@Model.DealsModels.StageId" asp-items="@Model.DealsModels.Stages" />
+                                <span asp-validation-for="@Model.DealsModels.StageId"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Buttons -->
+                    <div class="form-group row">
+                        <div class="col-sm-9 offset-sm-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-exchange-alt"></i> Convert
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="window.close();">Cancel</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+<script>
+    document.getElementById("createDeal").addEventListener("change", function () {
+        var dealFields = document.getElementById("dealFields");
+        dealFields.style.display = this.checked ? "block" : "none";
+    });
+</script>

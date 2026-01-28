@@ -1,0 +1,32 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.TaskCategories
+
+@model TaskCategoryModel
+
+@{
+    const string hideInfoBlockAttributeName = "TaskCategoryDetails.HideInfoBlock";
+    const string hideCheckListMappingBlockAttributeName = "TaskCategoryDetails.HideCheckListMappingBlock";
+
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+    var hideCheckListMappingBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCheckListMappingBlockAttributeName);
+}
+
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="taskcategory-item-cards">
+                <nop-card asp-name="taskcategory-item-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.TaskCategory.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/TaskCategories/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTaskCategoryChecklists, PermissionAction.View))
+                {
+                    <nop-card asp-name="taskcategory-item-checklistmapping" asp-icon="fas fa-tasks" asp-title="@T("Admin.Configuration.TaskCategory.CheckListMapping")" asp-hide-block-attribute-name="@hideCheckListMappingBlockAttributeName" asp-hide="@hideCheckListMappingBlock">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/TaskCategories/_CreateOrUpdateCheckListMapping.cshtml", Model)
+                    </nop-card>
+                }
+            </nop-cards>
+        </div>
+    </div>
+</section>

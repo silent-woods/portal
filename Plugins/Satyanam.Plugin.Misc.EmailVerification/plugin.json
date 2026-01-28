@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Satyanam",
+  "FriendlyName": "Email Verification",
+  "SystemName": "Misc.EmailVerification",
+  "Version": "3.56",
+  "SupportedVersions": [ "4.60" ],
+  "Author": "Satyanam team",
+  "DisplayOrder": 1,
+  "FileName": "Satyanam.Plugin.Misc.Emailverification.dll",
+  "Description": "This plugin allows to integrate with EmailVerification service"
+}

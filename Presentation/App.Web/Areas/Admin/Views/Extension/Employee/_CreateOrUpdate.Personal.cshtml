@@ -1,0 +1,85 @@
+﻿@model EmployeeModel
+
+<div class="card-body">
+    <div id="employee-details-area">
+        <div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="MaritalStatus"  />
+                </div>
+                <div class="col-md-9">
+                    <nop-select asp-for="MaritalStatusId" asp-items="Model.MaritalsStatus"/>
+                    <span asp-validation-for="MaritalStatusId"></span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="FatherName" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="FatherName" />
+                    <span asp-validation-for="FatherName"></span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="MotherName" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="MotherName" />
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="Hobbies" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="Hobbies" asp-template="RichEditor" />
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="BloodGroup"  />
+                </div>
+                <div class="col-md-9">
+                    <nop-select asp-for="BloodGroupId" asp-items="Model.BloodGroups" />
+                    <span asp-validation-for="BloodGroupId"></span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="EmergencyContactPerson" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="EmergencyContactPerson" />
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="Relationship" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="Relationship" />
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="ContactNumber" />
+                </div>
+                <div class="col-md-9">
+                    <nop-editor asp-for="ContactNumber" />
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <nop-label asp-for="EmployeeStatus"  />
+                </div>
+                <div class="col-md-9">
+                    <nop-select asp-for="EmployeeStatusId" asp-items="Model.EmployeesStatus" asp-required="true" />
+                    <span asp-validation-for="EmployeeStatusId"></span>
+
+                </div>
+            </div>
+        </div>        
+    </div>
+</div>

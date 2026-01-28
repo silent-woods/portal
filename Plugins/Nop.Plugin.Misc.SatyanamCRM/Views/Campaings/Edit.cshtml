@@ -1,0 +1,61 @@
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Campaings
+@model CampaingsModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page campaings
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.Campaings.EditCampaingsDetails").Text;
+     //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Campaings");
+}
+ 
+
+<form asp-controller="Campaings" asp-action="Edit" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Plugin.SatyanamCRM.Campaings.EditCampaingsDetails") @* - @Model.Name *@
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Plugin.SatyanamCRM.Campaings.BackToList")</a>
+            </small>
+        </h1>
+        <div class="float-right">
+            <input type="hidden" name="Id" value="@Model.Id" />
+            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageCampaigns, PermissionAction.Edit))
+            {
+                <button type="submit" onclick="openReplicatePage(@Model.Id)" formmethod="get" class="btn btn-success">
+                    <i class="far fa-clone"></i>
+                    @T("Campaigns.Replicate")
+                </button>
+                <button type="submit" formaction="@Url.Action("SendMassEmail", "Campaings")" formmethod="post" class="btn btn-primary">
+                    <i class="far fa-envelope"></i>
+                    @T("Campaigns.SendMassEmail")
+                </button>
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            }
+            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageCampaigns, PermissionAction.Delete))
+            {
+                <span id="campaings-delete" class="btn btn-danger">
+                    <i class="far fa-trash-alt"></i>
+                    @T("Admin.Common.Delete")
+                </span>
+            }
+        </div>
+    </div>
+    @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Campaings/_CreateOrUpdate.Info.cshtml", Model)
+</form>
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="campaings-delete" />
+<script>
+    function openReplicatePage(id) {
+        var url = '@Url.Action("Replicate", "Campaings")' + '?id=' + id;
+        window.open(url, '_blank');
+    }
+</script>

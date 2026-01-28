@@ -1,0 +1,34 @@
+﻿@model EmailSettingsModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="FirstMailVariation_OverrideForStore" asp-input="FirstMailVariation" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="FirstMailVariation" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="FirstMailVariation" />
+            <span asp-validation-for="ActiveStoreScopeConfiguration"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="SecondMailVariation_OverrideForStore" asp-input="SecondMailVariation" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="SecondMailVariation" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="SecondMailVariation" />
+            <span asp-validation-for="ActiveStoreScopeConfiguration"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="ThirdMailVariation_OverrideForStore" asp-input="ThirdMailVariation" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="ThirdMailVariation" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="ThirdMailVariation" />
+            <span asp-validation-for="ActiveStoreScopeConfiguration"></span>
+        </div>
+    </div>
+</div>

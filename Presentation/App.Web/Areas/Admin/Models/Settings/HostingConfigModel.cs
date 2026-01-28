@@ -1,0 +1,27 @@
+﻿using App.Web.Framework.Mvc.ModelBinding;
+using App.Web.Framework.Models;
+
+namespace App.Web.Areas.Admin.Models.Settings
+{
+    /// <summary>
+    /// Represents a hosting configuration model
+    /// </summary>
+    public partial record HostingConfigModel : BaseNopModel, IConfigModel
+    {
+        #region Properties
+
+        [NopResourceDisplayName("Admin.Configuration.AppSettings.Hosting.UseProxy")]
+        public bool UseProxy { get; set; }
+
+        [NopResourceDisplayName("Admin.Configuration.AppSettings.Hosting.ForwardedForHeaderName")]
+        public string ForwardedForHeaderName { get; set; }
+
+        [NopResourceDisplayName("Admin.Configuration.AppSettings.Hosting.ForwardedProtoHeaderName")]
+        public string ForwardedProtoHeaderName { get; set; }
+
+        [NopResourceDisplayName("Admin.Configuration.AppSettings.Hosting.KnownProxies")]
+        public string KnownProxies { get; set; }
+
+        #endregion
+    }
+}

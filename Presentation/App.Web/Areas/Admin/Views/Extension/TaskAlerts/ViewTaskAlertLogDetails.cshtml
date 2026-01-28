@@ -1,0 +1,97 @@
+﻿@model TaskAlertReportModel
+
+@{
+    ViewBag.PageTitle = T("Admin.TaskAlert.TaskAlertReport.ViewLogDetails").Text;
+    NopHtml.SetActiveMenuItemSystemName("Alert Report");
+}
+
+<form asp-controller="TaskAlert" asp-action="ViewTaskAlertLogDetails" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.TaskAlert.TaskAlertReport.ViewLogDetails")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="TaskAlertReports" asp-controller="TaskAlert">@T("Admin.TaskAlert.TaskAlertReport.BackToList")</a>
+            </small>
+        </h1>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default">
+                        <div asp-validation-summary="All"></div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="EmployeeName" />
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="form-text-row">@Model.EmployeeName</div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="TaskName" />
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="form-text-row">@Model.TaskName</div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="AlertPercentage" />
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="form-text-row">@Model.AlertPercentage</div>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(Model.Reason))
+                            {
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="Reason" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="form-text-row">@Model.Reason</div>
+                                    </div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Comment))
+                            {
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="Comment" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="form-text-row">@Model.Comment</div>
+                                    </div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.ETAHours))
+                            {
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="ETAHours" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="form-text-row">@Model.ETAHours</div>
+                                    </div>
+                                </div>
+                            }
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="CreatedOn" />
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="form-text-row">@Model.CreatedOn</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>

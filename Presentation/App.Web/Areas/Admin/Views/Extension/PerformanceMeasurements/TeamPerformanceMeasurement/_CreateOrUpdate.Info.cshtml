@@ -1,0 +1,504 @@
+﻿ @model TeamPerformanceMeasurementModel
+@{
+
+    <style>
+        .center-table {
+            width: 100%;
+            margin: auto;
+            text-align: center;
+            border-collapse: collapse;
+            border: 1px solid black;
+        }
+
+            .center-table th,
+            .center-table td {
+                border: 1px solid black;
+            }
+    </style>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-popup">
+                        <div class="card-body">
+
+                            <div class="form-group row">
+                                <div class="col-sm-3">
+                                 
+                                    <nop-label asp-for="Year" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <nop-select asp-for="Year" asp-items="Model.Years" asp-required="true" />
+                                    <span asp-validation-for="Year"></span>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-sm-3">
+                                    <input type="hidden" asp-for="@Model.Id" />
+                                    <nop-label asp-for="MonthName" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <nop-select asp-for="MonthId" asp-items="Model.Months" asp-required="true" />
+                                    <span asp-validation-for="MonthId"></span>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-sm-3">
+                                    <nop-label asp-for="SelectedManagerId" />
+                                </div>
+                                <div class="col-md-4">
+                                    <div style="position: relative;">
+                                        <nop-select asp-for="SelectedManagerId" asp-items="Model.AvailableManagers" asp-multiple="true" class="form-control" id="SelectedManagerId" />
+
+                                        <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <script>
+                                $(document).ready(function () {
+                                    var selectElement = $('#SelectedManagerId').data("kendoMultiSelect");
+
+                                    selectElement.setOptions({
+                                        autoClose: true,
+                                        filter: "contains",
+                                        change: function (e) {
+                                            if (this.value().length > 1) {
+                                                var lastItem = this.value()[this.value().length - 1];
+                                                this.value([lastItem]);
+                                            }
+                                           
+                                        }
+                                    });
+
+                                @if (Model.AvailableManagers.Count == 0)
+                                {
+                                    <text>
+                                            selectElement.setOptions({
+                                                enable: false,
+                                                placeholder: '@T("Admin.Catalog.Manager.NoManager")'
+                                            });
+                                        selectElement._placeholder();
+                                        selectElement._enable();
+                                    </text>
+                                }
+                                    });
+
+                                // function redirectToAction() {
+                                //     var selectedEmployeeIds = $('#SelectedEmployeeId').val(); // Get selected employee IDs
+                                //     var selectedMonthId = $('#MonthId').val(); // Get selected month ID
+                                //     var selectedEmployeeManagerId = $('#EmployeeManagerId').val(); // Get selected employee manager ID
+
+                                //     if (selectedEmployeeIds) {
+                                //         var url = '@Url.Action("Create", "TeamPerformanceMeasurement")' +
+                                //             '?monthId=' + selectedMonthId +
+                                //             '&managerId=' + selectedEmployeeManagerId +
+                                //             '&employeeId=' + selectedEmployeeIds;
+
+                                //         window.location.href = url; // Redirect to the specified URL
+                                //     }
+                                // }
+                            </script>
+
+                         
+                          
+                           <div class="form-group row">
+    <div class="col-sm-3">
+        <nop-label asp-for="SelectedEmployeeId" />
+    </div>
+    <div class="col-md-4">
+        <div style="position: relative;">
+            <nop-select asp-for="SelectedEmployeeId" asp-items="Model.AvailableEmployees" asp-multiple="true" class="form-control" id="SelectedEmployeeId" />
+
+            <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var selectElement = $('#SelectedEmployeeId').data("kendoMultiSelect");
+
+        selectElement.setOptions({
+            autoClose: true,
+            filter: "contains",
+            change: function (e) {
+                if (this.value().length > 1) {
+                    var lastItem = this.value()[this.value().length - 1];
+                    this.value([lastItem]);
+                }
+
+                redirectToAction();
+            }
+        });
+
+        // Bind change event dynamically using jQuery
+        $('#SelectedEmployeeId').change(function() {
+            redirectToAction();
+        });
+
+                                    $('#SelectedManagerId').change(function () {
+                                        redirectToAction();
+                                    });
+                                    $('#MonthId').change(function () {
+                                        redirectToAction();
+                                    });
+                                    $('#Year').change(function () {
+                                        redirectToAction();
+                                    });
+                                    
+
+        @if (Model.AvailableEmployees.Count == 0) {
+            <text>
+                selectElement.setOptions({
+                    enable: false,
+                    placeholder: '@T("Admin.Catalog.Employee.NoEmployee")'
+                });
+                selectElement._placeholder();
+                selectElement._enable();
+            </text>
+        }
+    });
+
+    function redirectToAction() {
+        var selectedEmployeeIds = $('#SelectedEmployeeId').val(); // Get selected employee IDs
+        var selectedMonthId = $('#MonthId').val(); // Get selected month ID
+        var selectedEmployeeManagerId = $('#SelectedManagerId').val(); // Get selected employee manager ID
+        var selectedYear = $('#Year').val();
+
+        if (selectedEmployeeIds) {
+            var url = '@Url.Action("Create", "TeamPerformanceMeasurement")' +
+                '?monthId=' + selectedMonthId +
+                '&managerId=' + selectedEmployeeManagerId +
+                                            '&employeeId=' + selectedEmployeeIds + '&year=' + selectedYear;
+
+            window.location.href = url; // Redirect to the specified URL
+        }
+    }
+</script>
+
+                            <br />
+                            <br />
+
+                            @if (Model.EmployeeId> 0)
+
+                            {
+                                <div class="data">
+                                    <table class="center-table">
+                                        <tr><th><label>KPIName</label></th>
+                                            <th><label>Rating</label></th></tr>
+
+                                        @for (int i = 0; i < Model.KPIMaster.Count; i++)
+                                        {
+                                            <tr>
+                                                <input type="hidden" asp-for="@Model.KPIMaster[i].Id" />
+                                                <input type="hidden" asp-for="@Model.KPIMaster[i].Name" />
+                                                <td>@Model.KPIMaster[i].Name</td>
+                                                <td><input asp-for="@Model.KPIMaster[i].Rating" /></td>
+                                            </tr>
+                                        }
+
+                                    </table>
+
+                                    <br />
+                                    <br />
+                                    <div class="form-group row">
+                                        <div class="col-sm-1.5">
+                                            <nop-label asp-for="Feedback" />
+                                        </div>
+                                        <div class="col-sm-3">
+                                            <nop-textarea asp-for="Feedback" />
+                                            <span asp-validation-for="Feedback"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+
+@* 
+
+<style>
+    .center-table {
+        width: 100%;
+        margin: auto;
+        text-align: center;
+        border-collapse: collapse;
+        border: 1px solid black;
+    }
+
+    .center-table th,
+    .center-table td {
+        border: 1px solid black;
+    }
+</style>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-popup">
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <input type="hidden" asp-for="@Model.Id" />
+                                <nop-label asp-for="MonthName" />
+                            </div>
+                            <div class="col-sm-4">
+                                <nop-select asp-for="MonthId" asp-items="Model.Months" id="MonthId" />
+                                <span asp-validation-for="MonthName"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="EmployeeManagerName" />
+                            </div>
+                            <div class="col-sm-4">
+                                <nop-select asp-for="EmployeeManagerId" asp-items="Model.Manager" id="EmployeeManagerId" />
+                                <span asp-validation-for="EmployeeManagerName"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="SelectedEmployeeId" />
+                            </div>
+                            <div class="col-md-4">
+                                <div style="position: relative;">
+                                    <nop-select asp-for="SelectedEmployeeId" asp-items="Model.AvailableEmployees" asp-multiple="true" class="form-control" id="SelectedEmployeeId" />
+                                    <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                                </div>
+                                <script>
+                                    $(document).ready(function () {
+                                        var selectElement = $('#@Html.IdFor(model => model.SelectedEmployeeId)').data("kendoMultiSelect");
+
+                                        selectElement.setOptions({
+                                            autoClose: true,
+                                            filter: "contains",
+                                            change: function (e) {
+                                                if (this.value().length > 1) {
+                                                    var lastItem = this.value()[this.value().length - 1];
+                                                    this.value([lastItem]);
+                                                }
+                                            }
+                                        });
+
+                                        @if (Model.AvailableEmployees.Count == 0)
+                                        {
+                                            <text>
+                                                selectElement.setOptions({
+                                                    enable: false,
+                                                    placeholder: '@T("Admin.Catalog.Employee.NoEmployee")'
+                                                });
+                                                selectElement._placeholder();
+                                                selectElement._enable();
+                                            </text>
+                                        }
+                                    });
+                                </script>
+                            </div>
+                            <button type="button" onclick="showKPIInput()">Search</button>
+                        </div>
+                        <br />
+                        <br />
+                        <div class="data" style="display: none;">
+                            <table class="center-table">
+                                <tr>
+                                    <th><label>KPIName</label></th>
+                                    <th><label>Rating</label></th>
+                                </tr>
+                                @for (int i = 0; i < Model.KPIMaster.Count; i++)
+                                {
+                                    <tr>
+                                        <input type="hidden" asp-for="@Model.KPIMaster[i].Id" />
+                                        <input type="hidden" asp-for="@Model.KPIMaster[i].Name" />
+                                        <td>@Model.KPIMaster[i].Name</td>
+                                        <td><input asp-for="@Model.KPIMaster[i].Rating" /></td>
+                                    </tr>
+                                }
+                            </table>
+                            <br />
+                            <br />
+                            <div class="form-group row">
+                                <div class="col-sm-1.5">
+                                    <nop-label asp-for="Feedback" />
+                                </div>
+                                <div class="col-sm-3">
+                                    <nop-textarea asp-for="Feedback" />
+                                    <span asp-validation-for="Feedback"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    function showKPIInput() {
+        var selectElement = $('#SelectedEmployeeId').data("kendoMultiSelect");
+        var selectedEmployeeId = selectElement.value()[0];
+        var dataDiv = document.querySelector('.data');
+        
+        if (selectedEmployeeId) {
+            dataDiv.style.display = 'block';
+        }
+    }
+</script>
+ *@
+
+@* 
+                        @model TeamPerformanceMeasurementModel
+
+<style>
+    .center-table {
+        width: 100%;
+        margin: auto;
+        text-align: center;
+        border-collapse: collapse;
+        border: 1px solid black;
+    }
+
+        .center-table th,
+        .center-table td {
+            border: 1px solid black;
+        }
+</style>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-popup">
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <input type="hidden" asp-for="@Model.Id" />
+                                <nop-label asp-for="MonthName" />
+                            </div>
+                            <div class="col-sm-4">
+                                <nop-select asp-for="MonthId" asp-items="Model.Months" />
+                                <span asp-validation-for="MonthName"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="EmployeeManagerName" />
+                            </div>
+                            <div class="col-sm-4">
+                                <nop-select asp-for="EmployeeManagerId" asp-items="Model.Manager" />
+                                <span asp-validation-for="EmployeeManagerName"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="SelectedEmployeeId" />
+                            </div>
+                            <div class="col-md-4">
+                                <div style="position: relative;">
+                                    <nop-select asp-for="SelectedEmployeeId" asp-items="Model.AvailableEmployees" asp-multiple="true" class="form-control" id="SelectedEmployeeId" />
+                                    <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                                </div>
+                                <script>
+                                    $(document).ready(function () {
+                                        var selectElement = $('#@Html.IdFor(model => model.SelectedEmployeeId)').data("kendoMultiSelect");
+
+                                        selectElement.setOptions({
+                                            autoClose: true,
+                                            filter: "contains",
+                                            change: function (e) {
+                                                if (this.value().length > 1) {
+                                                    var lastItem = this.value()[this.value().length - 1];
+                                                    this.value([lastItem]);
+                                                }
+                                            }
+                                        });
+
+                                    @if (Model.AvailableEmployees.Count == 0)
+                                    {
+                                        <text>
+                                                selectElement.setOptions({
+                                                    enable: false,
+                                                    placeholder: '@T("Admin.Catalog.Employee.NoEmployee")'
+                                                });
+                                            selectElement._placeholder();
+                                            selectElement._enable();
+                                        </text>
+                                    }
+                                                                        });
+                                </script>
+                            </div>
+                            <button type="button" onclick="redirectToAction()">Search</button>
+                        </div>
+                        <br />
+                        <br />
+
+                        @if (Model.SelectedEmployeeId.Any())
+                        {
+                            <div class="data">
+                                <table class="center-table">
+                                    <thead>
+                                        <tr>
+                                            <th><label>KPI Name</label></th>
+                                            <th><label>Rating</label></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var kpi in Model.KPIMaster)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <input type="hidden" asp-for="@kpi.Id" />
+                                                    @kpi.Name
+                                                </td>
+                                                <td>
+                                                    <input asp-for="@kpi.Rating" />
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                <br />
+                                <br />
+                                <div class="form-group row">
+                                    <div class="col-sm-1.5">
+                                        <nop-label asp-for="Feedback" />
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <nop-textarea asp-for="Feedback" />
+                                        <span asp-validation-for="Feedback"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    function redirectToAction() {
+        var selectedEmployeeId = $('#SelectedEmployeeId').val();
+        var selectedMonthId = $('#MonthId').val();
+        var selectedEmployeeManagerId = $('#EmployeeManagerId').val();
+
+        if (selectedEmployeeId && selectedEmployeeId.length > 0) {
+            var url = '@Url.Action("Create", "TeamPerformanceMeasurement")' + '?monthId=' + selectedMonthId + '&managerId=' + selectedEmployeeManagerId + '&employeeId=' + selectedEmployeeId[0];
+            window.location.href = url;
+        }
+    }
+</script>
+ *@

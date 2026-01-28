@@ -1,0 +1,108 @@
+﻿@model EducationModel
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-popup">
+                    <div class="card-body">
+                        @* <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="EmployeeName" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-select asp-for="EmployeeID" asp-items="Model.Employess" asp-required="true" />
+                                <span asp-validation-for="EmployeeID"></span>
+                            </div>
+                        </div> *@
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="SelectedEmployeeId" />
+                            </div>
+                            <div class="col-md-4">
+  
+                                <div style="position: relative;">
+                                    <nop-select asp-for="SelectedEmployeeId" asp-items="Model.AvailableEmployees" asp-multiple="true" class="form-control" />
+                                  
+                                    <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                                </div>
+                                <script>
+                                    $(document).ready(function () {
+                                        var selectElement = $('#@Html.IdFor(model => model.SelectedEmployeeId)').data("kendoMultiSelect");
+
+                                      
+                                        selectElement.setOptions({
+                                            autoClose: true,
+                                            filter: "contains",
+                                            change: function (e) {
+                                               
+                                                if (this.value().length > 1) {
+                                                    
+                                                    var lastItem = this.value()[this.value().length - 1];
+                                                   
+                                                    this.value([lastItem]);
+                                                }
+                                            }
+                                        });
+
+                                        
+                                    @if (Model.AvailableEmployees.Count == 0)
+                                    {
+                                        <text>
+                                                selectElement.setOptions({
+                                                    enable: false,
+                                                    placeholder: '@T("Admin.Catalog.Employee.NoEmployee")'
+                                                });
+                                            selectElement._placeholder();
+                                            selectElement._enable();
+                                        </text>
+                                    }
+                                                                                                                                        });
+                                </script>
+                             
+                            </div>
+                         
+                        </div>
+                      
+
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="Course" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-editor asp-for="Course" asp-required="true" />
+                                <span asp-validation-for="Course"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="InstitutionName" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-editor asp-for="InstitutionName" asp-required="true" />
+                                <span asp-validation-for="InstitutionName"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="MarksScored" />
+                            </div>
+                            <div class="col-md-5">
+                                <nop-editor asp-for="MarksScored" id="MarksScored" asp-required="true" />
+                                <span asp-validation-for="MarksScored"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="YearOfCompletion" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-editor asp-for="YearOfCompletion" asp-required="true" />
+                                <span asp-validation-for="YearOfCompletion"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

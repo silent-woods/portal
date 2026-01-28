@@ -1,0 +1,33 @@
+﻿@model ProjectBillingModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ProjectBilling.Edit").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.ProjectBillings");
+}
+
+<form asp-controller="AccountManagement" asp-action="ProjectBillingEdit" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ProjectBilling.Edit")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="ProjectBillings" asp-controller="AccountManagement">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ProjectBilling.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageProjectBillings, PermissionAction.Edit))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("_CreateOrUpdateProjectBilling.cshtml", Model)
+</form>

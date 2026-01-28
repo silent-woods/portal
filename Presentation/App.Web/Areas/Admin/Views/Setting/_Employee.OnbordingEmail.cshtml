@@ -1,0 +1,18 @@
+﻿@model EmployeeSettingsModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-sm-2">
+            <nop-label asp-for="OnBoardingEmail" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="OnBoardingEmail" asp-template="RichEditor"  />
+        </div>
+    </div>
+ 
+</div>
+<style>
+    .k-editor {
+        min-height: 500px !important; /* Adjust the height as needed */
+    }
+</style>

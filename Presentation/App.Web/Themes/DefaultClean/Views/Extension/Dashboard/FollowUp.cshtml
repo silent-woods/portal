@@ -1,0 +1,184 @@
+﻿@model App.Web.Models.Dashboard.PendingDashboardModel
+
+@{
+    Layout = "_ColumnsOne";
+}
+<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/dashboard.css")" />
+<h1>Follow-Up Dashboard</h1>
+<div class="filter-bar">
+    <div class="filter-row">
+        <select id="projectFilter" class="filter-input">
+            <option value="">Select Project</option>
+            @foreach (var p in Model.AvailableProjects)
+            {
+                <option value="@p.Value">@p.Text</option>
+            }
+        </select>
+
+        <select id="employeeId" class="filter-input">
+            <option value="0">Select Employee</option>
+            @foreach (var e in Model.AvailableEmployees)
+            {
+                <option value="@e.Value">@e.Text</option>
+            }
+        </select>
+        <input type="text"
+               id="taskSearch"
+               class="filter-input filter-task"
+               placeholder="Search task name..." />
+        <select asp-for="SearchPeriodId"
+                asp-items="Model.AvailableSearchPeriods"
+                class="filter-input filter-period"
+                id="SearchPeriodId">
+        </select>
+        <div id="from-container">
+            <input type="date" asp-for="From" id="From" class="filter-input" />
+        </div>
+
+        <div id="to-container">
+            <input type="date" asp-for="To" id="To" class="filter-input" />
+        </div>
+        <select id="typeFilter" class="filter-input filter-type">
+            <option value="">Select Type</option>
+            <option value="manual">Manual</option>
+            <option value="auto">Auto</option>
+        </select>
+
+        <label class="filter-checkbox">
+            <input type="checkbox" id="showOnlyNotTrack" />
+            Not On Track
+        </label>
+
+        <button id="btnSearch" class="search-btn">
+            Search
+        </button>
+    </div>
+
+</div>
+
+
+<div id="followupTablesContainer">
+    @await Html.PartialAsync("/Themes/DefaultClean/Views/Extension/Dashboard/_FollowupTables.cshtml", Model)
+</div>
+<script>
+         function changePageSize() {
+        var size = $("#pageSize").val();
+        loadCompleted(1, size);
+    }
+       function loadCompleted(page, size) {
+        size = size || $("#pageSize").val();
+
+        $.get("/Dashboard/CompletedFollowUp?page=" + page + "&pageSize=" + size,
+            function (html) {
+                $("#completedTable").html(html);
+            });
+    }
+    loadCompleted(1)
+</script>
+<script>
+    let openedAccordions = new Set();
+            function captureOpenedAccordions() {
+        openedAccordions.clear();
+
+        $(".accordion-header.active").each(function () {
+            const targetId = $(this).data("target");
+            if (targetId) {
+                openedAccordions.add(targetId);
+            }
+        });
+    }
+        function restoreOpenedAccordions() {
+        if (openedAccordions.size === 0) return;
+
+        openedAccordions.forEach(function (targetId) {
+            const header = $('.accordion-header[data-target="' + targetId + '"]');
+            const content = $(targetId);
+
+            if (header.length && content.length) {
+                header.addClass("active");
+                content.show();
+            }
+        });
+    }
+    $(document).on("click", ".accordion-header", function (e) {
+        e.preventDefault();
+        var targetId = $(this).data("target");
+        var target = $(targetId);
+        var isOpen = target.is(":visible");
+        var scrollTop = $(window).scrollTop();
+        if (isOpen) {
+            target.slideUp(200);
+            $(this).removeClass("active");
+            openedAccordions.delete(targetId);
+        } else {
+            target.slideDown(200);
+            $(this).addClass("active");
+            openedAccordions.add(targetId);
+        }
+    });
+    $(document).ready(function () {
+        if (openedAccordions.size === 0) {
+            const dueTodayHeader = $('.accordion-header[data-target="#dueTodayTable"]');
+            if (dueTodayHeader.length) {
+                dueTodayHeader.addClass("active");
+                $("#dueTodayTable").show();
+                openedAccordions.add("#dueTodayTable");
+            }
+        }
+    });
+          $('#SearchPeriodId').on('change', function () {
+        var periodId = $(this).val();
+        if (!periodId) {
+            $('#From').val('');
+            $('#To').val('');
+            $('#from-container').hide();
+            $('#to-container').hide();
+            return;
+        }
+
+        $.ajax({
+            url: "@(Url.Action("GetPeriodDateRange", "Reports"))",
+            type: 'GET',
+            data: { periodId: periodId },
+            success: function (data) {
+                if (!data.from && !data.to) {
+                    $('#From').val('');
+                    $('#To').val('');
+                    $('#from-container').show();
+                    $('#to-container').show();
+                }
+                else {
+                    $('#From').val(data.from);
+                    $('#To').val(data.to);
+                    $('#from-container').hide();
+                    $('#to-container').hide();
+                }
+            }
+        });
+    });
+
+
+    $('#SearchPeriodId').trigger('change');
+
+       $("#btnSearch").click(function () {
+        var keyword = $("#taskSearch").val();
+        var projectId = $("#projectFilter").val();
+        var employeeId = $("#employeeId").val();
+         var showOnlyNotTrack = $("#showOnlyNotTrack").is(":checked");
+          var sourceType = $("#typeFilter").val();
+             var from = $("#From").val();
+    var to = $("#To").val();
+        $.ajax({
+            url: "/Dashboard/SearchFollowup",
+            type: "GET",
+            data: { taskName: keyword, projectId: projectId, employeeId: employeeId,showOnlyNotTrack:showOnlyNotTrack ,sourceType: sourceType , from:from,to:to},
+                    success: function (html) {
+        $("#followupTablesContainer").html(html);
+       restoreOpenedAccordions();
+    },
+            error: function () {
+                alert("Search failed!");
+            }
+        });
+    });
+</script>

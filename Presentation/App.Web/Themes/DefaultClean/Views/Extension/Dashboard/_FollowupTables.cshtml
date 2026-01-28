@@ -1,0 +1,479 @@
+﻿@model App.Web.Models.Dashboard.PendingDashboardModel
+@{
+    bool hasAnyData =
+        (Model.NewTasks?.Any() == true) ||
+        (Model.Overdue?.Any() == true) ||
+        (Model.DueToday?.Any() == true) ||
+        (Model.Upcoming?.Any() == true);
+}
+@if (!hasAnyData)
+{
+    <div class="row-empty" style="margin:20px;">
+        No data found
+    </div>
+}
+
+@if (Model.NewTasks?.Any() == true)
+{
+    <div class="section-header accordion-header" data-target="#newTasksTable">
+        <span class="accordion-arrow">▶</span>
+        New Tasks (@Model.NewTasks.Count)
+    </div>
+    <div id="newTasksTable" class="accordion-content" style="display:none;">
+          <div class="table-scroll">
+        <table class="followup-table">
+            <thead>
+                <tr>
+                        <th></th>
+                        <th>Task Name</th>
+                        <th>Assign To</th>
+                        <th>Esti.</th>
+                        <th>Deve.</th>
+                        <th>Alert</th>
+                        <th>On Track</th>
+                        <th>Next Review</th>
+                        <th class="comment">Comment</th>
+                        <th>Last FollowUp</th>
+                        <th>Status</th>
+                        <th>Project</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                    </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.NewTasks)
+                {
+                        <tr class="new-row"  data-id="@t.Id">
+                        <td class="expand-cell">
+                            <span class="toggle-subgrid" data-id="@t.Id">+</span>
+                        </td>
+                                                    <td class="task-name-cell">
+                                <a href="/ProjectTask/Edit?id=@t.TaskId"
+                                   class="task-link"
+                                   target="_blank"
+                                   title="Open task">
+                                    @t.TaskName
+                                </a>
+                            </td>
+                        <td>@t.EmployeeName</td>
+                        <td>@t.EstimationTime</td>
+                        <td>@t.DevelopementTime</td>
+                        <td>@t.AlertType</td>
+                        <td>@Html.Raw(t.TrackReason)</td>
+
+                            <td class="next-followup">-</td>
+
+                            <td class="comment">@t.LastComment</td>
+
+                        <td>-</td>
+                        <td>
+                            <span class="status-dot" style="background:@t.StatusColor"></span>
+                            @t.StatusName
+                        </td>
+                        <td>@t.ProjectName</td>
+                        <td>-</td>
+
+
+                            <td class="action-cell">
+                                @if (t.CanTakeFollowUp)
+                                {
+                                    <button class="follow-btn btn-followup" data-id="@t.Id">Follow-Up</button>
+                                }
+                            </td>
+                    </tr>
+                    <tr class="subgrid-row" style="display:none;">
+                        <td colspan="14"><div class="subgrid-container"></div></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        </div>
+    </div>
+}
+
+@if (Model.Overdue?.Any() == true)
+{
+    <div class="section-header accordion-header" data-target="#overdueTable">
+        <span class="accordion-arrow">▶</span>
+        Overdue (@Model.Overdue.Count)
+    </div>
+    <div id="overdueTable" class="accordion-content" style="display:none;">
+        <div class="table-scroll">
+        <table class="followup-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Task Name</th>
+                        <th>Assign To</th>
+                        <th>Esti.</th>
+                        <th>Deve.</th>
+                        <th>Alert</th>
+                        <th>On Track</th>
+                        <th>Next Review</th>
+                        <th class="comment">Comment</th>
+                        <th>Last FollowUp</th>
+                        <th>Status</th>
+                        <th>Project</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+            <tbody>
+                @foreach (var t in Model.Overdue)
+                {
+                      <tr class="overdue-row" data-id="@t.Id">
+    <td class="expand-cell">
+        <span class="toggle-subgrid" data-id="@t.Id">+</span>
+    </td>
+    <td class="task-name-cell">
+        <a href="/ProjectTask/Edit?id=@t.TaskId"
+           class="task-link"
+           target="_blank">
+            @t.TaskName
+        </a>
+    </td>
+    <td>@t.EmployeeName</td>
+    <td>@t.EstimationTime</td>
+    <td>@t.DevelopementTime</td>
+    <td>@t.AlertType</td>
+    <td>@Html.Raw(t.TrackReason)</td>
+    <td class="next-followup">
+        @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+    </td>
+    <td class="comment">@t.LastComment</td>
+    <td>
+        @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+    </td>
+    <td>
+        <span class="status-dot" style="background:@t.StatusColor"></span>
+        @t.StatusName
+    </td>
+    <td>@t.ProjectName</td>
+    <td>@(t.IsManual ? "Manual" : "Auto")</td>
+    <td class="action-cell">
+        @if (t.CanTakeFollowUp)
+        {
+            <button class="follow-btn btn-followup" data-id="@t.Id">
+                Follow-Up
+            </button>
+        }
+    </td>
+</tr>
+                    <tr class="subgrid-row" style="display:none;">
+                        <td colspan="14"><div class="subgrid-container"></div></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        </div>
+    </div>
+}
+
+@if (Model.DueToday != null && Model.DueToday.Count > 0)
+{
+    <div class="section-header accordion-header" data-target="#dueTodayTable">
+        <span class="accordion-arrow">▶</span>
+        Due Today (@Model.DueToday.Count)
+    </div>
+
+    <div id="dueTodayTable" class="accordion-content" style="display:none;">
+          <div class="table-scroll">
+        <table class="followup-table">
+            <thead>
+               <tr>
+                        <th></th>
+                        <th>Task Name</th>
+                        <th>Assign To</th>
+                        <th>Esti.</th>
+                        <th>Deve.</th>
+                        <th>Alert</th>
+                        <th>On Track</th>
+                        <th>Next Review</th>
+                        <th class="comment">Comment</th>
+                        <th>Last FollowUp</th>
+                        <th>Status</th>
+                        <th>Project</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                    </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.DueToday)
+                {
+                        <tr class="today-row"  data-id="@t.Id">
+                      
+    <td class="expand-cell">
+        <span class="toggle-subgrid" data-id="@t.Id">+</span>
+    </td>
+    <td class="task-name-cell">
+        <a href="/ProjectTask/Edit?id=@t.TaskId"
+           class="task-link"
+           target="_blank">
+            @t.TaskName
+        </a>
+    </td>
+    <td>@t.EmployeeName</td>
+    <td>@t.EstimationTime</td>
+    <td>@t.DevelopementTime</td>
+    <td>@t.AlertType</td>
+    <td>@Html.Raw(t.TrackReason)</td>
+    <td class="next-followup">
+        @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+    </td>
+    <td class="comment">@t.LastComment</td>
+    <td>
+        @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+    </td>
+    <td>
+        <span class="status-dot" style="background:@t.StatusColor"></span>
+        @t.StatusName
+    </td>
+    <td>@t.ProjectName</td>
+    <td>@(t.IsManual ? "Manual" : "Auto")</td>
+    <td class="action-cell">
+        @if (t.CanTakeFollowUp)
+        {
+            <button class="follow-btn btn-followup" data-id="@t.Id">
+                Follow-Up
+            </button>
+        }
+    </td>
+                    </tr>
+                    <tr class="subgrid-row" style="display:none;">
+                        <td colspan="14"><div class="subgrid-container"></div></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        </div>
+    </div>
+}
+
+@if (Model.Upcoming != null && Model.Upcoming.Count > 0)
+{
+    <div class="section-header accordion-header" data-target="#upcomingTable">
+        <span class="accordion-arrow">▶</span>
+        Upcoming (@Model.Upcoming.Count)
+    </div>
+
+    <div id="upcomingTable" class="accordion-content" style="display:none;">
+        <div class="table-scroll">
+        <table class="followup-table">
+            <thead>
+                <tr>
+                        <th></th>
+                        <th>Task Name</th>
+                        <th>Assign To</th>
+                        <th>Esti.</th>
+                        <th>Deve.</th>
+                        <th>Alert</th>
+                        <th>On Track</th>
+                        <th>Next Review</th>
+                        <th class="comment">Comment</th>
+                        <th>Last FollowUp</th>
+                        <th>Status</th>
+                        <th>Project</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                    </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.Upcoming)
+                {
+                        <tr class="upcoming-row"  data-id="@t.Id">
+    <td class="expand-cell">
+        <span class="toggle-subgrid" data-id="@t.Id">+</span>
+    </td>
+    <td class="task-name-cell">
+        <a href="/ProjectTask/Edit?id=@t.TaskId"
+           class="task-link"
+           target="_blank">
+            @t.TaskName
+        </a>
+    </td>
+    <td>@t.EmployeeName</td>
+    <td>@t.EstimationTime</td>
+    <td>@t.DevelopementTime</td>
+    <td>@t.AlertType</td>
+    <td>@Html.Raw(t.TrackReason)</td>
+    <td class="next-followup">
+        @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+    </td>
+    <td class="comment">@t.LastComment</td>
+    <td>
+        @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+    </td>
+    <td>
+        <span class="status-dot" style="background:@t.StatusColor"></span>
+        @t.StatusName
+    </td>
+    <td>@t.ProjectName</td>
+    <td>@(t.IsManual ? "Manual" : "Auto")</td>
+    <td class="action-cell">
+        @if (t.CanTakeFollowUp)
+        {
+            <button class="follow-btn btn-followup" data-id="@t.Id">
+                Follow-Up
+            </button>
+        }
+    </td>
+                    </tr>
+                    <tr class="subgrid-row" style="display:none;">
+                        <td colspan="14"><div class="subgrid-container"></div></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        </div>
+    </div>
+}
+
+
+<script>
+    $(document).ready(function () {
+      $("table").on("click", ".btn-followup", function () {
+        var row = $(this).closest("tr");
+        var nextCell = row.find(".next-followup");
+        var commentCell = row.find(".comment");
+        var actionCell = row.find(".action-cell");
+        row.data("originalNext", nextCell.text().trim());
+        row.data("originalComment", commentCell.text().trim());
+        var originalNext = row.data("originalNext");
+        nextCell.html(`
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                <input type="datetime-local"
+                       class="next-input"
+                       value="${originalNext !== '-' ? originalNext : ''}" />
+
+                <label style="font-size:13px;">
+                    <input type="checkbox" class="mark-complete" /> Mark Completed
+                </label>
+            </div>
+        `);
+        commentCell.html(
+            `<input type="text" class="comment-input" value="" placeholder="Enter follow-up comment" />`
+        );
+        actionCell.html(`
+            <button class="save-btn btn-save">Save</button>
+            <button class="cancel-btn btn-cancel">Cancel</button>
+        `);
+    });
+
+     $("table").on("click", ".btn-cancel", function () {
+        var row = $(this).closest("tr");
+        var nextCell = row.find(".next-followup");
+        var commentCell = row.find(".comment");
+        var actionCell = row.find(".action-cell");
+        var originalNext = row.data("originalNext");
+        var originalComment = row.data("originalComment");
+        nextCell.text(originalNext && originalNext !== "" ? originalNext : "-");
+        commentCell.text(originalComment || "");
+        actionCell.html(
+            `<button class="follow-btn btn-followup">Follow-Up</button>`
+        );
+    });
+
+            $("table").on("change", ".mark-complete", function () {
+        var container = $(this).closest("td");
+        var nextInput = container.find(".next-input");
+        if ($(this).is(":checked")) {
+            nextInput.val("");      
+            nextInput.prop("disabled", true);  
+        } else {
+            nextInput.prop("disabled", false); 
+        }
+    });
+            $("table").on("click", ".btn-save", function () {
+
+        var btn = $(this);
+
+        if (btn.prop("disabled")) {
+            return;
+        }
+        btn.prop("disabled", true).text("Saving...");
+
+        var row = btn.closest("tr");
+        var taskId = row.data("id");
+        var nextCell = row.find(".next-followup");
+        var commentCell = row.find(".comment");
+        var actionCell = row.find(".action-cell");
+
+        var nextDate = nextCell.find(".next-input").val();
+        var isCompleted = nextCell.find(".mark-complete").is(":checked");
+        var comment = commentCell.find("input").val();
+
+        if (isCompleted) {
+            nextDate = null;
+        } else if (!nextDate) {
+            alert("Please select next follow-up date.");
+            btn.prop("disabled", false).text("Save");
+            return;
+        }
+
+        var data = {
+            id: taskId,
+            nextDate: nextDate,
+            comment: comment,
+            isCompleted: isCompleted
+        };
+
+        addAntiForgeryToken(data);
+
+        $.ajax({
+            url: "/Dashboard/SaveFollowUp",
+            type: "POST",
+            data: data,
+            success: function (res) {
+                if (res && res.success) {
+                    captureOpenedAccordions();
+
+                    $.ajax({
+                        url: "/Dashboard/ReloadFollowupTables",
+                        type: "GET",
+                        success: function (html) {
+                            $("#followupTablesContainer").html(html);
+                            restoreOpenedAccordions();
+                        }
+                    });
+                } else {
+                    alert("Error saving follow-up.");
+                    btn.prop("disabled", false).text("Save");
+                }
+            },
+            error: function () {
+                alert("Network error occurred.");
+                btn.prop("disabled", false).text("Save");
+            }
+        });
+    });
+
+        $("table").on("click", ".toggle-subgrid", function () {
+        var btn = $(this);
+        var parentRow = btn.closest("tr");
+        var subgridRow = parentRow.next(".subgrid-row");
+        var container = subgridRow.find(".subgrid-container");
+        var taskId = btn.data("id");
+        if (subgridRow.is(":visible")) {
+            subgridRow.hide();
+            btn.text("+");
+            return;
+        }
+        btn.text("-");
+        subgridRow.show();
+        if (container.html().trim() !== "") {
+            return;
+        }
+        $.ajax({
+            url: "/Dashboard/GetFollowUpSubGrid",
+            type: "GET",
+            data: { followUpTaskId: taskId },
+            success: function (html) {
+                container.html(html);
+            },
+            error: function () {
+                container.html("<div class='error'>Failed to load follow-ups</div>");
+            }
+        });
+    });
+    });
+</script>

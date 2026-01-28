@@ -1,0 +1,23 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.ConnectionRequests
+@model ConnectionRequestModel
+
+@{
+    const string hideInfoBlockAttributeName = "connectionRequestDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+}
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">      
+            <nop-cards id="connectionRequest-item-cards">
+                <nop-card asp-name="linkedInFollowups-item-info" asp-icon="fas fa-info" asp-title="@T("Plugin.SatyanamCRM.ConnectionRequest.Info")"
+                          asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/ConnectionRequests/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+            </nop-cards>
+        </div>
+    </div>
+</section>

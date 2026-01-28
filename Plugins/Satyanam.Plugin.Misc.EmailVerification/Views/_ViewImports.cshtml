@@ -1,0 +1,25 @@
+﻿@inherits App.Web.Framework.Mvc.Razor.NopRazorPage<TModel>
+@inject App.Services.Common.IGenericAttributeService genericAttributeService
+@inject IWorkContext workContext
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, App.Web.Framework
+
+@using System.Text.Encodings.Web
+@using App.Core
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
+@using Microsoft.AspNetCore.Routing
+@using Nop.Core
+@using App.Core.Domain.Common
+@using App.Core.Infrastructure
+@using App.Services.Events
+@using App.Web.Areas.Admin.Components
+@using App.Web.Framework
+@using App.Web.Framework.Models
+@using App.Web.Framework.Events
+@using App.Web.Framework.Extensions
+@using App.Web.Framework.Infrastructure
+@using App.Web.Framework.Models.DataTables
+@using App.Web.Framework.Security.Captcha
+@using App.Web.Framework.Security.Honeypot
+@using App.Web.Framework.Themes
+@using App.Web.Framework.UI

@@ -1,0 +1,32 @@
+@model LeaveManagementModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.LeaveManagement.AddNew").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("LeaveManagement");
+}
+<form asp-controller="LeaveManagement" asp-action="Create" method="post" id="leaveform">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.LeaveManagement.AddNew")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.Configuration.LeaveManagement.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageLeaveManagement, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/LeaveManagements/_CreateOrUpdate.cshtml", Model)
+</form>

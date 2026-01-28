@@ -1,0 +1,84 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Contacts
+@model ContactsModel
+
+<input type="hidden" asp-for="Id" />
+
+<div class="card-body">
+    @if (Model.Id > 0)
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "contactsdeals-grid",
+                        UrlRead = new DataUrl("ContactDeals", "Contacts", new RouteValueDictionary { [nameof(Model.contactsDealsSearch.ContactId)] = Model.Id }),
+                        UrlDelete = new DataUrl("ContactDealsDelete", "Contacts", new RouteValueDictionary { [nameof(Model.Id)] = Model.contactsDealsModels.FirstOrDefault()?.Id }),
+                        Length = Model.contactsDealsSearch.PageSize,
+                        LengthMenu = Model.contactsDealsSearch.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ContactsDealsModel.DealName))
+                    {
+                        Title = T("Admin.Contact.Deals.DealName").Text
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ContactsDealsModel.Amount))
+                    {
+                        Title = T("Admin.Contact.Deals.Amount").Text
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ContactsDealsModel.Stage))
+                    {
+                        Title = T("Admin.Contact.Deals.Stage").Text
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ContactsDealsModel.Probability))
+                    {
+                        Title = T("Admin.Contact.Deals.Probability").Text
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ContactsDealsModel.Date))
+                    {
+                        Title = T("Admin.Contact.Deals.ClosingDate").Text
+                    });
+                    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageContactDeals, PermissionAction.Edit))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ContactsModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "100",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderButtonEdit(new DataUrl("~/Admin/Contacts/ContactsDealsEdit?contactId=" + Model.Id + "&id=" + Model.contactsDealsModels.FirstOrDefault()?.Id, true))
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageContactDeals, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ContactsModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                            ClassName = NopColumnClassDefaults.Button
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+
+            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageContactDeals, PermissionAction.Add))
+            {
+                <div class="card-body">
+                    <button type="button" class="btn btn-primary" onclick="location.href = '@Url.Action("ContactsDealsCreate", new { contactId = Model.Id })'">
+                        <i class="fas fa-plus-square"></i>
+                        @T("Admin.Contacts.Deals.AddButton")
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                Please save the contact before viewing associated deals.
+            </div>
+        </div>
+    }
+</div>

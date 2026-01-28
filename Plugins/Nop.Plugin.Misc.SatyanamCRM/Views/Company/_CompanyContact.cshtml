@@ -1,0 +1,43 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Company
+@model CompanyModel
+
+<input type="hidden" asp-for="Id" />
+
+<div class="card-body">
+    @if (Model.Id > 0)
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "companycontact-grid",
+                        UrlRead = new DataUrl("CompanyContact", "Company", new RouteValueDictionary { [nameof(Model.companyDealsSearchModel.CompanyId)] = Model.Id }),
+                        Length = Model.companyContactSearchModel.PageSize,
+                        LengthMenu = Model.companyContactSearchModel.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(CompanyContactModel.Name))
+                    {
+                        Title = T("Admin.CompanyContactModel.Fields.Name").Text,
+                        Width = "50"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(CompanyContactModel.TitleName))
+                    {
+                        Title = T("Admin.CompanyContactModel.Fields.TitleName").Text,
+                        Width = "50"
+                    });
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                Please save the company before viewing associated contact.
+            </div>
+        </div>
+    }
+</div>

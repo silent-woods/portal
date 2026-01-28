@@ -1,0 +1,285 @@
+﻿@using App.Web.Areas.Admin.Models.ManageResumes;
+@model CandiatesResumesModel
+<input type="hidden" asp-for="@Model.Id" />
+@*<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-popup">*@
+<div class="card-body">
+    <input type="hidden" asp-for="TraineeId" />
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="Gender" />
+        </div>
+        <div class="col-sm-4">
+            <div class="gender">
+                <span class="male">
+                    <input type="radio" asp-for="Gender" value="M" checked="checked" id="gender-male" style="height:15px;width:15px;" />
+                    <label class="forcheckbox" for="gender-male">@T("Account.Fields.Gender.Male")</label>
+                </span>
+                <span class="female">
+                    <input type="radio" asp-for="Gender" value="F" checked="@(Model.Gender == "F")" id="gender-female" style="height:15px;width:15px;" />
+                    <label class="forcheckbox" for="gender-female">@T("Account.Fields.Gender.Female")</label>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="FirstName" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="FirstName" asp-required="true" />
+            <span asp-validation-for="FirstName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="LastName" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="LastName" asp-required="true" />
+            <span asp-validation-for="LastName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="DateOfBirth" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="DateOfBirth" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="Email" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="Email" asp-required="true" />
+            <span asp-validation-for="Email"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="CollegeName" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="CollegeName" asp-required="true" />
+            <span asp-validation-for="CollegeName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="Degree" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="Degree" asp-required="true" />
+            <span asp-validation-for="Degree"></span>
+        </div>
+    </div>
+    <div class="form-group row number">
+        <div class="col-sm-3">
+            <nop-label asp-for="CompletedYear" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="CompletedYear" asp-required="true" />
+            <span asp-validation-for="CompletedYear"></span>
+        </div>
+    </div>
+    <div class="form-group row number">
+        <div class="col-sm-3">
+            <nop-label asp-for="Percentage" />
+        </div>
+        <div class="col-sm-5">
+            <nop-editor asp-for="Percentage" />
+        </div>
+    </div>
+    @*<div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="ResumeUrl" />
+        </div>
+        <div class="col-sm-4">
+            @if (Model.ResumeUrl != null)
+            {
+                <a href="@Model.ResumeUrl"> @T("Trainee.Admin.ResumeDownload") </a>
+            }
+        </div>
+    </div>*@
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="ResumeUrl" />
+        </div>
+        <div class="col-sm-4">
+            <div class="file-upload">
+                <div class="outer">
+                    @if (Model.ResumeUrl != null)
+                    {
+                        <a href="@Model.ResumeUrl"> @T("Trainee.Admin.ResumeDownload") </a>
+                    }
+                    <div class="upload_button_outer clearfix">
+                        <div class="uploadbtn">
+                            <input type="file" id="file" name="file" />
+                        </div>
+                        <div class="filename"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="Skill" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="Skill" asp-required="true" />
+            <span asp-validation-for="Skill"></span>
+        </div>
+    </div>
+    <div class="form-group row number">
+        <div class="col-sm-3">
+            <nop-label asp-for="MobileNumber" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="MobileNumber" asp-required="true" />
+            <span asp-validation-for="MobileNumber"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="StreetAddress" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="StreetAddress" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="StreetAddress2" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="StreetAddress2" />
+        </div>
+    </div>
+    <div class="form-group row number">
+        <div class="col-sm-3">
+            <nop-label asp-for="ZipPostalCode" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="ZipPostalCode" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="City" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="City" asp-required="true" />
+            <span asp-validation-for="City"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="AboutYourSelf" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="AboutYourSelf" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="AppliedForId" />
+        </div>
+        <div class="col-sm-4">
+            <nop-select asp-for="AppliedForId" asp-items="Model.AvailableApplyFor" asp-required="true" />
+            <span asp-validation-for="AppliedForId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="StatusId" />
+        </div>
+        <div class="col-sm-4">
+            <nop-select asp-for="StatusId" asp-items="Model.AvailableStatus" asp-required="true" />
+            <span asp-validation-for="StatusId"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="Interviewer" />
+        </div>
+
+        <div class="col-sm-4">
+            <div class="input-group-append input-group-required">
+                <div class="input-group">
+                    <nop-select asp-for="SelectedInterviewer" asp-items="Model.Employee" asp-multiple="true" />
+                </div>
+                <div class="input-group-btn">
+                    <nop-required />
+                </div>
+            </div>
+            <script>
+                $(document).ready(function () {
+                    var customerRoleIdsInput = $('#@Html.IdFor(model => model.SelectedInterviewer)').data("kendoMultiSelect");
+                    customerRoleIdsInput.setOptions({
+                        customerRoleIdsInput: false,
+                        filter: "contains"
+                    });
+
+                @if (Model.Employee.Count == 0)
+                {
+                    <text>
+                            customerRoleIdsInput.setOptions({
+                                enable: false,
+                                placeholder: '@T("Admin.JobPosting.Fields.NoInterviewerId")'
+                            });
+                        customerRoleIdsInput._placeholder();
+                        customerRoleIdsInput._enable();
+                    </text>
+                }
+                                                                    });
+            </script>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="TechnicalRoundDate" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="TechnicalRoundDate" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="PracticalRoundDate" />
+        </div>
+        <div class="col-sm-4">
+            <nop-editor asp-for="PracticalRoundDate" />
+        </div>
+    </div>
+
+</div>
+@* </div>
+            </div>
+        </div>
+    </div>
+</section>*@
+
+<script>
+    $(function () {
+        $('.number').on('keydown', '#MobileNumber', function (e) { -1 !== $.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) || (/65|67|86|88/.test(e.keyCode) && (e.ctrlKey === true || e.metaKey === true)) && (!0 === e.ctrlKey || !0 === e.metaKey) || 35 <= e.keyCode && 40 >= e.keyCode || (e.shiftKey || 48 > e.keyCode || 57 < e.keyCode) && (96 > e.keyCode || 105 < e.keyCode) && e.preventDefault() });
+    })
+
+    $(function () {
+        $('.number').on('keydown', '#Percentage', function (e) { -1 !== $.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) || (/65|67|86|88/.test(e.keyCode) && (e.ctrlKey === true || e.metaKey === true)) && (!0 === e.ctrlKey || !0 === e.metaKey) || 35 <= e.keyCode && 40 >= e.keyCode || (e.shiftKey || 48 > e.keyCode || 57 < e.keyCode) && (96 > e.keyCode || 105 < e.keyCode) && e.preventDefault() });
+    })
+
+    $(function () {
+        $('.number').on('keydown', '#CompletedYear', function (e) { -1 !== $.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) || (/65|67|86|88/.test(e.keyCode) && (e.ctrlKey === true || e.metaKey === true)) && (!0 === e.ctrlKey || !0 === e.metaKey) || 35 <= e.keyCode && 40 >= e.keyCode || (e.shiftKey || 48 > e.keyCode || 57 < e.keyCode) && (96 > e.keyCode || 105 < e.keyCode) && e.preventDefault() });
+    })
+
+    $(function () {
+        $('.number').on('keydown', '#ZipPostalCode', function (e) { -1 !== $.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) || (/65|67|86|88/.test(e.keyCode) && (e.ctrlKey === true || e.metaKey === true)) && (!0 === e.ctrlKey || !0 === e.metaKey) || 35 <= e.keyCode && 40 >= e.keyCode || (e.shiftKey || 48 > e.keyCode || 57 < e.keyCode) && (96 > e.keyCode || 105 < e.keyCode) && e.preventDefault() });
+    })
+</script>

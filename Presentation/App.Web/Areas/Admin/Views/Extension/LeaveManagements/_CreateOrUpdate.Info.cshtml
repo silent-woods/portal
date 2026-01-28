@@ -1,0 +1,236 @@
+﻿@model LeaveManagementModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="SelectedEmployeeId" />
+        </div>
+        <div class="col-md-4">
+            <div style="position: relative;">
+                @if (Model.Id == 0)
+                {
+                    <nop-select asp-for="SelectedEmployeeId" asp-items="Model.AvailableEmployees" asp-multiple="true" class="form-control" />
+                    <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                }
+                else
+                {
+                    <input type="text" class="form-control" value="@Model.EmployeeName" readonly />
+
+                    <input type="hidden" class="form-control" value="@Model.EmployeeId"  />
+                   
+                  
+                }
+            </div>
+            <script>
+                $(document).ready(function () {
+                    var selectElement = $('#@Html.IdFor(model => model.SelectedEmployeeId)').data("kendoMultiSelect");
+
+                    selectElement.setOptions({
+                        autoClose: true,
+                        filter: "contains",
+                        change: function (e) {
+                            if (this.value().length > 1) {
+                                var lastItem = this.value()[this.value().length - 1];
+                                this.value([lastItem]);
+                            }
+                        }
+                    });
+
+                @if (Model.AvailableEmployees.Count == 0)
+                {
+                    <text>
+                            selectElement.setOptions({
+                                enable: false,
+                                placeholder: '@T("Admin.Catalog.Employee.NoEmployee")'
+                            });
+                        selectElement._placeholder();
+                        selectElement._enable();
+                    </text>
+                }
+                                });
+            </script>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="LeaveType" />
+        </div>
+        <div class="col-sm-4">
+            <nop-select asp-for="LeaveTypeId" asp-items="Model.Leave" asp-required="true" />
+            <span asp-validation-for="LeaveTypeId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="From" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="From" id="From" asp-required="true" />
+            <span asp-validation-for="From"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="To" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="To" id="To" asp-required="true" />
+            <span asp-validation-for="To"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="NoOfDays" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="NoOfDays" id="NoOfDays" asp-required="true" />
+            <span asp-validation-for="NoOfDays"></span>
+            <span id="NoOfDaysValidation" style="color: red;"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ReasonForLeave" />
+        </div>
+        <div class="col-md-4">
+            <nop-textarea asp-for="ReasonForLeave" asp-required="true" />
+            <span asp-validation-for="ReasonForLeave"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-3">
+            <nop-label asp-for="Status" />
+        </div>
+        <div class="col-sm-4">
+            <nop-select asp-for="StatusId" id="Status" asp-items="Model.ApprovedStatus" asp-required="true" onchange="handleApproval()" />
+            <span asp-validation-for="StatusId"></span>
+        </div>
+    </div>
+
+  
+        <div class="form-group row">
+            <div class="col-sm-3">
+            <nop-label asp-for="SelectedEmployeeIdForEmail" />
+            </div>
+            <div class="col-sm-4">
+                <div style="position: relative;">
+                <nop-select asp-for="SelectedEmployeeIdForEmail" asp-items="Model.AvailableEmployees" asp-multiple="true" class="form-control" name="SelectedEmployeeIdForEmail" />
+
+               
+                    <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                <input type="hidden" class="form-control" value="@Model.SelectedEmployeeIdForEmail" />
+
+                </div>
+            <script>
+                $(document).ready(function () {
+                    var selectElement = $('#@Html.IdFor(model => model.SelectedEmployeeIdForEmail)').data("kendoMultiSelect");
+
+                    selectElement.setOptions({
+                        autoClose: true,
+                        filter: "contains",
+                        change: function (e) {
+                            
+                        }
+                    });
+
+                @if (Model.AvailableEmployees.Count == 0)
+                {
+                    <text>
+                            selectElement.setOptions({
+                                enable: false,
+                                placeholder: '@T("Admin.Catalog.Employee.NoEmployee")'
+                            });
+                        selectElement._placeholder();
+                        selectElement._enable();
+                    </text>
+                }
+                                                });
+            </script>
+                <span id="Project-error"></span>
+
+            <span asp-validation-for="SelectedEmployeeIdForEmail"></span>
+            </div>
+        </div>
+   
+</div>
+
+<script>
+    $(document).ready(function () {
+        function updateNoOfDays() {
+            var fromDate = $("#From").val();
+            var toDate = $("#To").val();
+            console.log(fromDate, toDate, "fromto");
+
+            if (fromDate && toDate) {
+                $.ajax({
+                    url: '@Url.Action("CalculateNoOfDays", "LeaveManagement")',
+                    type: 'GET',
+                    data: {
+                        fromDate: fromDate,
+                        toDate: toDate
+                    },
+                    success: function (data) {
+                        $("#NoOfDays").data("kendoNumericTextBox").value(data);
+                    }
+                });
+            } else {
+                $("#NoOfDays").data("kendoNumericTextBox").value('');
+            }
+        }
+
+        $("#From, #To").change(function () {
+            updateNoOfDays();
+        });
+
+
+
+        // function validateNoOfDays(data) {
+        //     var fromDate = $("#From").val();
+        //     var toDate = $("#To").val();
+        //     var noOfDays = $("#NoOfDays").data("kendoNumericTextBox").value();
+
+        //     // Clear any existing validation message
+        //     $("#NoOfDaysValidation").text("");
+
+        //     if (fromDate && toDate) {
+        //         // Parse dates
+        //         var from = new Date(fromDate);
+        //         var to = new Date(toDate);
+
+        //         if (to < from) {
+        //             $("#NoOfDaysValidation").text("The 'To' date cannot be earlier than the 'From' date.");
+        //             return false;
+        //         }
+
+        //         // Calculate actual days difference (inclusive of both dates)
+        //         var timeDiff = to.getTime() - from.getTime();
+        //         var actualDays = timeDiff / (1000 * 3600 * 24) + 1; // +1 to include both dates
+              
+        //         // Validation check
+        //         if () {
+        //             $("#NoOfDaysValidation").text(
+        //                 "Please enter a valid number of days."
+        //             );
+        //             // $("#NoOfDays").data("kendoNumericTextBox").value(''); // Clear the field
+        //             return false;
+        //         }
+        //     }
+        //     return true;
+        // }
+        // // Trigger validation on date or NoOfDays changes
+        // $("#From, #To").change(function () {
+        //     validateNoOfDays();
+        // });
+
+        // $("#NoOfDays").change(function () {
+        //     validateNoOfDays();
+        // });
+
+    });
+
+
+
+ 
+
+</script>
+

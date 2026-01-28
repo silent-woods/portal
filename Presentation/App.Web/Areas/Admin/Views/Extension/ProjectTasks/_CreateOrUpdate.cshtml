@@ -1,0 +1,39 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.ProjectTasks
+@model ProjectTaskModel
+@{
+    const string hideInfoBlockAttributeName = "ProjectTaskDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+    const string hideTaskCommentsBlockAttributeName = "TaskComments.HideInfoBlock";
+   
+    var hideTaskCommentsBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideTaskCommentsBlockAttributeName);
+
+    const string hideTaskChangeLogBlockAttributeName = "TaskChangeLog.HideInfoBlock";
+
+    var hideTaskChangeLogBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideTaskChangeLogBlockAttributeName);
+}
+<input asp-for="Id" type="hidden" />
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="projecttask-item-cards">
+                <nop-card asp-name="projecttask-item-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.ProjectTask.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/ProjectTasks/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectTaskComments, PermissionAction.View))
+                {
+                    <nop-card asp-name="TaskComments-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.TaskComments")" asp-hide-block-attribute-name="@hideTaskCommentsBlockAttributeName" asp-hide="@hideTaskCommentsBlock" asp-advanced="false">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/ProjectTasks/_CreateOrUpdateTaskComments.cshtml", Model)
+                    </nop-card>
+                }
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectTaskChangeLog, PermissionAction.View))
+                {
+                    <nop-card asp-name="TaskChangeLog-info" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.TaskChangeLog")" asp-hide-block-attribute-name="@hideTaskChangeLogBlockAttributeName" asp-hide="@hideTaskChangeLogBlock" asp-advanced="false">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/ProjectTasks/_CreateOrUpdateTaskChangeLog.cshtml", Model)
+                    </nop-card>
+                }
+            </nop-cards>
+        </div>
+    </div>
+</section>

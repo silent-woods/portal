@@ -1,0 +1,104 @@
+@using App.Web.Areas.Admin.Models.ProjectTaskCategoryMappings
+@model ProjectModel
+
+<div class="card-body">
+    @if (Model.Id > 0)
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "projecttaskcategorymapping-grid",
+                        UrlRead = new DataUrl("List", "ProjectTaskCategoryMapping", new RouteValueDictionary { [nameof(Model.projectEmployeeMappingSearchModel.ProjectId)] = Model.Id }),
+                        UrlDelete = new DataUrl("Delete", "ProjectTaskCategoryMapping", new RouteValueDictionary { [nameof(Model.Id)] = Model.ProjectTaskCategoryMappingModel.FirstOrDefault()?.Id }),
+                        Length = Model.projectEmployeeMappingSearchModel.PageSize,
+                        LengthMenu = Model.projectEmployeeMappingSearchModel.AvailablePageSizes,
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectTaskCategoryMappingModel.TaskCategoryName))
+                    {
+                        Title = T("Admin.ProjectTaskCategoryMapping.Fields.CategoryName").Text,
+                        Width = "200"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectTaskCategoryMappingModel.OrderBy))
+                    {
+                        Title = T("Admin.ProjectTaskCategoryMapping.Fields.OrderBy").Text,
+                        Width = "100"
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectTaskCategoryMappingModel.IsActive))
+                    {
+                        Title = T("Admin.ProjectTaskCategoryMapping.Fields.IsActive").Text,
+                        Width = "50",
+                        ClassName = NopColumnClassDefaults.CenterAll,
+                        Render = new RenderBoolean()
+                    });
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectTaskCategoryMapping, PermissionAction.Edit))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectEmployeeMappingModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "80",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderCustom("renderCategoryEdit")
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectTaskCategoryMapping, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectEmployeeMappingModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                            ClassName = NopColumnClassDefaults.Button
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+            </div>
+
+            <script>
+                function renderCategoryEdit(data, type, row, meta) {
+                    var projectId = @Model.Id;
+                    var url = '@Url.Action("Edit", "ProjectTaskCategoryMapping")' + '?projectId=' + projectId + '&id=' + data;
+                    return '<button onclick="javascript:OpenWindow(\'' + url + '&btnId=btnRefreshTaskCategory&formId=project-form\', 800, 600, true); return false;" class="btn btn-default"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit").Text</button>';
+                }
+
+                $(document).ready(function () {
+                    $(window).on('refreshGrid', function () {
+                        updateTable('#projecttaskcategorymapping-grid');
+                        console.log("TaskCategory Grid refreshed");
+                    });
+                });
+
+                function openCopyMappingsPopup(targetProjectId) {
+                    var url = '@Url.Action("CopyMappings", "ProjectTaskCategoryMapping")' + '?targetProjectId=' + targetProjectId;
+                    OpenWindow(url, 400, 200, true);
+                }
+
+            </script>
+
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectTaskCategoryMapping, PermissionAction.Add))
+            {
+                <div class="card-body">
+                    <button type="button" id="btnAddNewTaskCategoryMapping" class="btn btn-primary" onclick="javascript:OpenWindow('@Url.Action("Create", "ProjectTaskCategoryMapping", new { projectId = Model.Id, btnId = "btnRefreshTaskCategory", formId = "project-form" })', 800, 600, true); return false;">
+                        <i class="fas fa-plus-square"></i>
+                        @T("Admin.ProjectTaskCategoryMapping.AddNew")
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="openCopyMappingsPopup(@Model.Id)">
+                        @T("Admin.ProjectTaskCategoryMapping.Copy")
+                    </button>
+                    <button type="button" id="btnRefreshTaskCategory" style="display:none"></button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card card-default">
+            <div class="card-body">
+                @T("Admin.ProjectTaskCategoryMapping.SaveBeforeEdit")
+            </div>
+        </div>
+    }
+</div>

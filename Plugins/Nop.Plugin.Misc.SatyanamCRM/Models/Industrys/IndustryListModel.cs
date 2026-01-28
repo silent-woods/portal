@@ -1,0 +1,10 @@
+﻿using App.Web.Framework.Models;
+namespace Satyanam.Nop.Plugin.SatyanamCRM.Models.Industrys
+{
+    /// <summary>
+    /// Represents a synchronization record list model
+    /// </summary>
+    public record IndustryListModel : BasePagedListModel<IndustryModel>
+    {
+    }
+}

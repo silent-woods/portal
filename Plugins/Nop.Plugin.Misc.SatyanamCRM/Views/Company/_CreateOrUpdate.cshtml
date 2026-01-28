@@ -1,0 +1,39 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Company
+@model CompanyModel
+
+@{
+    const string hideInfoBlockAttributeName = "companysDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+    const string hideInfoBlockAttributecompanycontact = "companyContactDetails.HideInfoBlock";
+    var hideInfoBlockContact = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributecompanycontact);
+
+    const string hideInfoBlockAttributecompanydeals = "companydealsDetails.HideInfoBlock";
+    var hideInfoBlockDeals = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributecompanydeals);
+}
+
+@* <div asp-validation-summary="All"></div> *@
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="company-item-cards">
+                <nop-card asp-name="company-item-info" asp-icon="fas fa-info" asp-title="@T("Plugin.SatyanamCRM.Company.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">@await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Company/_CreateOrUpdate.Info.cshtml", Model)</nop-card>
+                @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageCompanyContacts, PermissionAction.View))
+                {
+                    <nop-card asp-name="company-item-contact" asp-icon="fas fa-address-book" asp-title="@T("Plugin.SatyanamCRM.Company.Contact")" asp-hide-block-attribute-name="@hideInfoBlockAttributecompanycontact" asp-hide="@hideInfoBlockContact">
+                        @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Company/_CompanyContact.cshtml", Model)
+                    </nop-card>
+                }
+                @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageCompanyDeals, PermissionAction.View))
+                {
+                    <nop-card asp-name="lead-item-deals" asp-icon="fas fa-handshake" asp-title="@T("Plugin.SatyanamCRM.Company.Deals")" asp-hide-block-attribute-name="@hideInfoBlockAttributecompanydeals" asp-hide="@hideInfoBlockDeals">
+                        @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Company/_CompanyDeals.cshtml", Model)
+                    </nop-card>
+                }
+            </nop-cards>
+        </div>
+    </div>
+</section>

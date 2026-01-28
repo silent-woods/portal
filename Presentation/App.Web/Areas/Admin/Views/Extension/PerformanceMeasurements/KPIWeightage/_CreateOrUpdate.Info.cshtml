@@ -1,0 +1,48 @@
+﻿@model KPIWeightageModel
+
+@{
+    var customer = await workContext.GetCurrentCustomerAsync();
+    const string hideInfoBlockAttributeName = "KPIWeightageDetails.HideInfoBlock";
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="kpi-weightage-cards">
+                <nop-card asp-name="kpi-weightage-info" asp-icon="fas fa-info" asp-title="@T("Admin.KPIWeightage.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="KPIName" />
+                            </div>
+                            <div class="col-sm-4">
+                                <nop-select asp-for="KPIMasterId" asp-items="Model.KPIMaster" asp-required="true" />
+                                <span asp-validation-for="KPIMasterId"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-3">
+                                <nop-label asp-for="DesignationName" />
+                            </div>
+                            <div class="col-sm-4">
+                                <nop-select asp-for="DesignationId" asp-items="Model.Designations" asp-required="true" />
+                                <span asp-validation-for="DesignationId"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="Percentage" />
+                            </div>
+                            <div class="col-md-4">
+                                <nop-editor asp-for="Percentage" asp-required="true" />
+                                <span asp-validation-for="Percentage"></span>
+                            </div>
+                        </div>
+                    </div>
+                </nop-card>
+            </nop-cards>
+        </div>
+    </div>
+</section>
+

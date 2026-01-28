@@ -1,0 +1,41 @@
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Company
+@model CompanyDealsModel
+@{
+    Layout = "_AdminLayout";
+}
+@{
+    //page title
+    ViewBag.PageTitle = T("Plugin.SatyanamCRM.Deals.EditDealsDetails").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Deals");
+}
+
+<form asp-controller="Company" asp-action="CompanyDealsEdit" method="post">
+    <input asp-for="Id" type="hidden" />
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Plugin.SatyanamCRM.Deals.EditDealsDetails")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-controller="Company" asp-action="Edit" asp-route-id="@Model.CompanyId">@T("Admin.Company.Deals.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageCompanyDeals, PermissionAction.Edit))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Company/_CompanyDealsMapping.cshtml", Model)
+</form>
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="Address-delete" />
+
+

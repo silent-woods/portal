@@ -1,0 +1,333 @@
+@using App.Web.Areas.Admin.Models.Extension.MonthlyPerformanceReports
+@model MonthlyPerformanceReportSearchModel
+@{
+    ViewBag.PageTitle = T("Admin.Configuration.PerformanceSummaryReport").Text;
+    NopHtml.SetActiveMenuItemSystemName("PerformanceSummaryReport");
+
+    const string hideSearchBlockAttributeName = "PerformanceSummaryReport.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(
+        await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">@T("Admin.Configuration.PerformanceSummaryReport")</h1>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text"> </div>
+
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="SearchEmployeeId" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <select id="employeeDropdown" name="@Html.NameFor(model => model.SearchEmployeeId)" class="form-control" style="border: none;
+        box-shadow: none;">
+                                            <option value=""></option>
+                                            @foreach (var employee in Model.AvailableEmployees)
+                                            {
+                                                <option value="@employee.Value">@employee.Text</option>
+                                            }
+                                        </select>
+                                        @Html.HiddenFor(model => model.SearchEmployeeId)
+                                        <span id="employee-error"></span>
+
+                                    </div>
+                                </div>
+                                <script>
+                                    $(document).ready(function () {
+                                                $("#employeeDropdown").kendoDropDownList({
+                                                    optionLabel: "Select an employee",
+                                                    dataTextField: "Text",
+                                                    dataValueField: "Value",
+                                                    filter: "contains",
+                                                    autoBind: false,
+                                                    dataSource: @Html.Raw(Json.Serialize(Model.AvailableEmployees)),
+                                                    change: function (e) {
+                                                        var searchEmployeeId = $('#employeeDropdown').val();
+
+                                                        $('#SearchEmployeeId').val(searchEmployeeId);
+                                                    }
+                                                });
+                                                });
+                                </script>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="OverEstimation" />
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <nop-select asp-for="OverEstimation" asp-items="Model.AvailableOverEstimations" />
+                                        <span asp-validation-for="OverEstimation"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row">
+
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="SelectedProjectIds" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <div style="position: relative;">
+                                            <nop-select asp-for="SelectedProjectIds" asp-items="Model.AvailableProjects" asp-multiple="true" class="form-control" />
+                                        </div>
+                                        <span id="Project-error"></span>
+                                        <script>
+                                            $(document).ready(function () {
+                                                var selectElement = $('#@Html.IdFor(model => model.SelectedProjectIds)').data("kendoMultiSelect");
+
+                                                selectElement.setOptions({
+                                                    autoClose: true,
+                                                    filter: "contains",
+
+                                                });
+
+                                            @if (Model.AvailableProjects.Count == 0)
+                                            {
+                                                        <text>
+                                                                selectElement.setOptions({
+                                                                    enable: false,
+                                                                    placeholder: '@T("Admin.Catalog.Project.NoProject")'
+                                                                });
+                                                            selectElement._placeholder();
+                                                            selectElement._enable();
+                                                        </text>
+                                            }
+                                                                                                                                                                                                                                                            });
+                                        </script>
+                                        <div id="Project-error"></div>
+                                        <span asp-validation-for="SelectedProjectIds"></span>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="SearchPeriodId" />
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <nop-select asp-for="SearchPeriodId" asp-items="Model.PeriodList" />
+                                        <span asp-validation-for="SearchPeriodId"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <div class="col-sm-3">
+                                    </div>
+                                    <div class="col-sm-9">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group row" style="display:none;" id="from-container">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="From" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <nop-editor asp-for="From" />
+                                        <span asp-validation-for="From"></span>
+                                        <span id="From-error"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <script>
+                                $(document).ready(function () {
+
+                                    $('#SearchPeriodId').on('change', function () {
+                                    var periodId = $(this).val();
+
+                                    $.ajax({
+                                      url: "@(Url.Action("GetPeriodDateRange", "Reports"))",
+                                        type: 'GET',
+                                        data: { periodId: periodId },
+                                        success: function (data) {
+                                            if (data.from && data.to) {
+
+                                                // Not custom, auto-fill and hide custom fields
+                                                $('#From').val(data.from);
+                                                $('#To').val(data.to);
+                                                $('#from-container').hide();
+                                                $('#to-container').hide();
+
+                                            } else {
+                                                // Custom selected
+                                                $('#From').val('');
+                                                $('#To').val('');
+                                                $('#from-container').show();
+                                                $('#to-container').show();
+
+                                            }
+                                        }
+                                    });
+                                });
+                                 $('#SearchPeriodId').trigger('change');
+                                });
+                            </script>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="col-sm-3">
+                                    </div>
+                                    <div class="col-sm-9">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group row" style="display:none;" id="to-container">
+                                    <div class="col-sm-3">
+                                        <nop-label asp-for="To" />
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <nop-editor asp-for="To" />
+                                        <span asp-validation-for="To"></span>
+                                        <div id="To-error"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="text-center col-12">
+                                <button type="submit" id="search-employeePerformance" class="btn btn-primary btn-search">
+                                    <i class="fas fa-chart-line"></i>
+                                    @T("Admin.Reports.MonthlyReport.RunReport")
+                                </button>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "performance-summary-grid",
+                                UrlRead = new DataUrl("PerformanceSummaryReport", "Reports", null),
+                                SearchButtonId = "search-employeePerformance",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                    new FilterParameter(nameof(Model.SearchEmployeeId)),
+                                    new FilterParameter(nameof(Model.From)),
+                                    new FilterParameter(nameof(Model.To)),
+                                    new FilterParameter(nameof(Model.SelectedProjectIds)),
+                                    new FilterParameter(nameof(Model.OverEstimation)),
+                                },
+                            };
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(MonthlyPerformanceReportModel.EmployeeName))
+                            {
+                                Title = T("Admin.Extension.PerformanceSummary.Fields.EmployeeName").Text,
+                                Width = "15%"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(MonthlyPerformanceReportModel.EmployeeId))
+                            {
+                                Title = T("Admin.Extension.PerformanceSummary.Fields.EmployeeName").Text,
+                                Visible = false
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(MonthlyPerformanceReportModel.TotalTask))
+                            {
+                                Title = T("Admin.Extension.PerformanceSummary.Fields.TotalTask").Text,
+                                Width = "10%"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(MonthlyPerformanceReportModel.TotalDeleverdOnTime))
+                            {
+                                Title = T("Admin.Extension.PerformanceSummary.Fields.TotalDeleverdOnTime").Text,
+                                Width = "10%"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(MonthlyPerformanceReportModel.NoOfOverdueTask))
+                            {
+                                Title = T("Admin.Extension.PerformanceSummary.Fields.NoOfOverdueTask").Text,
+                                Width = "10%"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(MonthlyPerformanceReportModel.DOTPercentageString))
+                            {
+                                Title = T("Admin.Extension.PerformanceSummary.Fields.DOTPercentageString").Text,
+                                Width = "10%"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(MonthlyPerformanceReportModel.WorkQualityString))
+                            {
+                                Title = T("Admin.Extension.PerformanceSummary.Fields.WorkQualityString").Text,
+                                Width = "10%"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(MonthlyPerformanceReportModel.OverEstimationSummary))
+                            {
+                                Title = T("Admin.Extension.PerformanceSummary.Fields.OverEstimationSummary").Text,
+                                Width = "20%"
+                            });
+                            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeePerfomance, PermissionAction.View))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(null)
+                                {
+                                    Title = T("Admin.Common.ViewDetails").Text,
+                                    Width = "8%",
+                                    Render = new RenderCustom("renderDetailButton")
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+
+    function renderDetailButton(data, type, row, meta) {
+        var baseUrl = '@Url.Action("EmployeePerformanceReport", "Reports")';
+
+        // Get live values from filters
+        var params = {
+            searchEmployeeId: row.EmployeeId,
+            from: $('#From').val(),
+            to: $('#To').val(),
+            selectedProjectIds: $('#SelectedProjectIds').val() ? $('#SelectedProjectIds').val().join(',') : '',
+            overEstimation: $('#OverEstimation').val(),
+            searchPeriodId: $('#SearchPeriodId').val()   
+        };
+
+        // Convert object to query string
+        var query = Object.keys(params)
+            .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k]))
+            .join('&');
+
+        var url = baseUrl + '?' + query;
+
+        return '<a href="' + url + '" class="btn btn-info btn-sm" target="_blank">Details</a>';
+    }
+
+</script>
+
+

@@ -1,0 +1,82 @@
+﻿@model EmployeeModel
+
+@{
+    var showTour = ViewBag.ShowTour ?? false;
+
+    const string hideInfoBlockAttributeName = "EmployeePage.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+    const string hidePersonalBlockAttributeName = "EmployeePage.HidePersonalBlock";
+    var hidePersonalBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hidePersonalBlockAttributeName);
+
+    const string hideWorkBlockAttributeName = "EmployeePage.HideWorkBlock";
+    var hideWorkBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideWorkBlockAttributeName);
+
+    const string hideAddressBlockAttributeName = "EmployeePage.HideAddressBlock";
+    var hideAddressBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideAddressBlockAttributeName);
+
+    const string hideEducationBlockAttributeName = "EmployeePage.HideEducationBlock";
+    var hideEducationBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideEducationBlockAttributeName);
+    
+    const string hideExperienceBlockAttributeName = "EmployeePage.HideExperienceBlock";
+    var hideExperienceBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideEducationBlockAttributeName);
+
+    const string hideAssetsBlockAttributeName = "EmployeePage.HideAssetsBlock";
+    var hideAssetsBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideAssetsBlockAttributeName);
+
+}
+
+@* <div asp-validation-summary="All"></div> *@
+<input asp-for="Id" type="hidden" />
+<input asp-for="Customer_Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            @* <div class="row">
+                <div class="col-md-12 clearfix">
+                    <div class="float-left">
+                        @await Component.InvokeAsync(typeof(SettingModeViewComponent), new { modeName = "employee-advanced-mode" })
+                    </div>                   
+                </div>
+            </div> *@
+
+            <nop-cards id="employee-cards">
+                <nop-card asp-name="employee-info" asp-icon="fas fa-info" asp-title="@T("Admin.HRM.Employee.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock" asp-advanced="false">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+                <nop-card asp-name="employee-personal" asp-icon="fas fa-dollar-sign" asp-title="@T("Admin.HRM.Employee.Personal")" asp-hide-block-attribute-name="@hidePersonalBlockAttributeName" asp-hide="@hidePersonalBlock" asp-advanced="false">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Personal.cshtml", Model)
+                </nop-card>
+                <nop-card asp-name="employee-work" asp-icon="fas fa-truck" asp-title="@T("Admin.HRM.Employee.Work")" asp-hide-block-attribute-name="@hideWorkBlockAttributeName" asp-hide="@hideWorkBlock" asp-advanced="false">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Work.cshtml", Model)
+                </nop-card>
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress, PermissionAction.View))
+                {
+                    <nop-card asp-name="employee-address" asp-icon="fas fa-map-marker-alt" asp-title="@T("Admin.HRM.Employee.Address")" asp-hide-block-attribute-name="@hideAddressBlockAttributeName" asp-hide="@hideAddressBlock" asp-advanced="false">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Address.cshtml", Model)
+                    </nop-card>
+                }
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation, PermissionAction.View))
+                {
+                    <nop-card asp-name="employee-education" asp-icon="fas fa-graduation-cap" asp-title="@T("Admin.HRM.Employee.Education")" asp-hide-block-attribute-name="@hideEducationBlockAttributeName" asp-hide="@hideEducationBlock" asp-advanced="false">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Education.cshtml", Model)
+                    </nop-card>
+                }
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageExperience, PermissionAction.View))
+                {
+                    <nop-card asp-name="employee-experience" asp-icon="fas fa-chart-line" asp-title="@T("Admin.HRM.Employee.Experience")" asp-hide-block-attribute-name="@hideExperienceBlockAttributeName" asp-hide="@hideExperienceBlock" asp-advanced="false">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Experience.cshtml", Model)
+                    </nop-card>
+                }
+                @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAssets, PermissionAction.View))
+                {
+                    <nop-card asp-name="employee-assets" asp-icon="fas fa-laptop" asp-title="@T("Admin.HRM.Employee.Assets")" asp-hide-block-attribute-name="@hideAssetsBlockAttributeName" asp-hide="@hideAssetsBlock" asp-advanced="false">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Assets.cshtml", Model)
+                    </nop-card>
+                }
+            </nop-cards>
+        </div>
+    </div>
+</section>

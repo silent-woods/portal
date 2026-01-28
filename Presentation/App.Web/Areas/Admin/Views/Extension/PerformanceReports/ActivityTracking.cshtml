@@ -1,0 +1,293 @@
+@using App.Web.Areas.Admin.Models.Extension.ActivityTracking
+
+@model ActivityTrackingSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.ActivityTracking").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("ActivityTracking");
+
+    const string hideSearchBlockAttributeName = "ActivityTracking.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Configuration.ActivityTracking")
+    </h1>
+
+
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group row">
+                                        <div class="col-md-2">
+                                            <nop-label asp-for="SearchDate" />
+                                        </div>
+                                        <div class="col-md-4">
+                                            <nop-editor asp-for="SearchDate" />
+
+                                            <span id="SearchDate-error" class="text-danger" style="display:none;"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-brands" class="btn btn-primary
+                                         btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-default">
+                    <div class="card-body">
+
+                        @await Html.PartialAsync("Table", new DataTablesModel
+                        {
+                            Name = "projects-grid",
+                                                UrlRead = new DataUrl("ActivityTracking", "Employee", null),
+                                                SearchButtonId = "search-brands",
+
+                                                Length = Model.PageSize,
+                                                LengthMenu = Model.AvailablePageSizes,
+                                                Paging = false,
+                                                Filters = new List<FilterParameter>
+                                                {
+                                                new FilterParameter(nameof(Model.SearchDate)),
+                                                },
+                                                ColumnCollection = new List<ColumnProperty>
+                                                {
+                                                new ColumnProperty(nameof(ActivityTrackingModel.EmployeeName))
+                                                {
+                                                Title = T("Admin.ActivityTracking.Fields.EmployeeName").Text
+                                                },
+                                                new ColumnProperty(nameof(ActivityTrackingModel.ActivityStatusName))
+                                                {
+                                                Title = T("Admin.ActivityTracking.Fields.ActivityStatusName").Text,
+                                                Render = new RenderCustom("renderStatusDot"),
+                                                },
+                                                new ColumnProperty(nameof(ActivityTrackingModel.PresentStatus))
+                                                {
+                                                Title = T("Admin.ActivityTracking.Fields.PresentStatus").Text,
+                                                Render = new RenderCustom("renderPresentStatusWithInfo")
+                                                },
+
+
+                                                new ColumnProperty(nameof(ActivityTrackingModel.Time))
+                                                {
+                                                Title = T("Admin.ActivityTracking.Fields.Time").Text,
+                                                Width="130"
+                                                },
+                                                new ColumnProperty(nameof(ActivityTrackingModel.SpentTime))
+                                                {
+                                                Title = T("Admin.ActivityTracking.Fields.SpentTime").Text
+
+                                                },
+
+
+                                                new ColumnProperty(nameof(ActivityTrackingModel.ProjectName))
+                                                {
+                                                Title = T("Admin.ActivityTracking.Fields.ProjectName").Text
+                                                },
+                                                new ColumnProperty(nameof(ActivityTrackingModel.TaskName))
+                                                {
+                                                Title = T("Admin.ActivityTracking.Fields.TaskName").Text
+                                                },
+                                                new ColumnProperty(nameof(ActivityTrackingModel.ActivityName))
+                                                {
+                                                Title = T("Admin.ActivityTracking.Fields.ActivityName").Text,
+                                                Width= "200"
+                                                },
+                                                new ColumnProperty(null)
+                                                {
+                                                Title = "Details",
+                                                Width = "40",
+                                                Render = new RenderCustom("renderTimelineToggleButton"),
+                                                ClassName = "text-center"
+                                                },
+
+                                                }
+                                                })
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function renderStatusDot(data, type, row, meta) {
+            if (!data) return '';
+
+            const parts = data.split("|||");
+            const text = parts[0];
+            const color = parts[1] ;
+
+            return `
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};"></div>
+                    <span>${text}</span>
+                </div>`;
+        }
+
+                function renderTimelineToggleButton(data, type, row, meta) {
+            const childId = `timeline-subgrid-${row.Id}`;
+            return `
+                <button class="btn btn-sm btn-info toggle-subgrid" data-id="${row.EmployeeId}"
+                    onclick="loadSubgrid(${row.EmployeeId}, '${row.TodayDate}',this)">
+                    +
+                </button>
+            `;
+        }
+
+                      function loadSubgrid(employeeId,date, btn) {
+            const tr = $(btn).closest('tr');
+            const subRowId = `subgrid-${employeeId}`;
+           
+            if ($(`#${subRowId}`).length) {
+                $(`#${subRowId}`).toggle();
+                const isVisible = $(`#${subRowId}`).is(":visible");
+                $(btn).text(isVisible ? "-" : "+");
+                return;
+            }
+
+            $('<tr class="no-hover-subgrid" id="' + subRowId + '"><td colspan="100%">Loading...</td></tr>').insertAfter(tr);
+
+            $.get('@Url.Action("GetDailyTimelineData", "Reports")', { employeeId, date})
+                .done(function (html) {
+                    $(`#${subRowId}`).html('<td colspan="100%">' + html + '</td>');
+                    $(btn).text("-");
+                })
+                .fail(function () {
+                    $(`#${subRowId}`).html('<td colspan="100%">Error loading subgrid</td>');
+                });
+        }
+
+
+
+    </script>
+    <script>
+        function renderPresentStatusWithInfo(data, type, row, meta) {
+            let presentStatus = data;
+
+            if (row.ShowLeaveInfo) {
+                return `
+                    ${presentStatus}
+                    <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-html="true" title="${row.LeaveInfo}">
+                        <i class="fas fa-info-circle text-info ms-2"></i>
+                    </a>`;
+            }
+
+            return presentStatus;
+        }
+
+         $(document).on('draw.dt', function () {
+            $('[data-bs-toggle="tooltip"]').tooltip({ html: true });
+        });
+    </script>
+    <script>
+        $('#search-brands').on('click', function (e) {
+            const searchDate = $('#SearchDate').val();
+            const errorSpan = $('#SearchDate-error');
+
+            if (!searchDate) {
+                e.preventDefault(); // prevent form from submitting
+                errorSpan.text("Search Date is required.");
+                errorSpan.show();
+            } else {
+                errorSpan.hide();
+                // Reload the datatable manually
+                $('#projects-grid').DataTable().ajax.reload();
+            }
+        });
+    </script>
+    <style>
+        /* Clean up DataTables layout */
+        .dataTables_wrapper {
+            font-size: 15px;
+        }
+
+            .dataTables_wrapper .dt-top-grid,
+            .dataTables_wrapper .dt-bottom-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+                margin-bottom: 8px;
+                align-items: center;
+            }
+
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_filter,
+            .dataTables_wrapper .dataTables_info,
+            .dataTables_wrapper .dataTables_paginate {
+                margin: 0 !important;
+                padding: 0.25rem 0;
+            }
+
+
+        #projects-grid {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+
+            #projects-grid th, #projects-grid td {
+                /*    padding: 6px 10px !important; */
+                /* white-space: nowrap; */
+            }
+
+
+        .btn-search {
+            padding: 0.3rem 0.8rem;
+            font-size: 14px;
+        }
+
+
+        .card.card-default {
+            margin-bottom: 10px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-body {
+            padding: 0.75rem 1rem;
+        }
+
+        div.dataTables_wrapper div.dataTables_info {
+            padding-top: 0;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            const table = $('#projects-grid').DataTable();
+
+            table.on('init.dt', function () {
+                const wrapper = $('#projects-grid').closest('.dataTables_wrapper');
+
+                wrapper.find('.dataTables_length, .dataTables_filter')
+                    .wrapAll('<div class="dt-top-grid"></div>');
+
+                wrapper.find('.dataTables_info, .dataTables_paginate')
+                    .wrapAll('<div class="dt-bottom-grid"></div>');
+            });
+        });
+    </script>
+
+</section>

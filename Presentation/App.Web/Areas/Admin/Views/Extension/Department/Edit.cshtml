@@ -1,0 +1,43 @@
+﻿@using App.Web.Areas.Admin.Models.Departments;
+@model DepartmentModel
+@{
+    // Layout = "~/Areas/Admin/Views/Shared/_AdminPopupLayout.cshtml";
+    //page title
+    ViewBag.PageTitle = T("Admin.HRM.Department.Update").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Department");
+}
+
+<form asp-controller="Department" asp-action="Edit" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.HRM.Department.Update")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.HRM.Department.BackToList")</a>
+            </small>
+        </h1>
+        <div class="float-right">
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageDepartment, PermissionAction.Edit))
+            {
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            }
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageDepartment, PermissionAction.Delete))
+            {
+                <span id="department-delete" class="btn btn-danger">
+                    <i class="far fa-trash-alt"></i>
+                    @T("Admin.Common.Delete")
+                </span>
+            }
+        </div>
+    </div>
+    @await Html.PartialAsync("~/Areas/Admin/Views/Extension/Department/_CreateOrUpdate.cshtml", Model)
+</form>
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="department-delete" />

@@ -1,0 +1,608 @@
+@model TimeSheetModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.TimeSheet.EditTimeSheetDetails").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("TimeSheet");
+}
+<form asp-controller="TimeSheet" asp-action="Edit" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.TimeSheet.EditTimeSheetDetails")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.Configuration.TimeSheet.BackToList")</a>
+            </small>
+        </h1>
+        <div class="float-right">
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTimeSheet, PermissionAction.Edit))
+            {
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            }
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTimeSheet, PermissionAction.Delete))
+            {
+                <span id="timeSheet-delete" class="btn btn-danger">
+                    <i class="far fa-trash-alt"></i>
+                    @T("Admin.Common.Delete")
+                </span>
+            }
+        </div>
+    </div>
+    <input asp-for="Id" type="hidden" />
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+
+                <div class="cards-group">
+                    <div class="card card-default card-popup">
+                        <div class="card-body">
+                <div class="form-group row">
+                    <div class="col-sm-3">
+                        <nop-label asp-for="SelectedEmployeeId" />
+                    </div>
+                    <div class="col-md-4">
+                        <div style="position: relative;">
+                            <select id="employeeDropdown" name="SelectedEmployeeId" class="form-control">
+                                <option value=""></option>
+                                @foreach (var employee in Model.AvailableEmployees)
+                                {
+                                    <option value="@employee.Value">@employee.Text</option>
+                                }
+                            </select>
+                            <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                            <span style="color:red;" id="employeeError"></span>
+                        </div>
+                        <input type="hidden" id="hiddenEmployee" value="@Model.EmployeeId"></input>
+                    </div>
+                </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="SpentDate" />
+                                </div>
+                                <div class="col-md-4">
+                                    <nop-editor asp-for="SpentDate" class="form-control" /> <span style="color:red; font-weight:bold; position: absolute; right: -5px; top: 15px;">*</span>
+                                    <span style="color:red; " id="dateError"></span>
+                                </div>
+                            </div>
+                <div class="form-group row">
+                    <div class="col-sm-3">
+                        <nop-label asp-for="ProjectId" />
+                    </div>
+                    <div class="col-md-4">
+                        <div style="position: relative;">
+                            <select id="projectDropdown" name="ProjectId" class="form-control">
+                                <option value=""></option>
+                                @foreach (var projects in Model.Projects)
+                                {
+                                    <option value="@projects.Value">@projects.Text</option>
+                                }
+                            </select>
+                            <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                            <span style="color:red;" id="projectError"></span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="hiddenProject" value="@Model.ProjectId"></input>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-sm-3">
+                        <nop-label asp-for="TaskId" />
+                    </div>
+                    <div class="col-md-4">
+                        <div style="position: relative;">
+                            <select id="taskDropdown" name="TaskId" class="form-control">
+                                <option value=""></option>
+                                @foreach (var tasks in Model.Tasks)
+                                {
+                                    <option value="@tasks.Value">@tasks.Text</option>
+                                }
+                            </select>
+                            <span style="color:red; font-weight:bold; position: absolute; right: -12px; top: 15px;">*</span>
+                            <span style="color:red;" id="taskError"></span>
+                        </div>
+                    </div>
+                      <input type="hidden" id="hiddenTask" value="@Model.TaskId"></input>
+                </div>
+
+                            <div class="form-group row">
+                                <div class="col-sm-3">
+                                    <nop-label asp-for="ActivityName" />
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" id="activitySearchInput" name="ActivityName" class="form-control"
+                                           placeholder="Search or enter a new activity" autocomplete="off" value="@Model.ActivityName"/>
+                                    <span style="color:red;" id="activityError"></span>
+                                    <ul id="activitySuggestions" class="list-group" style="position: absolute; z-index: 100; display: none;">
+                                        <!-- Suggestions will be populated here -->
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="activityIdInput" name="ActivityId" value="0" />
+
+                <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="EstimatedHours" />
+                                </div>
+                    <div class="col-sm-3">
+                        <input type="text" name="EstimatedHours" class="form-control col-sm-12 EstimatedHours" value=@Model.EstimatedHours readonly="readonly" />
+                    </div>
+                </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="SpentTime" />
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" name="SpentTime" class="spentTimeInput form-control" placeholder="HH:MM" value="@Model.SpentTime" />
+                                    <span class="text-danger" id="SpentTimeValidation"></span>
+                                </div>
+                            </div>
+
+                            <script>
+                                $(document).on('input', '.spentTimeInput', function () {
+                                    var inputVal = $(this).val().replace(/[^0-9:]/g, ''); // Allow only numbers and ":"
+
+                                    // Ensure ":" is present only once
+                                    var timeParts = inputVal.split(":");
+
+                                    if (timeParts.length > 2) {
+                                        inputVal = timeParts[0] + ":" + timeParts[1].slice(0, 2); // Prevent multiple colons
+                                    }
+
+                                    // Validate format (HH:MM)
+                                    var isValid = timeParts.length === 2 && timeParts[0].length > 0 && timeParts[1].length > 0;
+
+                                    // Ensure minutes do not exceed 59
+                                    if (isValid && parseInt(timeParts[1], 10) > 59) {
+                                        timeParts[1] = "59"; // Force max value of 59 for minutes
+                                    }
+
+                                    // Show validation message if format is incorrect
+                                    if (!isValid) {
+                                        $('#SpentTimeValidation').text("Invalid format. Use HH:MM");
+                                    } else {
+                                        $('#SpentTimeValidation').text("");
+                                    }
+
+                                    // Update input value
+                                    $(this).val(timeParts.join(":"));
+                                });
+
+
+                            </script>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="Billable" />
+                                </div>
+                                <div class="col-md-6">
+                                    <nop-editor asp-for="Billable" id="TaskTitle"/>
+                                    <span asp-validation-for="Billable"></span>
+                                </div>
+                            </div>
+
+                           
+                        </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="timeSheet-delete" />
+<script>
+    $(document).ready(function () {
+        var employeeId = $('#hiddenEmployee').val();
+        $('#employeeDropdown').val(employeeId);
+
+        var projectId = $('#hiddenProject').val();
+        $('#projectDropdown').val(projectId);
+
+        // Initialize Kendo DropDownList for employees
+        $("#employeeDropdown").kendoDropDownList({
+            optionLabel: "Select an employee",
+            dataTextField: "Text",
+            dataValueField: "Value",
+            filter: "contains",
+            autoBind: false,
+            dataSource: @Html.Raw(Json.Serialize(Model.AvailableEmployees))
+            });
+     
+        // Initialize Kendo DropDownList for projects
+        $("#projectDropdown").kendoDropDownList({
+            optionLabel: "Select an project",
+            dataTextField: "Text",
+            dataValueField: "Value",
+            filter: "contains",
+            autoBind: false,
+            dataSource: @Html.Raw(Json.Serialize(Model.Projects)),
+            change: function () {
+                // Get the selected ProjectId
+                var projectId = this.value();
+       
+                $(".EstimatedHours").val(0);
+                
+                $.ajax({
+                    url: "@Url.Action("GetTasksByProject", "TimeSheet")",
+                    type: "GET",
+                    data: { projectId: projectId },
+                    success: function (data) {
+                        // Initialize the task dropdown
+                        var taskDropdown = $("#taskDropdown").kendoDropDownList({
+                            optionLabel: "Select an task",
+                            dataTextField: "Text",
+                            dataValueField: "Value",
+                            filter: "contains",
+                            autoBind: false,
+                            dataSource: data,
+                            change: function () {
+                                var taskId = this.value();
+                                $.ajax({
+                                    url: '@Url.Action("GetEstimatedTimeByTask", "TimeSheet")',
+                                    type: 'GET',
+                                    data: { taskId: taskId },
+                                    success: function (data) {
+                                        $(".EstimatedHours").val(data)
+                                        console.log(data);
+                                    },
+                                    error: function (xhr, status, error) {
+                                        console.log("Error fetching estimated time: " + error);
+                                    }
+                                });
+                            }
+                        }).data("kendoDropDownList");
+                    
+
+                        // Set the selected task value
+                        var taskId = $('#hiddenTask').val();
+                        taskDropdown.value(taskId);
+                       
+                        var taskDropdown = $("#taskDropdown").data("kendoDropDownList");
+                        taskDropdown.select(0);
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error fetching tasks: " + error);
+                    },
+                });
+            }
+        });
+
+        // Initialize the task dropdown with the initial tasks
+        $.ajax({
+            url: "@Url.Action("GetTasksByProject", "TimeSheet")",
+            type: "GET",
+            data: { projectId: projectId },
+            success: function (data) {
+                // Initialize the task dropdown
+              
+                var taskDropdown = $("#taskDropdown").kendoDropDownList({
+                    optionLabel: "Select an task",
+                    dataTextField: "Text",
+                    dataValueField: "Value",
+                    filter: "contains",
+                    autoBind: false,
+                    dataSource: data,
+                    change: function () {
+                        var taskId = this.value();
+                        $.ajax({
+                            url: '@Url.Action("GetEstimatedTimeByTask", "TimeSheet")',
+                            type: 'GET',
+                            data: { taskId: taskId },
+                            success: function (data) {
+                                $(".EstimatedHours").val(data.EstimatedTime)
+                                console.log(data);
+                            },
+                            error: function (xhr, status, error) {
+                                console.log("Error fetching estimated time: " + error);
+                            }
+                        });
+
+                    }
+                }).data("kendoDropDownList");
+          
+                // Set the selected task value
+                var taskId = $('#hiddenTask').val();
+                taskDropdown.value(taskId);
+            },
+            error: function (xhr, status, error) {
+                console.log("Error fetching tasks: " + error);
+            },
+        });
+        var isValid = true;
+
+        // Add JavaScript validations
+        $('#employeeDropdown').on('change', function () {
+            var employeeId = $(this).val();
+            if (employeeId == '') {
+                $('#employeeError').text('@T("Admin.Configuration.TimeSheet.PleaseSelectEmployee")');
+                isValid = false;
+            } else {
+                $('#employeeError').text('');
+                isValid = true;
+            }
+        });
+
+        $('#projectDropdown').on('change', function () {
+            var projectId = $(this).val();
+            if (projectId == '') {
+                $('#projectError').text('@T("Admin.Configuration.TimeSheet.PleaseSelectProject")');
+                isValid = false;
+            } else {
+                $('#projectError').text('');
+                isValid = true;
+            }
+        });
+
+        $('#taskDropdown').on('change', function () {
+            var taskId = $(this).val();
+            if (taskId == '') {
+                $('#taskError').text('@T("Admin.Configuration.TimeSheet.PleaseSelectTask")');
+                isValid = false;
+            } else {
+                $('#taskError').text('');
+                isValid = true;
+            }
+        });
+
+        $('#SpentDate').on('change', function () {
+            var spentDate = $(this).val();
+            if (spentDate == '') {
+                $('#dateError').text('@T("Admin.Configuration.TimeSheet.PleaseSelectDate")');
+                isValid = false;
+            } else {
+                $('#dateError').text('');
+                isValid = true;
+            }
+        });
+
+        $('#SpentHours').on('change', function () {
+            var spentHours = $(this).val();
+            var regex = /^\d+(\.\d+)?$/; // matches numbers and decimals (e.g. 1, 1.2, 1.23)
+            if (!regex.test(spentHours) || spentHours <= 0) {
+                $('#spentHoursError').text('@T("Admin.Configuration.TimeSheet.SpentHoursMustBeGreaterThanZeroAndValidNumber")');
+                isValid = false;
+            } else {
+                $('#spentHoursError').text('');
+                isValid = true;
+            }
+        });
+
+        // Add a submit handler to check if the form is valid before submitting
+        $('form').submit(function (e) {
+            isValid = true;
+
+            var employeeId = $('#employeeDropdown').val();
+            if (employeeId == '') {
+                $('#employeeError').text('@T("Admin.Configuration.TimeSheet.PleaseSelectEmployee")');
+                isValid = false;
+            }
+
+            var projectId = $('#projectDropdown').val();
+            if (projectId == '') {
+                $('#projectError').text('@T("Admin.Configuration.TimeSheet.PleaseSelectProject")');
+                isValid = false;
+            }
+
+            var taskId = $('#taskDropdown').val();
+            if (taskId == '') {
+                $('#taskError').text('@T("Admin.Configuration.TimeSheet.PleaseSelectTask")');
+                isValid = false;
+            }
+
+            var spentDate = $('#SpentDate').val();
+            if (spentDate == '') {
+                $('#dateError').text('@T("Admin.Configuration.TimeSheet.PleaseSelectDate")');
+                isValid = false;
+            }
+
+           
+            if (!isValid) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+
+    $(document).ready(function () {
+        let timeout = null;
+        const suggestions = $("#activitySuggestions");
+       
+        // Handle input event on the activity search field
+        $("#activitySearchInput").on("input", function () {
+            clearTimeout(timeout);
+            const query = $(this).val().trim();
+            var taskId = $('#taskDropdown').val();
+           
+
+            if (query.length > 0) {
+                timeout = setTimeout(() => {
+                    $.ajax({
+                        url: '@Url.Action("SearchActivities", "TimeSheet")',
+                        type: 'GET',
+                        data: { searchText: query, taskId: taskId },
+                        success: function (data) {
+                            const suggestions = $("#activitySuggestions");
+                            suggestions.empty().hide();
+
+                            if (data && data.length > 0) {
+                                data.forEach(activity => {
+                                    const item = $(`<li class="list-group-item list-group-item-action">${activity.Text}</li>`);
+                                    item.on("click", function () {
+                                        $("#activitySearchInput").val(activity.Text);
+                                        $("#activitySuggestions").hide();
+                                    });
+                                    suggestions.append(item);
+                                });
+                                suggestions.show();
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error fetching activities: " + error);
+                        }
+                    });
+                }, 300); // Add a debounce delay
+            } else {
+                $("#activitySuggestions").empty().hide();
+            }
+
+
+            const suggestions = $("#activitySuggestions");
+
+            // Handle arrow keys and Enter for navigation
+            let selectedIndex = -1;
+            $("#activitySearchInput").on("keydown", function (event) {
+                const items = suggestions.children("li");
+
+                if (items.length > 0) {
+                    if (event.key === "ArrowDown") {
+                        event.preventDefault();
+                        selectedIndex = (selectedIndex + 1) % items.length; // Move to the next item
+                        items.removeClass("active");
+                        items.eq(selectedIndex).addClass("active");
+                        scrollToView(items.eq(selectedIndex));
+                    } else if (event.key === "ArrowUp") {
+                        event.preventDefault();
+                        selectedIndex = (selectedIndex - 1 + items.length) % items.length; // Move to the previous item
+                        items.removeClass("active");
+                        items.eq(selectedIndex).addClass("active");
+                        scrollToView(items.eq(selectedIndex));
+                    } else if (event.key === "Enter") {
+                        event.preventDefault();
+                        if (selectedIndex >= 0 && selectedIndex < items.length) {
+                            const selectedItem = items.eq(selectedIndex);
+                            $("#activitySearchInput").val(selectedItem.text());
+                            $("#activityIdInput").val(selectedItem.data("id")); // Optionally set activity ID
+                            suggestions.hide();
+                        }
+                    }
+                }
+            });
+
+            // Function to scroll the active item into view
+            function scrollToView(item) {
+                const container = suggestions;
+                const offset = item.position().top;
+                const containerHeight = container.outerHeight();
+                const itemHeight = item.outerHeight();
+
+                if (offset + itemHeight > containerHeight) {
+                    container.scrollTop(container.scrollTop() + offset - containerHeight + itemHeight);
+                } else if (offset < 0) {
+                    container.scrollTop(container.scrollTop() + offset);
+                }
+            }
+
+        });
+
+      
+        // Hide suggestions when clicking outside the input or suggestion list
+        $(document).on("click", function (event) {
+            if (!$(event.target).closest("#activitySearchInput, #activitySuggestions").length) {
+                suggestions.hide();
+            }
+        });
+
+      
+
+        // Hide suggestions when clicking outside the input or suggestion list
+        $(document).on("click", function (event) {
+            if (!$(event.target).closest("#activitySearchInput, #activitySuggestions").length) {
+                $("#activitySuggestions").hide();
+            }
+        });
+
+        $(document).on("change", "#taskDropdown", function () {
+    console.log("Task ID changed");
+    $("#activitySearchInput").val("");
+    $("#activityIdInput").val("");
+    suggestions.empty().hide();
+          });
+
+        // Validate and submit the form
+        // $("form").submit(function (e) {
+            
+        //     // Fetch values from input fields
+        //     const query = $("#activitySearchInput").val().trim();
+        //     const spentHours = $("#SpentHours").val();
+
+        //     const employeeId = $("#employeeDropdown").val();
+        //     const taskId = $("#taskDropdown").val();
+        //     const projectId = $("#projectDropdown").val(); // If there's a project field
+        //     const timesheetId = $("#Id").val();
+        //     // console.log("query",query)
+        //     // Validate the activity input
+        //     // if (query.length === 0) {
+        //     //     $("#activityError").text('@T("Admin.Configuration.TimeSheet.PleaseEnterActivity")');
+        //     //     e.preventDefault();
+        //     //     return false;
+        //     // } else {
+        //     //     $("#activityError").text("");
+
+        //     //     // Validate additional fields (optional based on requirements)
+        //     //     if (!employeeId || !taskId || !projectId) {
+        //     //         alert("Please select valid employee, task, and project.");
+        //     //         e.preventDefault();
+        //     //         return false;
+        //     //     }
+
+        //     //     // Pass the activity name and additional parameters to the server
+        //     //     // var postData = {
+        //     //     //     activityName: query,
+        //     //     //     employeeId: employeeId,
+        //     //     //     taskId: taskId,
+        //     //     //     spentHours: spentHours,
+        //     //     //     timesheetId: timesheetId
+        //     //     // }
+
+        //     //     // addAntiForgeryToken(postData)
+        //     //     // $.ajax({
+        //     //     //     url: '@Url.Action("CreateActivityIfNotExists", "TimeSheet")',
+        //     //     //     type: 'POST',
+        //     //     //     data: postData,
+        //     //     //     success: function (result) {
+        //     //     //         if (!result.success) {
+        //     //     //             alert("Error: Unable to process the activity.");
+        //     //     //             e.preventDefault();
+        //     //     //         } else {
+        //     //     //             // Set the returned activityId into a hidden input field
+        //     //     //             $("#activityIdInput").val(result.activityId);
+        //     //     //         }
+        //     //     //     },
+        //     //     //     error: function (xhr, status, error) {
+        //     //     //         alert("Error: Unable to process the activity. " + error);
+        //     //     //         e.preventDefault();
+        //     //     //     }
+        //     //     // });
+        //     // }
+        // });
+
+    });
+
+</script>
+
+<style>
+    #activitySuggestions {
+        position: absolute;
+        width:100%;
+        z-index: 100;
+        max-height: 200px; /* Set a fixed height for the suggestion box */
+        overflow-y: auto; /* Enable vertical scrolling when needed */
+        border: 1px solid #ccc; /* Optional: To highlight the suggestion box */
+        background-color: #fff; /* To match the input field's background */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Add shadow for better visibility */
+    }
+
+        #activitySuggestions .list-group-item {
+            cursor: pointer; /* Indicate clickable items */
+        }
+
+            #activitySuggestions .list-group-item:hover {
+                background-color: #f0f0f0; /* Highlight on hover */
+            }
+</style>

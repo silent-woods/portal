@@ -1,0 +1,110 @@
+﻿@model PermissionUserRecordModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="PermissionId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="PermissionId" asp-items="Model.AvailablePermissions" />
+            <span asp-validation-for="PermissionId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="UserId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="UserId" asp-items="Model.AvailableUsers" />
+            <span asp-validation-for="UserId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Full" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Full" />
+            <span asp-validation-for="Full"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="View" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="View" />
+            <span asp-validation-for="View"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Add" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Add" />
+            <span asp-validation-for="Add"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Edit" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Edit" />
+            <span asp-validation-for="Edit"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Delete" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Delete" />
+            <span asp-validation-for="Delete"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        const $full = $('#Full');
+        const $add = $('#Add');
+        const $edit = $('#Edit');
+        const $del = $('#Delete');
+        const $view = $('#View');
+
+        const permissions = [$add, $edit, $del, $view];
+
+        $full.on('change', function () {
+            const checked = this.checked;
+            permissions.forEach(p => p.prop('checked', checked));
+        });
+
+        [$add, $edit, $del].forEach(cb => {
+            cb.on('change', function () {
+                if (this.checked) {
+                    $view.prop('checked', true);
+                }
+                syncFull();
+            });
+        });
+
+        $view.on('change', function () {
+            if (!this.checked) {
+                $add.prop('checked', false);
+                $edit.prop('checked', false);
+                $del.prop('checked', false);
+            }
+
+            syncFull();
+        });
+
+        function syncFull() {
+            const allChecked = permissions.every(p => p.prop('checked'));
+            $full.prop('checked', allChecked);
+        }
+
+        syncFull();
+    });
+</script>

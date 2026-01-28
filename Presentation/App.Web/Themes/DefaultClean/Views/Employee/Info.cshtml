@@ -1,0 +1,112 @@
+﻿@using App.Core
+@using App.Web.Models.Employee
+@model EmployeeInfoModel
+@inject App.Core.IWebHelper webHelper
+@{
+    Layout = "_ColumnsTwo";
+
+    //title
+    NopHtml.AddTitleParts(T("PageTitle.Account").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-customer-info-page");
+}
+
+@section left
+{
+    @await Component.InvokeAsync(typeof(CustomerNavigationViewComponent), new { selectedTabId = CustomerNavigationEnum.EmployeeInfo })
+}
+
+<div class="page account-page address-list-page">
+    <div class="page-title">
+        <h1>@T("Account.MyAccount") - @T("Account.EmployeeInfo")</h1>
+    </div>
+    <div class="page-body">
+        <div class="address-list">
+            <div class="section address-item">
+                <div class="title">
+                    <strong>@Model.FirstName @Model.LastName</strong>
+                </div>
+                <ul class="info">
+                    <li class="name">
+                        <span>@Model.FirstName @Model.LastName</span>
+                    </li>
+                    <li class="PersonalEmail">
+                        <label>@T("Account.Employee.Fields.PersonalEmail") :</label>
+                        <span>@Model.PersonalEmail</span>
+                    </li>
+                    <li class="Gender">
+                        <label>@T("Account.Employee.Fields.Gender") :</label>
+                        <span>@Model.Gender</span>
+                    </li>
+                    <li class="MobileNo">
+                        <label>@T("Account.Employee.Fields.MobileNo") :</label>
+                        <span>@Model.MobileNo</span>
+                    </li>
+                    @* <li class="phone">
+                        <label>@T("Account.Employee.Fields.PictureId"):</label>
+                        @Model.MobileNo
+                    </li>   *@ 
+                    <li class="OfficialEmail">
+                        <label>@T("Account.Employee.Fields.OfficialEmail") :</label>
+                        <span>@Model.OfficialEmail</span>
+                    </li>   
+                    <li class="Location">
+                        <label>@T("Account.Employee.Fields.Location") :</label>
+                        <span>@Model.Location</span>
+                    </li>   
+                    <li class="Department">
+                        <label>@T("Account.Employee.Fields.Department") :</label>
+                        <span>@Model.Department</span>
+                    </li>   
+                    <li class="Designation">
+                        <label>@T("Account.Employee.Fields.Designation") :</label>
+                        <span>@Model.Designation</span>
+                    </li>   
+                    <li class="DateofJoining">
+                        <label>@T("Account.Employee.Fields.DateofJoining") :</label>
+                        <span>@Model.DateofJoining</span>
+                    </li>   
+
+                    <li class="MaritalStatus">
+                        <label>@T("Account.Employee.Fields.MaritalStatus") :</label>
+                        <span>@Model.MaritalStatus</span>
+                    </li>   
+                    <li class="FatherName">
+                        <label>@T("Account.Employee.Fields.FatherName") :</label>
+                        <span>@Model.FatherName</span>
+                    </li>   
+                    <li class="MotherName">
+                        <label>@T("Account.Employee.Fields.MotherName") :</label>
+                        <span>@Model.MotherName</span>
+                    </li>   
+                    <li class="Hobbies">
+                        <label>@T("Account.Employee.Fields.Hobbies") :</label>
+                        <span>@Model.Hobbies</span>
+                    </li>   
+                    <li class="BloodGroup">
+                        <label>@T("Account.Employee.Fields.BloodGroup") :</label>
+                        <span>@Model.BloodGroup</span>
+                    </li>   
+                    <li class="EmergencyContactPerson">
+                        <label>@T("Account.Employee.Fields.EmergencyContactPerson"):</label>
+                        <span>@Model.EmergencyContactPerson</span>
+                    </li>   
+                    <li class="Relationship">
+                        <label>@T("Account.Employee.Fields.Relationship") :</label>
+                        <span>@Model.Relationship</span>
+                    </li>   
+                    <li class="ContactNumber">
+                        <label>@T("Account.Employee.Fields.ContactNumber") :</label>
+                        <span>@Model.ContactNumber</span>
+                    </li>   
+                    <li class="EmployeeStatus">
+                        <label>@T("Account.Employee.Fields.EmployeeStatus") :</label>
+                        <span>@Model.EmployeeStatus</span>
+                    </li>                       
+                              
+                </ul>                
+            </div>
+        </div>        
+    </div>
+</div>

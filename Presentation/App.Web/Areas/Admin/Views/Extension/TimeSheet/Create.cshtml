@@ -1,0 +1,20 @@
+@model TimeSheetModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.Configuration.TimeSheet.AddNew").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("TimeSheet");
+}
+<div id="notification-container"></div>
+<form asp-controller="TimeSheet" asp-action="Create" method="post" id="timeSheetForm">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Configuration.TimeSheet.AddNew")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.Configuration.TimeSheet.BackToList")</a>
+            </small>
+        </h1>
+    </div>
+    @await Html.PartialAsync("/Areas/Admin/Views/Extension/TimeSheet/_CreateOrUpdate.cshtml", Model);
+</form>

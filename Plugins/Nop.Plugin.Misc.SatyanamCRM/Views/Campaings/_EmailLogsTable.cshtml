@@ -1,0 +1,208 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Campaings
+@using static Satyanam.Nop.Plugin.SatyanamCRM.Models.Campaings.CampaingsModel
+@model CampaingsModel
+<input type="hidden" asp-for="@Model.Id"/>
+@{
+    var yesNoOptions = new List<SelectListItem>
+    {
+        new SelectListItem { Text = T("Admin.Common.All").Text, Value = "" },
+        new SelectListItem { Text = T("Admin.Common.Opened").Text, Value = "true" },
+        new SelectListItem { Text = T("Admin.Common.NotOpened").Text, Value = "false" }
+    };
+    var Options = new List<SelectListItem>
+    {
+        new SelectListItem { Text = T("Admin.Common.All").Text, Value = "" },
+        new SelectListItem { Text = T("Admin.Common.Clicked").Text, Value = "true" },
+        new SelectListItem { Text = T("Admin.Common.NotClicked").Text, Value = "false" }
+    };
+    var unsubscribedOptions = new List<SelectListItem>
+    {
+        new SelectListItem { Text = T("Admin.Common.All").Text, Value = "" },
+        new SelectListItem { Text = T("Admin.Common.Subscribed").Text, Value = "true" },
+        new SelectListItem { Text = T("Admin.Common.Unsubscribed").Text, Value = "false" }
+    };
+}
+@if (Model.Id > 0)
+{
+    <div class="card card-default">
+        <div class="card-body">
+            <div class="row">
+            <div class="col-md-6">
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <nop-label asp-for="CampaingsEmailLogSearchModel.Email" />
+                    </div>
+                    <div class="col-md-8">
+                        <nop-editor asp-for="CampaingsEmailLogSearchModel.Email" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group row">
+                    <div class="col-md-4">
+                            <nop-label asp-for="CampaingsEmailLogSearchModel.IsOpened" />
+                    </div>
+                    <div class="col-md-8">
+                            <nop-select asp-for="CampaingsEmailLogSearchModel.IsOpened" asp-items="@yesNoOptions" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group row">
+                    <div class="col-md-4">
+                            <nop-label asp-for="CampaingsEmailLogSearchModel.IsClicked" />
+                    </div>
+                    <div class="col-md-8">
+                            <nop-select asp-for="CampaingsEmailLogSearchModel.IsClicked" asp-items="@Options" />
+                    </div>
+                </div>
+            </div>
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <div class="col-md-4">
+                            <nop-label asp-for="CampaingsEmailLogSearchModel.OpenCountMin" />
+                        </div>
+                        <div class="col-md-8">
+                            <nop-editor asp-for="CampaingsEmailLogSearchModel.OpenCountMin" />
+                            <span asp-validation-for="CampaingsEmailLogSearchModel.OpenCountMin"></span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <div class="col-md-4">
+                            <nop-label asp-for="CampaingsEmailLogSearchModel.OpenCountMax" />
+                        </div>
+                        <div class="col-md-8">
+                            <nop-editor asp-for="CampaingsEmailLogSearchModel.OpenCountMax" />
+                            <span asp-validation-for="CampaingsEmailLogSearchModel.OpenCountMax"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <div class="col-md-4">
+                            <nop-label asp-for="CampaingsEmailLogSearchModel.ClickCountMin" />
+                        </div>
+                        <div class="col-md-8">
+                            <nop-editor asp-for="CampaingsEmailLogSearchModel.ClickCountMin" />
+                            <span asp-validation-for="CampaingsEmailLogSearchModel.ClickCountMin"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <div class="col-md-4">
+                            <nop-label asp-for="CampaingsEmailLogSearchModel.ClickCountMax" />
+                        </div>
+                        <div class="col-md-8">
+                            <nop-editor asp-for="CampaingsEmailLogSearchModel.ClickCountMax" />
+                            <span asp-validation-for="CampaingsEmailLogSearchModel.ClickCountMax"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <div class="col-md-4">
+                            <nop-label asp-for="CampaingsEmailLogSearchModel.IsUnsubscribed" />
+                        </div>
+                        <div class="col-md-8">
+                            <nop-select asp-for="CampaingsEmailLogSearchModel.IsUnsubscribed" asp-items="@unsubscribedOptions" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+            <div class="row">
+                <div class="text-center col-12">
+                    <button type="button" id="search-email-logs" class="btn btn-primary btn-search">
+                        <i class="fas fa-search"></i>
+                        @T("Admin.Common.Search")
+                    </button>
+                </div>
+            </div>
+            
+
+
+        <div class="card-body">
+@await Html.PartialAsync("Table", new DataTablesModel
+{
+    Name = "campaings-emaillogs-grid",
+    UrlRead = new DataUrl("EmailLogs", "Campaings", new RouteValueDictionary { ["CampaignId"] = Model.Id }),
+    Length = Model.campaingsSearchModel.PageSize,
+    LengthMenu = Model.campaingsSearchModel.AvailablePageSizes,
+    SearchButtonId = "search-email-logs",
+    ColumnCollection = new List<ColumnProperty>
+    {
+        new ColumnProperty(nameof(CampaingsEmailLogModel.Email))
+        {
+            Title = T("Plugin.SatyanamCRM.CampaignLogs.Fields.Email").Text
+        },
+        new ColumnProperty(nameof(CampaingsEmailLogModel.IsOpened))
+        {
+            Title = T("Plugin.SatyanamCRM.CampaignLogs.Fields.IsOpened").Text,
+            ClassName = NopColumnClassDefaults.CenterAll,
+            Render = new RenderBoolean(),
+        },
+        new ColumnProperty(nameof(CampaingsEmailLogModel.OpenCount))
+        {
+            Title = T("Plugin.SatyanamCRM.CampaignLogs.Fields.OpenCount").Text
+        },
+        new ColumnProperty(nameof(CampaingsEmailLogModel.IsClicked))
+        {
+            Title = T("Plugin.SatyanamCRM.CampaignLogs.Fields.IsClicked").Text,
+            ClassName = NopColumnClassDefaults.CenterAll,
+            Render = new RenderBoolean(),
+        },
+        new ColumnProperty(nameof(CampaingsEmailLogModel.ClickCount))
+        {
+            Title = T("Plugin.SatyanamCRM.CampaignLogs.Fields.ClickCount").Text
+        },
+        new ColumnProperty(nameof(CampaingsEmailLogModel.IsUnsubscribed))
+        {
+            Title = T("Plugin.SatyanamCRM.CampaignLogs.Fields.IsUnsubscribed").Text,
+            ClassName = NopColumnClassDefaults.CenterAll,
+            Render = new RenderBoolean(),
+        },
+        new ColumnProperty(nameof(CampaingsEmailLogModel.OpenedOnUtc))
+        {
+            Title = T("Plugin.SatyanamCRM.CampaignLogs.Fields.OpenedOnUtc").Text,
+            Render = new RenderDate()
+        }
+    }
+})
+        </div>
+    </div>
+}
+<script>
+    $(document).ready(function () {
+        var table = $('#campaings-emaillogs-grid').DataTable();
+
+        // Add custom search params before DataTables ajax request
+        table.on('preXhr.dt', function (e, settings, data) {
+            data.Email = $('#CampaingsEmailLogSearchModel_Email').val();
+            data.IsOpened = $('#CampaingsEmailLogSearchModel_IsOpened').val();
+            data.IsClicked = $('#CampaingsEmailLogSearchModel_IsClicked').val();
+            data.CampaignId = $('[name="CampaingsEmailLogSearchModel.CampaignId"]').val();
+
+            data.OpenCountMin = $('#CampaingsEmailLogSearchModel_OpenCountMin').val();
+            data.OpenCountMax = $('#CampaingsEmailLogSearchModel_OpenCountMax').val();
+            data.ClickCountMin = $('#CampaingsEmailLogSearchModel_ClickCountMin').val();
+            data.ClickCountMax = $('#CampaingsEmailLogSearchModel_ClickCountMax').val();
+            data.IsUnsubscribed = $('#CampaingsEmailLogSearchModel_IsUnsubscribed').val();
+
+        });
+
+        // Trigger reload on search button click
+        $('#search-email-logs').on('click', function () {
+            table.ajax.reload();
+        });
+    });
+</script>
+

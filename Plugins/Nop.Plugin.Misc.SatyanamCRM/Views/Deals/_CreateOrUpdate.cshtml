@@ -1,0 +1,39 @@
+﻿@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Deals
+@model DealsModel
+
+@{
+    const string hideInfoBlockAttributeName = "dealsDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+
+    const string hideInfoBlockAttributecontactdeals = "contactsdealsDetails.HideInfoBlock";
+    var hideInfoBlockDeals = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributecontactdeals);
+
+     const string hideInfoBlockAttributecompanydeals = "companydealsDetails.HideInfoBlock";
+     var hideInfoBlockDealscompany = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributecompanydeals);
+}
+
+@* <div asp-validation-summary="All"></div> *@
+<input asp-for="Id" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">           
+            <nop-cards id="deals-item-cards">
+                <nop-card asp-name="deals-item-info" asp-icon="fas fa-info" asp-title="@T("Plugin.SatyanamCRM.Deals.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">@await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Deals/_CreateOrUpdate.Info.cshtml", Model)</nop-card>
+                @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageDealContacts, PermissionAction.Edit))
+                {
+                    <nop-card asp-name="lead-item-deals" asp-icon="fas fa-address-book" asp-title="@T("Plugin.SatyanamCRM.Deals.Contacts")" asp-hide-block-attribute-name="@hideInfoBlockAttributecontactdeals" asp-hide="@hideInfoBlockDeals">
+                        @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Deals/_DealsContact.cshtml", Model)
+                    </nop-card>
+                }
+                @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageDealCompanies, PermissionAction.Edit))
+                {
+                    <nop-card asp-name="lead-item-deals" asp-icon="fas fa-building" asp-title="@T("Plugin.SatyanamCRM.Deals.Company")" asp-hide-block-attribute-name="@hideInfoBlockAttributecompanydeals" asp-hide="@hideInfoBlockDealscompany">
+                        @await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Deals/_DealsCompany.cshtml", Model)
+                    </nop-card>
+                }
+            </nop-cards>
+        </div>
+    </div>
+</section>

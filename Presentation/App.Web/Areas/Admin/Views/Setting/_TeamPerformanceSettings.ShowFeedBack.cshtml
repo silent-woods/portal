@@ -1,0 +1,15 @@
+﻿@model TeamPerformanceSettingsModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-override-store-checkbox asp-for="FeedbackShowId_OverrideForStore" asp-input="FeedbackShowId" asp-store-scope="@Model.ActiveStoreScopeConfiguration" />
+            <nop-label asp-for="FeedbackShowId" />
+        </div>
+        <div class="col-md-6">
+            <nop-select asp-for="FeedbackShowId" asp-items="Model.AvailableFeedBackShow" />
+            <span asp-validation-for="FeedbackShowId"></span>
+        </div>
+    </div>
+  
+</div>
