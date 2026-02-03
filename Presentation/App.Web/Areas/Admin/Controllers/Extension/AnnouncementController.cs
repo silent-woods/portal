@@ -1,5 +1,11 @@
-﻿using App.Core;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using App.Core;
 using App.Core.Domain.Messages;
+using App.Core.Domain.Security;
 using App.Core.Events;
 using App.Services.Configuration;
 using App.Services.Designations;
@@ -12,18 +18,12 @@ using App.Services.Projects;
 using App.Services.Security;
 using App.Web.Areas.Admin.Factories;
 using App.Web.Areas.Admin.Infrastructure.Mapper.Extensions;
-
 using App.Web.Areas.Admin.Models.Extension.Announcements;
 using App.Web.Framework.Mvc.Filters;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Satyanam.Nop.Core.Domains;
 using Satyanam.Nop.Core.Services;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace App.Web.Areas.Admin.Controllers
 {
@@ -113,7 +113,7 @@ namespace App.Web.Areas.Admin.Controllers
 
         public virtual async Task<IActionResult> List()
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements, PermissionAction.View))
                 return AccessDeniedView();
 
             //prepare model
@@ -125,7 +125,7 @@ namespace App.Web.Areas.Admin.Controllers
         [HttpPost]
         public virtual async Task<IActionResult> List(AnnouncementSearchModel searchModel)
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements, PermissionAction.View))
                 return await AccessDeniedDataTablesJson();
 
             //prepare model
@@ -140,7 +140,7 @@ namespace App.Web.Areas.Admin.Controllers
 
         public virtual async Task<IActionResult> Create()
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements, PermissionAction.Add))
                 return AccessDeniedView();
 
             //prepare model
@@ -152,7 +152,7 @@ namespace App.Web.Areas.Admin.Controllers
         [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]
         public virtual async Task<IActionResult> Create(AnnouncementModel model, bool continueEditing)
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements, PermissionAction.Add))
                 return AccessDeniedView();
 
             if (ModelState.IsValid)
@@ -219,7 +219,7 @@ namespace App.Web.Areas.Admin.Controllers
 
         public virtual async Task<IActionResult> Edit(int id)
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements, PermissionAction.Edit))
                 return AccessDeniedView();
 
             var announcement = await _announcementService.GetAnnouncementByIdAsync(id);
@@ -234,7 +234,7 @@ namespace App.Web.Areas.Admin.Controllers
         [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]
         public virtual async Task<IActionResult> Edit(AnnouncementModel model, bool continueEditing)
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements, PermissionAction.Edit))
                 return AccessDeniedView();
 
             var announcement = await _announcementService.GetAnnouncementByIdAsync(model.Id);
@@ -285,7 +285,7 @@ namespace App.Web.Areas.Admin.Controllers
         [HttpPost]
         public virtual async Task<IActionResult> Delete(int id)
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements, PermissionAction.Delete))
                 return AccessDeniedView();
 
             var announcement = await _announcementService.GetAnnouncementByIdAsync(id);
@@ -302,7 +302,7 @@ namespace App.Web.Areas.Admin.Controllers
         [HttpPost]
         public virtual async Task<IActionResult> DeleteSelected(ICollection<int> selectedIds)
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements, PermissionAction.Delete))
                 return AccessDeniedView();
 
             if (selectedIds == null || selectedIds.Count == 0)

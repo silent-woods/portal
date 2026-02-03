@@ -220,5 +220,22 @@
             }).length > 0;
             $mainPermissionCheckbox.prop('checked', anyActionChecked);
         });
+
+        $(document).on('change', 'input[type="checkbox"][name^="allow_"]', function () {
+            const $parent = $(this);
+            const checked = $parent.prop('checked');
+
+            const roleId = $parent.attr('class').replace('allow_', '');
+            const permission = $parent.closest('.permission-row').data('permission');
+
+            const $childActions = $('.perm-action').filter(function () {
+                return $(this).data('permission') === permission &&
+                       $(this).data('role').toString() === roleId;
+            });
+
+            if (!checked) {
+                $childActions.prop('checked', false);
+            }
+        });
     });
 </script>

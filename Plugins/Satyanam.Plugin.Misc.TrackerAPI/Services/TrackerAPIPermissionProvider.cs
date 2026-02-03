@@ -9,8 +9,8 @@ public partial class TrackerAPIPermissionProvider : IPermissionProvider
 {
     #region Permission Names
 
-    public static readonly PermissionRecord ManageTrackerAPIConfiguration = new() { Name = "Admin area. Manage TrackerAPI Configuration", SystemName = "ManageTrackerAPIConfiguration", Category = "Account" };
-    public static readonly PermissionRecord ManageTrackerAPILog = new() { Name = "Admin area. Manage TrackerAPI Log", SystemName = "ManageTrackerAPILog", Category = "Account" };
+    public static readonly PermissionRecord ManageTrackerAPIConfiguration = new() { Name = "Admin area. Tracker API - Manage TrackerAPI Configuration", SystemName = "ManageTrackerAPIConfiguration", Category = "Account" };
+    public static readonly PermissionRecord ManageTrackerAPILog = new() { Name = "Admin area. Tracker API - Manage TrackerAPI Log", SystemName = "ManageTrackerAPILog", Category = "Account" };
 
     #endregion
 

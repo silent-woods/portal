@@ -9,8 +9,8 @@ public partial class LeadAPIPermissionProvider : IPermissionProvider
 {
     #region Permission Names
 
-    public static readonly PermissionRecord ManageLeadAPIConfiguration = new() { Name = "Admin area. Manage LeadAPI Configuration", SystemName = "ManageLeadAPIConfiguration", Category = "Account" };
-    public static readonly PermissionRecord ManageLeadAPILog = new() { Name = "Admin area. Manage LeadAPI Log", SystemName = "ManageLeadAPILog", Category = "Account" };
+    public static readonly PermissionRecord ManageLeadAPIConfiguration = new() { Name = "Admin area. Lead API - Manage LeadAPI Configuration", SystemName = "ManageLeadAPIConfiguration", Category = "Account" };
+    public static readonly PermissionRecord ManageLeadAPILog = new() { Name = "Admin area. Lead API - Manage LeadAPI Log", SystemName = "ManageLeadAPILog", Category = "Account" };
 
     #endregion
 

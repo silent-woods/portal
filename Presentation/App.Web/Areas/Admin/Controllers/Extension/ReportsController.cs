@@ -255,7 +255,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
 
         public virtual async Task<IActionResult> PerformanceSummaryReport()
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTimeSheet))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManagePerformanceSummary, PermissionAction.View))
                 return AccessDeniedView();
 
             var model = await _monthlyPerformanceReportModelFactory.PrepareTimeSheetSearchModelAsync(new MonthlyPerformanceReportSearchModel());
@@ -273,7 +273,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
         [HttpPost]
         public virtual async Task<IActionResult> PerformanceSummaryReport(MonthlyPerformanceReportSearchModel searchModel)
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTimeSheet))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManagePerformanceSummary, PermissionAction.View))
                 return AccessDeniedView();
 
             var model = await _monthlyPerformanceReportModelFactory.PreparePerformanceSummaryReportListModelAsync(searchModel);

@@ -17,16 +17,11 @@
                     @await Html.PartialAsync("/Areas/Admin/Views/Extension/Announcements/_CreateOrUpdate.Info.cshtml", Model)
                 </nop-card>
             </nop-cards>
-
-             @if (Model.Id > 0)
+            @if (Model.Id > 0 && await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncementAcknowledgments, PermissionAction.View))
             {
-                <nop-card asp-name="announcement-acknowledgment"
-                asp-icon="fas fa-thumbs-up"
-                      asp-title="@T("Admin.Configuration.Announcements.Acknowledgment")"
-                      asp-hide-block-attribute-name="hideAcknowledgmentBlockAttributeName"
-                      asp-hide="false">
-                @await Html.PartialAsync("/Areas/Admin/Views/Extension/Announcements/_CreateOrUpdate.Acknowledgment.cshtml", Model)
-            </nop-card>
+                <nop-card asp-name="announcement-acknowledgment" asp-icon="fas fa-thumbs-up" asp-title="@T("Admin.Configuration.Announcements.Acknowledgment")" asp-hide-block-attribute-name="hideAcknowledgmentBlockAttributeName" asp-hide="false">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Announcements/_CreateOrUpdate.Acknowledgment.cshtml", Model)
+                </nop-card>
             }
         </div>
     </div>
