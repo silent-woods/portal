@@ -111,11 +111,11 @@ namespace App.Services.Security
         public static readonly PermissionRecord ManageWeeklyReports = new() { Name = "Admin area. HRM - Manage WeeklyReports", SystemName = "ManageWeeklyReports", Category = "Standard" };
 
         //Public Screens
-        public static readonly PermissionRecord PublicStoreEmployeeInfo = new() { Name = "Public store. Employee Info", SystemName = "EmployeeInfo", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreEmployeeAddresses = new() { Name = "Public store. Employee Addresses", SystemName = "EmployeeAddresses", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreEmployeeEducations = new() { Name = "Public store. Employee Educations", SystemName = "EmployeeEducations", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreEmployeeExperiences = new() { Name = "Public store. Employee Experiences", SystemName = "EmployeeExperiences", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreEmployeeAssets = new() { Name = "Public store. Employee Assets", SystemName = "EmployeeAssets", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreEmployeeAttendanceReport = new() { Name = "Public store. Employee Attendance Report", SystemName = "EmployeeAttendanceReport", Category = "PublicStore" };
 
 
         /// <summary>
@@ -160,7 +160,6 @@ namespace App.Services.Security
                 PublicStoreAllowNavigation,
                 AccessClosedStore,
                 AccessProfiling,
-                PublicStoreEmployeeInfo,
                 PublicStoreEmployeeAddresses,
                 PublicStoreEmployeeEducations,
                 PublicStoreEmployeeExperiences,
@@ -267,7 +266,6 @@ namespace App.Services.Security
                         ManageAppSettings,
                         DisplayPrices,
                         PublicStoreAllowNavigation,
-                        PublicStoreEmployeeInfo,
                         PublicStoreEmployeeAddresses,
                         PublicStoreEmployeeEducations,
                         PublicStoreEmployeeExperiences,

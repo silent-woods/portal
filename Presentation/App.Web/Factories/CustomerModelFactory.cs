@@ -566,15 +566,67 @@ namespace App.Web.Factories
         {
             var model = new CustomerNavigationModel();
 
-            //model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            //{
-            //    RouteName = "CustomerInfo",
-            //    Title = await _localizationService.GetResourceAsync("Account.CustomerInfo"),
-            //    Tab = (int)CustomerNavigationEnum.Info,
-            //    ItemClass = "customer-info"
-            //});
+            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+            {
+                RouteName = "EmployeeInfo",
+                Title = await _localizationService.GetResourceAsync("Account.EmployeeInfo"),
+                Tab = (int)CustomerNavigationEnum.EmployeeInfo,
+                ItemClass = "employee-info"
+            });
 
-       
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeAddresses, PermissionAction.View))
+            {
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "EmployeeAddresses",
+                    Title = await _localizationService.GetResourceAsync("Account.EmployeeAddresses"),
+                    Tab = (int)CustomerNavigationEnum.EmployeeAddresses,
+                    ItemClass = "employee-address"
+                });
+            }
+
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeEducations, PermissionAction.View))
+            {
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "EmployeeEducations",
+                    Title = await _localizationService.GetResourceAsync("Account.EmployeeEducations"),
+                    Tab = (int)CustomerNavigationEnum.EmployeeEducation,
+                    ItemClass = "employee-education"
+                });
+            }
+
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeExperiences, PermissionAction.View))
+            {
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "EmployeeExperiences",
+                    Title = await _localizationService.GetResourceAsync("Account.EmployeeExperiences"),
+                    Tab = (int)CustomerNavigationEnum.EmployeeExperience,
+                    ItemClass = "employee-experience"
+                });
+            }
+
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeExperiences, PermissionAction.View))
+            {
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "EmployeeAssets",
+                    Title = await _localizationService.GetResourceAsync("Account.EmployeeAssets"),
+                    Tab = (int)CustomerNavigationEnum.EmployeeAssets,
+                    ItemClass = "employee-asset"
+                });
+            }
+
+            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+            {
+                RouteName = "CustomerChangePassword",
+                Title = await _localizationService.GetResourceAsync("Account.ChangePassword"),
+                Tab = (int)CustomerNavigationEnum.ChangePassword,
+                ItemClass = "change-password"
+            });
+
+
             model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
             {
                 RouteName = "SearchLeave",
@@ -628,24 +680,19 @@ namespace App.Web.Factories
                 Tab = (int)CustomerNavigationEnum.EmployeePerformanceReport,
                 ItemClass = "EmployeePerformance-Report"
             });
+
             var currCustomer = await _workContext.GetCurrentCustomerAsync();
-
-
-            //prepare model
             int currCustomerId = 0;
 
             if (currCustomer != null)
             {
                 var employeeByCustomer = await _employeeService.GetEmployeeByCustomerIdAsync(currCustomer.Id);
                 if (employeeByCustomer != null)
-                {
                     currCustomerId = employeeByCustomer.Id;
-
-                }
-
             }
 
             if (await _teamPerformanceMeasurementService.IsEmployeeCanAddRatings(currCustomerId))
+            {
                 model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
                 {
                     RouteName = "AddRatings",
@@ -653,7 +700,7 @@ namespace App.Web.Factories
                     Tab = (int)CustomerNavigationEnum.AddRatings,
                     ItemClass = "AddRatings"
                 });
-
+            }
 
             model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
             {
@@ -680,58 +727,8 @@ namespace App.Web.Factories
                 ItemClass = "performance-report"
             });
 
-            //model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            //{
-            //    RouteName = "CustomerAddresses",
-            //    Title = await _localizationService.GetResourceAsync("Account.CustomerAddresses"),
-            //    Tab = (int)CustomerNavigationEnum.Addresses,
-            //    ItemClass = "customer-addresses"
-            //});
-
-            //model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            //{
-            //    RouteName = "CustomerOrders",
-            //    Title = await _localizationService.GetResourceAsync("Account.CustomerOrders"),
-            //    Tab = (int)CustomerNavigationEnum.Orders,
-            //    ItemClass = "customer-orders"
-            //});
-
             var store = await _storeContext.GetCurrentStoreAsync();
             var customer = await _workContext.GetCurrentCustomerAsync();
-
-            //if (!_customerSettings.HideDownloadableProductsTab)
-            //{
-            //    model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            //    {
-            //        RouteName = "CustomerDownloadableProducts",
-            //        Title = await _localizationService.GetResourceAsync("Account.DownloadableProducts"),
-            //        Tab = (int)CustomerNavigationEnum.DownloadableProducts,
-            //        ItemClass = "downloadable-products"
-            //    });
-            //}
-
-            //if (!_customerSettings.HideBackInStockSubscriptionsTab)
-            //{
-            //    model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            //    {
-            //        RouteName = "CustomerBackInStockSubscriptions",
-            //        Title = await _localizationService.GetResourceAsync("Account.BackInStockSubscriptions"),
-            //        Tab = (int)CustomerNavigationEnum.BackInStockSubscriptions,
-            //        ItemClass = "back-in-stock-subscriptions"
-            //    });
-            //}
-
-            //if (_rewardPointsSettings.Enabled)
-            //{
-            //    model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            //    {
-            //        RouteName = "CustomerRewardPoints",
-            //        Title = await _localizationService.GetResourceAsync("Account.RewardPoints"),
-            //        Tab = (int)CustomerNavigationEnum.RewardPoints,
-            //        ItemClass = "reward-points"
-            //    });
-            //}
-
          
             if (_customerSettings.AllowCustomersToUploadAvatars)
             {
@@ -754,40 +751,18 @@ namespace App.Web.Factories
                     ItemClass = "forum-subscriptions"
                 });
             }
-            //if (_catalogSettings.ShowProductReviewsTabOnAccountPage)
-            //{
-            //    model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            //    {
-            //        RouteName = "CustomerProductReviews",
-            //        Title = await _localizationService.GetResourceAsync("Account.CustomerProductReviews"),
-            //        Tab = (int)CustomerNavigationEnum.ProductReviews,
-            //        ItemClass = "customer-reviews"
-            //    });
-            //}
 
-
-            //if (_catalogSettings.ShowProductReviewsTabOnAccountPage)
-            //{
-            //    model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            //    {
-            //        RouteName = "List",
-            //        Title = await _localizationService.GetResourceAsync("Account.WeeklyReport"),
-            //        Tab = (int)CustomerNavigationEnum.Weeklyreport,
-            //        ItemClass = "Weekly-Report"
-            //    });
-            //}
-
-
-          
-          
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeAttendanceReport, PermissionAction.View))
             {
-                RouteName = "EmployeeAttendanceReport",
-                Title = await _localizationService.GetResourceAsync("Account.EmployeeAttendanceReport"),
-                Tab = (int)CustomerNavigationEnum.EmployeeAttendanceReport,
-                ItemClass = "EmployeeAttendance-Report"
-            });
-         
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "EmployeeAttendanceReport",
+                    Title = await _localizationService.GetResourceAsync("Account.EmployeeAttendanceReport"),
+                    Tab = (int)CustomerNavigationEnum.EmployeeAttendanceReport,
+                    ItemClass = "EmployeeAttendance-Report"
+                });
+            }
+
             if (_gdprSettings.GdprEnabled)
             {
                 model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
@@ -821,55 +796,6 @@ namespace App.Web.Factories
                     ItemClass = "customer-multiFactor-authentication"
                 });
             }
-
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            {
-                RouteName = "EmployeeInfo",
-                Title = await _localizationService.GetResourceAsync("Account.EmployeeInfo"),
-                Tab = (int)CustomerNavigationEnum.EmployeeInfo,
-                ItemClass = "employee-info"
-            });
-
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            {
-                RouteName = "EmployeeAddresses",
-                Title = await _localizationService.GetResourceAsync("Account.EmployeeAddresses"),
-                Tab = (int)CustomerNavigationEnum.EmployeeAddresses,
-                ItemClass = "employee-address"
-            });
-
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            {
-                RouteName = "EmployeeEducations",
-                Title = await _localizationService.GetResourceAsync("Account.EmployeeEducations"),
-                Tab = (int)CustomerNavigationEnum.EmployeeEducation,
-                ItemClass = "employee-education"
-            });
-
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            {
-                RouteName = "EmployeeExperiences",
-                Title = await _localizationService.GetResourceAsync("Account.EmployeeExperiences"),
-                Tab = (int)CustomerNavigationEnum.EmployeeExperience,
-                ItemClass = "employee-experience"
-            });
-
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            {
-                RouteName = "EmployeeAssets",
-                Title = await _localizationService.GetResourceAsync("Account.EmployeeAssets"),
-                Tab = (int)CustomerNavigationEnum.EmployeeAssets,
-                ItemClass = "employee-asset"
-            });
-
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            {
-                RouteName = "CustomerChangePassword",
-                Title = await _localizationService.GetResourceAsync("Account.ChangePassword"),
-                Tab = (int)CustomerNavigationEnum.ChangePassword,
-                ItemClass = "change-password"
-            });
-
 
             model.SelectedTab = selectedTabId;
 
