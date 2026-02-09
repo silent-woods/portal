@@ -42,8 +42,12 @@
 <div class="page registration-page">
     <div class="page-title">
         <h1>@T("Account.MyAccount") - @T("Account.LeaveManagement")</h1>
-         <button type="button" class="take-leave-btn button-1 save-customer-info-button" onclick="openCreateLeavePopup()">Request Leave</button>
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreLeaveManagement, PermissionAction.Add))
+        {
+             <button type="button" class="take-leave-btn button-1 save-customer-info-button" onclick="openCreateLeavePopup()">Request Leave</button>
+        }
     </div>
+
     <div class="page-body">
 
 

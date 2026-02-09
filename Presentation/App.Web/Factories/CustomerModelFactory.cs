@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using App.Core;
 using App.Core.Domain.Catalog;
 using App.Core.Domain.Common;
@@ -12,24 +11,26 @@ using App.Core.Domain.Forums;
 using App.Core.Domain.Gdpr;
 using App.Core.Domain.Media;
 using App.Core.Domain.Security;
+using App.Data.Extensions;
 using App.Services.Authentication.External;
 using App.Services.Authentication.MultiFactor;
 using App.Services.Common;
 using App.Services.Customers;
 using App.Services.Directory;
+using App.Services.Employees;
 using App.Services.Gdpr;
 using App.Services.Helpers;
 using App.Services.Localization;
 using App.Services.Media;
 using App.Services.Messages;
+using App.Services.PerformanceMeasurements;
 using App.Services.Security;
 using App.Services.Seo;
 using App.Services.Stores;
 using App.Web.Models.Common;
 using App.Web.Models.Customer;
-using App.Data.Extensions;
-using App.Services.PerformanceMeasurements;
-using App.Services.Employees;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using static LinqToDB.Reflection.Methods.LinqToDB.Insert;
 
 namespace App.Web.Factories
 {
@@ -626,60 +627,86 @@ namespace App.Web.Factories
                 ItemClass = "change-password"
             });
 
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreLeaveManagement, PermissionAction.View))
+            {
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "SearchLeave",
+                    Title = await _localizationService.GetResourceAsync("Account.LeaveManagement"),
+                    Tab = (int)CustomerNavigationEnum.LeaveManagement,
+                    ItemClass = "LeaveManagement"
+                });
+            }
 
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimesheet, PermissionAction.View))
             {
-                RouteName = "SearchLeave",
-                Title = await _localizationService.GetResourceAsync("Account.LeaveManagement"),
-                Tab = (int)CustomerNavigationEnum.LeaveManagement,
-                ItemClass = "LeaveManagement"
-            });
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "TimeSheetList",
+                    Title = await _localizationService.GetResourceAsync("Account.TimeSheetList"),
+                    Tab = (int)CustomerNavigationEnum.TimeSheetList,
+                    ItemClass = "TimeSheetList"
+                });
+            }
 
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreViewUpdate, PermissionAction.View))
             {
-                RouteName = "TimeSheetList",
-                Title = await _localizationService.GetResourceAsync("Account.TimeSheetList"),
-                Tab = (int)CustomerNavigationEnum.TimeSheetList,
-                ItemClass = "TimeSheetList"
-            });
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            {
-                RouteName = "ViewUpdateList",
-                Title = await _localizationService.GetResourceAsync("Account.ViewUpdateList"),
-                Tab = (int)CustomerNavigationEnum.ViewUpdateList,
-                ItemClass = "ViewUpdateList"
-            });
-
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            {
-                RouteName = "UpdateTimeSheet",
-                Title = await _localizationService.GetResourceAsync("Account.UpdateTimeSheet"),
-                Tab = (int)CustomerNavigationEnum.UpdateTimeSheet,
-                ItemClass = "UpdateTimeSheet"
-            });
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "ViewUpdateList",
+                    Title = await _localizationService.GetResourceAsync("Account.ViewUpdateList"),
+                    Tab = (int)CustomerNavigationEnum.ViewUpdateList,
+                    ItemClass = "ViewUpdateList"
+                });
+            }
 
 
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimesheet, PermissionAction.Add))
             {
-                RouteName = "ProjectManagement",
-                Title = await _localizationService.GetResourceAsync("Account.ProjectManagement"),
-                Tab = (int)CustomerNavigationEnum.ProjectManagement,
-                ItemClass = "ProjectManagement"
-            });
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "UpdateTimeSheet",
+                    Title = await _localizationService.GetResourceAsync("Account.UpdateTimeSheet"),
+                    Tab = (int)CustomerNavigationEnum.UpdateTimeSheet,
+                    ItemClass = "UpdateTimeSheet"
+                });
+            }
+
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreProjectManagement, PermissionAction.View))
             {
-                RouteName = "TimeSummaryReport",
-                Title = await _localizationService.GetResourceAsync("Account.TimeSummaryReport"),
-                Tab = (int)CustomerNavigationEnum.TimeSummaryReport,
-                ItemClass = "TimeSummary-Report"
-            });
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "ProjectManagement",
+                    Title = await _localizationService.GetResourceAsync("Account.ProjectManagement"),
+                    Tab = (int)CustomerNavigationEnum.ProjectManagement,
+                    ItemClass = "ProjectManagement"
+                });
+            }
+
+            
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimeSummaryReport, PermissionAction.View))
             {
-                RouteName = "EmployeePerformanceReport",
-                Title = await _localizationService.GetResourceAsync("Account.EmployeePerformanceReport"),
-                Tab = (int)CustomerNavigationEnum.EmployeePerformanceReport,
-                ItemClass = "EmployeePerformance-Report"
-            });
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "TimeSummaryReport",
+                    Title = await _localizationService.GetResourceAsync("Account.TimeSummaryReport"),
+                    Tab = (int)CustomerNavigationEnum.TimeSummaryReport,
+                    ItemClass = "TimeSummary-Report"
+                });
+            }
+
+            
+
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeePerformaceReport, PermissionAction.View))
+            {
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "EmployeePerformanceReport",
+                    Title = await _localizationService.GetResourceAsync("Account.EmployeePerformanceReport"),
+                    Tab = (int)CustomerNavigationEnum.EmployeePerformanceReport,
+                    ItemClass = "EmployeePerformance-Report"
+                });
+            }
 
             var currCustomer = await _workContext.GetCurrentCustomerAsync();
             int currCustomerId = 0;
@@ -693,39 +720,53 @@ namespace App.Web.Factories
 
             if (await _teamPerformanceMeasurementService.IsEmployeeCanAddRatings(currCustomerId))
             {
+                if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreAddRating, PermissionAction.View))
+                {
+                    model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                    {
+                        RouteName = "AddRatings",
+                        Title = await _localizationService.GetResourceAsync("Account.AddRatings"),
+                        Tab = (int)CustomerNavigationEnum.AddRatings,
+                        ItemClass = "AddRatings"
+                    });
+                }
+            }
+
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreMonthlyReview, PermissionAction.View))
+            {
                 model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
                 {
-                    RouteName = "AddRatings",
-                    Title = await _localizationService.GetResourceAsync("Account.AddRatings"),
-                    Tab = (int)CustomerNavigationEnum.AddRatings,
-                    ItemClass = "AddRatings"
+                    RouteName = "MonthlyReview",
+                    Title = await _localizationService.GetResourceAsync("Account.MonthlyReview"),
+                    Tab = (int)CustomerNavigationEnum.MonthlyReview,
+                    ItemClass = "performance-report"
                 });
             }
 
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            {
-                RouteName = "MonthlyReview",
-                Title = await _localizationService.GetResourceAsync("Account.MonthlyReview"),
-                Tab = (int)CustomerNavigationEnum.MonthlyReview,
-                ItemClass = "performance-report"
-            });
-
             if (await _teamPerformanceMeasurementService.IsEmployeeCanAddRatings(currCustomerId))
+            {
+                if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreProjectLeaderReview, PermissionAction.View))
+                {
+                    model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                    {
+                        RouteName = "ProjectLeaderReview",
+                        Title = await _localizationService.GetResourceAsync("Account.ProjectLeaderReview"),
+                        Tab = (int)CustomerNavigationEnum.ProjectLeaderReview,
+                        ItemClass = "ProjectLeaderReview"
+                    });
+                }
+            }
+
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreYearlyReview, PermissionAction.View))
+            {
                 model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
                 {
-                    RouteName = "ProjectLeaderReview",
-                    Title = await _localizationService.GetResourceAsync("Account.ProjectLeaderReview"),
-                    Tab = (int)CustomerNavigationEnum.ProjectLeaderReview,
-                    ItemClass = "ProjectLeaderReview"
+                    RouteName = "YearlyReview",
+                    Title = await _localizationService.GetResourceAsync("Account.YearlyReview"),
+                    Tab = (int)CustomerNavigationEnum.YearlyReview,
+                    ItemClass = "performance-report"
                 });
-
-            model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
-            {
-                RouteName = "YearlyReview",
-                Title = await _localizationService.GetResourceAsync("Account.YearlyReview"),
-                Tab = (int)CustomerNavigationEnum.YearlyReview,
-                ItemClass = "performance-report"
-            });
+            }
 
             var store = await _storeContext.GetCurrentStoreAsync();
             var customer = await _workContext.GetCurrentCustomerAsync();

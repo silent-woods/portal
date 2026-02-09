@@ -117,6 +117,17 @@ namespace App.Services.Security
         public static readonly PermissionRecord PublicStoreEmployeeExperiences = new() { Name = "Public store. Employee Experiences", SystemName = "EmployeeExperiences", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreEmployeeAssets = new() { Name = "Public store. Employee Assets", SystemName = "EmployeeAssets", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreEmployeeAttendanceReport = new() { Name = "Public store. Employee Attendance Report", SystemName = "EmployeeAttendanceReport", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreLeaveManagement = new() { Name = "Public store. Leave Management", SystemName = "LeaveManagement", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreTimesheet = new() { Name = "Public store. Timesheet", SystemName = "Timesheet", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreViewUpdate = new() { Name = "Public store. View Update", SystemName = "ViewUpdate", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreProjectManagement = new() { Name = "Public store. Project Management", SystemName = "ProjectManagement", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreTimeSummaryReport = new() { Name = "Public store. Time Summary Report", SystemName = "TimeSummaryReport", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreEmployeePerformaceReport = new() { Name = "Public store. Employee Performance Report", SystemName = "EmployeePerformanceReport", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreAddRating = new() { Name = "Public store. Add Rating", SystemName = "AddRating", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreMonthlyReview = new() { Name = "Public store. Monthly Review", SystemName = "MonthlyReview", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreProjectLeaderReview = new() { Name = "Public store. Project Leader Review", SystemName = "ProjectLeaderReview", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreYearlyReview = new() { Name = "Public store. Yearly Review", SystemName = "YearlyReview", Category = "PublicStore" };
+
 
         /// <summary>
         /// Get permissions
@@ -166,6 +177,16 @@ namespace App.Services.Security
                 PublicStoreEmployeeExperiences,
                 PublicStoreEmployeeAssets,
                 PublicStoreEmployeeAttendanceReport,
+                PublicStoreLeaveManagement,
+                PublicStoreTimesheet,
+                PublicStoreViewUpdate,
+                PublicStoreProjectManagement,
+                PublicStoreTimeSummaryReport,
+                PublicStoreEmployeePerformaceReport,
+                PublicStoreAddRating,
+                PublicStoreMonthlyReview,
+                PublicStoreProjectLeaderReview,
+                PublicStoreYearlyReview,
                 EnableMultiFactorAuthentication,
                 ManageDesignation,
                 ManageLeaveType,
@@ -274,6 +295,16 @@ namespace App.Services.Security
                         PublicStoreEmployeeExperiences,
                         PublicStoreEmployeeAssets,
                         PublicStoreEmployeeAttendanceReport,
+                        PublicStoreLeaveManagement,
+                        PublicStoreTimesheet,
+                        PublicStoreViewUpdate,
+                        PublicStoreProjectManagement,
+                        PublicStoreTimeSummaryReport,
+                        PublicStoreEmployeePerformaceReport,
+                        PublicStoreAddRating,
+                        PublicStoreMonthlyReview,
+                        PublicStoreProjectLeaderReview,
+                        PublicStoreYearlyReview,
                         AccessClosedStore,
                         AccessProfiling,
                         EnableMultiFactorAuthentication,
