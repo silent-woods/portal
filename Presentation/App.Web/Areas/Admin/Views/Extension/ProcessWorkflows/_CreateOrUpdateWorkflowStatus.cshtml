@@ -74,6 +74,7 @@
                         });
                     }
                 }
+                @await Html.PartialAsync("Table", gridModel)
             </div>
 
             <script>
@@ -107,7 +108,7 @@
                 });
             </script>
 
-            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageChecklist, PermissionAction.Add))
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageWorkflowStatus, PermissionAction.Add))
             {
                 <div class="card-body">
                     <button type="button" id="btnAddNewEmpProjectMapping" class="btn btn-primary" onclick="javascript:OpenWindow('@Url.Action("Create", "WorkflowStatus", new { processWorkflowId = Model.Id, btnId = "btnRefreshWorkflowStatus", formId = "processWorkflow-form" })', 800, 800, true); return false;">

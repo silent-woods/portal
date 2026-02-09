@@ -23,11 +23,11 @@
         @T("Plugin.SatyanamCRM.ConnectionRequest")
     </h1>
     <div class="float-right">
-        <button type="button" id="move-selected" class="btn btn-info" title="Move selected to LinkedIn Followups">
-            <i class="fas fa-exchange-alt"></i> Move
-        </button>
-        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
         {
+            <button type="button" id="move-selected" class="btn btn-info" title="Move selected to LinkedIn Followups">
+                <i class="fas fa-exchange-alt"></i> Move
+            </button>
             <div class="btn-group">
                 <button type="button" class="btn btn-success">
                     <i class="fas fa-download"></i>
@@ -63,6 +63,9 @@
                     </li>
                 </ul>
             </div>
+        }
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+        {
             <div class="btn-group">
                 <button type="button" class="btn bg-olive dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-upload"></i>
@@ -77,9 +80,6 @@
                     </li>
                 </ul>
             </div>
-        }
-        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
-        {
             <a asp-action="Create" class="btn btn-primary">
                 <i class="fas fa-plus-square"></i>
                 @T("Plugin.SatyanamCRM.ConnectionRequest.AddNew")

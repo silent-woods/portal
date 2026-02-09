@@ -19,6 +19,9 @@
                 <i class="fas fa-plus-square"></i>
                 @T("Admin.Common.AddNew")
             </a>
+        }
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageLeaveManagement, PermissionAction.Edit))
+        {
             <button type="button" id="approve-selected" class="btn btn-success">
                 <i class="fas fa-check-square"></i>
                 @T("Admin.Common.ApproveSelected")

@@ -1,0 +1,19 @@
+﻿@using Satyanam.Nop.Core.Domains
+@model TaskComments
+
+<div class="cr-comment-text">
+    @if (!string.IsNullOrWhiteSpace(Model.Description))
+    {
+        @Html.Raw(
+        System.Text.RegularExpressions.Regex.Replace(
+        System.Text.RegularExpressions.Regex.Replace(
+        Model.Description ?? "",
+        @"(?<!href=['""])(https?:\/\/[^\s<]+)",
+        "<a href='$1' target='_blank' class='comment-link'>$1</a>"
+        ),
+        @"@<([^>]+)>",
+        "<span class='mention'>@$1</span>"
+        )
+        )
+        }
+</div>

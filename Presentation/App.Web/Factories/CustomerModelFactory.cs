@@ -74,7 +74,7 @@ namespace App.Web.Factories
         private readonly SecuritySettings _securitySettings;
         private readonly ITeamPerformanceMeasurementService _teamPerformanceMeasurementService;
         private readonly IEmployeeService _employeeService;
-     
+
         #endregion
 
         #region Ctor
@@ -607,7 +607,7 @@ namespace App.Web.Factories
                 });
             }
 
-            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeExperiences, PermissionAction.View))
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeAssets, PermissionAction.View))
             {
                 model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
                 {
@@ -658,7 +658,7 @@ namespace App.Web.Factories
                 ItemClass = "UpdateTimeSheet"
             });
 
-       
+
             model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
             {
                 RouteName = "ProjectManagement",
@@ -729,7 +729,7 @@ namespace App.Web.Factories
 
             var store = await _storeContext.GetCurrentStoreAsync();
             var customer = await _workContext.GetCurrentCustomerAsync();
-         
+
             if (_customerSettings.AllowCustomersToUploadAvatars)
             {
                 model.CustomerNavigationItems.Add(new CustomerNavigationItemModel

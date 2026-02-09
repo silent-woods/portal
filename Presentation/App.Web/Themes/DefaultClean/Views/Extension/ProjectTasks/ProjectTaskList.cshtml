@@ -138,7 +138,7 @@
         <div class="card-body nop-card-body">
             <input type="hidden" id="EmployeeId" name="EmployeeId" value="@Model.EmployeeId" />
             <div class="form-horizontal">
-                <div class="grid-container">
+                <div class="grid-container task-filter-grid">
                     <input type="hidden" id="SelectedProjectIds"
                            name="SelectedProjectIds"
                            value="@(string.Join(",", Model.SelectedProjectIds ?? new List<int>()))" />

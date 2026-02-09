@@ -1564,8 +1564,20 @@ namespace Satyanam.Nop.Core.Services
                                         {
                                             var coordinatorId = await _projectsService.GetProjectCoordinatorIdByIdAsync(overdue.ProjectId);
                                             var coordinator = await _employeeService.GetEmployeeByIdAsync(coordinatorId);
-                                            if (coordinator != null)
+
+                                            if (coordinator != null && !string.IsNullOrEmpty(coordinator.OfficialEmail))
+                                            {
                                                 cCEmailsSet.Add(coordinator.OfficialEmail.Trim());
+                                            }
+                                            else
+                                            {
+                                                var projectLeaderId = await _projectsService.GetProjectLeaderIdByIdAsync(overdue.ProjectId);
+                                                var projectLeaderEmployee = await _employeeService.GetEmployeeByIdAsync(projectLeaderId);
+                                                if (projectLeaderEmployee != null && !string.IsNullOrEmpty(projectLeaderEmployee.OfficialEmail))
+                                                {
+                                                    cCEmailsSet.Add(projectLeaderEmployee.OfficialEmail.Trim());
+                                                }
+                                            }
                                         }
                                     }
                                     if (cCEmailsSet.Contains(senderEmail.Trim(), StringComparer.OrdinalIgnoreCase))

@@ -14,171 +14,12 @@
     NopHtml.AppendPageCssClassParts("html-account-page");
     NopHtml.AppendPageCssClassParts("html-update-form-page");
 }
-<style>
-    body {
-        background-color: #f8f9fa;
-    }
-    .card-box {
-        border: 1px solid #ddd;
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 24px;
-        background-color: #fff;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    }
-    .question-label {
-        font-weight: 600;
-        font-size: 17px;
-        margin-bottom: 8px;
-        display: block;
-        color: #333;
-    }
-    .question-hint {
-        font-size: 13px;
-        color: #888;
-        margin-bottom: 10px;
-    }
-    .form-control,
-    select {
-        height: 40px;
-        padding: 6px 12px;
-        font-size: 15px;
-        border-radius: 8px;
-        box-shadow: none;
-        border: 1px solid #ced4da;
-    }
-    .form-check {
-        margin-bottom: 6px;
-    }
-    .form-check-input {
-        margin-right: 10px;
-    }
-    .text-danger {
-        font-size: 13px;
-        margin-top: 6px;
-        display: block;
-    }
-    .form-title {
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 8px;
-        color: #2c3e50;
-    }
-    .btn-primary {
-        border: 0;
-        background-color: #4ab2f1;
-        color: #fff;
-        font-size: 18px;
-        padding: 10px;
-        font-weight: 500;
-        transition: background-color 0.3s ease;
-    }
-    .text-input-box {
-        height: 36px;
-        width: 100%;
-    }
-    .mt-2 {
-        margin-top: 12px;
-    }
-    .d-grid {
-        display: grid;
-    }
-    .gap-2 {
-        gap: 12px;
-    }
-    .w-100 {
-        width: 100%;
-    }
-    .text-muted {
-        color: #6c757d !important;
-    }
-    .back-to-list-btn {
-        padding: 8px 16px;
-        font-size: 14px;
-        border-radius: 6px;
-        background-color: #6c757d;
-        color: white;
-        text-decoration: none;
-        transition: background-color 0.2s ease;
-    }
-        .back-to-list-btn:hover {
-            background-color: #5a6268;
-            color: white;
-        }
-    .comment-item {
-        background-color: #ffffff;
-        border: 1px solid #dee2e6;
-    }
-        .comment-item + .comment-item {
-            margin-top: 15px;
-        }
-    textarea.form-control {
-        resize: vertical;
-    }
-    .container mt-4 {
-        padding-bottom: 10px;
-        padding-top: 10px;
-    }
-    .period-sidebar {
-        width: 220px;
-        padding-top: 49px;
-    }
-    .sidebar-title {
-        margin-bottom: 15px;
-        font-size: initial;
-    }
-    .period-list {
-        list-style: none;
-        padding-left: 0;
-        margin: 0;
-    }
-    .period-item {
-        background: #f8fff5;
-        border: 1px solid #d7f3d0;
-        border-radius: 10px;
-        padding: 10px 12px;
-        margin-bottom: 10px;
-    }
-    .period-date {
-        font-weight: 600;
-        color: #2d7a2d;
-        font-size: 14px;
-    }
-    .period-status {
-        color: #3c9a3c;
-        font-size: 13px;
-    }
-    .clear-file-btn {
-        border-radius: 4px;
-        padding: 3px 13px;
-        margin-left: 5px;
-    }
 
-    .checkbox-label {
-        display: inline-flex !important;
-        align-items: center;
-    }
-
-    .required-star {
-        color: red;
-        margin-left: 4px;
-        font-weight: bold;
-    }
-
-    .checkbox-error {
-        color: #dc3545; 
-        display: block;
-        text-align: center;
-        margin-top: 6px;
-        font-size: 0.875rem;
-    }
-
-</style>
-<div class="container my-4" style="display: flex; gap: 24px;">
+<div class="container page-container">
     <!-- Sidebar -->
     <div class="period-sidebar">
         <div class="card-box">
-            <h5 class="sidebar-title">Periods</h5>
+            <h5 class="sidebar-title">@T("Submit.Update.Periods")</h5>
             <ul class="period-list">
                 @foreach (var period in Model.Periods)
                 {
@@ -190,7 +31,7 @@
                             }
                         </div>
                         <span class="period-status">
-                            Submitted
+                            @T("Submit.Update.Submited")
                         </span>
                     </li>
                 }
@@ -198,15 +39,15 @@
         </div>
     </div>
     <!-- Form main area -->
-    <div style="flex: 1;">
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+    <div class="form-main">
+        <div class="top-actions">
             <a href="@Url.Action("SubmissionList", "UpdateSubmission")" class="btn btn-secondary back-to-list-btn">
-                Back to List
+                @T("Submit.Update.Backtolist")
             </a>
         </div>
         <div class="card-box">
             <div class="form-title">@Model.Title</div>
-            <div class="text-muted mb-3" style="margin-bottom: 15px;margin-top: 15px;">
+            <div class="text-muted form-description">
                 @Model.Description
             </div>
             <form asp-controller="UpdateSubmission"
@@ -315,8 +156,9 @@
                                 case "DropdownList":
                                     {
                                         var hasValue = !string.IsNullOrEmpty(question.AnswerText);
-                                        var canDisable = hasValue &&
-                                        !ViewData.ModelState.ContainsKey($"Questions[{i}].AnswerText");
+                                        var canDisable = !Model.AllowEditingAfterSubmit
+                                        && !string.IsNullOrEmpty(question.AnswerText);
+
 
                                         <select name="Questions[@i].AnswerText"
                                                 class="form-control"
@@ -328,9 +170,7 @@
                             @if (canDisable)
                             {
                                     <text> disabled="disabled" </text>
-                            }
-                >
-
+                            }>
                         <option value="">-- Select --</option>
 
                         @foreach (var opt in question.Options)
@@ -358,10 +198,6 @@
                                               data-valmsg-replace="true"></span>
                                     }
                                     break;
-
-
-
-
                                 case "RadioList":
                                     <div class="form-group">
                                         @foreach (var opt in question.Options)
@@ -414,13 +250,6 @@
                                         </div>
                                         break;
                                     }
-    
-
-
-
-
-
-
                                 case "Datepicker":
                                     <div class="form-group">
                                         <input type="date"name="Questions[@i].AnswerText"class="form-control"value="@question.AnswerText"
@@ -448,7 +277,7 @@
                                             <input type="file"name="Questions[@i].UploadedFile"class="form-control file-input"data-max-size="@maxFileSizeKb"data-allowed-ext="@allowedExtensions"
                                                    @(isRequired? "data-val='true' data-val-required='Please upload a file' required": "") />
                                             <button type="button"class="btn btn-sm btn-outline-secondary ms-2 clear-file-btn">
-                                                <i class="fa fa-times me-1"></i> Clear file
+                                                <i class="fa fa-times me-1"></i> @T("Submit.Update.Clearfile")
                                             </button>
                                             <span class="text-danger"data-valmsg-for="Questions[@i].UploadedFile"data-valmsg-replace="true"></span>
                                         }
@@ -475,12 +304,12 @@
                 }
                 @if (!Model.HasAlreadySubmitted || Model.AllowEditingAfterSubmit)
                 {
-                    <div style="margin-top: 30px; text-align: center;">
-                        <button type="submit" class="btn btn-primary">SUBMIT</button>
+                    <div class="submit-wrapper">
+                        <button type="submit" class="btn btn-primary">@T("Submit.Update.Form.Submit")</button>
                     </div>
                 }
-                <div class="container mt-4">
-                    <h4 class="mb-3" style="padding-bottom:12px;">Comments</h4>
+                <div class="container mt-4 comments-container">
+                    <h4 class="mb-3">@T("Submit.Update.Comments")</h4>
                     <div class="card shadow-sm p-3" style="background-color: #f8f9fa;">
                         <div id="comments-container-@Model.Id">
                             @await Html.PartialAsync("~/Themes/DefaultClean/Views/Extension/UpdateForm/_CommentsPartial.cshtml",

@@ -326,7 +326,7 @@ public partial class TaskAlertController : BaseAdminController
 
     public virtual async Task<IActionResult> TaskAlertReports()
     {
-        if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAlertReason, PermissionAction.View))
+        if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAlertReport, PermissionAction.View))
             return AccessDeniedView();
 
         var model = await _taskAlertModelFactory.PrepareTaskAlertReportSearchModelAsync(new TaskAlertReportSearchModel());
@@ -337,7 +337,7 @@ public partial class TaskAlertController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> TaskAlertReports(TaskAlertReportSearchModel searchModel)
     {
-        if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAlertReason, PermissionAction.View))
+        if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAlertReport, PermissionAction.View))
             return AccessDeniedView();
 
         var model = await _taskAlertModelFactory.PrepareTaskAlertReportListModelAsync(searchModel);
@@ -347,7 +347,7 @@ public partial class TaskAlertController : BaseAdminController
 
     public virtual async Task<IActionResult> ViewTaskAlertLogDetails(int id)
     {
-        if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAlertReason, PermissionAction.View))
+        if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAlertReport, PermissionAction.View))
             return AccessDeniedView();
 
         var existingTaskAlertLog = await _taskAlertService.GetTaskAlertLogByIdAsync(id);

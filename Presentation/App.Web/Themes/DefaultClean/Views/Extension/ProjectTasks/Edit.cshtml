@@ -370,28 +370,37 @@
 
             <div class="card card-default card-search task-change-log-card">
                 <div class="card-body nop-card-body">
-                    <div class="form-horizontal">
-                        <h3 class="section-title">Task Change Logs</h3>
-                        <div class="task-commments-container scrollable-section-highhight">
-                            @if (Model.TaskChangeLogModel != null && Model.TaskChangeLogModel.Any())
-                            {
-                                foreach (var taskLog in Model.TaskChangeLogModel)
+                    <div class="timesheet-header accordion-header" data-target="#taskChangeLogContainer">
+                        <h3 class="section-title">
+                            Task Change Logs
+                            <span class="accordion-arrow">&#9660;</span>
+                        </h3>
+                    </div>
+                    <div id="taskChangeLogContainer" style="display:none;">
+                        <div class="form-horizontal">
+                            <div class="task-commments-container scrollable-section-highhight">
+                                @if (Model.TaskChangeLogModel != null && Model.TaskChangeLogModel.Any())
                                 {
-                                    <div class="comment-card">
-                                        <div class="comment-header">
-                                            <span class="comment-author">@taskLog.EmployeeName</span>
-                                            <span class="comment-date">@taskLog.CreatedOn.ToString("dd MMM yyyy hh:mm tt")</span>
+                                    foreach (var taskLog in Model.TaskChangeLogModel)
+                                    {
+                                        <div class="comment-card">
+                                            <div class="comment-header">
+                                                <span class="comment-author">@taskLog.EmployeeName</span>
+                                                <span class="comment-date">
+                                                    @taskLog.CreatedOn.ToString("dd MMM yyyy hh:mm tt")
+                                                </span>
+                                            </div>
+                                            <div class="comments-body">
+                                                <p>@Html.Raw(taskLog.Notes)</p>
+                                            </div>
                                         </div>
-                                        <div class="comments-body">
-                                            <p>@Html.Raw(taskLog.Notes)</p>
-                                        </div>
-                                    </div>
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                <p class="no-comments">No logs</p>
-                            }
+                                else
+                                {
+                                    <p class="no-comments">No logs</p>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -501,6 +510,18 @@
                     }
                 }
             );
+              $(document).on(
+                        "click",
+                                ".accordion-header[data-target='#taskChangeLogContainer']",
+                        function () {
+
+                            const container = $("#taskChangeLogContainer");
+                            const arrow = $(this).find(".accordion-arrow");
+
+                            container.slideToggle(200);
+                            arrow.toggleClass("active");
+                        }
+                    );
             var isTimesheetLoaded = false;
             var taskId = @Model.Id;
 

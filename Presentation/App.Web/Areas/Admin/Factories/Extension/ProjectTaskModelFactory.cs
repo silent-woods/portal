@@ -324,7 +324,7 @@ namespace App.Web.Areas.Admin.Factories
                 throw new ArgumentNullException(nameof(model));
 
 
-            var status = await _workflowStatusService.GetAllWorkflowStatusAsync(model.ProcessWorkflowId,"");
+            var status = await _workflowStatusService.GetAllWorkflowStatusAsync(model.ProcessWorkflowId);
             foreach (var s in status)
             {
                 if (s != null)

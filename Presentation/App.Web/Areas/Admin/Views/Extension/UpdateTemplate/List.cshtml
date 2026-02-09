@@ -22,6 +22,12 @@
         @T("Admin.UpdateTemplateModel.UpdateTemplate")
     </h1>
     <div class="float-right">
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateTemplate, PermissionAction.Edit))
+        {
+            <button type="button" id="copy-selected" class="btn btn-info">
+                <i class="fas fa-copy"></i> @T("Admin.UpdateTemplate.CopyTemplate")
+            </button>
+        }
         @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateTemplate, PermissionAction.Add))
         {
             <a asp-action="Create" class="btn btn-primary">
@@ -139,13 +145,13 @@
                                     new FilterParameter(nameof(Model.DueDateTime)),
                                     new FilterParameter(nameof(Model.DueTime)),
                                     new FilterParameter(nameof(Model.IsActive)),
-                                },
+                                }
                             };
 
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateModel.Id))
                             {
                                 IsMasterCheckBox = true,
-                                Render = new RenderCheckBox("checkbox_update_template"),
+                                Render = new RenderCheckBox("checkbox_update_templates"),
                                 ClassName = NopColumnClassDefaults.CenterAll,
                                 Width = "30"
                             });
@@ -163,7 +169,8 @@
                             });
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateModel.DueTime))
                             {
-                                Title = T("Admin.UpdateTempalte.Fields.DueTime").Text
+                                Title = T("Admin.UpdateTempalte.Fields.DueTime").Text,
+                                Render = new RenderCustom("renderDueTime")
                             });
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateModel.IsActive))
                             {
@@ -173,16 +180,19 @@
                             });
                             @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateTemplate, PermissionAction.Edit))
                             {
-                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateModel.Id))
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProjectModel.Id))
                                 {
                                     Title = T("Admin.Common.Edit").Text,
-                                    Width = "80",
+                                    Width = "100",
                                     ClassName = NopColumnClassDefaults.Button,
                                     Render = new RenderButtonEdit(new DataUrl("Edit"))
                                 });
                             }
                         }
                         @await Html.PartialAsync("Table", gridModel)
+                        <form id="copy-selected-form"asp-controller="UpdateTemplate"asp-action="CopySelected"method="post">
+                            <input type="hidden" name="selectedIds" id="copy-selected-ids" />
+                        </form>
                     </div>
                 </div>
             </div>
@@ -216,7 +226,46 @@
             return false;
         });
     </script>
+    <script>
+        function renderDueTime(data, type, row, meta) {
+            if (!data)
+                return '';
 
+            // data = "23:00" or "12:00"
+            var parts = data.split(':');
+            if (parts.length < 2)
+                return data;
+
+            var hours = parseInt(parts[0], 10);
+            var minutes = parts[1];
+
+            var ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+
+            return hours.toString().padStart(2, '0') + ':' + minutes + ' ' + ampm;
+        }
+    </script>
+    <script>
+        $('#copy-selected').on('click', function () {
+
+            var selectedIds = [];
+
+            $('input[name="checkbox_update_templates"]:checked').each(function () {
+                selectedIds.push($(this).val());
+            });
+
+            if (selectedIds.length === 0) {
+                alert('Please select at least one template to copy.');
+                return;
+            }
+
+            $('#copy-selected-ids').val(selectedIds.join(','));
+
+            $('#copy-selected-form').submit();
+        });
+
+    </script>
     <nop-alert asp-alert-id="deleteSelectedFailed" />
     <nop-alert asp-alert-id="nothingSelectedAlert" />
 </section>

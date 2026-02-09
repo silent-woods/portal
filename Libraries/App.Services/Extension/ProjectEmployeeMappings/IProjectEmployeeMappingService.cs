@@ -28,5 +28,6 @@ namespace App.Services.ProjectEmployeeMappings
         Task<IList<int>> GetProjectIdsManagedOrCoordinateByEmployeeIdAsync(int employeeId);
         Task<IList<int>> GetVisibleProjectIdsForDashboardAsync(int employeeId);
         Task<IList<int>> GetProjectIdsByEmployeeAsync(int employeeId);
+        Task<IList<int>> GetProjectIdsQaByEmployeeIdAsync(int employeeId);
     }
 }

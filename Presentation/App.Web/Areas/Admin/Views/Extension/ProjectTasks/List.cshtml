@@ -23,10 +23,13 @@
         @T("Admin.Configuration.ProjectTask")
     </h1>
     <div class="float-right">
-        <button id="btnAddLeaveLog" class="btn btn-primary" onclick="javascript:OpenWindow('@(Url.Action("SyncTime", "ProjectTask", new { btnId="btnRefreshMonthlyLeave", formId="LeaveTransactionLog-form" }))', 1000, 600, true); return false;">
-            <i class="fas fa-sync"></i>
-            @T("Admin.Common.SyncTime")
-        </button>
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectTask, PermissionAction.Edit))
+        {
+            <button id="btnAddLeaveLog" class="btn btn-primary" onclick="javascript:OpenWindow('@(Url.Action("SyncTime", "ProjectTask", new { btnId = "btnRefreshMonthlyLeave", formId = "LeaveTransactionLog-form" }))', 1000, 600, true); return false;">
+                <i class="fas fa-sync"></i>
+                @T("Admin.Common.SyncTime")
+            </button>
+        }
         @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectTask, PermissionAction.Add))
         {
             <a asp-action="Create" class="btn btn-primary">

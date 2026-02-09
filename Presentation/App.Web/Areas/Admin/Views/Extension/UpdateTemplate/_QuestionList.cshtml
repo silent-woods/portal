@@ -16,124 +16,127 @@
 
 @if (Model.Id > 0)
 {
-    <div class="card card-default">
-        <div class="card-body">
-            <div class="row">
-                <!-- Question Field -->
-                <div class="col-md-6">
-                    <div class="form-group row">
-                        <div class="col-md-4">
-                            <nop-label asp-for="updateTemplateQuestionSearchModel.Question" />
+    <div class="card-body">
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="row">
+                    <!-- Question Field -->
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            <div class="col-md-4">
+                                <nop-label asp-for="updateTemplateQuestionSearchModel.Question" />
+                            </div>
+                            <div class="col-md-8">
+                                <nop-editor asp-for="updateTemplateQuestionSearchModel.Question" id="search-question-input" />
+                            </div>
                         </div>
-                        <div class="col-md-8">
-                            <nop-editor asp-for="updateTemplateQuestionSearchModel.Question" id="search-question-input" />
+                    </div>
+
+                    <!-- IsRequired Dropdown -->
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            <div class="col-md-4">
+                                <nop-label asp-for="updateTemplateQuestionSearchModel.IsRequired" />
+                            </div>
+                            <div class="col-md-8">
+                                <nop-select asp-for="updateTemplateQuestionSearchModel.IsRequired"
+                                            asp-items="yesNoOptions" id="search-isrequired-dropdown" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ControlType Dropdown -->
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            <div class="col-md-4">
+                                <nop-label asp-for="updateTemplateQuestionSearchModel.ControlType" />
+                            </div>
+                            <div class="col-md-8">
+                                <nop-select asp-for="updateTemplateQuestionSearchModel.ControlType"
+                                            asp-items="Model.updateTemplateQuestionSearchModel.AvailableControlTypes"
+                                            id="search-controltype-dropdown" />
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- IsRequired Dropdown -->
-                <div class="col-md-6">
-                    <div class="form-group row">
-                        <div class="col-md-4">
-                            <nop-label asp-for="updateTemplateQuestionSearchModel.IsRequired" />
-                        </div>
-                        <div class="col-md-8">
-                            <nop-select asp-for="updateTemplateQuestionSearchModel.IsRequired"
-                                        asp-items="yesNoOptions" id="search-isrequired-dropdown" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ControlType Dropdown -->
-                <div class="col-md-6">
-                    <div class="form-group row">
-                        <div class="col-md-4">
-                            <nop-label asp-for="updateTemplateQuestionSearchModel.ControlType" />
-                        </div>
-                        <div class="col-md-8">
-                            <nop-select asp-for="updateTemplateQuestionSearchModel.ControlType"
-                                        asp-items="Model.updateTemplateQuestionSearchModel.AvailableControlTypes"
-                                        id="search-controltype-dropdown" />
-                        </div>
+                <!-- Search Button -->
+                <div class="row">
+                    <div class="text-center col-12">
+                        <button type="button" id="search-update-template-questions" class="btn btn-primary btn-search">
+                            <i class="fas fa-search"></i> @T("Admin.Common.Search")
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Search Button -->
-            <div class="row">
-                <div class="text-center col-12">
-                    <button type="button" id="search-update-template-questions" class="btn btn-primary btn-search">
-                        <i class="fas fa-search"></i> @T("Admin.Common.Search")
+            <!-- Questions Grid -->
+            <div class="card-body">
+                @{
+                    var gridModel = new DataTablesModel
+                    {
+                        Name = "updateTemplateQuestion-grid",
+                        UrlRead = new DataUrl("QuestionList", "UpdateTemplate", new RouteValueDictionary { ["UpdateTemplateId"] = Model.Id }),
+                        UrlDelete = new DataUrl("QuestionDelete", "UpdateTemplate", new RouteValueDictionary { ["updateTemplateId"] = Model.Id }),
+                        SearchButtonId = "search-update-template-questions",
+                        Length = Model.updateTemplateQuestionSearchModel.PageSize,
+                        LengthMenu = Model.updateTemplateQuestionSearchModel.AvailablePageSizes,
+                        Filters = new List<FilterParameter>(),
+                    };
+
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateQuestionModel.QuestionText))
+                    {
+                        Title = T("Admin.UpdateTemplateQuestionModel.Fields.QuestionText").Text
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateQuestionModel.IsRequired))
+                    {
+                        Title = T("Admin.UpdateTemplateQuestionModel.Fields.IsRequired").Text,
+                        ClassName = NopColumnClassDefaults.CenterAll,
+                        Render = new RenderBoolean()
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateQuestionModel.ControlTypeName))
+                    {
+                        Title = T("Admin.UpdateTemplateQuestionModel.Fields.ControlTypeName").Text
+                    });
+                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateQuestionModel.DisplayOrder))
+                    {
+                        Title = T("Admin.UpdateTemplateQuestionModel.Fields.DisplayOrder").Text
+                    });
+                    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionTemplate, PermissionAction.Edit))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateQuestionModel.Id))
+                        {
+                            Title = T("Admin.Common.Edit").Text,
+                            Width = "100",
+                            ClassName = NopColumnClassDefaults.Button,
+                            Render = new RenderButtonEdit(new DataUrl("~/Admin/UpdateTemplate/QuestionEdit?UpdateTemplateId=" + Model.Id + "&id=", true))
+                        });
+                    }
+                    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionTemplate, PermissionAction.Delete))
+                    {
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateQuestionModel.Id))
+                        {
+                            Title = T("Admin.Common.Delete").Text,
+                            Width = "100",
+                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                            ClassName = NopColumnClassDefaults.Button
+                        });
+                    }
+                }
+                @await Html.PartialAsync("Table", gridModel)
+        </div>
+
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionTemplate, PermissionAction.Add))
+        {
+                <!-- Add New Question Button -->
+                <div class="card-body">
+                    <button type="button" class="btn btn-primary"
+                            onclick="location.href='@Url.Action("QuestionCreate", new { updateTemplateId = Model.Id })'">
+                        @T("Admin.Company.Deals.AddButton")
                     </button>
                 </div>
-            </div>
-        </div>
-
-        <!-- Questions Grid -->
-        <div class="card-body">
-            @{
-                var gridModel = new DataTablesModel
-                {
-                    Name = "updateTemplateQuestion-grid",
-                    UrlRead = new DataUrl("QuestionList", "UpdateTemplate", new RouteValueDictionary { ["UpdateTemplateId"] = Model.Id }),
-                    UrlDelete = new DataUrl("QuestionDelete", "UpdateTemplate", new RouteValueDictionary { ["updateTemplateId"] = Model.Id }),
-                    SearchButtonId = "search-update-template-questions",
-                    Length = Model.updateTemplateQuestionSearchModel.PageSize,
-                    LengthMenu = Model.updateTemplateQuestionSearchModel.AvailablePageSizes,
-                    Filters = new List<FilterParameter>()
-                };
-
-                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateQuestionModel.QuestionText))
-                {
-                    Title = T("Admin.UpdateTemplateQuestionModel.Fields.QuestionText").Text
-                });
-                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateQuestionModel.IsRequired))
-                {
-                    Title = T("Admin.UpdateTemplateQuestionModel.Fields.IsRequired").Text,
-                    ClassName = NopColumnClassDefaults.CenterAll,
-                    Render = new RenderBoolean()
-                });
-                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateQuestionModel.ControlTypeName))
-                {
-                    Title = T("Admin.UpdateTemplateQuestionModel.Fields.ControlTypeName").Text
-                });
-                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateQuestionModel.DisplayOrder))
-                {
-                    Title = T("Admin.UpdateTemplateQuestionModel.Fields.DisplayOrder").Text
-                });
-                @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionTemplate, PermissionAction.Edit))
-                {
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateModel.Id))
-                    {
-                        Title = T("Admin.Common.Edit").Text,
-                        Width = "100",
-                        ClassName = NopColumnClassDefaults.Button,
-                        Render = new RenderButtonEdit(new DataUrl("~/Admin/UpdateTemplate/QuestionEdit?UpdateTemplateId=" + Model.Id + "&id=", true))
-                    });
-                }
-                @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionTemplate, PermissionAction.Delete))
-                {
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(UpdateTemplateModel.Id))
-                    {
-                        Title = T("Admin.Common.Delete").Text,
-                        Width = "100",
-                        Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
-                        ClassName = NopColumnClassDefaults.Button
-                    });
-                }
-            }
-            @await Html.PartialAsync("Table", gridModel)
+        }
     </div>
-
-    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateQuestionTemplate, PermissionAction.Add))
-    {
-        <div class="card-body">
-            <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("QuestionCreate", new { updateTemplateId = Model.Id })'">
-                <i class="fas fa-plus-square"></i>
-                @T("Admin.Company.Deals.AddButton")
-            </button>
-        </div>
-    }
 </div>
 }
 else

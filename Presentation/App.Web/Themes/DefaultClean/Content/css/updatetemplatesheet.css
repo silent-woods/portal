@@ -1,0 +1,255 @@
+/*UPDATE SUBMISSION LIST STYLES */
+.update-list-container {
+    padding-bottom: 40px;
+}
+/* Template title */
+.update-template-heading {
+    font-size: 24px;
+}
+.update-template-title {
+    font-weight: 600;
+    color: #2c3e50;
+}
+/* Top actions */
+.update-top-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+}
+/* Cards */
+.update-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: 0.3s ease;
+}
+    .update-card:hover {
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+    }
+/* Header */
+.update-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+    .update-header h5 {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
+        color: #2c3e50;
+    }
+    .update-header .date {
+        font-size: 14px;
+        color: #6c757d;
+    }
+/* Search bar */
+.search-bar {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    margin-bottom: 30px;
+}
+/* Custom date range */
+.custom-date-range.hide {
+    display: none;
+}
+.custom-date-range.show {
+    display: block;
+    margin-top: 10px;
+}
+/* Questions */
+.question-block {
+    margin-bottom: 16px;
+}
+.question-text {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #333;
+}
+/* Answers */
+.answer-box {
+    background-color: #f5f5f5;
+    padding: 10px 14px;
+    font-size: 15px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+/* File download */
+.file-download-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+.file-name {
+    font-size: 14px;
+}
+/* Buttons */
+.back-to-list-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    background-color: #6c757d;
+    color: #fff;
+    text-decoration: none;
+}
+    .back-to-list-btn:hover {
+        background-color: #5a6268;
+        color: #fff;
+    }
+.download-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    background-color: #007bff;
+    border-radius: 4px;
+    text-decoration: none;
+}
+    .download-button:hover {
+        background-color: #0056b3;
+    }
+/* Alerts */
+.not-submitted-alert {
+    font-weight: 500;
+    font-size: 15px;
+}
+/* Comments */
+.comments-title {
+    margin-top: 24px;
+    margin-bottom: 10px;
+}
+.comments-container {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.comment-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.comment-input {
+    min-height: 42px;
+}
+.add-comment-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 42px; /* matches input height */
+    padding: 0 18px;
+    background: #0d99ff; /* cleaner blue than deepskyblue */
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px; /* softer rounded corners */
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+    /* Hover */
+    .add-comment-btn:hover {
+        background: #007fe6;
+        box-shadow: 0 4px 10px rgba(13, 153, 255, 0.3);
+    }
+    /* Active (click) */
+    .add-comment-btn:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 6px rgba(13, 153, 255, 0.25);
+    }
+    /* Icon inside button */
+    .add-comment-btn i {
+        font-size: 15px;
+    }
+/* Search button – same style as Add Comment */
+.btn-search {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 42px;
+    padding: 0 18px;
+    background: #0d99ff;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+    /* Hover */
+    .btn-search:hover {
+        background: #007fe6;
+        box-shadow: 0 4px 10px rgba(13, 153, 255, 0.3);
+    }
+    /* Active */
+    .btn-search:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 6px rgba(13, 153, 255, 0.25);
+    }
+    /* Icon inside search button */
+    .btn-search i {
+        font-size: 15px;
+    }
+/* ===== Collapsible Update Card ===== */
+.collapsible-header {
+    cursor: pointer;
+}
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+/* Toggle button */
+.card-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #6c757d;
+}
+    .card-toggle-btn i {
+        font-size: 14px;
+        transition: transform 0.25s ease;
+    }
+/* Card body (collapsed by default) */
+.update-card-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+}
+/* Expanded */
+.update-card.open .update-card-body {
+    max-height: 2000px; /* large enough for content */
+}
+/* Rotate arrow */
+.update-card.open .card-toggle-btn i {
+    transform: rotate(180deg);
+}
+.not-submitted-alert {
+    margin-bottom: 20px; /* spacing below */
+    padding: 14px 18px;
+    background-color: #fff4e5; /* soft highlighted background */
+    border: 1px solid #ffd8a8;
+    border-left: 4px solid #ff922b; /* emphasis strip */
+
+    color: #8a4b00;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 8px;
+}
+.button-wrapper {
+    text-align: center;
+}
+.comment-input{
+    width:100%;
+}

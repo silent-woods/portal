@@ -1,0 +1,88 @@
+﻿@model App.Web.Models.Dashboard.PendingDashboardModel
+
+@{
+    Layout = "_ColumnsOne";
+}
+<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/dashboard.css")" />
+<div class="code-review-dashboard">
+    <div class="page-header-bar">
+        <h1>
+            <span class="dashboard-text">Dashboard</span>
+        </h1>
+        <div class="page-nav">
+            <a href="@Url.Action("FollowUp", "Dashboard")"
+               class="page-nav-link">
+                Follow-Up
+            </a>
+            <a href="@Url.Action("CodeReview", "Dashboard")"
+               class="page-nav-link">
+                Code Review
+                @if (Model.PendingCodeReviewCount > 0)
+                {
+                    <span class="nav-count">
+                        @Model.PendingCodeReviewCount
+                    </span>
+                }
+            </a>
+            <a href="@Url.Action("ReadyToTest", "Dashboard")"
+               class="page-nav-link">
+                Ready To Test
+                @if (Model.PendingReadyToTestCount > 0)
+                {
+                    <span class="nav-count">
+                        @Model.PendingReadyToTestCount
+                    </span>
+                }
+            </a>
+            <a href="@Url.Action("Overdue", "Dashboard")"
+               class="page-nav-link active">
+                Overdue
+            </a>
+        </div>
+    </div>
+    <div class="cr-filter-bar">
+        <select id="projectId" class="cr-filter-input">
+            <option value="0">All Projects</option>
+            @foreach (var p in Model.AvailableProjects)
+            {
+                <option value="@p.Value">@p.Text</option>
+            }
+        </select>
+        <select id="employeeId" class="cr-filter-input">
+            <option value="0">All Employees</option>
+            @foreach (var e in Model.AvailableEmployees)
+            {
+                <option value="@e.Value">@e.Text</option>
+            }
+        </select>
+        <input type="text"
+               id="taskName"
+               class="cr-filter-input"
+               placeholder="Search task name..." />
+        <button id="btnSearch" class="cr-search-btn">
+            Search
+        </button>
+    </div>
+    <div id="overdueTaskContainer">
+        @await Html.PartialAsync("/Themes/DefaultClean/Views/Extension/Dashboard/_OverdueTaskList.cshtml",Model)
+    </div>
+</div>
+
+<script>
+    $("#btnSearch").on("click", function () {
+        loadOverdueTasks();
+    });
+    function loadOverdueTasks() {
+        $.get("/Dashboard/SearchOverdueTasks", {
+            projectId: $("#projectId").val(),
+            employeeId: $("#employeeId").val(),
+            taskName: $("#taskName").val()
+        })
+        .done(function (html) {
+            $("#overdueTaskContainer").html(html);
+        })
+        .fail(function () {
+            alert("Failed to load overdue tasks");
+        });
+    }
+</script>

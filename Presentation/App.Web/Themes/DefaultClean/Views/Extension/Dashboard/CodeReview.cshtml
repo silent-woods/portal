@@ -1,0 +1,197 @@
+﻿@model App.Web.Models.Dashboard.PendingDashboardModel
+
+@{
+    Layout = "_ColumnsOne";
+}
+
+<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/dashboard.css")" />
+<div class="code-review-dashboard">
+    <div class="page-header-bar">
+        <h1><span class="dashboard-text">Dashboard</span></h1>
+
+        <div class="page-nav">
+            <a href="@Url.Action("FollowUp", "Dashboard")"
+               class="page-nav-link">
+                Follow-Up
+            </a>
+            <a href="@Url.Action("CodeReview", "Dashboard")"
+               class="page-nav-link active">
+                Code Review
+            </a>
+            <a href="@Url.Action("ReadyToTest", "Dashboard")"
+               class="page-nav-link">
+                Ready To Test
+                @if (Model.PendingReadyToTestCount > 0)
+                {
+                    <span class="nav-count">
+                        @Model.PendingReadyToTestCount
+                    </span>
+                }
+            </a>
+            <a href="@Url.Action("Overdue", "Dashboard")"
+               class="page-nav-link">
+                Overdue
+                @if (Model.PendingOverdueCount > 0)
+                {
+                    <span class="nav-count">
+                        @Model.PendingOverdueCount
+                    </span>
+                }
+            </a>
+        </div>
+    </div>
+    <div class="cr-filter-bar">
+        <select id="projectId" class="cr-filter-input">
+            <option value="0">All Projects</option>
+            @foreach (var p in Model.AvailableProjects)
+            {
+                <option value="@p.Value">@p.Text</option>
+            }
+        </select>
+        <select id="employeeId" class="cr-filter-input">
+            <option value="0">All Employees</option>
+            @foreach (var e in Model.AvailableEmployees)
+            {
+                <option value="@e.Value">@e.Text</option>
+            }
+        </select>
+        <input type="text" id="taskName" class="cr-filter-input" placeholder="Search task name..." />
+        <button id="btnSearch" class="cr-search-btn">Search</button>
+    </div>
+    <input type="hidden" id="selectedStatusId" value="0" />
+    <div class="status-filter-bar">
+        @foreach (var wfGroup in Model.StatusFilters
+                .Where(s => s.Count > 0)
+                .GroupBy(s => s.ProcessWorkflowName))
+        {
+            <div class="workflow-row">
+                <span class="workflow-title">@wfGroup.Key</span>
+
+                <div class="status-list">
+                    @foreach (var s in wfGroup)
+                    {
+                        <span class="status-pill @(s.StatusId == Model.SelectedStatusId ? "active" : "")"
+                              data-statusid="@s.StatusId">
+                            <span class="dot" style="background:@s.ColorCode"></span>
+                            @s.StatusName
+                            <span class="count">@s.Count</span>
+                        </span>
+                    }
+                </div>
+            </div>
+
+        }
+
+    </div>
+    <div id="codeReviewTaskContainer">
+        @await Html.PartialAsync(
+        "/Themes/DefaultClean/Views/Extension/Dashboard/_CodeReviewTaskList.cshtml",Model)
+    </div>
+</div>
+<div id="crCommentPopover" class="cr-comment-popover" style="display:none;">
+    <div class="cr-comment-header">
+        <span>Last Comment</span>
+        <span class="cr-comment-close">✖</span>
+    </div>
+    <div class="cr-comment-body"></div>
+</div>
+<script>
+    $(document).on("click", ".cr-comment-icon", function () {
+        const taskId = $(this).data("taskid");
+        $(".cr-comment-body").html("Loading...");
+        $.get("/Dashboard/GetLastTaskComment", { taskId: taskId })
+            .done(function (html) {
+                $(".cr-comment-body").html(html);
+                $("#crCommentPopover").fadeIn(150);
+            })
+            .fail(function () {
+                $(".cr-comment-body").html("Failed to load comment");
+            });
+    });
+    $(document).on("click", ".cr-comment-close", function () {
+        $("#crCommentPopover").fadeOut(150);
+    });
+    $("#btnSearch").on("click", function () {
+    $("#selectedStatusId").val(0);
+    $(".status-pill").removeClass("active");
+        loadCodeReviewTasks();
+    });
+    function loadCodeReviewTasks() {
+
+       var statusId = $("#selectedStatusId").val()
+        $.get("/Dashboard/SearchCodeReviewTasks", {
+            projectId: $("#projectId").val(),
+            employeeId: $("#employeeId").val(),
+            taskName: $("#taskName").val(),
+            statusId: statusId
+
+        })
+        .done(function (html) {
+            $("#codeReviewTaskContainer").html(html);
+            if(statusId ==0)
+             updateStatusCountsFromTasks();
+        })
+        .fail(function () {
+            alert("Failed to load code review tasks");
+        });
+    }
+     $(document).on("click", ".status-pill", function () {
+
+        var $this = $(this);
+
+        // safety (in case you add disabled later)
+        if ($this.hasClass("disabled"))
+            return;
+
+        var statusId = $this.data("statusid");
+        var $hidden = $("#selectedStatusId");
+
+        // 🔁 Toggle logic
+        if ($this.hasClass("active")) {
+            $this.removeClass("active");
+            $hidden.val(0); // clear filter
+        } else {
+            $(".status-pill").removeClass("active");
+            $this.addClass("active");
+            $hidden.val(statusId);
+        }
+
+        loadCodeReviewTasks();
+    });
+
+         function updateStatusCountsFromTasks() {
+
+        var counts = {};
+        var selectedStatusId = $("#selectedStatusId").val();
+
+        // count tasks per status from DOM
+        $("#codeReviewTaskContainer  tr[data-statusid]").each(function () {
+            var sid = $(this).data("statusid");
+            counts[sid] = (counts[sid] || 0) + 1;
+        });
+
+        $(".status-pill").each(function () {
+
+            var $pill = $(this);
+            var sid = $pill.data("statusid");
+            var count = counts[sid] || 0;
+
+
+            // update count text
+            $pill.find(".count").text(count);
+
+            // ✅ visibility rules
+            if (selectedStatusId == 0) {
+                // no status selected → hide only zero-count statuses
+                if (count === 0) {
+                    $pill.hide();
+                } else {
+                    $pill.show();
+                }
+            } else {
+                // status selected → always show all statuses
+                $pill.show();
+            }
+        });
+    }
+</script>

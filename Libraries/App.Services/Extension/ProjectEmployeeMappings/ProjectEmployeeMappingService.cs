@@ -132,7 +132,6 @@ namespace App.Services.ProjectEmployeeMappings
                     if (projectleadersId == mapping.RoleId)
                     {
                         var selectedMappings = await GetAllProjectsEmployeeMappingAsync("", mapping.ProjectId);
-
                     foreach (var sm in selectedMappings)
                     {
                         var employee = await _employeeService.GetEmployeeByIdAsync(sm.EmployeeId);
@@ -211,12 +210,10 @@ namespace App.Services.ProjectEmployeeMappings
                 }
 
             }
-
             if (!juniorsEmployeeIds.Any())
             {
                 juniorsEmployeeIds.Add(employeeId);
             }
-
             return juniorsEmployeeIds.Distinct().ToList();
         }
 
@@ -272,8 +269,6 @@ namespace App.Services.ProjectEmployeeMappings
         {
             var projectLeaderRole = await _designationService.GetProjectLeaderRoleId();
             var projectManagerRole = await _designationService.GetRoleIdProjectManager();
-
-            // Fetch the list of project IDs where the given employeeId is assigned as a leader or manager
             var projectIds = await _projectEmployeeMappingRepository.Table
                 .Where(pem => pem.EmployeeId == employeeId
                               && (pem.RoleId == projectLeaderRole || pem.RoleId == projectManagerRole)
@@ -325,7 +320,6 @@ namespace App.Services.ProjectEmployeeMappings
                 .ToListAsync();
         }
 
-
         public async Task<IList<int>> GetVisibleProjectIdsForDashboardAsync(int employeeId)
         {
             if (employeeId <= 0)
@@ -338,6 +332,21 @@ namespace App.Services.ProjectEmployeeMappings
                 .Concat(assignedProjectIds)
                 .Distinct()
                 .ToList();
+        }
+        public virtual async Task<IList<int>> GetProjectIdsQaByEmployeeIdAsync(int employeeId)
+        {
+            if (employeeId <= 0)
+                return new List<int>();
+            var qaRoleId = await _designationService.GetQARoleId();
+            if (qaRoleId == 0)
+                return new List<int>();
+            var mappings = await GetAllProjectsEmployeeMappingByEmployeeIdAsync(employeeId: employeeId);
+            var projectIds = mappings
+                .Where(m => m.RoleId == qaRoleId)
+                .Select(m => m.ProjectId)
+                .Distinct()
+                .ToList();
+            return projectIds;
         }
         #endregion
     }

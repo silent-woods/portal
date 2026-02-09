@@ -7,9 +7,6 @@ using System.Threading.Tasks;
 
 namespace Satyanam.Nop.Core.Services
 {
-    /// <summary>
-    /// Campaings service interface
-    /// </summary>
     public partial interface ITaskChangeLogService
     {
         Task<IPagedList<TaskChangeLog>> GetAllTaskChangeLogAsync(int taskid, int statusid, int employeeid, int logTypeId, DateTime? from, DateTime? to, int assignedTo,
@@ -20,8 +17,6 @@ namespace Satyanam.Nop.Core.Services
         Task DeleteTaskChangeLogAsync(TaskChangeLog taskChangeLog);
         Task<IList<TaskChangeLog>> GetTaskChangeLogByIdsAsync(int[] taskChangeLogIds);
         Task InsertTaskChangeLogByUpdateTaskAsync(ProjectTask prevProjectTask, ProjectTask newProjectTask, int currentEmployeeId, List<TaskChecklistItemDto> checklistEntries = null);
-
-
-
+        Task<DateTime?> GetCurrentStatusStartDateAsync(int taskId,int statusId);
     }
 }

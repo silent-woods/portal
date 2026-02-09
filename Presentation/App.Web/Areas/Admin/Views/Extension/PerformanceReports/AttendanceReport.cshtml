@@ -21,12 +21,15 @@
     <h1 class="float-left">
         @T("Admin.Configuration.AttendanceReport")
     </h1>
-    <div class="float-right">
-    <button type="button" id="update-balance" class="btn btn-success">
-            <i class="fas fa-sync"></i>
-        @T("Admin.Common.updatebalance")
-    </button>
-    </div>
+    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAttendanceReport, PermissionAction.Edit))
+    {
+        <div class="float-right">
+            <button type="button" id="update-balance" class="btn btn-success">
+                <i class="fas fa-sync"></i>
+                @T("Admin.Common.updatebalance")
+            </button>
+        </div>
+    }
 </div>
 <section class="content">
     <div class="container-fluid">

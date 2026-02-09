@@ -113,7 +113,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
         #endregion
 
         public virtual async Task<IActionResult> EmployeePerformanceReport(int searchEmployeeId, DateTime? from, DateTime? to, string selectedProjectIds,
-            int overEstimation, int searchPeriodId) 
+            int overEstimation, int searchPeriodId)
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTimeSheet))
                 return AccessDeniedView();
@@ -121,13 +121,13 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             var searchModel = new MonthlyPerformanceReportSearchModel
             {
                 SearchEmployeeId = searchEmployeeId,
-                From = from ==null?await _dateTimeHelper.GetIndianTimeAsync():from,
-                To = to ==null? await _dateTimeHelper.GetIndianTimeAsync():to,
+                From = from == null ? await _dateTimeHelper.GetIndianTimeAsync() : from,
+                To = to == null ? await _dateTimeHelper.GetIndianTimeAsync() : to,
                 SelectedProjectIds = !string.IsNullOrEmpty(selectedProjectIds)
                     ? selectedProjectIds.Split(',').Select(int.Parse).ToList()
                     : new List<int>(),
                 OverEstimation = overEstimation,
-                SearchPeriodId = searchPeriodId   
+                SearchPeriodId = searchPeriodId
             };
 
             var model = await _monthlyPerformanceReportModelFactory.PrepareTimeSheetSearchModelAsync(searchModel);
@@ -141,9 +141,9 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTimeSheet))
                 return AccessDeniedView();
 
-                var model = await _monthlyPerformanceReportModelFactory.PrepareMonthlyPerformanceReportListModelAsync(searchModel);
+            var model = await _monthlyPerformanceReportModelFactory.PrepareMonthlyPerformanceReportListModelAsync(searchModel);
 
-                return Json(model);           
+            return Json(model);
         }
 
         public async Task<IActionResult> GetSummary(int searchEmployeeId, DateTime? From, DateTime? To, string ProjectIds, int overEstimation)
@@ -156,7 +156,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             }
 
             var timeSheetReports = await _timeSheetsService.GetAllEmployeePerformanceReportForParentTaskAsync(searchEmployeeId, From, To, projectList);
-            var totalTask = 0 ;
+            var totalTask = 0;
             var totalDeliveredOnTime = 0;
             int overDueCount = 0;
             decimal totalEstimatedHours = 0;
@@ -179,9 +179,10 @@ namespace App.Web.Areas.Admin.Controllers.Extension
                 {
 
                     decimal overDuePercentage = await _commonPluginService.GetOverduePercentageByTaskIdAsync(task.Id);
-                    if(overEstimation != 0)
+                    if (overEstimation != 0)
                     {
-                        if(overDuePercentage != overEstimation) {
+                        if (overDuePercentage != overEstimation)
+                        {
                             continue;
                         }
                     }
@@ -225,8 +226,8 @@ namespace App.Web.Areas.Admin.Controllers.Extension
                     }
 
                     totalEstimatedHours += estimatedHours;
-                    totalSpentHours += (decimal)spentTime; 
-                    extraTime += (decimal)(spentTime - estimatedHours >= 0 ? spentTime - estimatedHours : 0); 
+                    totalSpentHours += (decimal)spentTime;
+                    extraTime += (decimal)(spentTime - estimatedHours >= 0 ? spentTime - estimatedHours : 0);
                 }
             }
             var resultPercentage = totalTask == 0 ? 0 : Math.Round((totalDeliveredOnTime / (double)totalTask) * 100, 2);
@@ -246,10 +247,10 @@ namespace App.Web.Areas.Admin.Controllers.Extension
                 SecondOverDueThreshold = overDueThresholds[1],
                 ThirdOverDueThreshold = overDueThresholds[2],
                 FirstOverDueThresholdCount = firstOverDueThresholdCount,
-                SecondOverDueThresholdCount= secondOverDueThresholdCount,
+                SecondOverDueThresholdCount = secondOverDueThresholdCount,
                 ThirdOverDueThresholdCount = thirdOverDueThresholdCount,
                 AvgWorkQuality = avgWorkQuality,
-                
+
             });
         }
 
@@ -281,7 +282,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             return Json(model);
         }
 
-        [HttpPost]       
+        [HttpPost]
         public async Task<IActionResult> UpdateTaskEstimation(int taskId, string estimation)
         {
             try
@@ -301,8 +302,8 @@ namespace App.Web.Areas.Admin.Controllers.Extension
                     Tasktypeid = projectTask.Tasktypeid,
                     TaskTitle = projectTask.TaskTitle,
                     ParentTaskId = projectTask.ParentTaskId,
-                    IsSync =projectTask.IsSync,
-                    TaskCategoryId =projectTask.TaskCategoryId
+                    IsSync = projectTask.IsSync,
+                    TaskCategoryId = projectTask.TaskCategoryId
                 };
 
                 projectTask.EstimatedTime = estimationHours;
@@ -358,7 +359,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
                 return AccessDeniedView();
 
             var model = await _reportsModelFactory.PrepareTimeSheetReportSearchModelAsync(new TimesheetReportSearchModel());
-            
+
             return View("/Areas/Admin/Views/Extension/PerformanceReports/ReportByEmployee.cshtml", model);
         }
 
@@ -367,7 +368,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeReport, PermissionAction.View))
                 return AccessDeniedView();
- 
+
             var model = await _reportsModelFactory.PrepareTimesheetReportListModelAsync(searchModel);
 
             return Json(model);
@@ -378,7 +379,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeReport, PermissionAction.View))
                 return AccessDeniedView();
 
-            var timeSheetReports = await _timeSheetsService.GetReportByEmployeeListAsync(searchEmployeeId,From,To, ShowById, ProjectId, HoursId);
+            var timeSheetReports = await _timeSheetsService.GetReportByEmployeeListAsync(searchEmployeeId, From, To, ShowById, ProjectId, HoursId);
             var holidayList = await _holidayService.GetAllHolidaysAsync();
             var leaveList = await _leaveManagementService.GetLeaveManagementsAsync(searchEmployeeId, 0, From, To, 2);
 
@@ -405,7 +406,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             timeSheetReports.ForEach(report =>
             {
                 if (employee != null)
-                    report.EmployeeName = employee.FirstName+" "+employee.LastName;
+                    report.EmployeeName = employee.FirstName + " " + employee.LastName;
 
                 if (holidayList != null)
                 {
@@ -426,17 +427,17 @@ namespace App.Web.Areas.Admin.Controllers.Extension
                 }
 
                 report.IsWeekend = report.SpentDate.DayOfWeek == DayOfWeek.Saturday || report.SpentDate.DayOfWeek == DayOfWeek.Sunday;
-            
+
             });
 
             return Json(timeSheetReports);
         }
 
-        public virtual async Task<IActionResult> GetAllEmployeesData(DateTime From, DateTime To,int ShowById, int ProjectId, int HoursId)
+        public virtual async Task<IActionResult> GetAllEmployeesData(DateTime From, DateTime To, int ShowById, int ProjectId, int HoursId)
         {
             var allEmployees = await _employeeService.GetAllEmployeesAsync();
             var holidayList = await _holidayService.GetAllHolidaysAsync();
-            var allReports = new List<TimeSheetReport>(); 
+            var allReports = new List<TimeSheetReport>();
 
             foreach (var employee in allEmployees)
             {
@@ -462,7 +463,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
                 }).ToList();
 
 
-                var timeSheetReports = await _timeSheetsService.GetReportByEmployeeListAsync(employee.Id, From, To,ShowById, ProjectId, HoursId);
+                var timeSheetReports = await _timeSheetsService.GetReportByEmployeeListAsync(employee.Id, From, To, ShowById, ProjectId, HoursId);
 
                 timeSheetReports.ForEach(report =>
                 {
@@ -505,7 +506,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             return View("/Areas/Admin/Views/Extension/PerformanceReports/ReportByProject.cshtml", model);
         }
 
-        public virtual async Task<IActionResult> GetReportByProject(int searchEmployeeId, DateTime From, DateTime To, int ShowById, int ProjectId , int HoursId)
+        public virtual async Task<IActionResult> GetReportByProject(int searchEmployeeId, DateTime From, DateTime To, int ShowById, int ProjectId, int HoursId)
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProjectReport, PermissionAction.View))
                 return AccessDeniedView();
@@ -603,14 +604,14 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             {
                 if (report != null)
                 {
-                    if(task !=null)
-                    report.TaskName = task.TaskTitle;
+                    if (task != null)
+                        report.TaskName = task.TaskTitle;
 
                     if (holidayList != null)
                     {
                         report.IsHoliday = holidayList.Any(holiday => holiday.Date == report.SpentDate);
                     }
-                    report.IsWeekend = report.SpentDate.DayOfWeek == DayOfWeek.Saturday || report.SpentDate.DayOfWeek== DayOfWeek.Sunday;
+                    report.IsWeekend = report.SpentDate.DayOfWeek == DayOfWeek.Saturday || report.SpentDate.DayOfWeek == DayOfWeek.Sunday;
                 }
 
             });
@@ -622,15 +623,15 @@ namespace App.Web.Areas.Admin.Controllers.Extension
         {
             var projectIdList = projectIds.Split(',').Select(int.Parse).ToList();
 
-            var allTasks = new List<ProjectTask>(); 
+            var allTasks = new List<ProjectTask>();
 
             foreach (var projectId in projectIdList)
             {
-                var tasks = await _projectTaskService.GetProjectTasksByProjectId(projectId);  
+                var tasks = await _projectTaskService.GetProjectTasksByProjectId(projectId);
                 allTasks.AddRange(tasks);
             }
 
-           var taskList = allTasks.Select(t => new { TaskId = t.Id, TaskName = t.TaskTitle }).ToList().Distinct();
+            var taskList = allTasks.Select(t => new { TaskId = t.Id, TaskName = t.TaskTitle }).ToList().Distinct();
 
             return Json(taskList);
         }
@@ -638,21 +639,21 @@ namespace App.Web.Areas.Admin.Controllers.Extension
         public virtual async Task<IActionResult> GetAllTasksData(DateTime From, DateTime To, int ShowById, string EmployeeIds, int HoursId, string projectIds)
         {
             List<int> projectIdList = new List<int>();
-          
-            if(projectIdList!=null)
+
+            if (projectIdList != null)
                 projectIdList = projectIds.Split(',').Select(int.Parse).ToList();
-            
+
             List<int> employeeIdList = new List<int>();
 
-             if(EmployeeIds !=null)
+            if (EmployeeIds != null)
                 employeeIdList = EmployeeIds.Split(',').Select(int.Parse).ToList();
-    
-            var allTasks = await _projectTaskService.GetAllProjectTasksByDateAsync(From , To);
-   
+
+            var allTasks = await _projectTaskService.GetAllProjectTasksByDateAsync(From, To);
+
             var holidayList = await _holidayService.GetAllHolidaysAsync();
             var allReports = new List<TimeSheetReport>();
 
-            if (projectIdList.Count == 0 || projectIdList.Contains(0)) 
+            if (projectIdList.Count == 0 || projectIdList.Contains(0))
             {
                 foreach (var task in allTasks)
                 {
@@ -711,12 +712,12 @@ namespace App.Web.Areas.Admin.Controllers.Extension
 
             var allEmployees = await _employeeService.GetAllEmployeesAsync();
             var holidayList = await _holidayService.GetAllHolidaysAsync();
-            var allReports = new List<TimeSheetReport>(); 
+            var allReports = new List<TimeSheetReport>();
             List<int> projectIdList;
 
             if (string.IsNullOrEmpty(ProjectIds) || ProjectIds.Split(',').Count() < 1 || ProjectIds == "0")
             {
-                projectIdList = (await _projectsService.GetAllProjectIdsAsync()).ToList(); 
+                projectIdList = (await _projectsService.GetAllProjectIdsAsync()).ToList();
             }
             else
             {
@@ -752,7 +753,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
 
             if (string.IsNullOrEmpty(ProjectIds) || ProjectIds.Split(',').Count() < 1 || ProjectIds == "0")
             {
-                projectIdList = (await _projectsService.GetAllProjectIdsAsync()).ToList(); 
+                projectIdList = (await _projectsService.GetAllProjectIdsAsync()).ToList();
             }
             else
             {
@@ -763,7 +764,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             var timeSheetReports = await _timeSheetsService.GetReportByEmployeeListWithProjectsAsync(searchEmployeeId, From, To, ShowById, projectIdList, HoursId, taskIdList);
             var holidayList = await _holidayService.GetAllHolidaysAsync();
             var employee = await _employeeService.GetEmployeeByIdAsync(searchEmployeeId);
- 
+
             timeSheetReports.ForEach(report =>
             {
                 if (employee != null)
@@ -784,19 +785,19 @@ namespace App.Web.Areas.Admin.Controllers.Extension
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTimeSummmaryReport, PermissionAction.View))
                 return AccessDeniedView();
- 
+
             var model = await _reportsModelFactory.PrepareTimeSheetReportSearchModelAsync(new TimesheetReportSearchModel());
 
             return View("/Areas/Admin/Views/Extension/PerformanceReports/TimeSummaryReport.cshtml", model);
         }
 
-        public virtual async Task<IActionResult> GetDateReportData(DateTime From, DateTime To,int ShowById, string EmployeeIds,string projectIds,string taskIds, int HoursId)
+        public virtual async Task<IActionResult> GetDateReportData(DateTime From, DateTime To, int ShowById, string EmployeeIds, string projectIds, string taskIds, int HoursId)
         {
             List<int> projectIdList;
 
             if (string.IsNullOrEmpty(projectIds) || projectIds.Split(',').Count() < 1 || projectIds == "0")
             {
-                projectIdList = (await _projectsService.GetAllProjectIdsAsync()).ToList(); 
+                projectIdList = (await _projectsService.GetAllProjectIdsAsync()).ToList();
             }
             else
             {
@@ -804,11 +805,11 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             }
             List<int> taskIdList = new List<int>();
             List<int> employeeIdList = new List<int>();
-           if (taskIds !=null)
-            taskIdList = taskIds.Split(',').Select(int.Parse).ToList();
+            if (taskIds != null)
+                taskIdList = taskIds.Split(',').Select(int.Parse).ToList();
 
-           if(employeeIdList !=null)
-            employeeIdList = EmployeeIds.Split(',').Select(int.Parse).ToList();
+            if (employeeIdList != null)
+                employeeIdList = EmployeeIds.Split(',').Select(int.Parse).ToList();
 
             var timeSheetReports = await _timeSheetsService.GetReportByDateAsync(employeeIdList, From, To, projectIdList, HoursId, taskIdList);
 
@@ -822,11 +823,11 @@ namespace App.Web.Areas.Admin.Controllers.Extension
                 {
                     report.TaskName = task.TaskTitle;
                 }
-                    var employee = await _employeeService.GetEmployeeByIdAsync(report.EmployeeId);
-                    if (employee != null)
-                    {
+                var employee = await _employeeService.GetEmployeeByIdAsync(report.EmployeeId);
+                if (employee != null)
+                {
                     report.EmployeeName = employee.FirstName + " " + employee.LastName;
-                    }
+                }
             });
             await Task.WhenAll(reportTasks);
 
@@ -852,7 +853,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             var timeSheetReports = await _timeSheetsService.GetAttendanceReportByEmployeeListAsync(searchEmployeeId, From, To);
             var holidayList = await _holidayService.GetAllHolidaysAsync();
             var employee = await _employeeService.GetEmployeeByIdAsync(searchEmployeeId);
- 
+
             timeSheetReports.ForEach(report =>
             {
                 if (employee != null)
@@ -862,7 +863,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
                 {
                     report.IsHoliday = holidayList.Any(holiday => holiday.Date == report.SpentDate);
                 }
-               
+
                 report.IsWeekend = report.SpentDate.DayOfWeek == DayOfWeek.Saturday || report.SpentDate.DayOfWeek == DayOfWeek.Sunday;
             });
 
@@ -876,7 +877,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
 
             var allEmployees = await _employeeService.GetAllEmployeesAsync();
             var holidayList = await _holidayService.GetAllHolidaysAsync();
-            var allReports = new List<TimeSheetReport>(); 
+            var allReports = new List<TimeSheetReport>();
 
             foreach (var employee in allEmployees)
             {
@@ -932,7 +933,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             foreach (var employee in employees)
             {
                 var employeeLeaveBalance = new ExpandoObject() as IDictionary<string, object>;
-                employeeLeaveBalance["EmployeeName"] = employee.FirstName+" "+employee.LastName;
+                employeeLeaveBalance["EmployeeName"] = employee.FirstName + " " + employee.LastName;
 
                 foreach (var leaveType in leaveTypes)
                 {
@@ -941,10 +942,10 @@ namespace App.Web.Areas.Admin.Controllers.Extension
 
                     var totalTakenLeaves = approvedTakenLeaves.Sum(l => l.NoOfDays);
                     decimal totalAllowed = 0;
-                    
-                    var leaveLog = await _leaveTransactionLogService.GetLeaveBalanceByLogForPreviousMonth(employee.Id, leaveType.Id, currTime.Month,currTime.Year);
 
-                        totalAllowed = await _leaveTransactionLogService.GetAddedLeaveBalanceForCurrentMonthForReport(employee.Id, leaveType.Id, currTime.Month, currTime.Year);
+                    var leaveLog = await _leaveTransactionLogService.GetLeaveBalanceByLogForPreviousMonth(employee.Id, leaveType.Id, currTime.Month, currTime.Year);
+
+                    totalAllowed = await _leaveTransactionLogService.GetAddedLeaveBalanceForCurrentMonthForReport(employee.Id, leaveType.Id, currTime.Month, currTime.Year);
 
                     var remainingLeaves = totalAllowed;
                     employeeLeaveBalance[$"{leaveType.Type} Taken"] = totalTakenLeaves;
@@ -1053,9 +1054,9 @@ namespace App.Web.Areas.Admin.Controllers.Extension
         }
 
         [HttpGet]
-        public virtual async Task<IActionResult>  GetPeriodDateRange(int periodId)
+        public virtual async Task<IActionResult> GetPeriodDateRange(int periodId)
         {
-            var (from, to) =await _timeSheetsService.GetDateRange(periodId);
+            var (from, to) = await _timeSheetsService.GetDateRange(periodId);
 
             return Json(new
             {
@@ -1097,7 +1098,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
                         break;
                     case 4:
                         timelineEvent.StatusName = $"{ActivityTrackingEnum.Stopped}|||#808080";
-                        break; 
+                        break;
                 }
             }
             return PartialView("~/Areas/Admin/Views/Extension/PerformanceReports/_TimelineSubgrid.cshtml", timelineEvents);
@@ -1145,7 +1146,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
                         : task.DueDate.Value.ToString("dd-MMMM-yyyy")
                     : "";
                 reportModel.DeliveredOnTime = task.DeliveryOnTime;
-                reportModel.AllowedVariations = _monthlyReportSetting.AllowedVariations; 
+                reportModel.AllowedVariations = _monthlyReportSetting.AllowedVariations;
                 reportModel.OverduePercentage = await _commonPluginService.GetOverduePercentageByTimeAsync(
                 reportModel.SpentTimeFormat, reportModel.EstimatedTimeFormat);
 
@@ -1155,7 +1156,7 @@ namespace App.Web.Areas.Admin.Controllers.Extension
 
                 modelList.Add(reportModel);
             }
-            return PartialView("~/Areas/Admin/Views/Extension/PerformanceReports/_SubgridPerformanceBugList.cshtml", modelList); 
+            return PartialView("~/Areas/Admin/Views/Extension/PerformanceReports/_SubgridPerformanceBugList.cshtml", modelList);
         }
     }
 }

@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Satyanam.Nop.Core.Domains;
 using Satyanam.Nop.Core.Services;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -145,7 +146,10 @@ namespace App.Web.Areas.Admin.Factories
                 throw new ArgumentNullException(nameof(searchModel));
 
             //get project
-            var workflowStatuses = await _workflowStatusService.GetAllWorkflowStatusAsync(processWorkflowId: searchModel.ProcessWorkflowId,statusName:searchModel.SearchStatusName,
+            var workflowStatuses = await _workflowStatusService.GetAllWorkflowStatusAsync(processWorkflowId: searchModel.ProcessWorkflowId, statusNames: new List<string>
+    {
+        searchModel.SearchStatusName
+    },
                 showHidden: true,
                 pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize);
             //prepare grid model

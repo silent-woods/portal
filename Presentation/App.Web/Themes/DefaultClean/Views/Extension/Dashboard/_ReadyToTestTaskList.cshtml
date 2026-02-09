@@ -1,0 +1,85 @@
+﻿@model App.Web.Models.Dashboard.PendingDashboardModel
+
+<div class="cr-table-scroll">
+    <table class="cr-table">
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Project</th>
+                <th>Status</th>
+                <th>Developer</th>
+                <th>Assigned To</th>
+                <th>Due Date</th>
+                <th>Pending Since</th>
+                <th>Last Comment</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.ReadyToTestTasks != null && Model.ReadyToTestTasks.Any())
+            {
+                foreach (var t in Model.ReadyToTestTasks)
+                {
+                    <tr data-statusid="@t.StatusId">
+                        <td>
+                            <a href="@Url.Action("Edit", "ProjectTask", new { id = t.TaskId })"
+                               target="_blank"
+                               class="cr-task-link">
+                                @t.TaskTitle
+                            </a>
+                        </td>
+                        <td>@t.ProjectName</td>
+                        <td>
+                            <span class="cr-status-dot"
+                                  style="background-color:@t.StatusColorCode">
+                            </span>
+                            <span class="cr-status-text">
+                                @t.StatusName
+                            </span>
+                        </td>
+                        <td>@t.DeveloperName</td>
+                        <td>
+                            @if (t.AssignedTo == Model.CurrentEmployeeName)
+                            {
+                                <strong>@t.AssignedTo</strong>
+                            }
+                            else
+                            {
+                                @t.AssignedTo
+                            }
+                        </td>
+                        <td>@t.DueDate</td>
+                        <td>
+                            @t.ReadyToTestStartDate?.ToString("d-MMM-yyyy", CultureInfo.InvariantCulture) (@t.PendingSinceDays)
+                        </td>
+                        <td class="cr-comment-cell">
+                            @if (t.TaskId > 0)
+                            {
+                                <span class="cr-comment-icon"
+                                      data-taskid="@t.TaskId"
+                                      title="View last comment">
+                                    Last Comment
+                                </span>
+                            }
+                        </td>
+                        <td class="cr-action-cell">
+                            <a href="@Url.Action("Edit", "ProjectTask", new { id = t.TaskId })"
+                               class="cr-review-btn"
+                               target="_blank">
+                                Test
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="8" class="cr-row-empty">
+                        No ready-to-test tasks found
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

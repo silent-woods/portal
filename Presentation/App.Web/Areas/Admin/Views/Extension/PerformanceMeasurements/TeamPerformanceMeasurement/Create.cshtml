@@ -10,7 +10,7 @@
         <h1 class="float-left">
             @T("Admin.Configuration.TeamPerformanceMeasurement")
         </h1>
-        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAddRating, PermissionAction.View))
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAddRating, PermissionAction.Add))
         {
             <div class="float-right">
                 <a asp-action="Create" class="btn btn-primary">

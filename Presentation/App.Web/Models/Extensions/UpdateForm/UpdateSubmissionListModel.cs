@@ -44,6 +44,8 @@ namespace App.Web.Models.Extensions.UpdateForm
         public IList<SelectListItem> AvailablePeriods { get; set; }
 
         public List<string> NotSubmittedNames { get; set; } = new();
+        public string TemplateTitle { get; set; }
+
         #endregion
     }
 

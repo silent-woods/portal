@@ -8,9 +8,6 @@ using System.Threading.Tasks;
 
 namespace Satyanam.Nop.Core.Services
 {
-    /// <summary>
-    /// Categorys service interface
-    /// </summary>
     public partial interface ICommonPluginService
     {
         Task<IPagedList<ProjectTask>> GetAllProjectTasksAsync(
@@ -31,17 +28,14 @@ namespace Satyanam.Nop.Core.Services
             int filterDeliveryOnTime = 0,
             int searchParentTaskId = 0);
         Task<MonthlyTimeSheetReport> GetEmployeePerformanceSummaryAsync(int searchEmployeeId, DateTime? From, DateTime? To, string ProjectIds);
-
         Task<IList<decimal>> GetOverDueEmailPercentage();
-
         Task<decimal> GetOverduePercentageByTimeAsync(string bigTime, string smallTime);
-
         Task<decimal> GetOverduePercentageByTaskIdAsync(int taskId);
-
         Task<IList<ProjectTask>> GetOverdueTasksByEmployeeIdAsync(int employeeId);
-
+        Task<IList<int>> GetEmployeeIdsForOverdueAsync(int currEmployeeId);
         Task<string> GetLearningTimeOfEmployeeByRange(int employeeId, DateTime from, DateTime to);
-
         Task<int> GetManaualTimeOfEmployeeByRange(int employeeId, DateTime from, DateTime to);
+        Task<IList<ProjectTask>> GetOverdueTasksByCurrentEmployeeForDashboardAsync(int currEmployeeId);
+        Task<int> GetDashboardOverdueCountAsync(int currEmployeeId);
     }
 }

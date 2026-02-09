@@ -314,7 +314,7 @@ namespace App.Web.Areas.Admin.Controllers
                 await _announcementService.DeleteAnnouncementAsync(ann);
             }
 
-              return Json(new { Result = true });
+            return Json(new { Result = true });
         }
         #region Ajax Employee Selection
 

@@ -83,7 +83,7 @@ namespace App.Web.Areas.Admin.Factories
                 Value = null
             });
         
-            var allWorkflowStatus = await _workflowStatusService.GetAllWorkflowStatusAsync(model.ProcessWorkflowId,"");
+            var allWorkflowStatus = await _workflowStatusService.GetAllWorkflowStatusAsync(model.ProcessWorkflowId);
             foreach (var p in allWorkflowStatus)
             {
                 model.StateList.Add(new SelectListItem
@@ -111,62 +111,37 @@ namespace App.Web.Areas.Admin.Factories
         {
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));
-
-            //get project
             var processRules = await _processRulesService.GetAllProcessRulesAsync(processWorkflowId: searchModel.ProcessWorkflowId,
                 showHidden: true,
                 pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize);
-            //prepare grid model
             var model = await new ProcessRulesListModel().PrepareToGridAsync(searchModel, processRules, () =>
             {
                 return processRules.SelectAwait(async processRule =>
                 {
-                    //fill in model values from the entity
-
                     var processRulesModel = processRule.ToModel<ProcessRulesModel>();
                     processRulesModel.CreatedOn = await _dateTimeHelper.ConvertToUserTimeAsync(processRule.CreatedOn, DateTimeKind.Utc);
-
-                    //ProcessWorkflow process = await _processWorkflowService.GetProcessWorkflowByIdAsync(workflowStatusModel.ProcessWorkflowId);
-                    //if(process != null)
-                    //    workflowStatusModel.ProcessWorkflowName = process.Name;
-
                     WorkflowStatus fromWorkflowStatus =await _workflowStatusService.GetWorkflowStatusByIdAsync(processRule.FromStateId);
                     if (fromWorkflowStatus != null)
                         processRulesModel.FromStateName = fromWorkflowStatus.StatusName;
-
                     WorkflowStatus toWorkflowState = await _workflowStatusService.GetWorkflowStatusByIdAsync(processRule.ToStateId);
                     if (toWorkflowState != null)
                         processRulesModel.ToStateName = toWorkflowState.StatusName;
-
-
-
-
                     return processRulesModel;
 
                 });
             });
-            //prepare grid model
             return model;
         }
         public virtual async Task<ProcessRulesModel> PrepareProcessRulesModelAsync(ProcessRulesModel model, ProcessRules processRules, bool excludeProperties = false)
         {
             if (processRules != null)
             {
-                //fill in model values from the entity
                 if (model == null)
                 {
                     model = processRules.ToModel<ProcessRulesModel>();
-
-                 
-                }
-               
-              
-            }
-        
+                }           
+            }        
             await PrepareStatusListAsync(model);
-            //await PrepareProjectListAsync(model);
-
-            //await PrepareRoleListAsync(model);
             return model;
         }
         #endregion

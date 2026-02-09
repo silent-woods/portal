@@ -96,10 +96,13 @@ namespace Satyanam.Nop.Core.Services
                 if (!TimeSpan.TryParse(template.DueTime, out var dueTime))
                     dueTime = new TimeSpan(10, 0, 0);
 
-                var dueDate = template.DueDate ?? DateTime.UtcNow;
+                var dueDate = template.DueDate ?? nowUtc.AddDays(-1);
                 var scheduledIst = DateTime.SpecifyKind(dueDate.Date + dueTime, DateTimeKind.Unspecified);
                 var scheduledUtc = TimeZoneInfo.ConvertTimeToUtc(scheduledIst, indiaTimeZone);
 
+                var overdueDays = 0;
+                if (nowUtc.Date > scheduledUtc.Date)
+                    overdueDays = (nowUtc.Date - scheduledUtc.Date).Days;
                 // --- Decide overdue/due/future ---
                 bool shouldSend = false;
 
@@ -107,7 +110,7 @@ namespace Satyanam.Nop.Core.Services
                 {
                     if (template.LastReminderSentUtc == null)
                     {
-                        shouldSend = true;
+                            shouldSend = true;
                     }
                     else
                     {
@@ -118,7 +121,10 @@ namespace Satyanam.Nop.Core.Services
                 }
                 else if (nowUtc.Date == scheduledUtc.Date) // due today
                 {
-                    shouldSend = true;
+                    if (template.LastReminderSentUtc == null ||template.LastReminderSentUtc.Value.Date < nowUtc.Date)
+                    {
+                        shouldSend = IsReminderDueToday(template, nowUtc);
+                    }
                 }
                 else // future
                 {
@@ -127,6 +133,23 @@ namespace Satyanam.Nop.Core.Services
 
                 if (!shouldSend)
                     continue;
+
+                var viewerEmails = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(template.ViewerUserIds))
+                {
+                    var viewerIds = template.ViewerUserIds
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(int.Parse)
+                        .ToList();
+
+                    foreach (var viewerId in viewerIds)
+                    {
+                        var viewer = await _employeeService.GetEmployeeByIdAsync(viewerId);
+                        if (viewer != null && !string.IsNullOrWhiteSpace(viewer.OfficialEmail))
+                            viewerEmails.Add(viewer.OfficialEmail);
+                    }
+                }
 
                 var submitterIds = template.SubmitterUserIds.Split(',').Select(int.Parse).ToList();
                 var anyEmailQueued = false;
@@ -152,6 +175,7 @@ namespace Satyanam.Nop.Core.Services
                     // --- Subject & body messages ---
                     string subject;
                     string bodyMessage;
+                    bool addViewerInCc = false;
 
                     if (nowUtc.Date == scheduledUtc.Date)
                     {
@@ -160,8 +184,29 @@ namespace Satyanam.Nop.Core.Services
                     }
                     else if (nowUtc.Date > scheduledUtc.Date)
                     {
-                        subject = $"Overdue: '{template.Title}' form still pending";
-                        bodyMessage = $"<p>This is a reminder that you are <strong>overdue</strong> on the form <strong>{template.Title}</strong>. Please submit it as soon as possible.</p>";
+                        if (overdueDays >= 4)
+                        {
+                            addViewerInCc = true;
+
+                            subject = $"⚠️ Escalation: '{template.Title}' overdue for {overdueDays} days";
+
+                            bodyMessage = $@"
+                        <p>
+                            The form <strong>{template.Title}</strong> has been
+                            <strong style='color:red;'>overdue for {overdueDays} days</strong>.
+                        </p>
+                        <p>
+                            The assigned submitter has not completed the form.
+                        </p>
+                        <p>
+                            <strong>Viewers have been copied for awareness and follow-up.</strong>
+                        </p>";
+                        }
+                        else
+                        {
+                            subject = $"Overdue: '{template.Title}' form still pending";
+                            bodyMessage = $"<p>This is a reminder that you are <strong>overdue</strong> on the form <strong>{template.Title}</strong>. Please submit it as soon as possible.</p>";
+                        }
                     }
                     else
                     {
@@ -184,6 +229,7 @@ namespace Satyanam.Nop.Core.Services
                         From = emailAccount.Email,
                         FromName = emailAccount.DisplayName,
                         To = employee.OfficialEmail,
+                        CC = addViewerInCc && viewerEmails.Any()? string.Join(",", viewerEmails): null,
                         Subject = subject,
                         Body = body,
                         Priority = QueuedEmailPriority.High,
@@ -202,274 +248,6 @@ namespace Satyanam.Nop.Core.Services
                 }
             }
         }
-
-        //public async Task ExecuteAsync()
-        //{
-        //    var nowUtc = DateTime.UtcNow;
-        //    var store = await _storeContext.GetCurrentStoreAsync();
-
-        //    // Get valid email account (fallback if not set)
-        //    var emailAccount = (await _emailAccountService.GetAllEmailAccountsAsync()).FirstOrDefault();
-
-        //    if (emailAccount == null)
-        //    {
-        //        _notificationService.ErrorNotification("EmailAccount is null. Reminder emails cannot be sent.");
-        //        return;
-        //    }
-
-        //    var templates = await _templateRepo.Table
-        //        .Where(t => t.IsActive && !string.IsNullOrWhiteSpace(t.SubmitterUserIds))
-        //        .ToListAsync();
-
-        //    foreach (var template in templates)
-        //    {
-        //        if (!IsReminderDueToday(template, nowUtc))
-        //            continue;
-
-        //        var submitterIds = template.SubmitterUserIds.Split(',').Select(int.Parse).ToList();
-        //        var anyEmailQueued = false;
-
-        //        foreach (var employeeId in submitterIds)
-        //        {
-        //            var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
-        //            if (employee == null || string.IsNullOrWhiteSpace(employee.OfficialEmail))
-        //                continue;
-
-        //            // Check existing submission
-        //            var existingSubmission = await _submissionRepo.Table
-        //                .Where(s => s.UpdateTemplateId == template.Id && s.SubmittedByCustomerId == employeeId)
-        //                .OrderByDescending(s => s.Id)
-        //                .FirstOrDefaultAsync();
-
-        //            bool alreadySubmitted = existingSubmission != null;
-        //            bool allowEdit = template.IsEditingAllowed;
-
-        //            if (alreadySubmitted && !allowEdit)
-        //                continue;
-
-        //            // --- Always calculate scheduledUtc ---
-        //            var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
-        //            if (!TimeSpan.TryParse(template.DueTime, out var dueTime))
-        //                dueTime = new TimeSpan(10, 0, 0);
-
-        //            var dueDate = template.DueDate ?? DateTime.UtcNow;
-        //            var scheduledIst = DateTime.SpecifyKind(dueDate.Date + dueTime, DateTimeKind.Unspecified);
-        //            var scheduledUtc = TimeZoneInfo.ConvertTimeToUtc(scheduledIst, indiaTimeZone);
-
-
-        //            if (!alreadySubmitted)
-        //            {
-        //                if (nowUtc.Date >= scheduledUtc.Date) // overdue
-        //                {
-        //                    if (template.LastReminderSentUtc != null)
-        //                    {
-        //                        var daysSinceLast = (nowUtc.Date - template.LastReminderSentUtc.Value.Date).Days;
-        //                        if (daysSinceLast < template.RepeatEvery)
-        //                            continue;
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    if (!IsReminderDueToday(template, nowUtc))
-        //                        continue;
-        //                }
-        //            }
-        //            else
-        //            {
-        //                if (!IsReminderDueToday(template, nowUtc))
-        //                    continue;
-        //            }
-
-        //            // --- Subject & body messages ---
-        //            string subject;
-        //            string bodyMessage;
-
-        //            if (nowUtc.Date == scheduledUtc.Date)
-        //            {
-        //                subject = $"Reminder: '{template.Title}' form is due today";
-        //                bodyMessage = $"<p>This is a reminder that your form <strong>{template.Title}</strong> is due today. Please fill it up.</p>";
-        //            }
-        //            else if (nowUtc.Date > scheduledUtc.Date)
-        //            {
-        //                subject = $"Overdue: '{template.Title}' form still pending";
-        //                bodyMessage = $"<p>This is a reminder that you are <strong>overdue</strong> on the form <strong>{template.Title}</strong>. Please submit it as soon as possible.</p>";
-        //            }
-        //            else
-        //            {
-        //                subject = $"Reminder: Please fill the '{template.Title}' form";
-        //                bodyMessage = $"<p>This is a reminder to complete the <strong>{template.Title}</strong> form before the deadline.</p>";
-        //            }
-
-        //            // --- Build form link ---
-        //            var formLink = $"{store.Url.TrimEnd('/')}/UpdateSubmission/Submit/{template.Id}";
-        //            var periodId = existingSubmission?.PeriodId ?? 0;
-        //            if (periodId > 0)
-        //                formLink += $"?periodId={periodId}";
-
-        //            var body = $"<p>Dear {employee.FirstName} {employee.LastName},</p>" +
-        //                       bodyMessage +
-        //                       $"<p><a href=\"{formLink}\" target=\"_blank\">Click here to fill the form</a></p>";
-
-        //            var email = new QueuedEmail
-        //            {
-        //                From = emailAccount.Email,
-        //                FromName = emailAccount.DisplayName,
-        //                To = employee.OfficialEmail,
-        //                Subject = subject,
-        //                Body = body,
-        //                Priority = QueuedEmailPriority.High,
-        //                CreatedOnUtc = nowUtc,
-        //                EmailAccountId = emailAccount.Id
-        //            };
-
-        //            await _queuedEmailService.InsertQueuedEmailAsync(email);
-        //            anyEmailQueued = true;
-        //        }
-
-        //        if (anyEmailQueued)
-        //        {
-        //            template.LastReminderSentUtc = nowUtc;
-        //            await _templateRepo.UpdateAsync(template);
-        //        }
-        //    }
-        //}
-
-        //public async Task ExecuteAsync()
-        //{
-        //    var nowUtc = DateTime.UtcNow;
-        //    var store = await _storeContext.GetCurrentStoreAsync();
-
-        //    // Get valid email account (fallback if not set)
-        //    //var emailAccount = await _emailAccountService.GetEmailAccountByIdAsync(store.EmailAccountId);
-        //    //if (emailAccount == null)
-        //    var emailAccount = (await _emailAccountService.GetAllEmailAccountsAsync()).FirstOrDefault();
-
-        //    if (emailAccount == null)
-        //    {
-        //         _notificationService.ErrorNotification("EmailAccount is null. Reminder emails cannot be sent.");
-        //        return;
-        //    }
-
-        //    var templates = await _templateRepo.Table
-        //        .Where(t => t.IsActive && !string.IsNullOrWhiteSpace(t.SubmitterUserIds))
-        //        .ToListAsync();
-
-        //    foreach (var template in templates)
-        //    {
-        //        if (!IsReminderDueToday(template, nowUtc))
-        //            continue;
-
-        //        var submitterIds = template.SubmitterUserIds.Split(',').Select(int.Parse).ToList();
-        //        var anyEmailQueued = false;
-        //        foreach (var employeeId in submitterIds)
-        //        {
-        //            // Get employee from customer
-        //            var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
-        //            if (employee == null || string.IsNullOrWhiteSpace(employee.OfficialEmail))
-        //                continue;
-
-        //            // Check existing submission
-        //            var existingSubmission = await _submissionRepo.Table
-        //                .Where(s => s.UpdateTemplateId == template.Id && s.SubmittedByCustomerId == employeeId)
-        //                .OrderByDescending(s => s.Id)
-        //                .FirstOrDefaultAsync();
-
-        //            bool alreadySubmitted = existingSubmission != null;
-        //            bool allowEdit = template.IsEditingAllowed;
-
-        //            if (alreadySubmitted && !allowEdit)
-        //                continue; // Skip if already submitted and edit not allowed
-
-
-        //            // ✅ New: If not submitted and due date has passed, send reminder daily
-        //            if (!alreadySubmitted)
-        //            {
-        //                // Convert due date/time to UTC
-        //                var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
-        //                if (!TimeSpan.TryParse(template.DueTime, out var dueTime))
-        //                    dueTime = new TimeSpan(10, 0, 0);
-
-        //                var dueDate = template.DueDate ?? DateTime.UtcNow; // fallback
-        //                var scheduledIst = dueDate.Date + dueTime;
-        //                var scheduledUtc = TimeZoneInfo.ConvertTimeToUtc(scheduledIst, indiaTimeZone);
-
-        //                if (nowUtc.Date >= scheduledUtc.Date) // overdue
-        //                {
-        //                    // Respect RepeatEvery interval
-        //                    if (template.LastReminderSentUtc != null)
-        //                    {
-        //                        var daysSinceLast = (nowUtc.Date - template.LastReminderSentUtc.Value.Date).Days;
-        //                        if (daysSinceLast < template.RepeatEvery)
-        //                            continue; // too soon for next reminder
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    // Not yet due → check normal schedule
-        //                    if (!IsReminderDueToday(template, nowUtc))
-        //                        continue;
-        //                }
-        //            }
-        //            else
-        //            {
-        //                // Already submitted but template allows recurring → use normal schedule
-        //                if (!IsReminderDueToday(template, nowUtc))
-        //                    continue;
-        //            }
-        //            string subject;
-        //            string bodyMessage;
-
-        //            if (nowUtc.Date == scheduledUtc.Date)
-        //            {
-        //                // Due today
-        //                subject = $"Reminder: '{template.Title}' form is due today";
-        //                bodyMessage = $"<p>This is a reminder that your form <strong>{template.Title}</strong> is due today. Please fill it up.</p>";
-        //            }
-        //            else if (nowUtc.Date > scheduledUtc.Date)
-        //            {
-        //                // Overdue
-        //                subject = $"Overdue: '{template.Title}' form still pending";
-        //                bodyMessage = $"<p>This is a reminder that you are <strong>overdue</strong> on the form <strong>{template.Title}</strong>. Please submit it as soon as possible.</p>";
-        //            }
-        //            else
-        //            {
-        //                // Future reminder
-        //                subject = $"Reminder: Please fill the '{template.Title}' form";
-        //                bodyMessage = $"<p>This is a reminder to complete the <strong>{template.Title}</strong> form before the deadline.</p>";
-        //            }
-        //            // Build correct form link
-        //            var formLink = $"{store.Url.TrimEnd('/')}/UpdateSubmission/Submit/{template.Id}";
-        //            var periodId = existingSubmission?.PeriodId ?? 0;
-        //            if (periodId > 0)
-        //                formLink += $"?periodId={periodId}";
-
-        //            var body = $"<p>Dear {employee.FirstName+" "+employee.LastName},</p>" +
-        //                       $"<p>This is a reminder to complete the <strong>{template.Title}</strong> form.</p>" +
-        //                       $"<p><a href=\"{formLink}\" target=\"_blank\">Click here to fill the form</a></p>";
-
-        //            var email = new QueuedEmail
-        //            {
-        //                From = emailAccount.Email,
-        //                FromName = emailAccount.DisplayName,
-        //                To = employee.OfficialEmail,
-        //                Subject = $"Reminder: Please fill the '{template.Title}' form",
-        //                Body = body,
-        //                Priority = QueuedEmailPriority.High,
-        //                CreatedOnUtc = nowUtc,
-        //                EmailAccountId = emailAccount.Id
-        //            };
-
-        //            await _queuedEmailService.InsertQueuedEmailAsync(email);
-        //            anyEmailQueued = true;
-        //        }
-        //        if (anyEmailQueued)
-        //        {
-        //            template.LastReminderSentUtc = nowUtc;
-        //            await _templateRepo.UpdateAsync(template);
-        //        }
-        //    }
-        //}
-
 
         private bool IsReminderDueToday(UpdateTemplate template, DateTime nowUtc)
         {

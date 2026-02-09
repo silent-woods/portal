@@ -4,198 +4,36 @@
     Layout = "_ColumnsOne";
     NopHtml.AddTitleParts("My Submissions");
 }
-<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/timesheetlist.css")" />
-
+<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/updatetemplatesheet.css")" />
 <!-- Kendo UI CSS -->
 <link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
 <!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <!-- Kendo UI JS -->
 <script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
-
-
 <link rel="stylesheet" href="https://jqwidgets.com/public/jqwidgets/styles/jqx.base.css" type="text/css" />
 <script type="text/javascript" src="https://jqwidgets.com/public/jqwidgets/jqx-all.js"></script>
-<style>
-    .update-card {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-        padding: 24px;
-        margin-bottom: 20px;
-        transition: 0.3s ease;
-    }
 
-        .update-card:hover {
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+<div class="container update-list-container">
+    <!-- TEMPLATE TITLE -->
+    <h2 class="mb-4 update-template-heading">
+        @if (!string.IsNullOrEmpty(Model.TemplateTitle))
+        {
+            <span class="update-template-title">@Model.TemplateTitle</span>
         }
-
-    .update-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-    }
-
-        .update-header h5 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin: 0;
-        }
-
-        .update-header .date {
-            font-size: 14px;
-            color: #6c757d;
-        }
-
-    .update-question {
-        margin-bottom: 12px;
-    }
-
-        .update-question strong {
-            font-weight: 500;
-            color: #333;
-        }
-
-    .update-answer {
-        color: #555;
-        font-size: 15px;
-        margin-left: 8px;
-    }
-
-    .search-bar {
-        background: #fff;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-        margin-bottom: 30px;
-    }
-
-        .search-bar label {
-            font-weight: 500;
-        }
-
-   
-    #submitterDropdownWrapper {
-        display: block;
-    }
-
-    .answer-box {
-    display: block;
-    background-color: #f5f5f5;
-    padding: 10px 14px;
-    font-size: 15px;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-
-    .question-block {
-    margin-bottom: 16px;
-}
-
-.question-text {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 6px;
-    color: #333;
-}
-
-    .alert-warning {
-    background-color: #fff3cd;
-    border: 1px solid #ffeeba;
-    color: #856404;
-    font-weight: 500;
-    font-size: 15px;
-}
-.back-to-list-btn {
-        padding: 8px 16px;
-        font-size: 14px;
-        border-radius: 6px;
-        background-color: #6c757d;
-        color: white;
-        text-decoration: none;
-        transition: background-color 0.2s ease;
-    }
-
-        .back-to-list-btn:hover {
-            background-color: #5a6268;
-            color: white;
-        }
-        
-.add-comment-btn {
-    background: deepskyblue;;
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-.comments-container {
-   padding-bottom:10px;
-   padding-top:10px;
-}
-.download-button {
-    /* Basic button styling */
-    display: inline-flex; /* Use flexbox for easy icon and text alignment */
-    align-items: center;
-    justify-content: center;
-    padding: 10px 10px;
-    padding-left:7px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #fff; /* Text color */
-    background-color: #007bff; /* Primary blue color */
-    border-radius: 4px; /* Slightly rounded corners */
-    text-decoration: none; /* Remove underline from the link */
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-/* Hover and Active states for interactivity */
-.download-button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
-    border-color: #004d99;
-    transform: translateY(-1px); /* Slight lift effect on hover */
-}
-
-.download-button:active {
-    background-color: #004085; /* Even darker blue when clicked */
-    border-color: #00376d;
-    transform: translateY(0); /* Return to original position */
-}
-
-/* Style for the icon inside the button */
-.download-button i {
-    margin-right: 8px; /* Space between the icon and the text */
-}
-
-</style>
-
-<div class="container">
-
-    <h2 class="mb-4">Updates</h2>
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
-    <a href="@Url.Action("SubmissionList", "UpdateSubmission", new { templateId = Model.SelectedTemplateId })"
-       class="btn btn-secondary back-to-list-btn">
-         Back to List
-    </a>
-</div>
-
+    </h2>
+    <!-- TOP ACTIONS -->
+    <div class="update-top-actions">
+        <a href="@Url.Action("SubmissionList", "UpdateSubmission", new { templateId = Model.SelectedTemplateId })" class="btn btn-secondary back-to-list-btn">
+            @T("Submit.Update.Backtolist")
+        </a>
+    </div>
+    <!-- SEARCH / FILTER -->
     <form method="get" class="search-bar">
-        <div class="fieldset">
+        <input type="hidden" name="SelectedTemplateId" value="@Model.SelectedTemplateId" />
+        <div class="fieldsets">
             <div class="form-fields">
-                  <input type="hidden" id="canSeeDropdown" value="@Model.CanSeeSubmitterDropdown.ToString().ToLower()" />
-                <input type="hidden" name="SelectedTemplateId" value="@Model.SelectedTemplateId" />
                 @if (Model.CanSeeSubmitterDropdown && Model.AvailableSubmitters?.Any() == true)
                 {
                     <div class="inputs-row">
@@ -205,32 +43,22 @@
                         </div>
                     </div>
                 }
-                
-                    
                 <div class="inputs-row">
                     <div class="inputs">
                         <label asp-for="SelectedPeriodId"></label>
-                            <select id="SelectedPeriodId" name="SelectedPeriodId" class="select1" onchange="toggleCustomDateRange()">
-                                @if (!Model.SelectedTemplateId.HasValue)
-                                {
-                                    <option value="" selected>Select Period</option>
-                                    <option value="-1">Custom Range</option>
-                                }
-                                else
-                                {
-                                    @foreach (var item in Model.AvailablePeriods)
-                                    {
-                                        var selected = item.Selected ? "selected=\"selected\"" : "";
-                                        @:<option value="@item.Value" @Html.Raw(selected)>@item.Text</option>
-                                    }
-                                }
-                            </select>
+                        <select id="SelectedPeriodId"
+                                name="SelectedPeriodId"
+                                class="select1"
+                                onchange="toggleCustomDateRange()">
+                            @foreach (var item in Model.AvailablePeriods)
+                            {
+                                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                            }
+                        </select>
                     </div>
                 </div>
-
-
-
-                <div id="customDateRange" style="display: @(Model.SelectedPeriodId == -1 ? "block" : "none"); margin-top: 10px;">
+                <div id="customDateRange"
+                     class="custom-date-range @(Model.SelectedPeriodId == -1 ? "show" : "hide")">
                     <div class="inputs-row">
                         <div class="inputs">
                             <label asp-for="FromDate"></label>
@@ -243,106 +71,89 @@
                     </div>
                 </div>
             </div>
-
-            <div class="text-center col-12 button1 mt-3">
-                <div class="buttons">
-                    <button type="submit" name="save-info-button" class="btn-search">
-                        <i class="fas fa-search"></i> @T("Admin.Common.Search")
-                    </button>
-                </div>
+            <div class="text-center button-wrapper mt-3">
+                <button type="submit" class="btn-search">
+                    <i class="fas fa-search"></i> @T("Admin.Common.Search")
+                </button>
             </div>
         </div>
     </form>
+    <!-- NOT SUBMITTED -->
     @if (Model.NotSubmittedNames?.Any() == true)
-{
-    <div class="alert alert-warning" style="margin-bottom: 20px;">
-        <strong>Not Submitted by:</strong>
-        @string.Join(", ", Model.NotSubmittedNames)
-    </div>
-}
-
+    {
+        <div class="alert alert-warning not-submitted-alert">
+            <strong>Not Submitted by:</strong>
+            @string.Join(", ", Model.NotSubmittedNames)
+        </div>
+    }
+    <!-- SUBMISSIONS -->
     @if (!Model.Submissions.Any())
     {
-        <div class="alert alert-info">No submissions found.</div>
+        <div class="alert alert-info">@T("Submit.Update.NoSubmissionsFound")</div>
     }
     else
     {
         foreach (var submission in Model.Submissions)
         {
             <div class="update-card">
-                <div class="update-header">
-                    <div>
-                        @* <div class="text-muted" style="font-size: 20px;">@submission.TemplateName</div> *@
-                        <h5>@submission.SubmitterName</h5>
+                <!-- HEADER (always visible) -->
+                <div class="update-header collapsible-header">
+                    <h5>@submission.SubmitterName</h5>
+                    <div class="header-right">
+                        <span class="date">
+                            @submission.SubmittedOn.ToString("M/d/yyyy h:mm tt")
+                        </span>
+                        <!-- TOGGLE BUTTON -->
+                        <button type="button" class="card-toggle-btn">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
                     </div>
-                    <div class="date">@submission.SubmittedOn.ToString("dddd, dd MMM yyyy")</div>
                 </div>
-
-                @* @foreach (var q in submission.Questions)
-                {
-                    <div class="question-block">
-                        <div class="question-text">@q.QuestionText</div>
-                        <div class="answer-box">@q.AnswerText</div>
+                <!-- COLLAPSIBLE BODY -->
+                <div class="update-card-body">
+                    @foreach (var q in submission.Questions)
+                    {
+                        <div class="question-block">
+                            <div class="question-text">@q.QuestionText</div>
+                            <div class="answer-box">
+                                @if (!string.IsNullOrEmpty(q.FileName))
+                                {
+                                    var fileUrl = Url.Action("DownloadFile", "UpdateSubmission", new { fileName = q.FileName });
+                                    <div class="file-download-row">
+                                        <span class="file-name">
+                                            @System.IO.Path.GetFileName(q.FileName)
+                                        </span>
+                                        <a href="@fileUrl" class="download-button" download>📥 Download</a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    @q.AnswerText
+                                }
+                            </div>
+                        </div>
+                    }
+                    <!-- COMMENTS -->
+                    <h4 class="comments-title">@T("Submit.Update.Comments")</h4>
+                    <div id="comments-container-@submission.Id" class="comments-container">
+                        @await Html.PartialAsync("~/Themes/DefaultClean/Views/Extension/UpdateForm/_CommentsPartial.cshtml", submission.Comments, new ViewDataDictionary(ViewData) { { "CanReply", false } })
                     </div>
-                } *@
-                @foreach (var q in submission.Questions)
-{
-    <div class="question-block">
-        <div class="question-text">@q.QuestionText</div>
-
-        <div class="answer-box">
-            @* Check for both a GUID and an existing file path *@
-            @if (!string.IsNullOrEmpty(q.FileName))
-{
-    var fileUrl = Url.Action("DownloadFile", "UpdateSubmission", new { fileName = q.FileName });
-    var fileName = System.IO.Path.GetFileName(q.FileName);
-
-    <div class="d-flex align-items-center gap-3 mb-2 p-2" style="background-color: #f5f5f5; border-radius: 6px;">
-        <span>@fileName</span>
-        <a href="@fileUrl" class="download-button" download>📥 Download</a>
-    </div>
-}
-
-            else
-            {
-                @q.AnswerText
-            }
-        </div>
-    </div>
-}
-
-
-                <br/>
-               <div class="container">
-                   <h4 class="mb-3">Comments</h4>
-    <div id="comments-container-@submission.Id" class="comments-container">
-        @await Html.PartialAsync(
-            "~/Themes/DefaultClean/Views/Extension/UpdateForm/_CommentsPartial.cshtml", 
-            submission.Comments, 
-            new ViewDataDictionary(ViewData) { { "CanReply", false } }
-        )
-    </div>
-
-    <div class="mt-3 d-flex align-items-center gap-2">
-        <input type="text"
-               id="new-comment-text-@submission.Id"
-               class="form-control"
-               placeholder="Write your comment..."
-               style="min-height: 42px;width:83%" />
-
-        <button class="btn btn-primary px-3 d-inline-flex align-items-center add-comment-btn"
-                data-id="@submission.Id">
-            <i class="fas fa-comment-dots me-2"></i> Add Comment
-        </button>
-    </div>
-</div>
-
-
+                    <div class="comment-input-row">
+                        <input type="text"
+                               id="new-comment-text-@submission.Id"
+                               class="form-control comment-input"
+                               placeholder="Write your comment..." />
+                        <button class="btn btn-primary add-comment-btn"
+                                data-id="@submission.Id">
+                            <i class="fas fa-comment-dots"></i>
+                            @T("Submit.Update.AddComment")
+                        </button>
+                    </div>
+                </div>
             </div>
         }
     }
 </div>
-
 <script>
     function toggleCustomDateRange() {
         var selectedVal = document.getElementById("SelectedPeriodId").value;
@@ -352,41 +163,44 @@
             document.getElementById("customDateRange").style.display = "none";
         }
     }
-
     $(document).ready(function () {
         $('#SelectedPeriodId').change(toggleCustomDateRange);
         toggleCustomDateRange();
     });
 </script>
 <script>
-    $(document).ready(function () {
-    // Add Comment
-    $(document).ready(function () {
-        // ... existing change handlers ...
+        $(document).ready(function () {
+        // Add Comment
+        $(document).ready(function () {
+            // ... existing change handlers ...
 
-        // Add top-level comment (for any submission)
-        $(document).on('click', '.add-comment-btn', function () {
-            var submissionId = $(this).data('id');
-            var txtSelector = '#new-comment-text-' + submissionId;
-            var commentText = $(txtSelector).val().trim();
-            if (!commentText) {
-                alert('Comment cannot be empty.');
-                return;
-            }
-
-            $.post('@Url.Action("AddComment", "UpdateSubmission")', {
-                UpdateSubmissionId: submissionId,
-                CommentText: commentText,
-                ParentCommentId: null
-            }, function (html) {
-                $('#comments-container-' + submissionId).html(html);
-                $(txtSelector).val('');
-            }).fail(function () { alert('Error adding comment'); });
+            // Add top-level comment (for any submission)
+            $(document).on('click', '.add-comment-btn', function () {
+                var submissionId = $(this).data('id');
+                var txtSelector = '#new-comment-text-' + submissionId;
+                var commentText = $(txtSelector).val().trim();
+                if (!commentText) {
+                    alert('Comment cannot be empty.');
+                    return;
+                }
+                $.post('@Url.Action("AddComment", "UpdateSubmission")', {
+                    UpdateSubmissionId: submissionId,
+                    CommentText: commentText,
+                    ParentCommentId: null
+                }, function (html) {
+                    $('#comments-container-' + submissionId).html(html);
+                    $(txtSelector).val('');
+                }).fail(function () { alert('Error adding comment'); });
+            });
         });
     });
-
-});
-
 </script>
+<script>
+    document.addEventListener("click", function (e) {
+        const toggleBtn = e.target.closest(".card-toggle-btn");
+        if (!toggleBtn) return;
 
-
+        const card = toggleBtn.closest(".update-card");
+        card.classList.toggle("open");
+    });
+</script>

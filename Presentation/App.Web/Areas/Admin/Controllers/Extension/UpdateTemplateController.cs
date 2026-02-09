@@ -1,5 +1,6 @@
 ﻿using App.Core;
 using App.Data;
+using App.Data.Extensions;
 using App.Services.Employees;
 using App.Services.Localization;
 using App.Services.Messages;
@@ -157,6 +158,80 @@ namespace App.Web.Areas.Admin.Controllers
             return controlTypeId == (int)ControlTypeEnum.DropdownList
                 || controlTypeId == (int)ControlTypeEnum.RadioList;
         }
+
+        private async Task<int> CopyTemplateUtilityAsync(int templateId)
+        {
+            var original = await _updateTemplateService.GetByIdAsync(templateId);
+            if (original == null)
+                return 0;
+
+            // 1️ Create new template
+            var newTemplate = new UpdateTemplate
+            {
+                Title = original.Title+" (Copy)",
+                Description = original.Description,
+                FrequencyId = original.FrequencyId,
+                RepeatEvery = original.RepeatEvery,
+                RepeatType = original.RepeatType,
+                SelectedWeekDays = original.SelectedWeekDays,
+                OnDay = original.OnDay,
+                DueDate = original.DueDate,
+                DueTime = original.DueTime,
+                ReminderBeforeMinutes = original.ReminderBeforeMinutes,
+                SubmitterUserIds = original.SubmitterUserIds,
+                ViewerUserIds = original.ViewerUserIds,
+                IsFileAttachmentRequired = original.IsFileAttachmentRequired,
+                IsEditingAllowed = original.IsEditingAllowed,
+                CreatedByUserId = original.CreatedByUserId,
+                IsActive = original.IsActive,
+                CreatedOnUTC = DateTime.UtcNow
+            };
+
+            await _updateTemplateService.InsertAsync(newTemplate);
+
+            // 2️ Copy questions
+            var questions = await _questionRepository.GetAllAsync(q =>
+                q.Where(x => x.UpdateTemplateId == templateId));
+
+            foreach (var question in questions)
+            {
+                var newQuestion = new UpdateTemplateQuestion
+                {
+                    UpdateTemplateId = newTemplate.Id,
+                    QuestionText = question.QuestionText,
+                    IsRequired = question.IsRequired,
+                    ControlTypeId = question.ControlTypeId,
+                    DisplayOrder = question.DisplayOrder,
+                    ValidationMinLength = question.ValidationMinLength,
+                    ValidationMaxLength = question.ValidationMaxLength,
+                    ValidationFileMaximumSize = question.ValidationFileMaximumSize,
+                    ValidationFileAllowedExtensions = question.ValidationFileAllowedExtensions,
+                    DefaultValue = question.DefaultValue
+                };
+
+                await _questionRepository.InsertAsync(newQuestion);
+
+                // 3️ Copy options
+                var options = await _questionOptionRepository.GetAllAsync(o =>
+                    o.Where(x => x.UpdateTemplateQuestionId == question.Id));
+
+                foreach (var option in options)
+                {
+                    var newOption = new UpdateQuestionOption
+                    {
+                        UpdateTemplateQuestionId = newQuestion.Id,
+                        Name = option.Name,
+                        DisplayOrder = option.DisplayOrder,
+                        IsPreSelected = option.IsPreSelected,
+                        IsRequired = option.IsRequired
+                    };
+
+                    await _questionOptionRepository.InsertAsync(newOption);
+                }
+            }
+            return newTemplate.Id;
+        }
+
 
         #endregion
 
@@ -436,23 +511,113 @@ namespace App.Web.Areas.Admin.Controllers
             return Json(new { Result = true });
         }
 
-        //public virtual async Task<IActionResult> DeleteSelected(ICollection<int> selectedIds)
-        //{
-        //    if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageTitles))
-        //        return AccessDeniedView();
+        public virtual async Task<IActionResult> CopyTemplate(int id)
+        {
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateTemplate, PermissionAction.Edit))
+                return AccessDeniedView();
 
-        //    if (selectedIds == null || selectedIds.Count == 0)
-        //        return NoContent();
+            var newTemplateId = await CopyTemplateUtilityAsync(id);
 
-        //    var data = await _updateTemplateService.GetByIdsAsync(selectedIds.ToArray());
+            if (newTemplateId == 0)
+            {
+                _notificationService.ErrorNotification("Admin.UpdateTemplate.Unabletocopytemplate");
+                return RedirectToAction("List");
+            }
 
-        //    foreach (var item in data)
-        //    {
-        //        await _updateTemplateService.DeleteAsync(item);
-        //    }
+            _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.UpdateTemplate.Templatecopiedsuccessfully"));
 
-        //    return Json(new { Result = true });
-        //}
+            return RedirectToAction("Edit", new { id = newTemplateId });
+        }
+        [HttpPost]
+        public async Task<IActionResult> CopySelected(string selectedIds)
+        {
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageUpdateTemplate, PermissionAction.Edit))
+                return AccessDeniedView();
+
+            if (string.IsNullOrEmpty(selectedIds))
+            {
+                _notificationService.WarningNotification("Nothing selected to copy.");
+                return RedirectToAction("List");
+            }
+
+            var ids = selectedIds.Split(',').Select(int.Parse).ToList();
+
+            foreach (var id in ids)
+            {
+                var template = await _updateTemplateService.GetByIdAsync(id);
+                if (template == null)
+                    continue;
+
+                var newTemplate = new UpdateTemplate
+                {
+                    Title = template.Title + " (Copy)",
+                    Description = template.Description,
+                    FrequencyId = template.FrequencyId,
+                    RepeatEvery = template.RepeatEvery,
+                    RepeatType = template.RepeatType,
+                    SelectedWeekDays = template.SelectedWeekDays,
+                    OnDay = template.OnDay,
+                    DueDate = template.DueDate,
+                    DueTime = template.DueTime,
+                    SubmitterUserIds = template.SubmitterUserIds,
+                    ViewerUserIds = template.ViewerUserIds,
+                    ReminderBeforeMinutes = template.ReminderBeforeMinutes,
+                    IsFileAttachmentRequired = template.IsFileAttachmentRequired,
+                    IsEditingAllowed = template.IsEditingAllowed,
+                    IsActive = template.IsActive,
+                    CreatedByUserId = template.CreatedByUserId,
+                    CreatedOnUTC = DateTime.UtcNow
+                };
+
+                await _updateTemplateService.InsertAsync(newTemplate);
+
+                var questions = await _questionRepository.Table
+                    .Where(x => x.UpdateTemplateId == template.Id)
+                    .ToListAsync();
+
+                foreach (var question in questions)
+                {
+                    var newQuestion = new UpdateTemplateQuestion
+                    {
+                        UpdateTemplateId = newTemplate.Id,
+                        QuestionText = question.QuestionText,
+                        IsRequired = question.IsRequired,
+                        ControlTypeId = question.ControlTypeId,
+                        DisplayOrder = question.DisplayOrder,
+                        ValidationMinLength = question.ValidationMinLength,
+                        ValidationMaxLength = question.ValidationMaxLength,
+                        ValidationFileMaximumSize = question.ValidationFileMaximumSize,
+                        ValidationFileAllowedExtensions = question.ValidationFileAllowedExtensions,
+                        DefaultValue = question.DefaultValue
+                    };
+
+                    await _questionRepository.InsertAsync(newQuestion);
+
+                    var options = await _questionOptionRepository.Table
+                        .Where(o => o.UpdateTemplateQuestionId == question.Id)
+                        .ToListAsync();
+
+                    foreach (var option in options)
+                    {
+                        await _questionOptionRepository.InsertAsync(new UpdateQuestionOption
+                        {
+                            UpdateTemplateQuestionId = newQuestion.Id,
+                            Name = option.Name,
+                            DisplayOrder = option.DisplayOrder,
+                            IsPreSelected = option.IsPreSelected,
+                            IsRequired = option.IsRequired
+                        });
+                    }
+                }
+            }
+
+            _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.UpdateTemplate.Templatecopiedsuccessfully"));
+
+            return RedirectToAction("List");
+        }
+
+
+
         #endregion
 
         #region Update Question List/Create/Edit/Delete

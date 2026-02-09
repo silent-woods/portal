@@ -6,9 +6,6 @@ using System.Threading.Tasks;
 
 namespace Satyanam.Nop.Core.Services
 {
-    /// <summary>
-    /// Campaings service interface
-    /// </summary>
     public partial interface ITaskCommentsService
     {
         Task<IPagedList<TaskComments>> GetAllTaskCommentsAsync(int taskid, int statusid, int employeeid, DateTime? from, DateTime? to,
@@ -18,6 +15,6 @@ namespace Satyanam.Nop.Core.Services
         Task UpdateTaskCommentsAsync(TaskComments taskComments);
         Task DeleteTaskCommentsAsync(TaskComments taskComments);
         Task<IList<TaskComments>> GetTaskCommentsByIdsAsync(int[] taskCommentIds);
-       
+        Task<TaskComments> GetLastCommentByTaskIdAsync(int taskId);
     }
 }

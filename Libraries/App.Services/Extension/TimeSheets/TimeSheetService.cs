@@ -1524,7 +1524,7 @@ namespace App.Services.TimeSheets
             if (previousState != null && previousState.Tasktypeid == 3 && previousState.ParentTaskId != 0 &&
                 (projectTask.Tasktypeid != 3 || projectTask.ParentTaskId != previousState.ParentTaskId))
             {
-                var oldParent = await _projectTaskService.GetProjectTasksByIdAsync(previousState.ParentTaskId);
+                var oldParent = await _projectTaskService.GetProjectTasksWithoutCacheByIdAsync(previousState.ParentTaskId);
                 if (oldParent != null)
                 {
                     await UpdateParentTaskDOTAsync(oldParent, excludedBugTaskId: projectTask.Id);
@@ -1541,7 +1541,7 @@ namespace App.Services.TimeSheets
                 bool isBugDOT = bugTotalSpentMinutes <= (bugEstimatedMinutes + bugAllowedVariationMinutes);
                 projectTask.DeliveryOnTime = isBugDOT;
                 await _projectTaskService.UpdateProjectTaskAsync(projectTask);
-                var newParent = await _projectTaskService.GetProjectTasksByIdAsync(projectTask.ParentTaskId);
+                var newParent = await _projectTaskService.GetProjectTasksWithoutCacheByIdAsync(projectTask.ParentTaskId);
                 if (newParent != null && newParent.Tasktypeid != 3)
                 {
                     await UpdateParentTaskDOTAsync(newParent);

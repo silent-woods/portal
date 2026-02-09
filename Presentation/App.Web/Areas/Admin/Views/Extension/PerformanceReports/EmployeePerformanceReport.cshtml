@@ -20,16 +20,15 @@
     <h1 class="float-left">
         @T("Admin.Configuration.MonthlyPerformanceReports")
     </h1>
-
-    <div class="float-right">
-
-
-        <button type="button" id="sync-dot" class="btn btn-primary">
-            <i class="fas fa-sync"></i>
-            @T("Admin.Common.SyncDOT")
-        </button>
-
-    </div>
+    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeePerfomance, PermissionAction.Edit))
+    {
+        <div class="float-right">
+            <button type="button" id="sync-dot" class="btn btn-primary">
+                <i class="fas fa-sync"></i>
+                @T("Admin.Common.SyncDOT")
+            </button>
+        </div>
+    }
 </div>
 <section class="content">
     <div class="container-fluid">

@@ -2385,7 +2385,18 @@ public partial class TrackerAPIController : BaseController
         string leaderOrManagerName = string.Empty;
         var ccEmails = new List<string>();
 
-        if (taskAlertConfig.EnableLeaderMail)
+        if (taskAlertConfig.EnableCoordinatorMail)
+        {
+            int projectCoorddinatorId = await _projectsService.GetProjectCoordinatorIdByIdAsync(projectId);
+            var projectCoorddinator = await _employeeService.GetEmployeeByIdAsync(projectCoorddinatorId);
+            if (projectCoorddinator != null && employee.OfficialEmail != projectCoorddinator.OfficialEmail)
+            {
+                leaderOrManagerName = projectCoorddinator.FirstName + " " + projectCoorddinator.LastName;
+                ccEmails.Add(projectCoorddinator.OfficialEmail);
+            }
+        }
+
+        if (taskAlertConfig.EnableLeaderMail && !ccEmails.Any())
         {
             int leaderId = await _projectsService.GetProjectLeaderIdByIdAsync(projectId);
             var leader = await _employeeService.GetEmployeeByIdAsync(leaderId);
@@ -2404,17 +2415,6 @@ public partial class TrackerAPIController : BaseController
             {
                 leaderOrManagerName = manager.FirstName + " " + manager.LastName;
                 ccEmails.Add(manager.OfficialEmail);
-            }
-        }
-
-        if (taskAlertConfig.EnableCoordinatorMail)
-        {
-            int projectCoorddinatorId = await _projectsService.GetProjectCoordinatorIdByIdAsync(projectId);
-            var projectCoorddinator = await _employeeService.GetEmployeeByIdAsync(projectCoorddinatorId);
-            if (projectCoorddinator != null && employee.OfficialEmail != projectCoorddinator.OfficialEmail)
-            {
-                leaderOrManagerName = projectCoorddinator.FirstName + " " + projectCoorddinator.LastName;
-                ccEmails.Add(projectCoorddinator.OfficialEmail);
             }
         }
 

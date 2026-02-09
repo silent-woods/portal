@@ -1,0 +1,79 @@
+﻿@model App.Web.Models.Dashboard.PendingDashboardModel
+
+<div class="cr-table-scroll">
+    <table class="cr-table">
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Project</th>
+                <th>Due Date</th>
+                <th>Esti.</th>
+                <th>Deve.</th>
+                <th>Developer</th>
+                <th>Assigned To</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model.OverdueTasks != null && Model.OverdueTasks.Any())
+            {
+                foreach (var t in Model.OverdueTasks)
+                {
+
+                    <tr>
+                        <td>
+                            <a href="@Url.Action("Edit", "ProjectTask", new { id = t.TaskId })"
+                               target="_blank"
+                               class="cr-task-link">
+                                @t.TaskTitle
+                            </a>
+                        </td>
+
+                        <td>@t.ProjectName</td>
+                        <td>@t.DueDate</td>
+                        <td>@t.EstimationTime</td>
+                        <td>@t.DeveloperTime</td>
+                        <td>@t.DeveloperName</td>
+
+                        <td>
+                            @if (t.AssignedTo == Model.CurrentEmployeeName)
+                            {
+                                <strong>@t.AssignedTo</strong>
+                            }
+                            else
+                            {
+                                @t.AssignedTo
+                            }
+                        </td>
+                        <td>
+                            <span class="cr-status-dot"
+                                  style="background-color:@t.StatusColorCode">
+                            </span>
+                            <span class="cr-status-text">
+                                @t.StatusName
+                            </span>
+                        </td>
+                       
+                        <td class="cr-action-cell">
+                            <a href="@Url.Action("Edit", "ProjectTask", new { id = t.TaskId })"
+                               class="cr-review-btn"
+                               target="_blank">
+                                Open
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="8" class="cr-row-empty">
+                        No overdue tasks found
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

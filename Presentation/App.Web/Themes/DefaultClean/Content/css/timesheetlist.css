@@ -1035,7 +1035,9 @@ button {
     font-size: 12px;
     font-weight: 600;
 }
-
+.task-filter-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+}
 @media (max-width: 768px) {
     .timesheet-section-table thead {
         display: none;

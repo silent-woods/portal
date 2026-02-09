@@ -1,7 +1,6 @@
 ﻿@model App.Web.Models.Dashboard.PendingDashboardModel
 @{
     bool hasAnyData =
-        (Model.NewTasks?.Any() == true) ||
         (Model.Overdue?.Any() == true) ||
         (Model.DueToday?.Any() == true) ||
         (Model.Upcoming?.Any() == true);
@@ -12,85 +11,6 @@
         No data found
     </div>
 }
-
-@if (Model.NewTasks?.Any() == true)
-{
-    <div class="section-header accordion-header" data-target="#newTasksTable">
-        <span class="accordion-arrow">▶</span>
-        New Tasks (@Model.NewTasks.Count)
-    </div>
-    <div id="newTasksTable" class="accordion-content" style="display:none;">
-          <div class="table-scroll">
-        <table class="followup-table">
-            <thead>
-                <tr>
-                        <th></th>
-                        <th>Task Name</th>
-                        <th>Assign To</th>
-                        <th>Esti.</th>
-                        <th>Deve.</th>
-                        <th>Alert</th>
-                        <th>On Track</th>
-                        <th>Next Review</th>
-                        <th class="comment">Comment</th>
-                        <th>Last FollowUp</th>
-                        <th>Status</th>
-                        <th>Project</th>
-                        <th>Type</th>
-                        <th>Action</th>
-                    </tr>
-            </thead>
-            <tbody>
-                @foreach (var t in Model.NewTasks)
-                {
-                        <tr class="new-row"  data-id="@t.Id">
-                        <td class="expand-cell">
-                            <span class="toggle-subgrid" data-id="@t.Id">+</span>
-                        </td>
-                                                    <td class="task-name-cell">
-                                <a href="/ProjectTask/Edit?id=@t.TaskId"
-                                   class="task-link"
-                                   target="_blank"
-                                   title="Open task">
-                                    @t.TaskName
-                                </a>
-                            </td>
-                        <td>@t.EmployeeName</td>
-                        <td>@t.EstimationTime</td>
-                        <td>@t.DevelopementTime</td>
-                        <td>@t.AlertType</td>
-                        <td>@Html.Raw(t.TrackReason)</td>
-
-                            <td class="next-followup">-</td>
-
-                            <td class="comment">@t.LastComment</td>
-
-                        <td>-</td>
-                        <td>
-                            <span class="status-dot" style="background:@t.StatusColor"></span>
-                            @t.StatusName
-                        </td>
-                        <td>@t.ProjectName</td>
-                        <td>-</td>
-
-
-                            <td class="action-cell">
-                                @if (t.CanTakeFollowUp)
-                                {
-                                    <button class="follow-btn btn-followup" data-id="@t.Id">Follow-Up</button>
-                                }
-                            </td>
-                    </tr>
-                    <tr class="subgrid-row" style="display:none;">
-                        <td colspan="14"><div class="subgrid-container"></div></td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        </div>
-    </div>
-}
-
 @if (Model.Overdue?.Any() == true)
 {
     <div class="section-header accordion-header" data-target="#overdueTable">
@@ -99,76 +19,145 @@
     </div>
     <div id="overdueTable" class="accordion-content" style="display:none;">
         <div class="table-scroll">
-        <table class="followup-table">
+            <table class="followup-table">
                 <thead>
                     <tr>
                         <th></th>
-                        <th>Task Name</th>
-                        <th>Assign To</th>
-                        <th>Esti.</th>
-                        <th>Deve.</th>
-                        <th>Alert</th>
-                        <th>On Track</th>
-                        <th>Next Review</th>
-                        <th class="comment">Comment</th>
-                        <th>Last FollowUp</th>
-                        <th>Status</th>
-                        <th>Project</th>
-                        <th>Type</th>
+                        <th class="sortable" data-type="text">
+                            Task Name <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Assign To <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number">
+                            Esti. <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+
+                        </th>
+                        <th class="sortable" data-type="number">
+                            Deve.<span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Alert <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            On Track <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="date">
+                            Next Review <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text comment">
+                            Comment <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="date">
+                            Last FollowUp <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="date">
+                            Last TrackedOn<span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Status <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Project <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Type<span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
                         <th>Action</th>
                     </tr>
                 </thead>
-            <tbody>
-                @foreach (var t in Model.Overdue)
-                {
-                      <tr class="overdue-row" data-id="@t.Id">
-    <td class="expand-cell">
-        <span class="toggle-subgrid" data-id="@t.Id">+</span>
-    </td>
-    <td class="task-name-cell">
-        <a href="/ProjectTask/Edit?id=@t.TaskId"
-           class="task-link"
-           target="_blank">
-            @t.TaskName
-        </a>
-    </td>
-    <td>@t.EmployeeName</td>
-    <td>@t.EstimationTime</td>
-    <td>@t.DevelopementTime</td>
-    <td>@t.AlertType</td>
-    <td>@Html.Raw(t.TrackReason)</td>
-    <td class="next-followup">
-        @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
-    </td>
-    <td class="comment">@t.LastComment</td>
-    <td>
-        @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
-    </td>
-    <td>
-        <span class="status-dot" style="background:@t.StatusColor"></span>
-        @t.StatusName
-    </td>
-    <td>@t.ProjectName</td>
-    <td>@(t.IsManual ? "Manual" : "Auto")</td>
-    <td class="action-cell">
-        @if (t.CanTakeFollowUp)
-        {
-            <button class="follow-btn btn-followup" data-id="@t.Id">
-                Follow-Up
-            </button>
-        }
-    </td>
-</tr>
-                    <tr class="subgrid-row" style="display:none;">
-                        <td colspan="14"><div class="subgrid-container"></div></td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                <tbody>
+                    @foreach (var t in Model.Overdue)
+                    {
+                        <tr class="overdue-row" data-id="@t.Id">
+                            <td class="expand-cell">
+                                <span class="toggle-subgrid" data-id="@t.Id">+</span>
+                            </td>
+                            <td class="task-name-cell">
+                                <a href="/ProjectTask/Edit?id=@t.TaskId"
+                                   class="task-link"
+                                   target="_blank">
+                                    @t.TaskName
+                                </a>
+                            </td>
+                            <td>@t.EmployeeName</td>
+                            <td>@t.EstimationTime</td>
+                            <td>@t.DevelopementTime</td>
+                            <td>@t.AlertType</td>
+                            <td>@Html.Raw(t.TrackReason)</td>
+                            <td class="next-followup">
+                                @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+                            </td>
+                            <td class="comment">@t.LastComment</td>
+                            <td>
+                                @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+                            </td>
+                            <td>
+                                @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
+                            </td>
+                            <td>
+                                <span class="status-dot" style="background:@t.StatusColor"></span>
+                                @t.StatusName
+                            </td>
+                            <td>@t.ProjectName</td>
+                            <td>@(t.IsManual ? "Manual" : "Auto")</td>
+                            <td class="action-cell">
+                                @if (t.CanTakeFollowUp)
+                                {
+                                    <button class="follow-btn btn-followup" data-id="@t.Id">
+                                        Follow-Up
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        <tr class="subgrid-row" style="display:none;">
+                            <td colspan="14"><div class="subgrid-container"></div></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 }
-
 @if (Model.DueToday != null && Model.DueToday.Count > 0)
 {
     <div class="section-header accordion-header" data-target="#dueTodayTable">
@@ -177,78 +166,146 @@
     </div>
 
     <div id="dueTodayTable" class="accordion-content" style="display:none;">
-          <div class="table-scroll">
-        <table class="followup-table">
-            <thead>
-               <tr>
+        <div class="table-scroll">
+            <table class="followup-table">
+                <thead>
+                    <tr>
                         <th></th>
-                        <th>Task Name</th>
-                        <th>Assign To</th>
-                        <th>Esti.</th>
-                        <th>Deve.</th>
-                        <th>Alert</th>
-                        <th>On Track</th>
-                        <th>Next Review</th>
-                        <th class="comment">Comment</th>
-                        <th>Last FollowUp</th>
-                        <th>Status</th>
-                        <th>Project</th>
-                        <th>Type</th>
+                        <th class="sortable" data-type="text">
+                            Task Name <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Assign To <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number">
+                            Esti. <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+
+                        </th>
+                        <th class="sortable" data-type="number">
+                            Deve.<span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Alert <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            On Track <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="date">
+                            Next Review <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text comment">
+                            Comment <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="date">
+                            Last FollowUp <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="date">
+                            Last TrackedOn<span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Status <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Project <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Type<span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
                         <th>Action</th>
                     </tr>
-            </thead>
-            <tbody>
-                @foreach (var t in Model.DueToday)
-                {
-                        <tr class="today-row"  data-id="@t.Id">
-                      
-    <td class="expand-cell">
-        <span class="toggle-subgrid" data-id="@t.Id">+</span>
-    </td>
-    <td class="task-name-cell">
-        <a href="/ProjectTask/Edit?id=@t.TaskId"
-           class="task-link"
-           target="_blank">
-            @t.TaskName
-        </a>
-    </td>
-    <td>@t.EmployeeName</td>
-    <td>@t.EstimationTime</td>
-    <td>@t.DevelopementTime</td>
-    <td>@t.AlertType</td>
-    <td>@Html.Raw(t.TrackReason)</td>
-    <td class="next-followup">
-        @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
-    </td>
-    <td class="comment">@t.LastComment</td>
-    <td>
-        @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
-    </td>
-    <td>
-        <span class="status-dot" style="background:@t.StatusColor"></span>
-        @t.StatusName
-    </td>
-    <td>@t.ProjectName</td>
-    <td>@(t.IsManual ? "Manual" : "Auto")</td>
-    <td class="action-cell">
-        @if (t.CanTakeFollowUp)
-        {
-            <button class="follow-btn btn-followup" data-id="@t.Id">
-                Follow-Up
-            </button>
-        }
-    </td>
-                    </tr>
-                    <tr class="subgrid-row" style="display:none;">
-                        <td colspan="14"><div class="subgrid-container"></div></td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.DueToday)
+                    {
+                        <tr class="today-row" data-id="@t.Id">
+                            <td class="expand-cell">
+                                <span class="toggle-subgrid" data-id="@t.Id">+</span>
+                            </td>
+                            <td class="task-name-cell">
+                                <a href="/ProjectTask/Edit?id=@t.TaskId"
+                                   class="task-link"
+                                   target="_blank">
+                                    @t.TaskName
+                                </a>
+                            </td>
+                            <td>@t.EmployeeName</td>
+                            <td>@t.EstimationTime</td>
+                            <td>@t.DevelopementTime</td>
+                            <td>@t.AlertType</td>
+                            <td>@Html.Raw(t.TrackReason)</td>
+                            <td class="next-followup">
+                                @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+                            </td>
+                            <td class="comment">@t.LastComment</td>
+                            <td>
+                                @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+                            </td>
+                            <td>
+                                @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
+                            </td>
+                            <td>
+                                <span class="status-dot" style="background:@t.StatusColor"></span>
+                                @t.StatusName
+                            </td>
+                            <td>@t.ProjectName</td>
+                            <td>@(t.IsManual ? "Manual" : "Auto")</td>
+                            <td class="action-cell">
+                                @if (t.CanTakeFollowUp)
+                                {
+                                    <button class="follow-btn btn-followup" data-id="@t.Id">
+                                        Follow-Up
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        <tr class="subgrid-row" style="display:none;">
+                            <td colspan="14"><div class="subgrid-container"></div></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 }
-
 @if (Model.Upcoming != null && Model.Upcoming.Count > 0)
 {
     <div class="section-header accordion-header" data-target="#upcomingTable">
@@ -258,77 +315,147 @@
 
     <div id="upcomingTable" class="accordion-content" style="display:none;">
         <div class="table-scroll">
-        <table class="followup-table">
-            <thead>
-                <tr>
+            <table class="followup-table">
+                <thead>
+                    <tr>
                         <th></th>
-                        <th>Task Name</th>
-                        <th>Assign To</th>
-                        <th>Esti.</th>
-                        <th>Deve.</th>
-                        <th>Alert</th>
-                        <th>On Track</th>
-                        <th>Next Review</th>
-                        <th class="comment">Comment</th>
-                        <th>Last FollowUp</th>
-                        <th>Status</th>
-                        <th>Project</th>
-                        <th>Type</th>
+
+                        <th class="sortable" data-type="text">
+                            Task Name <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Assign To <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number">
+                            Esti. <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+
+                        </th>
+                        <th class="sortable" data-type="number">
+                            Deve.<span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Alert <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            On Track <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="date">
+                            Next Review <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text comment">
+                            Comment <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="date">
+                            Last FollowUp <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+
+                        <th class="sortable" data-type="date">
+                            Last TrackedOn<span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Status <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Project <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            Type<span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
                         <th>Action</th>
                     </tr>
-            </thead>
-            <tbody>
-                @foreach (var t in Model.Upcoming)
-                {
-                        <tr class="upcoming-row"  data-id="@t.Id">
-    <td class="expand-cell">
-        <span class="toggle-subgrid" data-id="@t.Id">+</span>
-    </td>
-    <td class="task-name-cell">
-        <a href="/ProjectTask/Edit?id=@t.TaskId"
-           class="task-link"
-           target="_blank">
-            @t.TaskName
-        </a>
-    </td>
-    <td>@t.EmployeeName</td>
-    <td>@t.EstimationTime</td>
-    <td>@t.DevelopementTime</td>
-    <td>@t.AlertType</td>
-    <td>@Html.Raw(t.TrackReason)</td>
-    <td class="next-followup">
-        @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
-    </td>
-    <td class="comment">@t.LastComment</td>
-    <td>
-        @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
-    </td>
-    <td>
-        <span class="status-dot" style="background:@t.StatusColor"></span>
-        @t.StatusName
-    </td>
-    <td>@t.ProjectName</td>
-    <td>@(t.IsManual ? "Manual" : "Auto")</td>
-    <td class="action-cell">
-        @if (t.CanTakeFollowUp)
-        {
-            <button class="follow-btn btn-followup" data-id="@t.Id">
-                Follow-Up
-            </button>
-        }
-    </td>
-                    </tr>
-                    <tr class="subgrid-row" style="display:none;">
-                        <td colspan="14"><div class="subgrid-container"></div></td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Upcoming)
+                    {
+                        <tr class="upcoming-row" data-id="@t.Id">
+                            <td class="expand-cell">
+                                <span class="toggle-subgrid" data-id="@t.Id">+</span>
+                            </td>
+                            <td class="task-name-cell">
+                                <a href="/ProjectTask/Edit?id=@t.TaskId"
+                                   class="task-link"
+                                   target="_blank">
+                                    @t.TaskName
+                                </a>
+                            </td>
+                            <td>@t.EmployeeName</td>
+                            <td>@t.EstimationTime</td>
+                            <td>@t.DevelopementTime</td>
+                            <td>@t.AlertType</td>
+                            <td>@Html.Raw(t.TrackReason)</td>
+                            <td class="next-followup">
+                                @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+                            </td>
+                            <td class="comment">@t.LastComment</td>
+                            <td>
+                                @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
+                            </td>
+                            <td>
+                                @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
+                            </td>
+                            <td>
+                                <span class="status-dot" style="background:@t.StatusColor"></span>
+                                @t.StatusName
+                            </td>
+                            <td>@t.ProjectName</td>
+                            <td>@(t.IsManual ? "Manual" : "Auto")</td>
+                            <td class="action-cell">
+                                @if (t.CanTakeFollowUp)
+                                {
+                                    <button class="follow-btn btn-followup" data-id="@t.Id">
+                                        Follow-Up
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        <tr class="subgrid-row" style="display:none;">
+                            <td colspan="14"><div class="subgrid-container"></div></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 }
-
-
 <script>
     $(document).ready(function () {
       $("table").on("click", ".btn-followup", function () {
@@ -377,10 +504,10 @@
         var container = $(this).closest("td");
         var nextInput = container.find(".next-input");
         if ($(this).is(":checked")) {
-            nextInput.val("");      
-            nextInput.prop("disabled", true);  
+            nextInput.val("");
+            nextInput.prop("disabled", true);
         } else {
-            nextInput.prop("disabled", false); 
+            nextInput.prop("disabled", false);
         }
     });
             $("table").on("click", ".btn-save", function () {
@@ -409,16 +536,13 @@
             btn.prop("disabled", false).text("Save");
             return;
         }
-
         var data = {
             id: taskId,
             nextDate: nextDate,
             comment: comment,
             isCompleted: isCompleted
         };
-
         addAntiForgeryToken(data);
-
         $.ajax({
             url: "/Dashboard/SaveFollowUp",
             type: "POST",
@@ -446,7 +570,6 @@
             }
         });
     });
-
         $("table").on("click", ".toggle-subgrid", function () {
         var btn = $(this);
         var parentRow = btn.closest("tr");
@@ -475,5 +598,46 @@
             }
         });
     });
+    });
+        $("table").on("click", "th.sortable", function () {
+        var th = $(this);
+        var table = th.closest("table");
+        var tbody = table.find("tbody");
+        var index = th.index();
+        var type = th.data("type");
+        var asc = !th.hasClass("asc");
+
+        table.find("th").removeClass("asc desc");
+        th.addClass(asc ? "asc" : "desc");
+        var rows = tbody.find("tr").not(".subgrid-row").get();
+        rows.sort(function (a, b) {
+            var A = $(a).children("td").eq(index).text().trim();
+            var B = $(b).children("td").eq(index).text().trim();
+
+            if (type === "number") {
+                A = parseFloat(A) || 0;
+                B = parseFloat(B) || 0;
+            }
+            else if (type === "date") {
+                A = A ? new Date(A) : new Date(0);
+                B = B ? new Date(B) : new Date(0);
+            }
+            else {
+                A = A.toLowerCase();
+                B = B.toLowerCase();
+            }
+
+            if (A < B) return asc ? -1 : 1;
+            if (A > B) return asc ? 1 : -1;
+            return 0;
+        });
+
+        $.each(rows, function (i, row) {
+            var subgrid = $(row).next(".subgrid-row");
+            tbody.append(row);
+            if (subgrid.length) {
+                tbody.append(subgrid);
+            }
+        });
     });
 </script>

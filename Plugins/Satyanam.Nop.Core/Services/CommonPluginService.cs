@@ -6,6 +6,7 @@ using App.Core.Domain.TimeSheets;
 using App.Data;
 using App.Data.Extensions;
 using App.Services.Messages;
+using App.Services.ProjectEmployeeMappings;
 using App.Services.ProjectTasks;
 using App.Services.TimeSheets;
 using Humanizer;
@@ -18,13 +19,9 @@ using static LinqToDB.Sql;
 
 namespace Satyanam.Nop.Core.Services
 {
-    /// <summary>
-    /// Title service
-    /// </summary>
     public partial class CommonPluginService : ICommonPluginService
     {
         #region Fields
-
         private readonly IRepository<ProcessRules> _processRulesRepository;
         private readonly IRepository<WorkflowStatus> _workflowStatusRepository;
         private readonly IRepository<ProjectTask> _projectTaskRepository;
@@ -34,12 +31,11 @@ namespace Satyanam.Nop.Core.Services
         private readonly EmailSettings _emailSettings;
         private readonly MonthlyReportSetting _monthlyReportSetting;
         private readonly IRepository<TimeSheet> _timeSheetRepository;
-
+        private readonly IProjectEmployeeMappingService _projectEmployeeMappingService;
         #endregion
 
         #region Ctor
-
-        public CommonPluginService(IRepository<ProcessRules> processRulesRepository, IRepository<WorkflowStatus> workflowStatusRepository, IRepository<ProjectTask> projectTaskRepository, ITimeSheetsService timeSheetsService, IProjectTaskService projectTaskService, IWorkflowStatusService workflowStatusService, EmailSettings emailSettings, MonthlyReportSetting monthlyReportSetting, IRepository<TimeSheet> timeSheetRepository)
+        public CommonPluginService(IRepository<ProcessRules> processRulesRepository, IRepository<WorkflowStatus> workflowStatusRepository, IRepository<ProjectTask> projectTaskRepository, ITimeSheetsService timeSheetsService, IProjectTaskService projectTaskService, IWorkflowStatusService workflowStatusService, EmailSettings emailSettings, MonthlyReportSetting monthlyReportSetting, IRepository<TimeSheet> timeSheetRepository, IProjectEmployeeMappingService projectEmployeeMappingService)
         {
             _processRulesRepository = processRulesRepository;
             _workflowStatusRepository = workflowStatusRepository;
@@ -50,8 +46,8 @@ namespace Satyanam.Nop.Core.Services
             _emailSettings = emailSettings;
             _monthlyReportSetting = monthlyReportSetting;
             _timeSheetRepository = timeSheetRepository;
+            _projectEmployeeMappingService = projectEmployeeMappingService;
         }
-
         #endregion
 
         #region Methods
@@ -101,7 +97,6 @@ namespace Satyanam.Nop.Core.Services
                     }
                 }
             }
-
             var query = await _projectTaskRepository.GetAllAsync(async query =>
             {
                 if (!showHidden)
@@ -261,7 +256,6 @@ namespace Satyanam.Nop.Core.Services
             IList<decimal> overDuePercentage = new List<decimal> { _emailSettings.FirstMailVariation,_emailSettings.SecondMailVariation,_emailSettings.ThirdMailVariation};
             return overDuePercentage;
         }
-
         public virtual async Task<decimal> GetOverduePercentageByTimeAsync(string bigTime, string smallTime)
         {
             decimal bigHours = await _timeSheetsService.ConvertHHMMToDecimal(bigTime);
@@ -297,7 +291,6 @@ namespace Satyanam.Nop.Core.Services
             var overDue = await GetOverduePercentageByTimeAsync(bigTime, smallTime);
             return overDue;
         }
-
         public async Task<IList<ProjectTask>> GetOverdueTasksByEmployeeIdAsync(int employeeId)
         {
             var today = DateTime.UtcNow.Date;
@@ -323,43 +316,37 @@ namespace Satyanam.Nop.Core.Services
                (s.StatusName ?? "").Trim(),
                "Code Review",
                StringComparison.OrdinalIgnoreCase
-           )
-       )?.Id;
+           ))?.Id;
                     var readyToTestStatusId = g.FirstOrDefault(s =>
            string.Equals(
                (s.StatusName ?? "").Trim(),
                "Ready To Test",
                StringComparison.OrdinalIgnoreCase
-           )
-       )?.Id;
+           ))?.Id;
                     var qaOnLiveStatusId = g.FirstOrDefault(s =>
            string.Equals(
                (s.StatusName ?? "").Trim(),
                "QA on Live",
                StringComparison.OrdinalIgnoreCase
-           )
-       )?.Id;
+           ))?.Id;
                     var readyForLiveStatusId = g.FirstOrDefault(s =>
          string.Equals(
              (s.StatusName ?? "").Trim(),
              "Ready for Live",
              StringComparison.OrdinalIgnoreCase
-         )
-     )?.Id;
+         ))?.Id;
                     var reviewDoneStatusId = g.FirstOrDefault(s =>
        string.Equals(
            (s.StatusName ?? "").Trim(),
            "Code Review Done",
            StringComparison.OrdinalIgnoreCase
-       )
-   )?.Id;
+       ))?.Id;
                     var testFailedStatusId = g.FirstOrDefault(s =>
        string.Equals(
            (s.StatusName ?? "").Trim(),
            "Test Failed",
            StringComparison.OrdinalIgnoreCase
-       )
-   )?.Id;
+       ))?.Id;
                     var pairs = new List<(int WorkflowId, int StatusId)>();
                     var statusList = new List<int?>
                            {
@@ -396,6 +383,87 @@ namespace Satyanam.Nop.Core.Services
             return overdueTasks;
         }
 
+        public async Task<IList<ProjectTask>> GetOverdueTasksByCurrentEmployeeForDashboardAsync(
+            int currEmployeeId)
+        {
+            var today = DateTime.UtcNow.Date;
+            var employeeIds = await GetEmployeeIdsForOverdueAsync(currEmployeeId);
+            var allStatuses = await _workflowStatusRepository.Table
+                .Where(s => s.ProcessWorkflowId != 0)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.ProcessWorkflowId,
+                    s.DisplayOrder,
+                    s.IsDefaultDeveloperStatus,
+                    s.StatusName
+                })
+                .ToListAsync();
+            var allowedStatuses = allStatuses
+                .GroupBy(s => s.ProcessWorkflowId)
+                .SelectMany(g =>
+                {
+                    var statusIds = new List<int?>
+                    {
+                g.OrderBy(s => s.DisplayOrder).FirstOrDefault()?.Id,
+                g.FirstOrDefault(s => s.IsDefaultDeveloperStatus)?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("Code Review", StringComparison.OrdinalIgnoreCase))?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("Ready To Test", StringComparison.OrdinalIgnoreCase))?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("QA on Live", StringComparison.OrdinalIgnoreCase))?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("Ready for Live", StringComparison.OrdinalIgnoreCase))?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("Code Review Done", StringComparison.OrdinalIgnoreCase))?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("Test Failed", StringComparison.OrdinalIgnoreCase))?.Id
+                    };
+
+                    return statusIds
+                        .Where(x => x.HasValue)
+                        .Select(x => new
+                        {
+                            WorkflowId = g.Key,
+                            StatusId = x.Value
+                        })
+                        .Distinct();
+                })
+                .ToList();
+            var tasks = await _projectTaskRepository.Table
+                .Where(t =>
+                    !t.IsDeleted &&
+                    employeeIds.Contains(t.AssignedTo) &&
+                    t.DueDate.HasValue &&
+                    t.DueDate.Value.Date < today &&
+                    t.ProcessWorkflowId != 0 &&
+                    t.StatusId != 0)
+                .Where(t =>
+                    allowedStatuses.Any(s =>
+                        s.WorkflowId == t.ProcessWorkflowId &&
+                        s.StatusId == t.StatusId))
+                .ToListAsync();
+            var overdueTasks = tasks
+                .GroupBy(t => t.Id)
+                .Select(g => g.First())
+                .ToList();
+            return overdueTasks;
+        }
+        public async Task<IList<int>> GetEmployeeIdsForOverdueAsync(int currEmployeeId)
+        {
+            var employeeIds = new List<int> { currEmployeeId };
+            var juniorIds = await _projectEmployeeMappingService.GetJuniorsIdsByEmployeeIdAsync(currEmployeeId);
+            if (juniorIds?.Any() == true)
+                employeeIds.AddRange(juniorIds);
+            return employeeIds.Distinct().ToList();
+        }
         public virtual async Task<string> GetLearningTimeOfEmployeeByRange(int employeeId, DateTime from, DateTime to)
         {
             var learningProjectId = _monthlyReportSetting.LearningProjectId;
@@ -424,6 +492,75 @@ namespace Satyanam.Nop.Core.Services
                 .ToListAsync();
             var totalMinutes = learningEntries.Sum(e => (e.SpentHours * 60) + e.SpentMinutes);
             return totalMinutes;
+        }
+        public async Task<int> GetDashboardOverdueCountAsync(int currEmployeeId)
+        {
+            var today = DateTime.UtcNow.Date;
+            var employeeIds = await GetEmployeeIdsForOverdueAsync(currEmployeeId);
+            var allStatuses = await _workflowStatusRepository.Table
+                .Where(s => s.ProcessWorkflowId != 0)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.ProcessWorkflowId,
+                    s.DisplayOrder,
+                    s.IsDefaultDeveloperStatus,
+                    s.StatusName
+                })
+                .ToListAsync();
+            var allowedStatuses = allStatuses
+                .GroupBy(s => s.ProcessWorkflowId)
+                .SelectMany(g =>
+                {
+                    var statusIds = new List<int?>
+                    {
+                g.OrderBy(s => s.DisplayOrder).FirstOrDefault()?.Id,
+                g.FirstOrDefault(s => s.IsDefaultDeveloperStatus)?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("Code Review", StringComparison.OrdinalIgnoreCase))?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("Ready To Test", StringComparison.OrdinalIgnoreCase))?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("QA on Live", StringComparison.OrdinalIgnoreCase))?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("Ready for Live", StringComparison.OrdinalIgnoreCase))?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("Code Review Done", StringComparison.OrdinalIgnoreCase))?.Id,
+
+                g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
+                    .Equals("Test Failed", StringComparison.OrdinalIgnoreCase))?.Id
+                    };
+                    return statusIds
+                        .Where(x => x.HasValue)
+                        .Select(x => new
+                        {
+                            WorkflowId = g.Key,
+                            StatusId = x.Value
+                        })
+                        .Distinct();
+                })
+                .ToList();
+            var count = await _projectTaskRepository.Table
+                .Where(t =>
+                    !t.IsDeleted &&
+                    employeeIds.Contains(t.AssignedTo) &&
+                    t.DueDate.HasValue &&
+                    t.DueDate.Value.Date < today &&
+                    t.ProcessWorkflowId != 0 &&
+                    t.StatusId != 0)
+                .Where(t =>
+                    allowedStatuses.Any(s =>
+                        s.WorkflowId == t.ProcessWorkflowId &&
+                        s.StatusId == t.StatusId))
+                .Select(t => t.Id)
+                .Distinct()
+                .CountAsync();
+            return count;
         }
         #endregion
     }

@@ -1,0 +1,81 @@
+﻿@model App.Web.Models.Dashboard.PendingDashboardModel
+
+<div class="cr-table-scroll">
+    <table class="cr-table">
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Project</th>
+                <th>Status</th>
+                <th>Developer</th>
+                <th>Assigned To</th>
+                <th>Due Date</th>
+                <th>Pending Since</th>
+                <th>Change Set</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.CodeReviewTasks.Any())
+            {
+                foreach (var t in Model.CodeReviewTasks)
+                {
+                    <tr data-statusid="@t.StatusId">
+                        <td>
+                            <a href="@Url.Action("Edit", "ProjectTask", new { id = t.TaskId })"
+                               target="_blank"
+                               class="cr-task-link">
+                                @t.TaskTitle
+                            </a>
+                        </td>
+                        <td>@t.ProjectName</td>
+                        <td>
+                            <span class="cr-status-dot"
+                                  style="background-color:@t.StatusColorCode">
+                            </span>
+                            <span class="cr-status-text">
+                                @t.StatusName
+                            </span>
+                        </td>
+                        <td>@t.DeveloperName</td>
+                        <td>
+                            @if (t.AssignedTo == Model.CurrentEmployeeName)
+                            {
+                                <strong>@t.AssignedTo</strong>
+                            }
+                            else
+                            {
+                                @t.AssignedTo
+                            }
+                        </td>
+                        <td>@t.DueDate</td>
+                        <td>
+                            @t.CodeReviewStartDate?.ToString("d-MMM-yyyy", CultureInfo.InvariantCulture) (@t.PendingSinceDays)
+                        </td>
+                        <td class="cr-comment-cell">
+                            @if (t.TaskId > 0)
+                            {
+                                <span class="cr-comment-icon"
+                                      data-taskid="@t.TaskId"
+                                      title="View last comment">
+                                    Change Set
+                                </span>
+                            }
+                        <td class="cr-action-cell">
+                            <a href="@Url.Action("Edit", "ProjectTask", new { id = t.TaskId })"
+                               class="cr-review-btn" target="_blank">
+                                Review
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" class="cr-row-empty">No code review tasks found</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

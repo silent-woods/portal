@@ -61,8 +61,7 @@ namespace App.Web.Areas.Admin.Controllers
             ITaskCommentsModelFactory taskCommentsModelFactory,
             ITaskChangeLogService taskChangeLogService,
             ITaskChangeLogModelFactory taskChangeLogModelFactory,
-            IProcessWorkflowService processWorkflowService
-,
+            IProcessWorkflowService processWorkflowService,
             IProcessWorkflowModelFactory processWorkflowModelFactory,
             IProcessRulesService processRulesService,
             IWorkflowStatusService workflowStatusService)
@@ -95,7 +94,6 @@ namespace App.Web.Areas.Admin.Controllers
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessWorkflow, PermissionAction.View))
                 return AccessDeniedView();
-            //prepare model
             var model = await _processWorkflowModelFactory.PrepareProcessWorkflowSearchModelAsync(new ProcessWorkflowSearchModel());
             return View("/Areas/Admin/Views/Extension/ProcessWorkflows/List.cshtml", model);
         }
@@ -104,9 +102,6 @@ namespace App.Web.Areas.Admin.Controllers
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessWorkflow, PermissionAction.View))
                 return AccessDeniedView();
-
-
-            //prepare model
             var model = await _processWorkflowModelFactory.PrepareProcessWorkflowListModelAsync(searchModel);
             return Json(model);
         }
@@ -115,8 +110,6 @@ namespace App.Web.Areas.Admin.Controllers
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessWorkflow, PermissionAction.Add))
                 return AccessDeniedView();
-
-            //prepare model
             var model = await _processWorkflowModelFactory.PrepareProcessWorkflowModelAsync(new ProcessWorkflowModel(), null);
 
             return View("/Areas/Admin/Views/Extension/ProcessWorkflows/Create.cshtml", model);
@@ -127,30 +120,17 @@ namespace App.Web.Areas.Admin.Controllers
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessWorkflow, PermissionAction.Add))
                 return AccessDeniedView();
-
-
             var processWorkflow = model.ToEntity<ProcessWorkflow>();
-
-
             if (ModelState.IsValid)
             {
                 processWorkflow.CreatedOn = await _dateTimeHelper.GetUTCAsync();
-
-
                 await _processWorkflowService.InsertProcessWorkflowAsync(processWorkflow);
-
                 _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.Catalog.processWorkflow.Added"));
-
                 if (!continueEditing)
                     return RedirectToAction("List");
-
                 return RedirectToAction("Edit", new { id = processWorkflow.Id });
             }
-            //prepare model
             model = await _processWorkflowModelFactory.PrepareProcessWorkflowModelAsync(model, processWorkflow, true);
-
-            //if we got this far, something failed, redisplay form
-
             return View("/Areas/Admin/Views/Extension/ProcessWorkflows/Create.cshtml", model);
         }
 
@@ -158,14 +138,10 @@ namespace App.Web.Areas.Admin.Controllers
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessWorkflow, PermissionAction.Edit))
                 return AccessDeniedView();
-
             var processWorkflow = await _processWorkflowService.GetProcessWorkflowByIdAsync(id);
             if (processWorkflow == null)
                 return RedirectToAction("List");
-
-            //prepare model
             var model = await _processWorkflowModelFactory.PrepareProcessWorkflowModelAsync(null, processWorkflow);
-
             return View("/Areas/Admin/Views/Extension/ProcessWorkflows/Edit.cshtml", model);
         }
 
@@ -174,29 +150,18 @@ namespace App.Web.Areas.Admin.Controllers
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessWorkflow, PermissionAction.Edit))
                 return AccessDeniedView();
-
-
-            //try to get a project with the specified id
-            var processWorkflow = await _processWorkflowService.GetProcessWorkflowByIdAsync(model.Id);
-
+            var processWorkflow = await _processWorkflowService.GetProcessWorkflowByIdAsync(model.Id);        
             if (processWorkflow == null)
                 return RedirectToAction("List");
-
             if (ModelState.IsValid)
             {
                 processWorkflow = model.ToEntity(processWorkflow);
-
-
                 await _processWorkflowService.UpdateProcessWorkflowAsync(processWorkflow);
-
                 _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.Catalog.processWorkflow.Updated"));
-
                 if (!continueEditing)
                     return RedirectToAction("List");
-
                 return RedirectToAction("Edit", new { id = processWorkflow.Id });
             }
-            //if we got this far, something failed, redisplay form
             return View("/Areas/Admin/Views/Extension/ProcessWorkflows/Edit.cshtml", model);
         }
 
@@ -205,16 +170,11 @@ namespace App.Web.Areas.Admin.Controllers
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessWorkflow, PermissionAction.Delete))
                 return AccessDeniedView();
-
-            //try to get a leaveType with the specified id
             var processWorkflow = await _processWorkflowService.GetProcessWorkflowByIdAsync(id);
             if (processWorkflow == null)
                 return RedirectToAction("List");
-
             await _processWorkflowService.DeleteProcessWorkflowAsync(processWorkflow);
-
             _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("Admin.Catalog.processWorkflow.Deleted"));
-
             return RedirectToAction("List");
         }
 
@@ -223,19 +183,15 @@ namespace App.Web.Areas.Admin.Controllers
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageProcessWorkflow, PermissionAction.Delete))
                 return AccessDeniedView();
-
             if (selectedIds == null || selectedIds.Count == 0)
                 return NoContent();
-
             var data = await _processWorkflowService.GetProcessWorkflowsByIdsAsync(selectedIds.ToArray());
-
             foreach (var item in data)
             {
                 await _processWorkflowService.DeleteProcessWorkflowAsync(item);
             }
             return Json(new { Result = true });
         }
-
 
         [HttpPost]
         public async Task<IActionResult> Copy(int id)
@@ -246,8 +202,7 @@ namespace App.Web.Areas.Admin.Controllers
             var original = await _processWorkflowService.GetProcessWorkflowByIdAsync(id);
             if (original == null)
                 return Json(new { success = false, message = "Original workflow not found." });
-
-            // 1. Copy Process Workflow
+ 
             var newWorkflow = new ProcessWorkflow
             {
                 Name = original.Name + " - Copy",
@@ -258,10 +213,8 @@ namespace App.Web.Areas.Admin.Controllers
             };
 
             await _processWorkflowService.InsertProcessWorkflowAsync(newWorkflow);
-
-            // 2. Copy Workflow Statuses
-            var statuses = await _workflowStatusService.GetAllWorkflowStatusAsync(original.Id, "");
-            var statusMap = new Dictionary<int, int>(); // oldId -> newId
+            var statuses = await _workflowStatusService.GetAllWorkflowStatusAsync(original.Id);
+            var statusMap = new Dictionary<int, int>(); 
 
             foreach (var status in statuses)
             {
@@ -279,14 +232,12 @@ namespace App.Web.Areas.Admin.Controllers
                 await _workflowStatusService.InsertWorkflowStatusAsync(newStatus);
                 statusMap[status.Id] = newStatus.Id;
             }
-
-            // 3. Copy Process Rules
+          
             var rules = await _processRulesService.GetAllProcessRulesAsync(original.Id);
             foreach (var rule in rules)
             {
                 if (!statusMap.ContainsKey(rule.FromStateId) || !statusMap.ContainsKey(rule.ToStateId))
                     continue;
-
                 var newRule = new ProcessRules
                 {
                     ProcessWorkflowId = newWorkflow.Id,
@@ -296,10 +247,8 @@ namespace App.Web.Areas.Admin.Controllers
                     IsActive = rule.IsActive,
                     CreatedOn = DateTime.UtcNow
                 };
-
                 await _processRulesService.InsertProcessRuleAsync(newRule);
             }
-
             return Json(new { success = true, newWorkflowId = newWorkflow.Id });
         }
 

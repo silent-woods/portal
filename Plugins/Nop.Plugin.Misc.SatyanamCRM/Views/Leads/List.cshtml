@@ -21,13 +21,16 @@
     <h1 class="float-left">
         @T("Plugin.SatyanamCRM.Lead")
     </h1>
-    <div class="float-right">  
+    <div class="float-right"> 
         @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
         {
             <button type="button" id="syncToReplyBtn" class="btn btn-primary" fdprocessedid="k7p67s">
                 <i class="fas fa-sync-alt"></i>
                 @T("Admin.SelectedLead.SyncToReply")
             </button>
+        }
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+        {
             <button type="button" id="checkemail-selected" class="btn btn-success" fdprocessedid="k7p67s">
                 <i class="fas fa-check"></i>
                 @T("Admin.SelectedEmail.Email")
@@ -84,6 +87,9 @@
                     </li>
                 </ul>
             </div>
+        }
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+        {
             <div class="btn-group">
                 <button type="button" class="btn bg-olive dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-upload"></i>
@@ -104,9 +110,6 @@
                     </li>
                 </ul>
             </div>
-        }
-        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
-        {
             <a asp-action="Create" class="btn btn-primary">
                 <i class="fas fa-plus-square"></i>
                 @T("Plugin.SatyanamCRM.Lead.AddNew")
@@ -636,7 +639,7 @@
         $(document).ready(function () {
             $('#syncToReplyBtn').on('click', function () {
                 var selectedIds = [];
-                $('#lead-grid').find('input[name="checkbox_categories"]:checked').each(function () {
+                $('#lead-grid').find('input[name="checkbox_leads"]:checked').each(function () {
                     selectedIds.push($(this).val());
                 });
 

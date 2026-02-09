@@ -4,6 +4,8 @@ using App.Core.Domain.TaskAlerts;
 using App.Data.Extensions;
 using App.Services.Customers;
 using App.Services.Employees;
+using App.Services.Helpers;
+using App.Services.Messages;
 using App.Services.ProjectEmployeeMappings;
 using App.Services.Projects;
 using App.Services.ProjectTasks;
@@ -35,10 +37,16 @@ namespace App.Web.Controllers
         private readonly ITaskAlertService _taskAlertService;
         private readonly IProjectsService _projectsService;
         private readonly IProjectEmployeeMappingService _projectEmployeeMappingService;
+        private readonly ITaskCommentsService _taskCommentsService;
+        private readonly IWorkflowStatusService _workflowStatusService;
+        private readonly IProcessRulesService _processRulesService;
+        private readonly IDateTimeHelper _dateTimeHelper;
+        private readonly IWorkflowMessageService _workflowMessageService;
+        private readonly IProcessWorkflowService _processWorkflowService;
         #endregion
 
         #region Ctor
-        public DashboardController(IFollowUpTaskService followUpTaskService, IDashboardModelFactory dashboardModelFactory, IWorkContext workContext, IEmployeeService employeeService, ICustomerService customerService, ITaskAlertService taskAlertService, IProjectTaskService projectTaskService, IProjectsService projectsService, IProjectEmployeeMappingService projectEmployeeMappingService)
+        public DashboardController(IFollowUpTaskService followUpTaskService, IDashboardModelFactory dashboardModelFactory, IWorkContext workContext, IEmployeeService employeeService, ICustomerService customerService, ITaskAlertService taskAlertService, IProjectTaskService projectTaskService, IProjectsService projectsService, IProjectEmployeeMappingService projectEmployeeMappingService, ITaskCommentsService taskCommentsService, IWorkflowStatusService workflowStatusService, IProcessRulesService processRulesService, IDateTimeHelper dateTimeHelper, IWorkflowMessageService workflowMessageService, IProcessWorkflowService processWorkflowService)
         {
             _followUpTaskService = followUpTaskService;
             _dashboardModelFactory = dashboardModelFactory;
@@ -49,6 +57,12 @@ namespace App.Web.Controllers
             _projectTaskService = projectTaskService;
             _projectsService = projectsService;
             _projectEmployeeMappingService = projectEmployeeMappingService;
+            _taskCommentsService = taskCommentsService;
+            _workflowStatusService = workflowStatusService;
+            _processRulesService = processRulesService;
+            _dateTimeHelper = dateTimeHelper;
+            _workflowMessageService = workflowMessageService;
+            _processWorkflowService = processWorkflowService;
         }
 
         #endregion
@@ -70,11 +84,17 @@ namespace App.Web.Controllers
                 await _projectEmployeeMappingService.GetVisibleProjectIdsForDashboardAsync(currEmployeeId);
             var manageableProjectIds =
                 await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeIdAsync(currEmployeeId);
+            var workflows = (await _processWorkflowService.GetAllProcessWorkflowsAsync()).OrderBy(w => w.DisplayOrder).ToList();
+            var defaultWorkflowId = workflows.Any()
+                ? workflows.First().Id
+                : 0;
             var model = await _dashboardModelFactory.PrepareFollowUpDashboardModelAsync(
                 statusType: 2,
                 currEmployeeId: currEmployeeId,
                 visibleProjectIds: visibleProjectIds,
-                managedProjectIds: manageableProjectIds);
+                managedProjectIds: manageableProjectIds,
+                processWorkflow: defaultWorkflowId);
+
             return View("/Themes/DefaultClean/Views/Extension/Dashboard/FollowUp.cshtml", model);
         }
 
@@ -116,8 +136,7 @@ namespace App.Web.Controllers
                 if (task == null)
                     return Json(new { success = false, message = "Task not found" });
 
-                var managedProjectIds =
-await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeIdAsync(currEmployeeId);
+                var managedProjectIds = await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeIdAsync(currEmployeeId);
                 bool isAllowed =
                     managedProjectIds.Contains(task.ProjectId);
                 if (!isAllowed)
@@ -137,7 +156,25 @@ await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeI
                 taskalertlog.FollowUpTaskId = follow.Id;
                 taskalertlog.AlertId = 0;
                 await _taskAlertService.InsertTaskAlertLogAsync(taskalertlog);
-   
+
+                TaskComments taskComment = new TaskComments();
+
+                taskComment.EmployeeId = currEmployeeId;
+                taskComment.StatusId = task.StatusId;
+                taskComment.TaskId = task.Id;
+                taskComment.CreatedOn = await _dateTimeHelper.GetUTCAsync();
+
+                var assignTo = await _employeeService.GetEmployeeByIdAsync(task.AssignedTo);
+
+                var assignedUserName = assignTo != null
+                    ? $"{assignTo.FirstName} {assignTo.LastName}".Trim()
+                    : "";
+
+                taskComment.Description = $"@<{assignedUserName}> {comment}";
+
+                await _taskCommentsService.InsertTaskCommentsAsync(taskComment);
+                await _workflowMessageService.SendEmployeeMentionMessageAsync((await _workContext.GetWorkingLanguageAsync()).Id, taskComment.EmployeeId, taskComment.TaskId, taskComment.Description);
+
                 return Json(new { success = true });
             }
             catch (Exception ex)
@@ -174,7 +211,7 @@ await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeI
                 model
             );
         }
-        public virtual async Task<IActionResult> SearchFollowup(string taskName, int projectId, int employeeId, bool showOnlyNotTrack, string sourceType, DateTime? from = null, DateTime? to = null)
+        public virtual async Task<IActionResult> SearchFollowup(string taskName, int projectId, int employeeId, bool showOnlyNotTrack, string sourceType, DateTime? from = null, DateTime? to = null,int percentageFilter = 0,int processWorkflow = 0,int statusId =0)
         {
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -182,8 +219,7 @@ await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeI
 
             var currEmployee = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
             var currEmployeeId = currEmployee?.Id ?? 0;
-            var visibleProjectIds =
-      await _projectEmployeeMappingService.GetVisibleProjectIdsForDashboardAsync(currEmployeeId);
+            var visibleProjectIds =await _projectEmployeeMappingService.GetVisibleProjectIdsForDashboardAsync(currEmployeeId);
             var managedProjectIds =
                 await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeIdAsync(currEmployeeId);
             var model = await _dashboardModelFactory.PrepareFollowUpDashboardModelAsync(
@@ -197,7 +233,10 @@ await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeI
                 showOnlyNotOnTrack:showOnlyNotTrack,
                 sourceType: sourceType,
                 from :from,
-                to:to
+                to:to,
+                percentageFilter: percentageFilter,
+                processWorkflow: processWorkflow,
+                statusId: statusId
             );
 
             return PartialView(
@@ -252,8 +291,7 @@ await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeI
             var emp = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
             var currEmployeeId = emp?.Id ?? 0;
 
-            var visibleProjectIds =
-     await _projectEmployeeMappingService.GetVisibleProjectIdsForDashboardAsync(currEmployeeId);
+            var visibleProjectIds = await _projectEmployeeMappingService.GetVisibleProjectIdsForDashboardAsync(currEmployeeId);
             var managedProjectIds =
                 await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeIdAsync(currEmployeeId);
 
@@ -266,6 +304,168 @@ await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeI
                 managedProjectIds: managedProjectIds
             );
             return PartialView("/Themes/DefaultClean/Views/Extension/Dashboard/_CompletedTableBody.cshtml", model);
+        }
+
+        public async Task<IActionResult> CodeReview()
+        {
+            var customer = await _workContext.GetCurrentCustomerAsync();
+            if (!await _customerService.IsRegisteredAsync(customer))
+                return Challenge();
+
+            var emp = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
+
+            var model = await _dashboardModelFactory
+                .PrepareCodeReviewDashboardModelAsync(
+                    currEmployeeId: emp?.Id ?? 0
+                );
+
+            return View("/Themes/DefaultClean/Views/Extension/Dashboard/CodeReview.cshtml",model);
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> SearchCodeReviewTasks(int projectId = 0,int employeeId = 0,string taskName = null,int statusId= 0)
+        {
+            var customer = await _workContext.GetCurrentCustomerAsync();
+            if (!await _customerService.IsRegisteredAsync(customer))
+                return Challenge();
+
+            var emp = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
+            var model = await _dashboardModelFactory
+                .PrepareCodeReviewDashboardModelAsync(
+                    currEmployeeId: emp?.Id ?? 0,
+                    projectId: projectId,
+                    employeeId: employeeId,
+                    taskName: taskName,
+                    statusId: statusId
+                );
+
+            return PartialView("/Themes/DefaultClean/Views/Extension/Dashboard/_CodeReviewTaskList.cshtml", model);
+        }
+
+
+        public async Task<IActionResult> GetLastTaskComment(int taskId)
+        {
+            if (taskId <= 0)
+                return Content("No comment found");
+            var comment = await _taskCommentsService.GetLastCommentByTaskIdAsync(taskId);
+            if (comment == null)
+                return Content("No comment found");
+            return PartialView(
+                "/Themes/DefaultClean/Views/Extension/Dashboard/_LastTaskComment.cshtml",
+                comment
+            );
+        }
+
+        public async Task<IActionResult> GetReviewStatuses(int taskId,int processWorkflowId,int currentStatusId)
+        {
+            var statusIds = await _processRulesService
+                .GetPossibleStatusIds(processWorkflowId, currentStatusId);
+
+            var statuses = await _workflowStatusService.GetWorkflowStatusByIdsAsync(statusIds.ToArray());
+            return Json(statuses.Select(s => new {
+                id = s.Id,
+                text = s.StatusName
+            }));
+        }
+        [HttpPost]
+        public async Task<IActionResult> SaveReview(int taskId,int statusId,string comment)
+        {
+            var projectTask = await _projectTaskService.GetProjectTasksWithoutCacheByIdAsync(taskId);
+            if (projectTask != null)
+            {
+                projectTask.StatusId = statusId;
+                
+                await _projectTaskService.UpdateProjectTaskAsync(projectTask);
+            } 
+            if (!string.IsNullOrWhiteSpace(comment))
+            {
+                TaskComments taskComment = new TaskComments();
+                taskComment.StatusId = statusId;
+                taskComment.UpdatedOn = DateTime.UtcNow;
+                taskComment.CreatedOn = DateTime.UtcNow;
+                taskComment.TaskId = taskId;
+                taskComment.Description = comment;
+
+                var customer = await _workContext.GetCurrentCustomerAsync();
+                if (!await _customerService.IsRegisteredAsync(customer))
+                    return Challenge();
+
+                var emp = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
+
+                taskComment.EmployeeId = emp != null ? emp.Id : 0;
+                await _taskCommentsService.InsertTaskCommentsAsync(taskComment);
+            }
+            return Ok();
+        }
+
+        public async Task<IActionResult> ReadyToTest(int projectId = 0,int employeeId = 0,string taskName = null)
+        {
+            var customer = await _workContext.GetCurrentCustomerAsync();
+            if (!await _customerService.IsRegisteredAsync(customer))
+                return Challenge();
+
+            var emp = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
+            var model = await _dashboardModelFactory
+                .PrepareReadyToTestDashboardModelAsync(
+                    emp?.Id ?? 0, projectId, employeeId, taskName
+                );
+
+            return View("/Themes/DefaultClean/Views/Extension/Dashboard/ReadyToTest.cshtml", model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SearchReadyToTestTasks(int projectId = 0,int employeeId = 0,string taskName = null,int statusId = 0)
+        {
+            var customer = await _workContext.GetCurrentCustomerAsync();
+            if (!await _customerService.IsRegisteredAsync(customer))
+                return Challenge();
+
+            var emp = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
+            var model = await _dashboardModelFactory
+                .PrepareReadyToTestDashboardModelAsync(
+                    currEmployeeId: emp?.Id ?? 0,
+                    projectId: projectId,
+                    employeeId: employeeId,
+                    taskName: taskName,
+                    statusId: statusId
+                );
+            return PartialView("/Themes/DefaultClean/Views/Extension/Dashboard/_ReadyToTestTaskList.cshtml",model);
+        }
+        [HttpGet]
+        public async Task<IActionResult> SearchOverdueTasks(int projectId = 0,int employeeId = 0,string taskName = null)
+        {
+            var customer = await _workContext.GetCurrentCustomerAsync();
+            if (!await _customerService.IsRegisteredAsync(customer))
+                return Challenge();
+
+            var emp = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
+            var model = await _dashboardModelFactory
+                .PrepareOverdueDashboardModelAsync(
+                    currEmployeeId: emp?.Id ?? 0,
+                    projectId: projectId,
+                    employeeId: employeeId,
+                    taskName: taskName
+                );
+
+            return PartialView("/Themes/DefaultClean/Views/Extension/Dashboard/_OverdueTaskList.cshtml",model);
+        }
+
+        public async Task<IActionResult> Overdue(int projectId = 0, int employeeId = 0, string taskName = null)
+        {
+            var customer = await _workContext.GetCurrentCustomerAsync();
+            if (!await _customerService.IsRegisteredAsync(customer))
+                return Challenge();
+
+            var emp = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
+            var model = await _dashboardModelFactory
+                .PrepareOverdueDashboardModelAsync(
+                    currEmployeeId: emp.Id,
+                    projectId: projectId,
+                    employeeId: employeeId,
+                    taskName: taskName);
+
+            return View("~/Themes/DefaultClean/Views/Extension/Dashboard/Overdue.cshtml", model);
         }
         #endregion
     }

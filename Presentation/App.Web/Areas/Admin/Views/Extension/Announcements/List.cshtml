@@ -124,13 +124,16 @@
                                 Title = T("Admin.Configuration.Announcement.Fields.ScheduledOnUtc").Text,
                                 Render = new RenderDate()
                             });
-                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AnnouncementModel.Id))
+                            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAnnouncements, PermissionAction.Edit))
                             {
-                                Title = T("Admin.Common.Edit").Text,
-                                Width = "80",
-                                ClassName = NopColumnClassDefaults.Button,
-                                Render = new RenderButtonEdit(new DataUrl("Edit"))
-                            });
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AnnouncementModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "80",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonEdit(new DataUrl("Edit"))
+                                });
+                            }
                         }
                         @await Html.PartialAsync("Table", gridModel)
                     </div>

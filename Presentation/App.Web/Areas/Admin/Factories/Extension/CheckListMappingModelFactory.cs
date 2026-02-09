@@ -71,7 +71,7 @@ namespace App.Web.Areas.Admin.Factories
 
             model.AvailableStatuses.Add(new SelectListItem { Text = "Select", Value = "0" });
 
-            var statuses = await _workflowStatusService.GetAllWorkflowStatusAsync(0,"");
+            var statuses = await _workflowStatusService.GetAllWorkflowStatusAsync(0);
             foreach (var s in statuses)
             {
                 model.AvailableStatuses.Add(new SelectListItem

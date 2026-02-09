@@ -2,6 +2,7 @@
 using App.Core.Domain.Extension.ProjectTasks;
 using App.Core.Domain.ProjectTasks;
 using App.Data;
+using App.Data.Extensions;
 using App.Services.Employees;
 using App.Services.ProjectTasks;
 using App.Services.TimeSheets;
@@ -54,7 +55,6 @@ namespace Satyanam.Nop.Core.Services
             int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? overridePublished = null)
         {
             var query = _taskChangeLogRepository.Table;
-
             if (statusid > 0)
                 query = query.Where(c => c.StatusId == statusid);
 
@@ -334,8 +334,36 @@ namespace Satyanam.Nop.Core.Services
             }
         }
 
-        #endregion
+        public async Task<DateTime?> GetCurrentStatusStartDateAsync(int taskId,int statusId)
+        {
+            var logs = await _taskChangeLogRepository.Table
+                .Where(x => x.TaskId == taskId)
+                .OrderByDescending(x => x.CreatedOn)
+                .Select(x => new
+                {
+                    x.StatusId,
+                    x.CreatedOn
+                })
+                .ToListAsync();
 
+            if (!logs.Any())
+                return null;
+
+            DateTime? statusStartDate = null;
+
+            foreach (var log in logs)
+            {
+                if (log.StatusId == statusId)
+                {
+                    statusStartDate = log.CreatedOn;
+                    continue;
+                }
+                if (statusStartDate.HasValue)
+                    break;
+            }
+            return statusStartDate;
+        }
+        #endregion
         #endregion
     }
 }

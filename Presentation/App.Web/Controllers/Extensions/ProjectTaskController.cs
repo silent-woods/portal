@@ -283,12 +283,10 @@ namespace App.Web.Controllers.Extensions
                         model.Status = workflowStatus.StatusName + "|||" + workflowStatus.ColorCode;
 
                     var project = await _projectsService.GetProjectsByIdAsync(projectTask.ProjectId);
-
                     if (project != null)
                         model.ProjectName = project.ProjectTitle;
 
                     var task = await _projectTaskService.GetProjectTasksWithoutCacheByIdAsync(projectTask.Id);
-
                     if (task != null)
                     {
                         model.TaskTitle = task.TaskTitle;
@@ -330,7 +328,6 @@ namespace App.Web.Controllers.Extensions
                 pageSize
             });
         }
-
         public virtual async Task<IActionResult> Create()
         {
             var model = await _projectTaskModelFactory.PrepareProjectTaskModelAsync(new ProjectTaskModel(), null);
@@ -453,7 +450,6 @@ namespace App.Web.Controllers.Extensions
                 model = await _projectTaskModelFactory.PrepareProjectTaskModelAsync(model, null, true);
                 return View("/Areas/Admin/Views/Extension/ProjectTasks/Edit.cshtml", model);
             }
-
             if (ModelState.IsValid)
             {
                 projectTask = model.ToEntity(projectTask);
@@ -808,7 +804,7 @@ namespace App.Web.Controllers.Extensions
         [HttpGet]
         public async Task<IActionResult> GetStatusesByProcessWorkflow(int processWorkflowId)
         {
-            var statuses = await _workflowStatusService.GetAllWorkflowStatusAsync(processWorkflowId, "");
+            var statuses = await _workflowStatusService.GetAllWorkflowStatusAsync(processWorkflowId);
 
             var items = new List<SelectListItem>();
             items.Add(new SelectListItem
@@ -853,9 +849,9 @@ namespace App.Web.Controllers.Extensions
                 filterDeliveryOnTime: searchModel.SearchDeliveryOnTime,
                 searchParentTaskId: searchModel.SearchParentTaskId);
 
-            var allStatuses = await _workflowStatusService.GetAllWorkflowStatusAsync(0, "");
+            var allStatuses = await _workflowStatusService.GetAllWorkflowStatusAsync(0);
             var pagedStatuses = new PagedList<WorkflowStatus>(allStatuses, 0, int.MaxValue); 
-            var allWorkflows = await _processWorkflowService.GetAllProcessWorkflowsAsync("");
+            var allWorkflows = await _processWorkflowService.GetAllProcessWorkflowsAsync();
 
             if (searchModel.SearchProcessWorkflowId > 0)
                 allStatuses = new PagedList<WorkflowStatus>(
@@ -974,7 +970,7 @@ namespace App.Web.Controllers.Extensions
                 }
 
             }
-            else if (status.StatusName.Equals("Test Failed", StringComparison.OrdinalIgnoreCase) || status.StatusName.Equals("Code Review Done", StringComparison.OrdinalIgnoreCase) || status.StatusName.Equals("Ready for Live", StringComparison.OrdinalIgnoreCase))
+            else if (status.StatusName.Equals("Test Failed", StringComparison.OrdinalIgnoreCase) || status.StatusName.Equals("Code Review Done", StringComparison.OrdinalIgnoreCase) || status.StatusName.Equals("Ready for Live", StringComparison.OrdinalIgnoreCase) || status.StatusName.Equals("Active", StringComparison.OrdinalIgnoreCase))
             {
                 var employee = await _employeeService.GetEmployeeByIdAsync(task.DeveloperId);
                 if (employee != null)
@@ -1181,6 +1177,7 @@ namespace App.Web.Controllers.Extensions
                     Description = description,
                     StatusId = defaultStatus,
                     AssignedTo = parentTask.AssignedTo,
+                    DeveloperId = parentTask.DeveloperId,
                     DueDate = DueDate,
                     Tasktypeid = 3,
                     ProcessWorkflowId = parentTask.ProcessWorkflowId,
@@ -1209,7 +1206,6 @@ namespace App.Web.Controllers.Extensions
                 var reason = log.ReasonId > 0
                     ? await _taskAlertService.GetTaskAlertReasonByIdAsync(log.ReasonId)
                     : null;
-
                 var alertConfig = log.AlertId > 0
                     ? await _taskAlertService.GetTaskAlertConfigurationByIdAsync(log.AlertId)
                     : null;
@@ -1229,7 +1225,5 @@ namespace App.Web.Controllers.Extensions
             }
             return PartialView("/Themes/DefaultClean/Views/Extension/ProjectTasks/_TaskAlertLogTable.cshtml", model);
         }
-
-
     }
 }

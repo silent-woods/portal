@@ -26,7 +26,8 @@ namespace App.Web.Models.Dashboard
         public string ETAHours { get; set; }
         public string AlertType { get; set; }
         public string TrackReason { get; set; }
-        public bool IsManual { get; set; }      
+        public bool IsManual { get; set; }
+        public DateTime? LastTrackedOn { get; set; }
         public DateTime? LastFollowupDateTime { get; set; }
         public DateTime? NextFollowupDateTime { get; set; }
         public DateTime UpdatedOn { get; set; }

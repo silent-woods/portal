@@ -1,4 +1,5 @@
 ﻿using App.Core;
+using App.Core.Domain.Customers;
 using App.Core.Domain.Employees;
 using App.Core.Domain.Media;
 using App.Core.Domain.Messages;
@@ -277,14 +278,26 @@ namespace Nop.Web.Controllers
             if (filterSubmitterId.HasValue)
                 submissionsQuery = submissionsQuery.Where(x => x.SubmittedByCustomerId == filterSubmitterId.Value);
 
+            var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+
+            DateTime? fromUtc = null;
+            DateTime? toUtc = null;
+
             if (from.HasValue)
-                submissionsQuery = submissionsQuery.Where(x => x.SubmittedOnUtc >= from.Value);
+                fromUtc = TimeZoneInfo.ConvertTimeToUtc(from.Value, istTimeZone);
 
             if (to.HasValue)
             {
                 var inclusiveTo = to.Value.Date.AddDays(1).AddTicks(-1);
-                submissionsQuery = submissionsQuery.Where(x => x.SubmittedOnUtc <= inclusiveTo);
+                toUtc = TimeZoneInfo.ConvertTimeToUtc(inclusiveTo, istTimeZone);
             }
+
+            if (fromUtc.HasValue)
+                submissionsQuery = submissionsQuery.Where(x => x.SubmittedOnUtc >= fromUtc.Value);
+
+            if (toUtc.HasValue)
+                submissionsQuery = submissionsQuery.Where(x => x.SubmittedOnUtc <= toUtc.Value);
+
 
             if (selectedTemplateId.HasValue)
                 submissionsQuery = submissionsQuery.Where(x => x.UpdateTemplateId == selectedTemplateId.Value);
@@ -373,7 +386,7 @@ namespace Nop.Web.Controllers
                     Id = sub.Id,                  // ensures your view's submission.Id still works
                     SubmissionId = sub.Id,        // duplicate if you want explicit prop
                     SubmitterName = submitterName,
-                    SubmittedOn = sub.SubmittedOnUtc,
+                    SubmittedOn = TimeZoneInfo.ConvertTimeFromUtc(sub.SubmittedOnUtc, istTimeZone),
                     TemplateName = templateName,
                     Questions = questionModels
                 };
@@ -441,7 +454,7 @@ namespace Nop.Web.Controllers
         private async Task<List<UpdateSubmissionCommentModel>> PrepareCommentModels(IEnumerable<UpdateSubmissionComment> comments)
         {
             var commentModels = new List<UpdateSubmissionCommentModel>();
-
+            var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
             // Build dictionary of all comments for quick lookup
             var commentList = comments.ToList();
 
@@ -458,7 +471,7 @@ namespace Nop.Web.Controllers
                     CommentText = comment.CommentText,
                     CommentedByCustomerId = comment.CommentedByCustomerId,
                     CommentedByName = commenter != null ? $"{commenter.FirstName} {commenter.LastName}".Trim() : "Unknown",
-                    CreatedOnUtc = comment.CreatedOnUtc
+                    CreatedOnUtc = TimeZoneInfo.ConvertTimeFromUtc(comment.CreatedOnUtc,istTimeZone)
                 };
 
                 // Now find replies for this root comment and recursively map them
@@ -666,6 +679,91 @@ namespace Nop.Web.Controllers
         .ToListAsync();
         }
 
+        private async Task NotifyReviewersOnSubmissionAsync(UpdateSubmission submission,Customer submitter,bool isEdit)
+        {
+            var template = await _updateTemplateRepository.GetByIdAsync(submission.UpdateTemplateId);
+            if (template == null || string.IsNullOrEmpty(template.ViewerUserIds))
+                return;
+
+            var reviewerIds = template.ViewerUserIds
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => int.Parse(x))
+                .ToList();
+
+            var emailAccount = (await _emailAccountService.GetAllEmailAccountsAsync()).FirstOrDefault();
+            if (emailAccount == null) return;
+
+            var request = _httpContextAccessor.HttpContext?.Request;
+
+            string baseUrl = request != null
+                ? $"{request.Scheme}://{request.Host}"
+                : (await _storeContext.GetCurrentStoreAsync()).Url;
+
+            var reviewLink =
+                $"{baseUrl}/UpdateSubmission/List?selectedSubmitterId={submission.SubmittedByCustomerId}&selectedTemplateId={submission.UpdateTemplateId}";
+
+            foreach (var reviewerId in reviewerIds)
+            {
+                var reviewer = await _employeeService.GetEmployeeByIdAsync(reviewerId);
+                if (reviewer == null || string.IsNullOrWhiteSpace(reviewer.OfficialEmail))
+                    continue;
+
+                string subject;
+                string body;
+
+                if (!isEdit)
+                {
+                    //  FIRST SUBMIT
+                    subject = $"New submission received - {template.Title}";
+
+                    body = $@"
+                <p>Hello {reviewer.FirstName},</p>
+
+                <p>
+                    <strong>{submitter.FirstName} {submitter.LastName}</strong>
+                    submitted a NEW update for <strong>{template.Title}</strong>.
+                </p>
+
+                <p>Submitted On: {DateTime.UtcNow.ToLocalTime():M/d/yyyy h:mm tt}</p>
+
+                <p><a href='{reviewLink}'>Open submission</a></p>";
+                }
+                else
+                {
+                    //  EDIT SUBMIT
+                    subject = $"Submission updated - {template.Title}";
+
+                    body = $@"
+                <p>Hello {reviewer.FirstName},</p>
+
+                <p>
+                    <strong>{submitter.FirstName} {submitter.LastName}</strong>
+                    UPDATED their submission for <strong>{template.Title}</strong>.
+                </p>
+
+                <p>Please review the changes.</p>
+
+                <p>Updated On: {DateTime.UtcNow.ToLocalTime():M/d/yyyy h:mm tt}</p>
+
+                <p><a href='{reviewLink}'>Open updated submission</a></p>";
+                }
+
+                await _queuedEmailService.InsertQueuedEmailAsync(new QueuedEmail
+                {
+                    From = emailAccount.Email,
+                    FromName = emailAccount.DisplayName,
+                    To = reviewer.OfficialEmail,
+                    ToName = $"{reviewer.FirstName} {reviewer.LastName}",
+                    Subject = subject,
+                    Body = body,
+                    Priority = QueuedEmailPriority.High,
+                    CreatedOnUtc = DateTime.UtcNow,
+                    EmailAccountId = emailAccount.Id
+                });
+            }
+        }
+
+
         #endregion
 
         #region Actions
@@ -720,7 +818,7 @@ namespace Nop.Web.Controllers
             if (employeeIdStr == null)
                 return Json(Enumerable.Empty<object>()); // No employee record, return nothing
 
-            var templates = await _updateTemplateRepository.Table.ToListAsync();
+            var templates = await _updateTemplateRepository.Table.Where(t=>t.IsActive).ToListAsync();
 
             var userSubmissions = await _submissionRepository.Table
                 .Where(x => x.SubmittedByCustomerId == customer.Id)
@@ -784,7 +882,7 @@ namespace Nop.Web.Controllers
                 .Where(p => p.UpdateTemplateId == id)
                 .OrderByDescending(p => p.PeriodStart)
                 .ToListAsync();
-            // Fetch user's previous submissions
+            // Fetch user's previous    
             var userSubmissions = await _submissionRepository.Table
                 .Where(x => x.UpdateTemplateId == id.Value && x.SubmittedByCustomerId == customer.Id)
                 .ToListAsync();
@@ -942,7 +1040,9 @@ namespace Nop.Web.Controllers
                         (question.MaxLength > 0 && question.AnswerText.Length > question.MaxLength))
                     {
                         ModelState.AddModelError($"Questions[{i}].AnswerText",
-                            $"Answer must be between {question.MinLength} and {question.MaxLength} characters.");
+                          string.Format(await _localizationService.GetResourceAsync("UpdateForm.Validation.AnswerLength"),question.MinLength,question.MaxLength)
+                        );
+
                     }
                 }
                 if (question.ControlType == "Checkboxes")
@@ -969,10 +1069,7 @@ namespace Nop.Web.Controllers
                         // Case 1: nothing selected
                         if (!selectedValues.Any())
                         {
-                            ModelState.AddModelError(
-                                $"Questions[{i}].AnswerText",
-                                "Please select the required options."
-                            );
+                            ModelState.AddModelError($"Questions[{i}].AnswerText",await _localizationService.GetResourceAsync("UpdateForm.Validation.RequiredCheckbox"));
                         }
                         else
                         {
@@ -983,10 +1080,7 @@ namespace Nop.Web.Controllers
 
                             if (missingRequiredOptions.Any())
                             {
-                                ModelState.AddModelError(
-                                    $"Questions[{i}].AnswerText",
-                                    "Please select required options."
-                                );
+                                ModelState.AddModelError($"Questions[{i}].AnswerText",await _localizationService.GetResourceAsync("UpdateForm.Validation.MissingRequiredCheckbox"));
                             }
                         }
                     }
@@ -1003,8 +1097,7 @@ namespace Nop.Web.Controllers
                         if (question.MaximumFileSizeKb > 0 &&
                             uploadedFile.Length > question.MaximumFileSizeKb * 1024)
                         {
-                            ModelState.AddModelError($"Questions[{i}].UploadedFile",
-                                $"File size must not exceed {question.MaximumFileSizeKb} KB.");
+                            ModelState.AddModelError($"Questions[{i}].UploadedFile",string.Format(await _localizationService.GetResourceAsync("UpdateForm.Validation.FileSizeExceeded"),question.MaximumFileSizeKb));
                         }
 
                         // Check allowed extensions
@@ -1018,8 +1111,7 @@ namespace Nop.Web.Controllers
                             var fileExt = Path.GetExtension(uploadedFile.FileName).ToLower();
                             if (!allowedExt.Contains(fileExt))
                             {
-                                ModelState.AddModelError($"Questions[{i}].UploadedFile",
-                                    $"Invalid file type. Allowed: {string.Join(", ", allowedExt)}");
+                                ModelState.AddModelError($"Questions[{i}].UploadedFile",string.Format(await _localizationService.GetResourceAsync("UpdateForm.Validation.InvalidFileType"),string.Join(", ", allowedExt)));
                             }
                         }
                         if (ModelState.IsValid)
@@ -1052,7 +1144,7 @@ namespace Nop.Web.Controllers
                     else if (question.IsRequired)
                     {
                         // If required but no file uploaded
-                        ModelState.AddModelError($"Questions[{i}].UploadedFile", "This file is required.");
+                        ModelState.AddModelError($"Questions[{i}].UploadedFile",await _localizationService.GetResourceAsync("UpdateForm.Validation.FileRequired"));
                     }
                 }
 
@@ -1060,7 +1152,7 @@ namespace Nop.Web.Controllers
             if (!ModelState.IsValid || !ValidateRequiredAnswers(model))
             {
                 await RebindQuestionOptionsAsync(model); // repopulate dropdowns etc.
-                _notificationService.ErrorNotification("Please correct the form.");
+                _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("UpdateForm.Notification.CorrectForm"));
                 return View("~/Themes/DefaultClean/Views/Extension/UpdateForm/Submit.cshtml", model);
             }
 
@@ -1139,7 +1231,9 @@ namespace Nop.Web.Controllers
                     }
                 }
                 submission = existingSubmission;
-                _notificationService.SuccessNotification("Submission updated successfully.");
+                _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("UpdateForm.Notification.Updated"));
+                
+                await NotifyReviewersOnSubmissionAsync(submission, customer, true);
             }
             else
             {
@@ -1156,7 +1250,7 @@ namespace Nop.Web.Controllers
 
                     if (activePeriod == null)
                     {
-                        _notificationService.ErrorNotification("No reporting period found.");
+                        _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("UpdateForm.Notification.NoPeriod"));
                         return RedirectToRoute("HomePage");
                     }
                 }
@@ -1186,7 +1280,7 @@ namespace Nop.Web.Controllers
                         .Where(x => x > 0)
                         .Distinct()
                         .ToList();
-
+                    
                     foreach (var reviewerId in reviewerIds)
                     {
                         var reviewer = new UpdateSubmissionReviewer
@@ -1196,9 +1290,11 @@ namespace Nop.Web.Controllers
                             //HasReviewed = false
                         };
                         await _reviewerRepository.InsertAsync(reviewer);
+                       
                     }
                 }
-                _notificationService.SuccessNotification("Thank you for your submission.");
+                _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("UpdateForm.Notification.ThankYou"));
+                await NotifyReviewersOnSubmissionAsync(submission, customer, false);
             }
             // Reload the form with submitted answers
             var reloadModel = await PrepareSubmitModelAsync(templateId);
@@ -1310,19 +1406,31 @@ namespace Nop.Web.Controllers
 
             int? employeeId = employee?.Id;
             var isViewer = false;
-            if (employeeId.HasValue)
+            bool hasAccess = false;
+
+            if (selectedTemplateId.HasValue && employeeId.HasValue)
             {
-                string empIdStr = employeeId.Value.ToString();
+                var template = await _updateTemplateRepository.GetByIdAsync(selectedTemplateId.Value);
 
-                var updateTemplates = await _updateTemplateRepository.Table
-                    .Where(t => !string.IsNullOrEmpty(t.ViewerUserIds))
-                    .ToListAsync();
+                if (template != null)
+                {
+                    var empIdStr = employeeId.Value.ToString();
 
-                isViewer = updateTemplates.Any(t =>
-                    t.ViewerUserIds.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Select(x => x.Trim())
-                        .Contains(empIdStr));
+                    var viewerIds = (template.ViewerUserIds ?? "")
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim());
+
+                    var submitterIds = (template.SubmitterUserIds ?? "")
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim());
+
+                    isViewer = viewerIds.Contains(empIdStr);
+                    bool isSubmitter = submitterIds.Contains(empIdStr);
+
+                    hasAccess = isViewer || isSubmitter;
+                }
             }
+
             if (!isViewer)
             {
                 var returnUrl = Url.Action("List", "UpdateSubmission", new
@@ -1334,7 +1442,7 @@ namespace Nop.Web.Controllers
                 return RedirectToRoute("Login", new { returnUrl });
             }
             // If user is neither viewer nor submitter Access Denied
-            if (!isViewer)
+            if (!hasAccess)
             {
                 return RedirectToAction("AccessDenied", "Security");
             }
@@ -1348,6 +1456,7 @@ namespace Nop.Web.Controllers
             if (isViewer && selectedTemplateId.HasValue)
             {
                 var template = await _updateTemplateRepository.GetByIdAsync(selectedTemplateId.Value);
+                model.TemplateTitle = template?.Title;
                 var submitterIds = new List<int>();
                 if (!string.IsNullOrEmpty(template?.SubmitterUserIds))
                 {

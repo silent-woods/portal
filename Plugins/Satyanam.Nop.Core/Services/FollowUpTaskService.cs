@@ -1,8 +1,11 @@
 ﻿using App.Core;
 using App.Core.Domain.ProjectTasks;
+using App.Core.Domain.TaskAlerts;
 using App.Data;
 using App.Data.Extensions;
 using App.Services.Projects;
+using App.Services.TaskAlerts;
+using App.Services.TimeSheets;
 using MailKit;
 using Satyanam.Nop.Core.Domains;
 using System;
@@ -18,16 +21,24 @@ namespace Satyanam.Nop.Core.Services
         private readonly IRepository<FollowUpTask> _followUpTaskRepository;
         private readonly IRepository<ProjectTask> _projectTaskRepository;
         private readonly IProjectsService _projectsService;
+        private readonly ITaskAlertService _taskAlertService;
+        private readonly ITimeSheetsService _timeSheetsService;
+        private readonly IRepository<TaskAlertConfiguration> _taskAlertConfigurationRepository;
         #endregion
 
         #region Ctor
-        public FollowUpTaskService(IRepository<FollowUpTask> followUpTaskRepository, IProjectsService projectsService, IRepository<ProjectTask> projectTaskRepository)
+        public FollowUpTaskService(IRepository<FollowUpTask> followUpTaskRepository, IProjectsService projectsService, IRepository<ProjectTask> projectTaskRepository, ITaskAlertService taskAlertService, ITimeSheetsService timeSheetsService, IRepository<TaskAlertConfiguration> taskAlertConfigurationRepository)
         {
             _followUpTaskRepository = followUpTaskRepository;
             _projectsService = projectsService;
             _projectTaskRepository = projectTaskRepository;
+            _taskAlertService = taskAlertService;
+            _timeSheetsService = timeSheetsService;
+            _taskAlertConfigurationRepository = taskAlertConfigurationRepository;
         }
         #endregion
+
+        #region Utilities
         private async Task<List<int>> GetFollowupByTaskNameAsync(string taskName)
         {
             var query = from t1 in _projectTaskRepository.Table
@@ -38,6 +49,62 @@ namespace Satyanam.Nop.Core.Services
 
             return await query.Distinct().ToListAsync();
         }
+        public Task<int> ConvertHoursToMinutes(decimal totalHours)
+        {
+            if (totalHours < 0)
+                throw new ArgumentException("Total hours cannot be negative.");
+
+            int totalMinutes = (int)Math.Round(totalHours * 60);
+
+            return Task.FromResult(totalMinutes);
+        }
+        private static bool IsWeekend(DateTime date)
+        {
+            return date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
+        }
+        private static DateTime GetNextWorkingDay(DateTime date)
+        {
+            do
+            {
+                date = date.AddDays(1);
+            }
+            while (IsWeekend(date));
+
+            return date;
+        }
+        private static DateTime AdjustToOfficeHours(DateTime startTime, int minutesToAdd, TimeZoneInfo officeTimeZone)
+        {
+            DateTime officeStart = startTime.Date.AddHours(10);
+            DateTime officeEnd = startTime.Date.AddHours(19);
+
+            if (startTime < officeStart)
+                startTime = officeStart;
+
+            if (startTime >= officeEnd)
+                startTime = GetNextWorkingDay(startTime).Date.AddHours(10);
+
+            while (minutesToAdd > 0)
+            {
+                officeEnd = startTime.Date.AddHours(19);
+
+                int availableMinutes =
+                    (int)(officeEnd - startTime).TotalMinutes;
+
+                if (minutesToAdd <= availableMinutes)
+                {
+                    startTime = startTime.AddMinutes(minutesToAdd);
+                    minutesToAdd = 0;
+                }
+                else
+                {
+                    minutesToAdd -= availableMinutes;
+                    startTime = GetNextWorkingDay(startTime).Date.AddHours(10);
+                }
+            }
+
+            return startTime;
+        }
+        #endregion
         #region Methods
         public virtual async Task<IPagedList<FollowUpTask>> GetAllFollowUpTasksAsync(
       int taskId = 0,
@@ -54,7 +121,10 @@ namespace Satyanam.Nop.Core.Services
       bool showOnlyNotOnTrack =false,
       string sourceType = null,
        DateTime? from = null,  
-        DateTime? to = null,
+       DateTime? to = null,
+       int percentageFilter =0,
+       int processWorkflow =0,
+       int statusId=0,
       IList<int> visibleProjectIds = null,
       IList<int> managedProjectIds = null)
         {
@@ -90,9 +160,27 @@ namespace Satyanam.Nop.Core.Services
                         || t.AssignedTo == currEmployeeId
                     select f;
             }
+            if(processWorkflow > 0)
+            {
+                query =
+     from f in query
+     join t in _projectTaskRepository.Table
+         on f.TaskId equals t.Id
+     where t.ProcessWorkflowId == processWorkflow
+     select f;
+            }
+            if (statusId > 0)
+            {
+                query =
+     from f in query
+     join t in _projectTaskRepository.Table
+         on f.TaskId equals t.Id
+     where t.StatusId == statusId
+     select f;
+            }
             if(showOnlyNotOnTrack)
                 query = query.Where(f =>
-              f.OnTrack);
+              !f.OnTrack && f.AlertId >0);
 
             if (statusType != 0)
             {
@@ -169,6 +257,19 @@ namespace Satyanam.Nop.Core.Services
                         break;
                 }
             }
+            if (percentageFilter > 0)
+            {
+                query =
+                    from f in query
+                    join ac in _taskAlertConfigurationRepository.Table
+                        on f.AlertId equals ac.Id
+                    where
+                        f.AlertId > 0 &&              
+                        ac.Percentage == percentageFilter &&
+                        ac.IsActive &&
+                        !ac.Deleted
+                    select f;
+            }
             query = query.OrderByDescending(f => f.UpdatedOn);
             var list = await query.ToPagedListAsync(pageIndex, pageSize);
             return list;
@@ -237,6 +338,17 @@ namespace Satyanam.Nop.Core.Services
             var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
             followUpTask.CreatedOn = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, istTimeZone);
             followUpTask.UpdatedOn = followUpTask.CreatedOn;
+            var existingNextAlertConfiguration = await _taskAlertService.GetNextTaskAlertConfigurationAsync(0);
+            if (existingNextAlertConfiguration != null)
+            {
+                decimal percentageDifference = existingNextAlertConfiguration.Percentage;
+                int estimatedMinutes = await ConvertHoursToMinutes(entity.EstimatedTime);
+                int minutesToAdd = (int)Math.Round(estimatedMinutes * (percentageDifference / 100m));
+                TimeZoneInfo officeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+                DateTime officeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, officeTimeZone);
+                DateTime adjustedOfficeTime = AdjustToOfficeHours(officeNow, minutesToAdd, officeTimeZone);
+                followUpTask.NextFollowupDateTime = TimeZoneInfo.ConvertTimeToUtc(adjustedOfficeTime, officeTimeZone);
+            }
             await InsertFollowUpTaskAsync(followUpTask);            
         }
 
