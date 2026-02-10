@@ -144,7 +144,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM
                 ActionName = "List",
                 ControllerName = "LinkedInFollowups",
                 SystemName = "LinkedInFollowups",
-                Visible = await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View),
+                Visible = await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.View),
                 RouteValues = new RouteValueDictionary() { { "area", "Admin" } },
                 IconClass = "fas fa-user-tie"
             });
@@ -154,7 +154,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM
                 ActionName = "List",
                 ControllerName = "ConnectionRequest",
                 SystemName = "ConnectionRequest",
-                Visible = await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View),
+                Visible = await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageConnectionRequests, PermissionAction.View),
                 RouteValues = new RouteValueDictionary() { { "area", "Admin" } },
                 IconClass = "fas fa-user-tie"
             });
@@ -271,6 +271,8 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM
                 await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageDeals, PermissionAction.View) ||
                 await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageCampaigns, PermissionAction.View) ||
                 await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageInquiries, PermissionAction.View) ||
+                await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageConnectionRequests, PermissionAction.View) ||
+                await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.View) ||
                 await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageIndustries, PermissionAction.View) ||
                 await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeadSources, PermissionAction.View) ||
                 await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeadStatuses, PermissionAction.View) ||

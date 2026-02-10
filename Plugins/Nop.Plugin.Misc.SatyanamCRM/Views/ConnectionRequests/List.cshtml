@@ -23,7 +23,7 @@
         @T("Plugin.SatyanamCRM.ConnectionRequest")
     </h1>
     <div class="float-right">
-        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageConnectionRequests, PermissionAction.Edit))
         {
             <button type="button" id="move-selected" class="btn btn-info" title="Move selected to LinkedIn Followups">
                 <i class="fas fa-exchange-alt"></i> Move
@@ -64,7 +64,7 @@
                 </ul>
             </div>
         }
-        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageConnectionRequests, PermissionAction.Add))
         {
             <div class="btn-group">
                 <button type="button" class="btn bg-olive dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
@@ -85,7 +85,7 @@
                 @T("Plugin.SatyanamCRM.ConnectionRequest.AddNew")
             </a>
         }
-        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Delete))
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageConnectionRequests, PermissionAction.Delete))
         {
             <button type="button" id="delete-selected" class="btn btn-danger">
                 <i class="far fa-trash-alt"></i>
@@ -281,95 +281,108 @@
                 </div>
                 <div class="card card-default">
                     <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "connectionRequest-grid",
+                                UrlRead = new DataUrl("List", "ConnectionRequest", null),
+                                UrlUpdate = new DataUrl("InlineEdit", "ConnectionRequest", null),
+                                SearchButtonId = "search-connectionRequest",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                    new FilterParameter(nameof(Model.SearchFirstName)),
+                                    new FilterParameter(nameof(Model.SearchLastName)),
+                                    new FilterParameter(nameof(Model.SearchEmail)),
+                                    new FilterParameter(nameof(Model.SearchLinkedinUrl)),
+                                    new FilterParameter(nameof(Model.SearchWebsiteUrl)),
+                                    new FilterParameter(nameof(Model.SearchStatus))
+                                },
+                            };
 
-                        @await Html.PartialAsync("Table", new DataTablesModel
-                        {
-                            Name = "connectionRequest-grid",
-                                                UrlRead = new DataUrl("List", "ConnectionRequest", null),
-                                                UrlUpdate = new DataUrl("InlineEdit", "ConnectionRequest", null), // ?? enable inline save
-                                                SearchButtonId = "search-connectionRequest",
-                                                Length = Model.PageSize,
-                                                LengthMenu = Model.AvailablePageSizes,
-                                                Filters = new List<FilterParameter>
-                                                {
-                                                new FilterParameter(nameof(Model.SearchFirstName)),
-                                                new FilterParameter(nameof(Model.SearchLastName)),
-                                                new FilterParameter(nameof(Model.SearchEmail)),
-                                                new FilterParameter(nameof(Model.SearchLinkedinUrl)),
-                                                new FilterParameter(nameof(Model.SearchWebsiteUrl)),
-                                                new FilterParameter(nameof(Model.SearchStatus))
-                                                },
-                                                ColumnCollection = new List<ColumnProperty>
-                                                {
-                                                new ColumnProperty(nameof(ConnectionRequestModel.Id))
-                                                {
-                                                IsMasterCheckBox = true,
-                                                Render = new RenderCheckBox("checkbox_categories"),
-                                                ClassName = NopColumnClassDefaults.CenterAll,
-                                                Width = "50"
-                                                },
-                                                new ColumnProperty(nameof(ConnectionRequestModel.Id))
-                                                {
-                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Edit").Text,
-                                                Width = "80",
-                                                ClassName =  NopColumnClassDefaults.Button,
-                                                Render = new RenderButtonsInlineEdit()
-                                                },
-                                                new ColumnProperty(nameof(ConnectionRequestModel.Id))
-                                                {
-                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.ChangeStatus").Text,
-                                                Width = "120",
-                                                ClassName = NopColumnClassDefaults.Button,
-                                                Render = new RenderCustom("renderStatusPopup")
-                                                },
-                                                new ColumnProperty(nameof(ConnectionRequestModel.LinkedinUrl))
-                                                {
-                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.LinkedinUrl").Text,
-                                                Editable = true,
-                                                EditType = EditType.String,
-                                                Render = new RenderCustom("renderLinkedInUrl")
-                                                },
-                                                new ColumnProperty(nameof(ConnectionRequestModel.FirstName))
-                                                {
-                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.FirstName").Text,
-                                                Editable = true,
-                                                EditType = EditType.String
-                                                },
-                                                new ColumnProperty(nameof(ConnectionRequestModel.LastName))
-                                                {
-                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.LastName").Text,
-                                                Editable = true,
-                                                EditType = EditType.String
-                                                },
-                                                new ColumnProperty(nameof(ConnectionRequestModel.Email))
-                                                {
-                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.Email").Text,
-                                                Editable = true,
-                                                EditType = EditType.String
-                                                },
-                                                new ColumnProperty(nameof(ConnectionRequestModel.WebsiteUrl))
-                                                {
-                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.WebsiteUrl").Text,
-                                                Editable = true,
-                                                EditType = EditType.String
-                                                },
-                                                new ColumnProperty(nameof(ConnectionRequestModel.StatusText))
-                                                {
-                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.Status").Text,
-                                                Editable = true
-                                                },
-                                                new ColumnProperty(nameof(ConnectionRequestModel.CreatedOnUtc))
-                                                {
-                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.CreatedOnUtc").Text,
-                                                Render = new RenderDate()
-                                                },
-                                                new ColumnProperty(nameof(ConnectionRequestModel.UpdatedOnUtc))
-                                                {
-                                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.UpdatedOnUtc").Text,
-                                                Render = new RenderDate()
-                                                }
-                                                }
-                                                })
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ConnectionRequestModel.Id))
+                            {
+                                IsMasterCheckBox = true,
+                                Render = new RenderCheckBox("checkbox_categories"),
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "50"
+                            });
+
+                            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageConnectionRequests, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ConnectionRequestModel.Id))
+                                {
+                                    Title = T("Plugin.SatyanamCRM.ConnectionRequest.Edit").Text,
+                                    Width = "80",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonsInlineEdit()
+                                });
+
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ConnectionRequestModel.Id))
+                                {
+                                    Title = T("Plugin.SatyanamCRM.ConnectionRequest.ChangeStatus").Text,
+                                    Width = "120",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderCustom("renderStatusPopup")
+                                });
+                            }
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ConnectionRequestModel.LinkedinUrl))
+                            {
+                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.LinkedinUrl").Text,
+                                Editable = true,
+                                EditType = EditType.String,
+                                Render = new RenderCustom("renderLinkedInUrl")
+                            });
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ConnectionRequestModel.FirstName))
+                            {
+                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.FirstName").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ConnectionRequestModel.LastName))
+                            {
+                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.LastName").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ConnectionRequestModel.Email))
+                            {
+                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.Email").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ConnectionRequestModel.WebsiteUrl))
+                            {
+                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.WebsiteUrl").Text,
+                                Editable = true,
+                                EditType = EditType.String
+                            });
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ConnectionRequestModel.StatusText))
+                            {
+                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.StatusText").Text,
+                                Editable = true,
+                            });
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ConnectionRequestModel.CreatedOnUtc))
+                            {
+                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.CreatedOnUtc").Text,
+                                Render = new RenderDate()
+                            });
+
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ConnectionRequestModel.UpdatedOnUtc))
+                            {
+                                Title = T("Plugin.SatyanamCRM.ConnectionRequest.Fields.UpdatedOnUtc").Text,
+                                Render = new RenderDate()
+                            });
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
                     </div>
                 </div>
 
@@ -379,7 +392,7 @@
     <button type="submit" id="btnRefreshConnectionRequest" style="display:none"></button>
 
     <script>
-                function renderStatusPopup(data, type, row, meta) {
+        function renderStatusPopup(data, type, row, meta) {
             var statusText = row.StatusName || "Change Status";
 
             return '<button onclick="javascript:OpenWindow(\'@Url.Action("ChangeStatus", "ConnectionRequest")/'

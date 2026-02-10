@@ -54,7 +54,7 @@
                                                                     <th class="text-center">Add</th>
                                                                     <th class="text-center">Edit</th>
                                                                     <th class="text-center">Delete</th>
-                                                                    
+                                                                    <th class="text-center">Action</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -83,6 +83,12 @@
                                                                                        data-action="@action" @(isChecked ? "checked" : null) />
                                                                             </td>
                                                                         }
+
+                                                                        <td class="text-center">
+                                                                            <button type="button" class="btn btn-sm btn-danger delete-permission" data-user-id="@perm.UserId" data-permission-id="@perm.PermissionRecordId">
+                                                                                <i class="fas fa-trash"></i>
+                                                                            </button>
+                                                                        </td>
                                                                     </tr>
                                                                 }
                                                             </tbody>
@@ -176,4 +182,33 @@
             }
         });
     });
+
+    $(document).on('click', '.delete-permission', function () {
+        const $btn = $(this);
+        const $row = $btn.closest('tr');
+
+        const payload = {
+            userId: $btn.data('user-id'),
+            permissionRecordId: $btn.data('permission-id')
+        };
+
+        if (!confirm('Are you sure you want to delete this permission record?')) {
+            return;
+        }
+
+        addAntiForgeryToken(payload);
+
+        $.ajax({
+            url: '@Url.Action("DeleteUserPermission", "Security")',
+            type: 'POST',
+            data: payload,
+            success: function () {
+                location.reload();
+            },
+            error: function () {
+                alert('Failed to delete permission');
+            }
+        });
+    });
+
 </script>

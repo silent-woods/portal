@@ -233,6 +233,10 @@
                        $(this).data('role').toString() === roleId;
             });
 
+            if (checked) {
+                $childActions.prop('checked', true);
+            }
+
             if (!checked) {
                 $childActions.prop('checked', false);
             }

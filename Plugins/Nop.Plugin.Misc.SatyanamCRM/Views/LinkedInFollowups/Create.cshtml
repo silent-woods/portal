@@ -19,7 +19,7 @@
                 <a asp-action="List">@T("Plugin.SatyanamCRM.LinkedInFollowups.BackToList")</a>
             </small>
         </h1>
-        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Add))
         {
             <div class="float-right">
                 <button type="submit" name="save" class="btn btn-primary">

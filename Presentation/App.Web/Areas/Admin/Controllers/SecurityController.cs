@@ -247,6 +247,18 @@ namespace App.Web.Areas.Admin.Controllers
             });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUserPermission(int userId, int permissionRecordId)
+        {
+            var existingPermissionUserRecord = await _permissionService.GetExistingPermissionRecordByPermissionAndRoleAsync(permissionRecordId, userId);
+
+            await _permissionService.DeletePermissionRecordUserMappingAsync(existingPermissionUserRecord);
+
+            return Ok();
+        }
+
+
         #endregion
     }
 }

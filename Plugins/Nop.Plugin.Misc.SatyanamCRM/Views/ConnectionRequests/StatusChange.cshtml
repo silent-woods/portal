@@ -39,7 +39,7 @@
                             <span asp-validation-for="StatusId"></span>
                         </div>
                     </div>
-                    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+                    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageConnectionRequests, PermissionAction.Edit))
                     {
                         <!-- Buttons -->
                         <div class="form-group row">

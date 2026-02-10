@@ -263,7 +263,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
         public virtual async Task<IActionResult> List()
         {
-            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.View))
                 return AccessDeniedView();
 
             //prepare model
@@ -275,7 +275,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         [HttpPost]
         public virtual async Task<IActionResult> List(LinkedInFollowupsSearchModel searchModel)
         {
-            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.View))
                 return await AccessDeniedDataTablesJson();
 
             //prepare model
@@ -286,7 +286,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
         public virtual async Task<IActionResult> Create()
         {
-            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Add))
                 return AccessDeniedView();
 
             //prepare model
@@ -297,7 +297,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]
         public virtual async Task<IActionResult> Create(LinkedInFollowupsModel model, bool continueEditing)
         {
-            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Add))
                 return AccessDeniedView();
 
             if (string.IsNullOrWhiteSpace(model.FirstName))
@@ -431,7 +431,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
         public virtual async Task<IActionResult> InlineEdit(LinkedInFollowupsModel model)
         {
-            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
                 return AccessDeniedView();
 
             var linkedInFollowUps = await _linkedInFollowupsService.GetLinkedInFollowupsByIdAsync(model.Id);
@@ -533,7 +533,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         [HttpGet]
         public async Task<IActionResult> ChangeStatus(int id, string btnId, string formId)
         {
-            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
                 return AccessDeniedView();
 
             // Get the follow-up record
@@ -562,7 +562,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         [HttpPost]
         public async Task<IActionResult> ChangeStatus(LinkedInFollowupsModel model)
         {
-            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
                 return AccessDeniedView();
 
             var entity = await _linkedInFollowupsService.GetLinkedInFollowupsByIdAsync(model.Id);
@@ -579,7 +579,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
         public virtual async Task<IActionResult> DeleteSelected(ICollection<int> selectedIds)
         {
-            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Delete))
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Delete))
                 return AccessDeniedView();
 
             if (selectedIds == null || selectedIds.Count == 0)
@@ -602,7 +602,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         [FormValueRequired("exportexcel-all")]
         public virtual async Task<IActionResult> ExportToExcel(LinkedInFollowupsSearchModel searchModel)
         {
-            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
                 return AccessDeniedView();
 
             // fetch all matched records (pageSize = int.MaxValue)
@@ -659,7 +659,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         [HttpPost]
         public virtual async Task<IActionResult> SelectedExportToExcel(List<int> selectedIds)
         {
-            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
                 return AccessDeniedView();
 
             if (selectedIds == null || !selectedIds.Any())
@@ -709,7 +709,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         [HttpPost]
         public async Task<IActionResult> ImportFromExcel(IFormFile importFile)
         {
-            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Add))
                 return AccessDeniedView();
 
             try

@@ -472,6 +472,13 @@ namespace App.Services.Security
             await _permissionRecordUserMappingRepository.UpdateAsync(permissionRecordUserMapping);
         }
 
+        public virtual async Task DeletePermissionRecordUserMappingAsync(PermissionRecordUserMapping permissionRecordUserMapping)
+        {
+            ArgumentNullException.ThrowIfNull(nameof(permissionRecordUserMapping));
+
+            await _permissionRecordUserMappingRepository.DeleteAsync(permissionRecordUserMapping);
+        }
+
         public virtual async Task<PermissionRecordUserMapping> GetExistingPermissionRecordByPermissionAndRoleAsync(int permissionId = 0, int userId = 0)
         {
             return await _permissionRecordUserMappingRepository.Table.Where(prcrm => prcrm.PermissionId == permissionId && prcrm.UserId == userId).FirstOrDefaultAsync();

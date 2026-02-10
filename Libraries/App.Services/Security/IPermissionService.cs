@@ -151,6 +151,8 @@ namespace App.Services.Security
 
         Task UpdatePermissionRecordUserMappingAsync(PermissionRecordUserMapping permissionRecordUserMapping);
 
+        Task DeletePermissionRecordUserMappingAsync(PermissionRecordUserMapping permissionRecordUserMapping);
+
         Task<PermissionRecordUserMapping> GetExistingPermissionRecordByPermissionAndRoleAsync(int permissionId = 0, int userId = 0);
 
         Task<IList<PermissionRecordUserMapping>> GetAllPermissionRecordsUserMappingAsync();

@@ -28,10 +28,11 @@ namespace Satyanam.Nop.Core.Services
         public static readonly PermissionRecord ManageTags = new() { Name = "Admin area. CRM - Manage Tags", SystemName = "ManageTags", Category = "CRM" };
         public static readonly PermissionRecord ManageAccountTypes = new() { Name = "Admin area. CRM - Manage Account Types", SystemName = "ManageAccountTypes", Category = "CRM" };
         public static readonly PermissionRecord ManageInquiries = new() { Name = "Admin area. CRM - Manage Inquiry", SystemName = "ManageInquiries", Category = "CRM" };
+        public static readonly PermissionRecord ManageConnectionRequests = new() { Name = "Admin area. CRM - Manage Connection Requests", SystemName = "ManageConnectionRequests", Category = "CRM" };
+        public static readonly PermissionRecord ManageLinkedInFollowups = new() { Name = "Admin area. CRM - Manage LinkedIn Followups", SystemName = "ManageLinkedInFollowups", Category = "CRM" };
         public static readonly PermissionRecord ManageUpdateTemplate = new() { Name = "Admin area. Update Template - Manage UpdateTemplate", SystemName = "ManageUpdateTemplate", Category = "Standard" };
         public static readonly PermissionRecord ManageUpdateQuestionTemplate = new() { Name = "Admin area. Update Template - Manage UpdateQuestionTemplate", SystemName = "ManageUpdateQuestionTemplate", Category = "Standard" };
         public static readonly PermissionRecord ManageUpdateQuestionOptionTemplate = new() { Name = "Admin area. Update Template - Manage UpdateQuestionOptionTemplate", SystemName = "ManageUpdateQuestionOptionTemplate", Category = "Standard" };
-
 
         /// <summary>
         /// Get permissions
@@ -59,6 +60,8 @@ namespace Satyanam.Nop.Core.Services
                 ManageTags,
                 ManageAccountTypes,
                 ManageInquiries,
+                ManageConnectionRequests,
+                ManageLinkedInFollowups,
                 ManageUpdateTemplate,
                 ManageUpdateQuestionTemplate,
                 ManageUpdateQuestionOptionTemplate
@@ -95,6 +98,8 @@ namespace Satyanam.Nop.Core.Services
                         ManageTags,
                         ManageAccountTypes,
                         ManageInquiries,
+                        ManageConnectionRequests,
+                        ManageLinkedInFollowups,
                         ManageUpdateTemplate,
                         ManageUpdateQuestionTemplate,
                         ManageUpdateQuestionOptionTemplate

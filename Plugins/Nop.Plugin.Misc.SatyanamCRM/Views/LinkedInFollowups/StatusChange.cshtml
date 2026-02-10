@@ -37,7 +37,7 @@
                             <span asp-validation-for="StatusId"></span>
                         </div>
                     </div>
-                    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+                    @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
                     {
                         <div class="form-group row">
                             <div class="col-sm-9 offset-sm-3">

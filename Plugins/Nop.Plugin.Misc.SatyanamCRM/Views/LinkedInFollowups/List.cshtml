@@ -23,7 +23,7 @@
         @T("Plugin.SatyanamCRM.LinkedInFollowups")
     </h1>
     <div class="float-right">
-        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
         {
             <div class="btn-group">
                 <button type="button" class="btn btn-success">
@@ -62,7 +62,7 @@
                 </ul>
             </div>
         }
-        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Add))
         {
             <div class="btn-group">
                 <button type="button" class="btn bg-olive dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
@@ -83,7 +83,7 @@
                 @T("Plugin.SatyanamCRM.LinkedInFollowups.AddNew")
             </a>
         }
-        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Delete))
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Delete))
         {
             <button type="button" id="delete-selected" class="btn btn-danger">
                 <i class="far fa-trash-alt"></i>
@@ -327,7 +327,7 @@
                                 ClassName = NopColumnClassDefaults.CenterAll,
                                 Width = "50"
                             });
-                            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
+                            @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
                             {
                                 gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.Id))
                                 {
@@ -336,14 +336,16 @@
                                     ClassName = NopColumnClassDefaults.Button,
                                     Render = new RenderButtonsInlineEdit()
                                 });
+
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.Id))
+                                {
+                                    Title = T("Plugin.SatyanamCRM.LinkedInFollowups.ChangeStatus").Text,
+                                    Width = "120",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderCustom("renderStatusPopup")
+                                });
                             }
-                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.Id))
-                            {
-                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.ChangeStatus").Text,
-                                Width = "120",
-                                ClassName = NopColumnClassDefaults.Button,
-                                Render = new RenderCustom("renderStatusPopup")
-                            });
+                            
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.LinkedinUrl))
                             {
                                 Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.LinkedinUrl").Text,
