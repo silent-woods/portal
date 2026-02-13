@@ -3,6 +3,7 @@ using App.Core.Domain.Customers;
 using App.Core.Domain.Employees;
 using App.Core.Domain.Media;
 using App.Core.Domain.Messages;
+using App.Core.Domain.Security;
 using App.Data;
 using App.Data.Extensions;
 using App.Services.Customers;
@@ -800,8 +801,11 @@ namespace Nop.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult SubmissionList()
+        public virtual async Task<IActionResult> SubmissionList()
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreViewUpdate, PermissionAction.View))
+                return Challenge();
+
             var model = new UpdateSubmissionSearchModel();
             return View("~/Themes/DefaultClean/Views/Extension/UpdateForm/SubmissionList.cshtml", model);
         }

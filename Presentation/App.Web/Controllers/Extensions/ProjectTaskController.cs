@@ -2,6 +2,7 @@
 using App.Core.Domain.Extension.ProjectTasks;
 using App.Core.Domain.Extension.TimeSheets;
 using App.Core.Domain.ProjectTasks;
+using App.Core.Domain.Security;
 using App.Services.Configuration;
 using App.Services.Customers;
 using App.Services.Employees;
@@ -139,8 +140,12 @@ namespace App.Web.Controllers.Extensions
         }
 
         #endregion
+
         public virtual async Task<IActionResult> List(int projectId)
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.View))
+                return Challenge();
+
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))
                 return Challenge();
@@ -178,6 +183,9 @@ namespace App.Web.Controllers.Extensions
 
         public virtual async Task<IActionResult> ProjectManagement()
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreProjectManagement, PermissionAction.View))
+                return Challenge();
+
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))
                 return Challenge();
@@ -188,7 +196,6 @@ namespace App.Web.Controllers.Extensions
                 if (employeeByCustomer != null)
                 {
                     projectTaskSearchModel.EmployeeId = employeeByCustomer.Id;
-
                 }
             }
             var project = await _projectsService.GetProjectListByEmployee(projectTaskSearchModel.EmployeeId);
@@ -206,6 +213,9 @@ namespace App.Web.Controllers.Extensions
         [HttpPost]
         public virtual async Task<IActionResult> List(ProjectTaskSearchModel searchModel)
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.View))
+                return Challenge();
+
             var model = await _projectTaskModelFactory.PrepareProjectTaskListModelAsync(searchModel);
             return Json(model);
         }
@@ -396,6 +406,9 @@ namespace App.Web.Controllers.Extensions
         }
         public virtual async Task<IActionResult> Edit(int id)
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.Edit))
+                return Challenge();
+
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
                 return Challenge();

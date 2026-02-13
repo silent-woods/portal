@@ -25,7 +25,10 @@
 
 <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
     <h1>@T("Admin.Catalog.ProjectTask.List")</h1>
-    <button type="button" class="add-btn button-1 save-customer-info-button" onclick="openProjectTaskPopup()">Add Task</button>
+    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.Add))
+    {
+        <button type="button" class="add-btn button-1 save-customer-info-button" onclick="openProjectTaskPopup()">Add Task</button>
+    }
 </div>
 <script>
     function openProjectTaskPopup() {

@@ -1,5 +1,4 @@
-﻿
- @using App.Core
+﻿@using App.Core
 @using App.Web.Models.Extensions.LeaveManagement;
 @model LeaveManagementSearchModel
 @inject App.Core.IWebHelper webHelper
@@ -44,7 +43,7 @@
         <h1>@T("Account.MyAccount") - @T("Account.LeaveManagement")</h1>
         @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreLeaveManagement, PermissionAction.Add))
         {
-             <button type="button" class="take-leave-btn button-1 save-customer-info-button" onclick="openCreateLeavePopup()">Request Leave</button>
+            <button type="button" class="take-leave-btn button-1 save-customer-info-button" onclick="openCreateLeavePopup()">Request Leave</button>
         }
     </div>
 
@@ -101,7 +100,7 @@
 
                                 });
 
-                           
+
 
                                 $(document).on('click', '#save-leave',function () {
                                     var leaveTypeId = $("#leaveType").val();
@@ -133,14 +132,14 @@
                                                 $("#search-leave-button").trigger('click');
                                                 $('.validation-error-message').text("");
                                                 location.reload(); // This reloads the page
-                                                
+
                                             }
                                             else {
                                                 $('.validation-error-message').text(response.message);
                                             }
-                                            
+
                                             GetLeaveBalance();
-                                           
+
                                         },
                                         error: function (xhr, status, error) {
                                             console.error("Error occurred: " + status + ", " + error);
@@ -173,7 +172,7 @@
         </table>
 
         <div class="fieldset">
-           
+
             <div class="form-fields">
                 <div class="inputs-row">
                     <div class="inputs">
@@ -198,13 +197,13 @@
             </div>
         </div>
 
-            <div class="text-center col-12 button1">
-                <div class="buttons">
-                    <button type="button" id="search-leave-button" name="save-info-button" class="button-1 save-customer-info-button">@T("Search")</button>
-                </div>
-
+        <div class="text-center col-12 button1">
+            <div class="buttons">
+                <button type="button" id="search-leave-button" name="save-info-button" class="button-1 save-customer-info-button">@T("Search")</button>
             </div>
-      
+
+        </div>
+
     </div>
 </div>
 
@@ -226,27 +225,27 @@
         color: #333;
     }
 
-    .table thead th {
+        .table thead th {
             background-color: #e8e8e8;
-        padding: 10px;
-        font-weight: bold;
-        border-bottom: 2px solid #ddd;
-        text-align: left;
-    }
+            padding: 10px;
+            font-weight: bold;
+            border-bottom: 2px solid #ddd;
+            text-align: left;
+        }
 
-    .table tbody td {
-        padding: 10px;
-        border-bottom: 1px solid #ddd;
-        text-align: left;
-    }
+        .table tbody td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
 
-    .table tbody tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
+        .table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
 
-    .table tbody tr:hover {
-        background-color: #f1f1f1;
-    }
+        .table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
 
 </style>
 
@@ -277,30 +276,33 @@
         justify-content: center; /* Center items */
     }
 
-    .page-title{
-        display:flex;
-        justify-content:space-between;
+    .page-title {
+        display: flex;
+        justify-content: space-between;
     }
     /* .col-sm-4{
-            margin-left: 2px;
-        } */
+                margin-left: 2px;
+            } */
 
     .select1 {
         min-width: 160px;
         height: 40px;
         padding: 6px;
     }
-    .button1{
-        text-align:center;
+
+    .button1 {
+        text-align: center;
     }
 
-  
-    .header{
-        z-index:0;
+
+    .header {
+        z-index: 0;
     }
-    .header-menu{
-        z-index:0;
+
+    .header-menu {
+        z-index: 0;
     }
+
     .btn-search {
         padding: 8px 25px;
         border-radius: 10px;
@@ -312,22 +314,21 @@
         padding: 6px;
         box-sizing: border-box;
     }
-    .table-rep
-    {
-        overflow-x:auto;
+
+    .table-rep {
+        overflow-x: auto;
     }
+
     table {
-       
         width: 100%;
-       
     }
-    #From , #To {
-        min-width:5rem;
+
+    #From, #To {
+        min-width: 5rem;
     }
 
     .inputs-row .inputs label {
-        width: 0px!important; /* Set label width to 0 */
-      
+        width: 0px !important; /* Set label width to 0 */
     }
 
     th, td {
@@ -374,7 +375,7 @@
         background-color: #fff;
         border-radius: 5px;
         width: 40vw;
-        min-width:340px;
+        min-width: 340px;
         max-height: 98%;
         overflow-y: auto;
     }
@@ -401,7 +402,7 @@
         cursor: pointer;
     }
 
-    .fieldset{
+    .fieldset {
         margin: 8px 0 15px;
     }
     /* Modal body */
@@ -419,12 +420,12 @@
     }
 
     /*    button:hover {
-                background-color: #0056b3;
-            } */
-   
+                    background-color: #0056b3;
+                } */
 
-    .registration-page .button-1{
-        margin-left:auto;
+
+    .registration-page .button-1 {
+        margin-left: auto;
     }
 
     #popupDialog {
@@ -436,7 +437,6 @@
         width: 100%;
         display: flex;
         flex-direction: column;
-      
     }
 
         .inputs-popup label {
@@ -463,33 +463,32 @@
             background-color: #248ece;
         }
 
- 
 
-.inputs-row {
-    display: flex;
-    gap: 20px; /* Add space between fields */
-    justify-content: space-between;
-}
 
-.inputs {
-    flex: 1;
-    min-width: 45%; /* Ensure fields stay 2 per row */
-    display: flex;
-    flex-direction: column;
-}
+    .inputs-row {
+        display: flex;
+        gap: 20px; /* Add space between fields */
+        justify-content: space-between;
+    }
 
-label {
-    font-weight: bold;
-    margin-bottom: 5px;
-}
+    .inputs {
+        flex: 1;
+        min-width: 45%; /* Ensure fields stay 2 per row */
+        display: flex;
+        flex-direction: column;
+    }
 
-.select1, .select2 {
-    width: 100%;
-    height: 40px;
-    padding: 6px;
-    box-sizing: border-box;
-}
+    label {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
 
+    .select1, .select2 {
+        width: 100%;
+        height: 40px;
+        padding: 6px;
+        box-sizing: border-box;
+    }
 
 </style>
 
@@ -505,7 +504,7 @@ label {
             var toDate = $("#To").val();
             var statusId = $("#StatusId").val();
 
-        
+
             $.ajax({
                 url: '@Url.Action("SearchLeaveList", "LeaveManagement")',
                 type: 'GET',
@@ -532,11 +531,11 @@ label {
 
                     // Initialize jqxGrid
                     $("#jqxgrid").jqxGrid({
-                        width: '100%',                       
-                        source: new $.jqx.dataAdapter(source),                       
+                        width: '100%',
+                        source: new $.jqx.dataAdapter(source),
                         autoheight: true,
                         sortable: true,
-                     
+
 
                         columnsresize: true,
                         columns: [
@@ -550,7 +549,7 @@ label {
 
                         pageable: true,
                         pagerMode: 'advanced',
-                       
+
                         pagesize: 5,
                         pagesizeoptions: ['5', '10', '20', '50', '100']
                     });
@@ -566,8 +565,8 @@ label {
 
         $("#search-leave-button").trigger('click');
 
-       
-     
+
+
     });
     function GetLeaveBalance() {
         $.ajax({
@@ -622,17 +621,17 @@ label {
     }
 
     function openLeaveFormPopup() {
-       
+
         $.ajax({
             url: '/LeaveManagement/LeaveCreate',
             type: 'GET',
             dataType: 'html',
             success: function (data) {
-             
+
 
                 $('#popupDialog').remove();
 
-   
+
                 $('<div id="popupDialog"></div>').html(data)
                     .dialog({
                         modal: true,
@@ -645,13 +644,13 @@ label {
                             }
                         }
                     });
-              
+
             },
             error: function (xhr, status, error) {
                 console.log("Error: " + error);
             }
         });
-      
+
     }
 
 

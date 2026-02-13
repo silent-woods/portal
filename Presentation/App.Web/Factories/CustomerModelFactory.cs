@@ -683,7 +683,7 @@ namespace App.Web.Factories
                 });
             }
 
-            
+
             if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimeSummaryReport, PermissionAction.View))
             {
                 model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
@@ -694,8 +694,6 @@ namespace App.Web.Factories
                     ItemClass = "TimeSummary-Report"
                 });
             }
-
-            
 
             if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeePerformaceReport, PermissionAction.View))
             {

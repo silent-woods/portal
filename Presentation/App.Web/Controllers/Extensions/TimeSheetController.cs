@@ -2,6 +2,7 @@
 using App.Core.Domain.Activities;
 using App.Core.Domain.Extension.TimeSheets;
 using App.Core.Domain.ProjectTasks;
+using App.Core.Domain.Security;
 using App.Core.Domain.TimeSheets;
 using App.Services.Activities;
 using App.Services.Customers;
@@ -96,6 +97,9 @@ namespace App.Web.Controllers.Extensions
 
         public virtual async Task<IActionResult> List()
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimesheet, PermissionAction.View))
+                return Challenge();
+
             var customer = await _workContext.GetCurrentCustomerAsync();
 
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -222,6 +226,9 @@ namespace App.Web.Controllers.Extensions
 
         public virtual async Task<IActionResult> UpdateTimeSheet()
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimesheet, PermissionAction.Add))
+                return Challenge();
+
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))
                 return Challenge();

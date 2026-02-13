@@ -492,10 +492,10 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
                     // 6️ Optional: mark as moved
                     // req.IsMovedToFollowups = true;
-                     await _connectionRequestService.DeleteConnectionRequestAsync(req);
+                    await _connectionRequestService.DeleteConnectionRequestAsync(req);
                 }
                 _notificationService.SuccessNotification(
-                 string.Format(await _localizationService.GetResourceAsync("Plugin.SatyanamCRM.ConnectionRequests.Moved"),movedCount, updatedCount));
+                 string.Format(await _localizationService.GetResourceAsync("Plugin.SatyanamCRM.ConnectionRequests.Moved"), movedCount, updatedCount));
                 // 7️⃣ Return summary
                 return Json(new
                 {

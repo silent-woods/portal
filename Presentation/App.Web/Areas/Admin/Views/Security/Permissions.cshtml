@@ -45,9 +45,9 @@
                                     $(document).ready(function () {
                                         @foreach (var cr in Model.AvailableCustomerRoles)
                                         {
-                                                    <text>
-                                                        prepareTableCheckboxes('#selectall-@(cr.Id)', '.allow_@(cr.Id)');
-                                                    </text>
+                                                        <text>
+                                                            prepareTableCheckboxes('#selectall-@(cr.Id)', '.allow_@(cr.Id)');
+                                                        </text>
                                         }
                                     });
                                 </script>
@@ -152,9 +152,9 @@
         background-color: #f9f9f9;
     }
 
-    .permission-subgrid table {
-        margin-left: 25px;
-    }
+        .permission-subgrid table {
+            margin-left: 25px;
+        }
 
     .toggle-icon {
         margin-right: 6px;

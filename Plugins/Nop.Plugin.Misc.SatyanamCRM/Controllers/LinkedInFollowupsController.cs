@@ -488,7 +488,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             // --- Formula Logic End ---
             if (model.StatusId == 0)
                 model.StatusId = linkedInFollowUps.StatusId;
-            
+
             //  Update database entity
             linkedInFollowUps.FirstName = model.FirstName;
             linkedInFollowUps.LastName = model.LastName;

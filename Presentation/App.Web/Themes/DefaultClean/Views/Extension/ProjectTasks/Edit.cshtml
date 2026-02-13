@@ -29,16 +29,25 @@
         </span>
     </h1>
     <div class="button-container">
-        <button type="button"
-                class="delete-btn"
-                onclick="confirmDeleteTask(@Model.Id)">
-            Delete
-        </button>
-
-    @if(Model.Tasktypeid!=3){
-    <button type="button" class="update-btn button-1 save-customer-info-button" onclick="openBugTaskPopup()">Add Bug</button>
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.Delete))
+        {
+            <button type="button"
+                    class="delete-btn"
+                    onclick="confirmDeleteTask(@Model.Id)">
+                Delete
+            </button>
+        }
+    @if(Model.Tasktypeid!=3)
+    {
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagementAddBug, PermissionAction.Add))
+        {
+            <button type="button" class="update-btn button-1 save-customer-info-button" onclick="openBugTaskPopup()">Add Bug</button>
+        }
     }
-    <button type="button" class="btnSaveTask update-btn">Save</button>
+    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.Edit))
+    {
+        <button type="button" class="btnSaveTask update-btn">Save</button>
+    }
     </div>
 
 </div>
@@ -316,95 +325,105 @@
                     </div>
                 </div>
             </div>
-            <div class="card card-default card-search">
-                <div class="card-body nop-card-body">
-                    <div class="timesheet-header" id="timesheetHeader">
-                        <h3 class="section-title">
-                            Timesheet
-                            <span id="timesheetArrow">&#9660;</span>
-                        </h3>
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagementTimesheet, PermissionAction.View))
+            {
+                <div class="card card-default card-search">
+                    <div class="card-body nop-card-body">
+                        <div class="timesheet-header" id="timesheetHeader">
+                            <h3 class="section-title">
+                                Timesheet
+                                <span id="timesheetArrow">&#9660;</span>
+                            </h3>
+                        </div>
+                        <div id="timesheetContainer" style="display:none;">
+                            <div id="timesheetFilter" class="timesheet-filter">
+                                <div class="grid-item">
+                                    <label>Period:</label>
+                                    <select id="SearchPeriodId" class="form-control">
+                                        @foreach (var p in Model.PeriodList)
+                                        {
+                                            <option value="@p.Value" selected="@p.Selected">@p.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="grid-item" id="from-container">
+                                    <label>From</label>
+                                    <input type="date" id="From" class="form-control" />
+                                </div>
+                                <div class="grid-item" id="to-container">
+                                    <label>To</label>
+                                    <input type="date" id="To" class="form-control" />
+                                </div>
+                            </div>
+                            <div id="timesheetTable"></div>
+                        </div>
                     </div>
-                    <div id="timesheetContainer" style="display:none;">
-                        <div id="timesheetFilter" class="timesheet-filter">
-                            <div class="grid-item">
-                                <label>Period:</label>
-                                <select id="SearchPeriodId" class="form-control">
-                                    @foreach (var p in Model.PeriodList)
+                </div>
+            }
+
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagementFollowupLogs, PermissionAction.View))
+            {
+                <div class="card card-default card-search">
+                    <div class="card-body nop-card-body">
+
+                        <div class="timesheet-header accordion-header" data-target="#followupLogContainer">
+                            <h3 class="section-title">
+                                Follow-Up Logs
+                                <span class="accordion-arrow">&#9660;</span>
+                            </h3>
+                        </div>
+
+                        <div id="followupLogContainer" style="display:none;">
+                            <div id="followupLogLoader" class="text-muted" style="padding:10px;">
+                                Click to load follow-up logs
+                            </div>
+                            <div id="followupLogTable"></div>
+                        </div>
+
+                    </div>
+                </div>
+            }
+
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagementTaskChangeLogs, PermissionAction.View))
+            {
+                <div class="card card-default card-search task-change-log-card">
+                    <div class="card-body nop-card-body">
+                        <div class="timesheet-header accordion-header" data-target="#taskChangeLogContainer">
+                            <h3 class="section-title">
+                                Task Change Logs
+                                <span class="accordion-arrow">&#9660;</span>
+                            </h3>
+                        </div>
+                        <div id="taskChangeLogContainer" style="display:none;">
+                            <div class="form-horizontal">
+                                <div class="task-commments-container scrollable-section-highhight">
+                                    @if (Model.TaskChangeLogModel != null && Model.TaskChangeLogModel.Any())
                                     {
-                                        <option value="@p.Value" selected="@p.Selected">@p.Text</option>
+                                        foreach (var taskLog in Model.TaskChangeLogModel)
+                                        {
+                                            <div class="comment-card">
+                                                <div class="comment-header">
+                                                    <span class="comment-author">@taskLog.EmployeeName</span>
+                                                    <span class="comment-date">
+                                                        @taskLog.CreatedOn.ToString("dd MMM yyyy hh:mm tt")
+                                                    </span>
+                                                </div>
+                                                <div class="comments-body">
+                                                    <p>@Html.Raw(taskLog.Notes)</p>
+                                                </div>
+                                            </div>
+                                        }
                                     }
-                                </select>
-                            </div>
-                            <div class="grid-item" id="from-container">
-                                <label>From</label>
-                                <input type="date" id="From" class="form-control" />
-                            </div>
-                            <div class="grid-item" id="to-container">
-                                <label>To</label>
-                                <input type="date" id="To" class="form-control" />
-                            </div>
-                        </div>
-                        <div id="timesheetTable"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="card card-default card-search">
-                <div class="card-body nop-card-body">
-
-                    <div class="timesheet-header accordion-header" data-target="#followupLogContainer">
-                        <h3 class="section-title">
-                            Follow-Up Logs
-                            <span class="accordion-arrow">&#9660;</span>
-                        </h3>
-                    </div>
-
-                    <div id="followupLogContainer" style="display:none;">
-                        <div id="followupLogLoader" class="text-muted" style="padding:10px;">
-                            Click to load follow-up logs
-                        </div>
-                        <div id="followupLogTable"></div>
-                    </div>
-
-                </div>
-            </div>
-
-            <div class="card card-default card-search task-change-log-card">
-                <div class="card-body nop-card-body">
-                    <div class="timesheet-header accordion-header" data-target="#taskChangeLogContainer">
-                        <h3 class="section-title">
-                            Task Change Logs
-                            <span class="accordion-arrow">&#9660;</span>
-                        </h3>
-                    </div>
-                    <div id="taskChangeLogContainer" style="display:none;">
-                        <div class="form-horizontal">
-                            <div class="task-commments-container scrollable-section-highhight">
-                                @if (Model.TaskChangeLogModel != null && Model.TaskChangeLogModel.Any())
-                                {
-                                    foreach (var taskLog in Model.TaskChangeLogModel)
+                                    else
                                     {
-                                        <div class="comment-card">
-                                            <div class="comment-header">
-                                                <span class="comment-author">@taskLog.EmployeeName</span>
-                                                <span class="comment-date">
-                                                    @taskLog.CreatedOn.ToString("dd MMM yyyy hh:mm tt")
-                                                </span>
-                                            </div>
-                                            <div class="comments-body">
-                                                <p>@Html.Raw(taskLog.Notes)</p>
-                                            </div>
-                                        </div>
+                                        <p class="no-comments">No logs</p>
                                     }
-                                }
-                                else
-                                {
-                                    <p class="no-comments">No logs</p>
-                                }
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
 
   <div class="half-page">
@@ -435,7 +454,10 @@
             <div id="StatusChangeCommentEditor"></div>
             <span id="error-StatusChangeComment" class="field-validation-error text-danger"></span>
           </div>
-          <button type="button" class="btnSaveTask update-btn second-save-btn">Save</button>
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.Edit))
+            {
+                <button type="button" class="btnSaveTask update-btn second-save-btn">Save</button>
+            }
         </div>
         <div class="task-commments-container scrollable-section">
           @if (Model.TaskCommentsModel != null && Model.TaskCommentsModel.Any())

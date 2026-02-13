@@ -266,6 +266,9 @@ namespace App.Web.Controllers
 
         public virtual async Task<IActionResult> Addresses()
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeAddresses, PermissionAction.View))
+                return Challenge();
+
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
                 return Challenge();
@@ -291,6 +294,9 @@ namespace App.Web.Controllers
 
         public virtual async Task<IActionResult> Education()
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeEducations, PermissionAction.View))
+                return Challenge();
+
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer)|| customer ==null)
                 return Challenge();
@@ -311,6 +317,9 @@ namespace App.Web.Controllers
 
         public virtual async Task<IActionResult> Experience()
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeExperiences, PermissionAction.View))
+                return Challenge();
+
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
                 return Challenge();
@@ -332,6 +341,9 @@ namespace App.Web.Controllers
 
         public virtual async Task<IActionResult> Asset()
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeAssets, PermissionAction.View))
+                return Challenge();
+
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
                 return Challenge();
@@ -373,6 +385,7 @@ namespace App.Web.Controllers
             return Content("Thanks for liking this announcement!");
         }
         #endregion
+
         #endregion
     }
 }

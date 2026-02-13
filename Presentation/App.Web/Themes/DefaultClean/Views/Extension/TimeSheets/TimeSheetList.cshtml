@@ -8,11 +8,11 @@
     NopHtml.AddTitleParts(T("PageTitle.TimeSheetList").Text);
     NopHtml.AppendPageCssClassParts("html-account-page");
     NopHtml.AppendPageCssClassParts("html-customer-info-page");
- 
+
 }
 <link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/timesheetlist.css")" />
 <link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
 <link rel="stylesheet" href="https://jqwidgets.com/public/jqwidgets/styles/jqx.base.css" type="text/css" />
@@ -20,7 +20,7 @@
 
 <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
     <h1>@T("Admin.Catalog.TimeSheet.List")</h1>
-    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimesheet, PermissionAction.Add) || await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimesheet, PermissionAction.Edit))
+    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimesheet, PermissionAction.Add))
     {
         <a href="@Url.Action("UpdateTimeSheet", "TimeSheet")" class="update-btn">
             Add
@@ -29,7 +29,7 @@
 </div>
 
 <div class="content-body">
-        <div class="card card-default card-search">
+    <div class="card card-default card-search">
         <div class="card-body nop-card-body">
             <input type="hidden" id="EmployeeId" name="EmployeeId" value="@Model.EmployeeId" />
             <div class="form-horizontal">
@@ -51,19 +51,19 @@
 
                             @if (Model.AvailableProjects.Count == 0)
                             {
-                                <text>
-                                        projectSelect.setOptions({
-                                            enable: false,
-                                            placeholder: '@T("Admin.Catalog.Products.NoAvailableProjects")'
-                                        });
-                                    projectSelect._placeholder();
-                                    projectSelect._enable();
-                                </text>
+                                    <text>
+                                            projectSelect.setOptions({
+                                                enable: false,
+                                                placeholder: '@T("Admin.Catalog.Products.NoAvailableProjects")'
+                                            });
+                                        projectSelect._placeholder();
+                                        projectSelect._enable();
+                                    </text>
                             }
                                                 });
                         </script>
                     </div>
-                    
+
                     <div class="grid-item">
                         <label asp-for="SelectedEmployeeIds" asp-postfix=":"></label>
                         <select id="SelectedEmployeeIds" name="SelectedEmployeeIds" class="kendo-multi-select" multiple>
@@ -73,24 +73,24 @@
                             }
                         </select>
                         <script>
-                            $(document).ready(function () {
-                                var projectSelect = $('#SelectedEmployeeIds').kendoMultiSelect({
-                                    autoClose: true,
-                                    filter: "contains",
-                                    value: [@Html.Raw(Model.EmployeeId)],
-                                }).data("kendoMultiSelect");
-                            @if (Model.AvailableEmployees.Count == 0)
-                            {
-                                <text>
-                                        projectSelect.setOptions({
-                                            enable: false,
-                                            placeholder: '@T("Admin.Catalog.NoAvailableEmployees")'
-                                        });
-                                    projectSelect._placeholder();
-                                    projectSelect._enable();
-                                </text>
-                            }
-                    });
+                                    $(document).ready(function () {
+                                        var projectSelect = $('#SelectedEmployeeIds').kendoMultiSelect({
+                                            autoClose: true,
+                                            filter: "contains",
+                                            value: [@Html.Raw(Model.EmployeeId)],
+                                        }).data("kendoMultiSelect");
+                                    @if (Model.AvailableEmployees.Count == 0)
+                                    {
+                                            <text>
+                                                    projectSelect.setOptions({
+                                                        enable: false,
+                                                        placeholder: '@T("Admin.Catalog.NoAvailableEmployees")'
+                                                    });
+                                                projectSelect._placeholder();
+                                                projectSelect._enable();
+                                            </text>
+                                    }
+                            });
                         </script>
                     </div>
 
@@ -104,7 +104,7 @@
                         <nop-select asp-for="SearchPeriodId" asp-items="Model.PeriodList" id="SearchPeriodId" />
                         <span asp-validation-for="SearchPeriodId"></span>
                     </div>
-                   
+
                     <div class="grid-item">
                         <label asp-for="BillableType" asp-postfix=":"></label>
                         <nop-select asp-for="BillableType" class="select1" asp-items="Model.AvailableBillableType" />
@@ -114,8 +114,7 @@
                         <input asp-for="From" type="date" />
                         <span asp-validation-for="From"></span>
                     </div>
-                    <div class="grid-item" >
-                
+                    <div class="grid-item">
                     </div>
                     <div class="grid-item" style="display:none;" id="to-container">
                         <label asp-for="To" asp-postfix=":"></label>
@@ -130,12 +129,12 @@
                 </div>
             </div>
         </div>
-        </div>
+    </div>
     <div id="timesheet-table-container">
         <div id="timesheet-table"></div>
     </div>
 
-  
+
 </div>
 
 <script>
@@ -154,7 +153,7 @@
                     $('#To').val(data.to);
                     $('#from-container').hide();
                     $('#to-container').hide();
-                    
+
                 } else {
                     $('#From').val('');
                     $('#To').val('');
@@ -170,11 +169,11 @@
 <script>
     $(document).ready(function () {
         function performSearch(pageIndex, pageSize) {
-            pageIndex = pageIndex || 0; 
+            pageIndex = pageIndex || 0;
             pageSize = pageSize || 10;
-            var selectedProjects = $('#SelectedProjectIds').val() || []; 
-            var selectedEmployees = $('#SelectedEmployeeIds').val() || []; 
-            selectedProjects = selectedProjects.join(','); 
+            var selectedProjects = $('#SelectedProjectIds').val() || [];
+            var selectedEmployees = $('#SelectedEmployeeIds').val() || [];
+            selectedProjects = selectedProjects.join(',');
             selectedEmployees = selectedEmployees.join(',');
 
             var taskName = $('#TaskName').val();

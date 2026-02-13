@@ -211,11 +211,11 @@ namespace App.Web.Controllers
         #region Methods
 
         #region My account / Employee Performance Report
+
         public virtual async Task<IActionResult> AddRatings(int monthId, int employeeId, int Year)
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageTeamPerformanceMeasurement))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreAddRating, PermissionAction.View))
                 return Challenge();
-
 
             var customer = await _workContext.GetCurrentCustomerAsync();
 
@@ -270,8 +270,6 @@ namespace App.Web.Controllers
         [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]
         public virtual async Task<IActionResult> AddRatings(PerformanceMeasurementModel model, bool continueEditing)
         {
-            
-            
             var customer = await _workContext.GetCurrentCustomerAsync();
 
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -361,6 +359,9 @@ namespace App.Web.Controllers
         }
         public virtual async Task<IActionResult> MonthlyReview(int monthId, int employeeId, int year)
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreMonthlyReview, PermissionAction.View))
+                return Challenge();
+
             var customer = await _workContext.GetCurrentCustomerAsync();
 
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -420,6 +421,9 @@ namespace App.Web.Controllers
 
         public virtual async Task<IActionResult> YearlyReview(int startmonth, int endmonth, int startYear, int endYear, int employeeId)
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreYearlyReview, PermissionAction.View))
+                return Challenge();
+
             var customer = await _workContext.GetCurrentCustomerAsync();
             var empId = customer.Id;
             var employee = await _employeeService.GetEmployeeByIdAsync(empId);
@@ -475,8 +479,9 @@ namespace App.Web.Controllers
 
 
         public virtual async Task<IActionResult> ProjectLeaderReview(int monthId, int year)
-
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreProjectLeaderReview, PermissionAction.View))
+                return Challenge();
 
             var customer = await _workContext.GetCurrentCustomerAsync();
 

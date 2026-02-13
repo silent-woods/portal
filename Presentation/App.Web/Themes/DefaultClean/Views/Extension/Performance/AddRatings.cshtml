@@ -28,18 +28,20 @@
         <h1 class="float-left">
             @T("Admin.Configuration.TeamPerformanceMeasurement")
         </h1>
-
         <div class="float-right page-btn">
             <a asp-action="AddRatings" class="reset-btn btn btn-primary">
                 <i class="fas fa-plus-square"></i>
                 @T("Admin.PerformanceMeasurement.Reset")
             </a>
-            <button type="button" name="save" class="btn-search btn btn-primary">
-                <i class="far fa-save"></i>
-                @T("Admin.Common.Save")
-            </button>
-            
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreAddRating, PermissionAction.Add))
+            {
+                <button type="button" name="save" class="btn-search btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+            }
         </div>
+
     </div>
 
     

@@ -4,6 +4,7 @@ using App.Core.Domain.Designations;
 using App.Core.Domain.Employees;
 using App.Core.Domain.Extension.Leaves;
 using App.Core.Domain.Leaves;
+using App.Core.Domain.Security;
 using App.Services.Customers;
 using App.Services.Employees;
 using App.Services.Helpers;
@@ -465,6 +466,9 @@ namespace App.Web.Controllers.Extensions
         [HttpGet]
         public async Task<IActionResult> SearchLeave(LeaveManagementSearchModel searchModel)
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreLeaveManagement, PermissionAction.View))
+                return Challenge();
+
             var currentcustomer = await _workContext.GetCurrentCustomerAsync();
 
             searchModel.CurrentCustomer = currentcustomer.Id;

@@ -34,6 +34,7 @@ using App.Services.Leaves;
 using App.Core.Domain.Extension.Leaves;
 using App.Services.Helpers;
 using Satyanam.Nop.Core.Services;
+using App.Core.Domain.Security;
 
 
 
@@ -41,19 +42,18 @@ namespace App.Web.Controllers.Extensions
 {
     public class ReportsController : Controller
     {
-            #region Fields
-            private readonly IPermissionService _permissionService;
-            private readonly ITimeSheetModelFactory _timeSheetModelFactory;
-            private readonly ITimeSheetsService _timeSheetsService;
-            private readonly INotificationService _notificationService;
-            private readonly ILocalizationService _localizationService;
-            private readonly IProjectsService _projectsService;
-            private readonly IProjectTaskService _projectTaskService;
-            private readonly Areas.Admin.Factories.Extension.IProjectTaskModelFactory _projectTaskModelFactory;
-            private readonly IEmployeeService _employeeService;
-          
-            private readonly Factories.Extensions.IReportsModelFactory _reportsModelFactory;
-            private readonly IHolidayService _holidayService;
+        #region Fields
+        private readonly IPermissionService _permissionService;
+        private readonly ITimeSheetModelFactory _timeSheetModelFactory;
+        private readonly ITimeSheetsService _timeSheetsService;
+        private readonly INotificationService _notificationService;
+        private readonly ILocalizationService _localizationService;
+        private readonly IProjectsService _projectsService;
+        private readonly IProjectTaskService _projectTaskService;
+        private readonly Areas.Admin.Factories.Extension.IProjectTaskModelFactory _projectTaskModelFactory;
+        private readonly IEmployeeService _employeeService;       
+        private readonly Factories.Extensions.IReportsModelFactory _reportsModelFactory;
+        private readonly IHolidayService _holidayService;
         private readonly IWorkContext _workContext;
         private readonly ICustomerService _customerService;
         private readonly IProjectEmployeeMappingService _projectEmployeeMappingService;
@@ -65,6 +65,7 @@ namespace App.Web.Controllers.Extensions
         private readonly IDateTimeHelper _dateTimeHelper;
         private readonly IWorkflowStatusService _workflowStatusService;
         private readonly ICommonPluginService _commonPluginService;
+
         #endregion
 
         #region Ctor
@@ -117,7 +118,10 @@ namespace App.Web.Controllers.Extensions
 
 
         public virtual async Task<IActionResult> EmployeePerformanceReport()
-            {
+        {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeePerformaceReport, PermissionAction.View))
+                return Challenge();
+
             //prepare model
             TimesheetReportSearchModel timesheetReportSearchModel = new TimesheetReportSearchModel();
 
@@ -858,10 +862,12 @@ namespace App.Web.Controllers.Extensions
 
 
         public virtual async Task<IActionResult> TimeSummaryReport()
-            {
-              
-                //prepare model
-                TimesheetReportSearchModel timesheetReportSearchModel = new TimesheetReportSearchModel();
+        {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimeSummaryReport, PermissionAction.View))
+                return Challenge();
+
+            //prepare model
+            TimesheetReportSearchModel timesheetReportSearchModel = new TimesheetReportSearchModel();
 
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -958,6 +964,9 @@ namespace App.Web.Controllers.Extensions
 
         public virtual async Task<IActionResult> AttendanceReport()
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeAttendanceReport, PermissionAction.View))
+                return Challenge();
+
             //prepare model
             TimesheetReportSearchModel timesheetReportSearchModel = new TimesheetReportSearchModel();
 

@@ -231,7 +231,7 @@ namespace App.Web.Areas.Admin.Controllers
             if ((add || edit || delete) && !view)
                 existingPermissionUserRecord.View = true;
 
-            existingPermissionUserRecord.Full = existingPermissionUserRecord.Add && existingPermissionUserRecord.Edit && existingPermissionUserRecord.Delete && 
+            existingPermissionUserRecord.Full = existingPermissionUserRecord.Add && existingPermissionUserRecord.Edit && existingPermissionUserRecord.Delete &&
                 existingPermissionUserRecord.View;
             existingPermissionUserRecord.UpdatedOnUtc = DateTime.UtcNow;
 
