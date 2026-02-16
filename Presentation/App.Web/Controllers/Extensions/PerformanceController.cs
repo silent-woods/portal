@@ -2,7 +2,6 @@
 using App.Core.Domain;
 using App.Core.Domain.Common;
 using App.Core.Domain.Customers;
-using App.Core.Domain.Employees;
 using App.Core.Domain.Forums;
 using App.Core.Domain.Gdpr;
 using App.Core.Domain.Localization;
@@ -26,21 +25,15 @@ using App.Services.Media;
 using App.Services.Messages;
 using App.Services.PerformanceMeasurements;
 using App.Services.Security;
-using App.Web.Areas.Admin.Models.PerformanceMeasurements;
-
-//using App.Web.Areas.Admin.Factories;
 using App.Web.Factories;
 using App.Web.Framework.Mvc.Filters;
-using App.Web.Models.Customer;
-using App.Web.Models.Employee;
 using App.Web.Models.PerformanceMeasurements;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System;
+using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using System;
-using Newtonsoft.Json;
-using System.Linq;
-using System.Collections.Generic;
 
 
 namespace App.Web.Controllers
@@ -215,7 +208,12 @@ namespace App.Web.Controllers
         public virtual async Task<IActionResult> AddRatings(int monthId, int employeeId, int Year)
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreAddRating, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
 
@@ -270,6 +268,14 @@ namespace App.Web.Controllers
         [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]
         public virtual async Task<IActionResult> AddRatings(PerformanceMeasurementModel model, bool continueEditing)
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreAddRating, PermissionAction.View))
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
+
             var customer = await _workContext.GetCurrentCustomerAsync();
 
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -360,7 +366,12 @@ namespace App.Web.Controllers
         public virtual async Task<IActionResult> MonthlyReview(int monthId, int employeeId, int year)
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreMonthlyReview, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
 
@@ -422,7 +433,12 @@ namespace App.Web.Controllers
         public virtual async Task<IActionResult> YearlyReview(int startmonth, int endmonth, int startYear, int endYear, int employeeId)
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreYearlyReview, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
             var empId = customer.Id;
@@ -481,7 +497,12 @@ namespace App.Web.Controllers
         public virtual async Task<IActionResult> ProjectLeaderReview(int monthId, int year)
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreProjectLeaderReview, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
 

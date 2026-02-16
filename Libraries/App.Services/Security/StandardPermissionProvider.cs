@@ -132,7 +132,7 @@ namespace App.Services.Security
         public static readonly PermissionRecord PublicStoreMonthlyReview = new() { Name = "Public store. Monthly Review", SystemName = "MonthlyReview", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreProjectLeaderReview = new() { Name = "Public store. Project Leader Review", SystemName = "ProjectLeaderReview", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreYearlyReview = new() { Name = "Public store. Yearly Review", SystemName = "YearlyReview", Category = "PublicStore" };
-
+        public static readonly PermissionRecord PublicStoreDashboard = new() { Name = "Public store. Dashboard", SystemName = "Dashboard", Category = "PublicStore" };
 
         /// <summary>
         /// Get permissions

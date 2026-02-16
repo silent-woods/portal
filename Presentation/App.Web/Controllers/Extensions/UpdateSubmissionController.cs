@@ -679,6 +679,11 @@ namespace Nop.Web.Controllers
         .Select(o => o.Id.ToString())   // MUST match checkbox value
         .ToListAsync();
         }
+        private static DateTime ConvertToIst(DateTime utc)
+        {
+            var ist = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+            return TimeZoneInfo.ConvertTimeFromUtc(utc, ist);
+        }
 
         private async Task NotifyReviewersOnSubmissionAsync(UpdateSubmission submission,Customer submitter,bool isEdit)
         {
@@ -725,7 +730,7 @@ namespace Nop.Web.Controllers
                     submitted a NEW update for <strong>{template.Title}</strong>.
                 </p>
 
-                <p>Submitted On: {DateTime.UtcNow.ToLocalTime():M/d/yyyy h:mm tt}</p>
+                <p>Submitted On: {ConvertToIst(DateTime.UtcNow):M/d/yyyy h:mm tt}</p>
 
                 <p><a href='{reviewLink}'>Open submission</a></p>";
                 }
@@ -744,7 +749,7 @@ namespace Nop.Web.Controllers
 
                 <p>Please review the changes.</p>
 
-                <p>Updated On: {DateTime.UtcNow.ToLocalTime():M/d/yyyy h:mm tt}</p>
+                <p>Updated On: {ConvertToIst(DateTime.UtcNow):M/d/yyyy h:mm tt}</p>
 
                 <p><a href='{reviewLink}'>Open updated submission</a></p>";
                 }
@@ -804,7 +809,12 @@ namespace Nop.Web.Controllers
         public virtual async Task<IActionResult> SubmissionList()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreViewUpdate, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var model = new UpdateSubmissionSearchModel();
             return View("~/Themes/DefaultClean/Views/Extension/UpdateForm/SubmissionList.cshtml", model);

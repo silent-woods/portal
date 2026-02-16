@@ -10,8 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-
-
 namespace App.Web.Models.Extensions.ProjectTasks
 {
     public partial record ProjectTaskModel : BaseNopEntityModel
@@ -125,7 +123,6 @@ namespace App.Web.Models.Extensions.ProjectTasks
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.ParentTaskId")]
         public int ParentTaskId { get; set; }
-
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.IsSync")]
         public bool IsSync { get; set; }
         public string ParentTaskName { get; set; }
@@ -138,7 +135,7 @@ namespace App.Web.Models.Extensions.ProjectTasks
         [Required(ErrorMessage = "Please Select Task Category")]
         [Range(1, int.MaxValue, ErrorMessage = "Please Select Task Category")]
         public int TaskCategoryId { get; set; }
-        public string ChildTaskTable { get; set; }
+        public string ParentTaskTable { get; set; }
         public int DeveloperId { get; set; }
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.DeveloperName")]
@@ -170,5 +167,15 @@ namespace App.Web.Models.Extensions.ProjectTasks
         public string ETAHours { get; set; }
         public string Type { get; set; } 
     }
-
+    public partial record ChildTaskModel
+    {
+        public int Id { get; set; }
+        public int ParentTaskId { get; set; }
+        public int ProjectId { get; set; }
+        public string TaskTitle { get; set; }
+        public string EstimatedTime { get; set; }
+        public string SpentTime { get; set; }
+        public string StatusName { get; set; }
+        public string StatusColor { get; set; }
+    }
 }

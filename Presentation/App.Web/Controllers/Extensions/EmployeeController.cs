@@ -229,45 +229,15 @@ namespace App.Web.Controllers
 
         #region My account / Employee Addresses
 
-        //public virtual async Task<IActionResult> Addresses()
-        //{
-        //    var customer = await _workContext.GetCurrentCustomerAsync();
-        //    if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
-        //        return Challenge();
-
-        //    var employeeId = customer.Id;
-        //    //var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
-        //    var address = new EmpAddress();
-        //    address.EmployeeID = employeeId;
-
-        //    var model = new EmployeeAddressModel();
-        //    model = await _employeeAddressModelFactory.PrepareAddressAsync(model, address);
-
-        //    return View(model);
-        //}
-        //public virtual async Task<IActionResult> Addresses()
-        //{
-        //    var customer = await _workContext.GetCurrentCustomerAsync();
-        //    if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
-        //        return Challenge();
-
-        //    var employee = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
-        //    var addresses = await _empAddressService.GetAllAddressAsync(employee.Id, "");
-        //    EmpAddress address = null;
-        //    if (addresses.Any())
-        //    {
-        //        address = addresses.FirstOrDefault();
-        //    }
-        //    var model = new EmployeeAddressModel();
-        //    model = await _employeeAddressModelFactory.PrepareAddressAsync(model, address);
-
-        //    return View(model);
-        //}
-
         public virtual async Task<IActionResult> Addresses()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeAddresses, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
@@ -295,7 +265,12 @@ namespace App.Web.Controllers
         public virtual async Task<IActionResult> Education()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeEducations, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer)|| customer ==null)
@@ -318,7 +293,12 @@ namespace App.Web.Controllers
         public virtual async Task<IActionResult> Experience()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeExperiences, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
@@ -342,7 +322,12 @@ namespace App.Web.Controllers
         public virtual async Task<IActionResult> Asset()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeAssets, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
@@ -384,6 +369,7 @@ namespace App.Web.Controllers
             // You can redirect to a "Thank You" page or show a message
             return Content("Thanks for liking this announcement!");
         }
+
         #endregion
 
         #endregion

@@ -1,0 +1,15 @@
+﻿@{
+    Layout = "_ColumnsOne";
+
+    //title
+    NopHtml.AddTitleParts(T("PageTitle.AccessDenied").Text);
+    //page class
+    NopHtml.AppendPageCssClassParts("html-access-denied-page");
+}
+
+<div class="content-header">
+    <h1>@T("Public.AccessDenied.Title")</h1>
+</div>
+<div class="alert alert-danger alert-dismissable">
+    @T("Public.AccessDenied.Description")
+</div>

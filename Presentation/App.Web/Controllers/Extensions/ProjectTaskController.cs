@@ -21,7 +21,6 @@ using App.Web.Areas.Admin.Models.Extension.TaskChangeLogs;
 using App.Web.Factories.Extensions;
 using App.Web.Framework.Mvc.Filters;
 using App.Web.Models.Extensions.ProjectTasks;
-using AspNetCoreGeneratedDocument;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -144,7 +143,12 @@ namespace App.Web.Controllers.Extensions
         public virtual async Task<IActionResult> List(int projectId)
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -180,11 +184,15 @@ namespace App.Web.Controllers.Extensions
             });
             return View("/Themes/DefaultClean/Views/Extension/ProjectTasks/ProjectTaskList.cshtml", model);
         }
-
         public virtual async Task<IActionResult> ProjectManagement()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreProjectManagement, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -214,7 +222,12 @@ namespace App.Web.Controllers.Extensions
         public virtual async Task<IActionResult> List(ProjectTaskSearchModel searchModel)
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var model = await _projectTaskModelFactory.PrepareProjectTaskListModelAsync(searchModel);
             return Json(model);
@@ -406,8 +419,13 @@ namespace App.Web.Controllers.Extensions
         }
         public virtual async Task<IActionResult> Edit(int id)
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.Edit))
-                return Challenge();
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.View))
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
@@ -1237,6 +1255,31 @@ namespace App.Web.Controllers.Extensions
                 });
             }
             return PartialView("/Themes/DefaultClean/Views/Extension/ProjectTasks/_TaskAlertLogTable.cshtml", model);
+        }
+
+        public async Task<IActionResult> GetChildTasks(int parentTaskId)
+        {
+            var tasks = await _projectTaskService.GetProjectTasksByParentIdAsync(
+parentTaskId: parentTaskId);
+            var model = new List<ChildTaskModel>();
+
+            foreach (var t in tasks)
+            {
+                var developmentTime =
+                    await _timeSheetsService.GetDevelopmentTimeByTaskId(t.Id);
+                var status = await _workflowStatusService.GetWorkflowStatusByIdAsync(t.StatusId);
+                model.Add(new ChildTaskModel
+                {
+                    Id = t.Id,
+                    TaskTitle = t.TaskTitle,
+                    EstimatedTime =
+                        await _timeSheetsService.ConvertToHHMMFormat(t.EstimatedTime),
+                    SpentTime = await _timeSheetsService.ConvertSpentTimeAsync(developmentTime.SpentHours,developmentTime.SpentMinutes),
+                    StatusColor= status !=null ? status.ColorCode : string.Empty,
+                    StatusName = status !=null ? status.StatusName : string.Empty,
+                });
+            }
+            return PartialView("/Themes/DefaultClean/Views/Extension/ProjectTasks/_ChildTaskTable.cshtml", model);
         }
     }
 }

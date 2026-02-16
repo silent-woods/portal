@@ -53,13 +53,13 @@
             <form asp-controller="UpdateSubmission"
                   asp-action="Submit"
                   asp-route-id="@Model.UpdateTemplateId"
-                  asp-route-periodId="@Model.PeriodId"
+                  
                   method="post"
                   enctype="multipart/form-data"
                   id="updateForm">
                 <input type="hidden" asp-for="Id" />
                 <input type="hidden" asp-for="UpdateTemplateId" />
-                <input type="hidden" name="periodId" asp-for="PeriodId" />
+                <input type="hidden"  asp-for="PeriodId" />
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 @for (int i = 0; i < Model.Questions.Count; i++)

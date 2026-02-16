@@ -8,13 +8,28 @@
         {
             <li><a href="@Url.RouteUrl("DownloadTracker")" class="ico-account">@T("Account.DownloadTracker")</a></li>
             <li><a href="@Url.RouteUrl("EmployeeInfo")" class="ico-account">@T("Account.MyAccount")</a></li>
-            <li><a href="@Url.Action("Followup", "Dashboard")" class="ico-dashboard">@T("Account.Dashboard")</a></li>
-            <li>
-                <a href="@Url.Action("UpdateTimeSheet", "TimeSheet")" class="ico-timesheets">
-                    @T("Account.UpdateTimeSheet")
-                </a>
-            </li>
-            <li><a href="@Url.Action("TimeSummaryReport", "Reports")" class="ico-timesheets">@T("Account.HeaderLink.TimeSummaryReport")</a></li>
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreDashboard, PermissionAction.View))
+            {
+                <li>
+                    <a href="@Url.Action("Followup", "Dashboard")" class="ico-dashboard">@T("Account.Dashboard")</a>
+                </li>
+            }
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimesheet, PermissionAction.Add))
+            {
+                <li>
+                    <a href="@Url.Action("UpdateTimeSheet", "TimeSheet")" class="ico-timesheets">
+                        @T("Account.UpdateTimeSheet")
+                    </a>
+                </li>
+            }
+            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimeSummaryReport, PermissionAction.View))
+            {
+                <li>
+                    <a href="@Url.Action("TimeSummaryReport", "Reports")" class="ico-timesheets">
+                        @T("Account.HeaderLink.TimeSummaryReport")
+                    </a>
+                </li>
+            }
             <li><a href="@Url.RouteUrl("Logout")" class="ico-logout">@T("Account.Logout")</a></li>
         }
         else

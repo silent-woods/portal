@@ -246,6 +246,69 @@
     margin-left: 12px;
     font-size: 14px;
 }
+.parent-task-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 13px;
+}
+
+    .parent-task-table th {
+        background-color: #e8f0fe;
+        text-align: left;
+        padding: 6px;
+        border: 1px solid #ddd;
+        font-weight: 600;
+    }
+
+    .parent-task-table td {
+        border: 1px solid #ddd;
+        padding: 6px;
+    }
+
+.parent-task-title a {
+    color: #0078d4;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+    .parent-task-title a:hover {
+        text-decoration: underline;
+    }
+
+.parent-task-time {
+    width: 50%;
+    white-space: nowrap;
+}
+.spent-time-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+    .spent-time-table th {
+        background-color: #f2f2f2;
+        text-align: left;
+        padding: 5px;
+        border: 1px solid #ddd;
+        font-weight: 600;
+    }
+
+    .spent-time-table td {
+        padding: 5px;
+        border: 1px solid #ddd;
+    }
+
+    .spent-time-table .total-row {
+        font-weight: 600;
+        background-color: #f9f9f9;
+    }
+
+    .spent-time-table .nowrap {
+        white-space: nowrap;
+    }
+
 
 @media (max-width: 768px) {
     .grid-container {
@@ -1038,6 +1101,19 @@ button {
 .task-filter-grid {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
 }
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.status-text {
+    vertical-align: middle;
+    font-size: 13px;
+}
+
 @media (max-width: 768px) {
     .timesheet-section-table thead {
         display: none;

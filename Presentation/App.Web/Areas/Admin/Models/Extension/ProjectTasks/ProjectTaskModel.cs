@@ -12,8 +12,7 @@ using System.ComponentModel.DataAnnotations;
 namespace App.Web.Areas.Admin.Models.Extension.ProjectTasks
 {
     public partial record ProjectTaskModel : BaseNopEntityModel
-    {
-    
+    {    
        public  ProjectTaskModel()
         {
             Projects= new List<SelectListItem>();
@@ -33,9 +32,7 @@ namespace App.Web.Areas.Admin.Models.Extension.ProjectTasks
         [Range(1, int.MaxValue, ErrorMessage = "Please select Project")]
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.ProjectId")]
         public int ProjectId { get; set; }
-
         public string ProjectName { get; set; }
-
         public IList<SelectListItem> Projects { get; set; }
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.TaskTitle")]
@@ -46,7 +43,6 @@ namespace App.Web.Areas.Admin.Models.Extension.ProjectTasks
         public string Description { get; set; }
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.StatusId")]
         public int StatusId { get; set; }
-    
         public string Status { get; set; }
         public IList<SelectListItem> StatusList { get; set; }
 
@@ -62,7 +58,6 @@ namespace App.Web.Areas.Admin.Models.Extension.ProjectTasks
         [Required(ErrorMessage = "Spent Hours Must be Positive Value")]
         [Range(0, int.MaxValue, ErrorMessage = "Spent Hours Must be Positive Value")]
         public int SpentHours { get; set; }
-
         public int SpentMinutes { get; set; }
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.SpentTime")]
@@ -89,30 +84,21 @@ namespace App.Web.Areas.Admin.Models.Extension.ProjectTasks
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.EmployeeId")]
         public int EmployeeId { get; set; }
-
         public IList<SelectListItem> AvailableEmployees { get; set; }
-
         public IList<SelectListItem> AvailableAssigntoEmployees { get; set; }
-
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.AssignedTo")]
         public IList<int> SelectedEmployeeId { get; set; }
-
         public bool DeliveryOnTime { get; set; }
-
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.IsManualDOT")]
         public bool IsManualDOT { get; set; }
-
         public string AssignedEmployee {  get; set; }
         public DateTime CreatedOnUtc { get; set; }
-
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.Tasktypeid")]
         [Required(ErrorMessage = "Please Select Task Type")]
         [Range(1, int.MaxValue, ErrorMessage = "Please Select Task Type")]
         public int Tasktypeid { get; set; }
-
         public IList<SelectListItem> TaskTypeList { get; set; }
-
         public string TaskTypeName { get; set; }
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.IsQARequired")]
@@ -121,7 +107,6 @@ namespace App.Web.Areas.Admin.Models.Extension.ProjectTasks
         [UIHint("DateNullable")]
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.DueDate")]
         public DateTime? DueDate { get; set; }
-
         public string DueDateFormat { get; set; }
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.StatusChangeComment")]
@@ -135,25 +120,16 @@ namespace App.Web.Areas.Admin.Models.Extension.ProjectTasks
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.IsSync")]
         public bool IsSync { get; set; }
-
         public string ParentTaskName { get; set; }
-
         public decimal? WorkQuality { get; set; }
-
         public string WorkQualityFormat { get; set; }
-
-
         public decimal? DOTPercentage { get; set; }
-
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.TaskCategoryId")]
         [Required(ErrorMessage = "Please Select Task Category")]
         [Range(1, int.MaxValue, ErrorMessage = "Please Select Task Category")]
-
         public int TaskCategoryId { get; set; }
-
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.DeveloperId")]
         public int DeveloperId { get; set; }
-
         public IList<SelectListItem> AvailableProcessWorkflows { get; set; }
         public IList<SelectListItem> AvailableParentTasks { get; set; }
         public IList<SelectListItem> AvailableTaskCategories{ get; set; }

@@ -98,7 +98,12 @@ namespace App.Web.Controllers.Extensions
         public virtual async Task<IActionResult> List()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimesheet, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
 
@@ -227,7 +232,12 @@ namespace App.Web.Controllers.Extensions
         public virtual async Task<IActionResult> UpdateTimeSheet()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimesheet, PermissionAction.Add))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))

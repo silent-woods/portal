@@ -551,39 +551,37 @@ namespace App.Web.Factories.Extensions
                     var developerEmployee = await _employeeService.GetEmployeeByIdAsync(projectTask.DeveloperId);
                     if (developerEmployee != null)
                         model.DeveloperName = developerEmployee.FirstName + " " + developerEmployee.LastName;
-
                     model.SpentTimeTable = $@"
-<table style='width:100%; border-collapse:collapse;'>
+<table class='spent-time-table'>
     <thead>
-        <tr style='background-color:#f2f2f2; text-align:left;'>
-            <th style='padding:5px; border:1px solid #ddd;'>Category</th>
-            <th style='padding:5px; border:1px solid #ddd;'>Billable</th>
-            <th style='padding:5px; border:1px solid #ddd;'>Non-Billable</th>
-            <th style='padding:5px; border:1px solid #ddd; white-space:nowrap;'>Total</th>
+        <tr>
+            <th>Category</th>
+            <th>Billable</th>
+            <th>Non-Billable</th>
+            <th class='nowrap'>Total</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td style='padding:5px; border:1px solid #ddd;'>Development</td>
-            <td style='padding:5px; border:1px solid #ddd;'>{spentTimeTable.BillableDevelopmentTime}</td>
-            <td style='padding:5px; border:1px solid #ddd;'>{spentTimeTable.NotBillableDevelopmentTime}</td>
-            <td style='padding:5px; border:1px solid #ddd; white-space:nowrap;'>{spentTimeTable.TotalDevelopmentTime}</td>
+            <td>Development</td>
+            <td>{spentTimeTable.BillableDevelopmentTime}</td>
+            <td>{spentTimeTable.NotBillableDevelopmentTime}</td>
+            <td class='nowrap'>{spentTimeTable.TotalDevelopmentTime}</td>
         </tr>
         <tr>
-            <td style='padding:5px; border:1px solid #ddd;'>QA</td>
-            <td style='padding:5px; border:1px solid #ddd;'>{spentTimeTable.BillableQATime}</td>
-            <td style='padding:5px; border:1px solid #ddd;'>{spentTimeTable.NotBillableQATime}</td>
-            <td style='padding:5px; border:1px solid #ddd; white-space:nowrap;'>{spentTimeTable.TotalQATime}</td>
+            <td>QA</td>
+            <td>{spentTimeTable.BillableQATime}</td>
+            <td>{spentTimeTable.NotBillableQATime}</td>
+            <td class='nowrap'>{spentTimeTable.TotalQATime}</td>
         </tr>
-        <tr style='font-weight:bold; background-color:#f9f9f9;'>
-            <td style='padding:5px; border:1px solid #ddd;'>Total</td>
-            <td style='padding:5px; border:1px solid #ddd;'>{spentTimeTable.TotalBillableTime}</td>
-            <td style='padding:5px; border:1px solid #ddd;'>{spentTimeTable.TotalNotBillableTime}</td>
-            <td style='padding:5px; border:1px solid #ddd; white-space:nowrap;'>{spentTimeTable.TotalSpentTime}</td>
+        <tr class='total-row'>
+            <td>Total</td>
+            <td>{spentTimeTable.TotalBillableTime}</td>
+            <td>{spentTimeTable.TotalNotBillableTime}</td>
+            <td class='nowrap'>{spentTimeTable.TotalSpentTime}</td>
         </tr>
     </tbody>
 </table>";
-
                     var employee = await _employeeService.GetEmployeeByIdAsync(model.AssignedTo);
                     if (employee != null)
                     {
@@ -605,31 +603,48 @@ namespace App.Web.Factories.Extensions
                 Selected = model.Tasktypeid.ToString() == store.Value
             }).ToList();
             var periods = await SearchPeriodEnum.Today.ToSelectListAsync();
-
             model.PeriodList = periods.Select(store => new SelectListItem
             {
                 Value = store.Value,
                 Text = store.Text,
                 Selected = model.SearchPeriodId.ToString() == store.Value
             }).ToList();
-            var childTasks = await _projectTaskService.GetProjectTasksByParentIdAsync(model.Id);
-            if (childTasks != null && childTasks.Any())
+            var parentTask =
+     await _projectTaskService.GetProjectTasksWithoutCacheByIdAsync(model.ParentTaskId);
+
+            if (parentTask != null)
             {
+                var parentDevTime =
+                    await _timeSheetsService.GetDevelopmentTimeByTaskId(parentTask.Id);
+
+                var parentSpentTime = await _timeSheetsService.ConvertSpentTimeAsync(parentDevTime.SpentHours, parentDevTime.SpentMinutes);
+
+                var parentEstimatedTime =
+                    await _timeSheetsService.ConvertToHHMMFormat(parentTask.EstimatedTime);
+
                 var sb = new StringBuilder();
-                sb.AppendLine("<table style='width:100%; border-collapse:collapse; margin-top:15px;'>");
-                sb.AppendLine("<thead><tr style='background-color:#f2f2f2; text-align:left;'>");
-                sb.AppendLine("<th style='padding:5px; border:1px solid #ddd;'>Child Task</th>");
-                sb.AppendLine("</tr></thead><tbody>");
-
-                foreach (var child in childTasks)
-                {
-                    sb.AppendLine("<tr>");
-                    sb.AppendLine($"<td style='padding:5px; border:1px solid #ddd;'><a href='/ProjectTask/Edit?id={child.Id}' target='_blank' class='child-task-link'>{child.TaskTitle}</a></td>");
-                    sb.AppendLine("</tr>");
-                }
-
-                sb.AppendLine("</tbody></table>");
-                model.ChildTaskTable = sb.ToString();
+                sb.AppendLine("<table class='parent-task-table'>");
+                sb.AppendLine("<thead>");
+                sb.AppendLine("<tr>");
+                sb.AppendLine("<th colspan='2'>Parent Task</th>");
+                sb.AppendLine("</tr>");
+                sb.AppendLine("</thead>");
+                sb.AppendLine("<tbody>");
+                sb.AppendLine("<tr>");
+                sb.AppendLine("<td colspan='2' class='parent-task-title'>");
+                sb.AppendLine(
+                    $"<a href='/ProjectTask/Edit?id={parentTask.Id}' target='_blank'>" +
+                    $"{parentTask.TaskTitle}</a>"
+                );
+                sb.AppendLine("</td>");
+                sb.AppendLine("</tr>");
+                sb.AppendLine("<tr>");
+                sb.AppendLine($"<td class='parent-task-time'><strong>Est:</strong> {parentEstimatedTime}</td>");
+                sb.AppendLine($"<td class='parent-task-time'><strong>Dev:</strong> {parentSpentTime}</td>");
+                sb.AppendLine("</tr>");
+                sb.AppendLine("</tbody>");
+                sb.AppendLine("</table>");
+                model.ParentTaskTable = sb.ToString();
             }
             await PrepareTaskCommentsListAsync(model);
             await PrepareEmployeeListAsync(model);

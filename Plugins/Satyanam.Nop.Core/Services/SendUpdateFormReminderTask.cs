@@ -159,17 +159,18 @@ namespace Satyanam.Nop.Core.Services
                     var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
                     if (employee == null || string.IsNullOrWhiteSpace(employee.OfficialEmail))
                         continue;
+                    var customerId = employee.Customer_Id;
 
                     // Check existing submission
                     var existingSubmission = await _submissionRepo.Table
-                        .Where(s => s.UpdateTemplateId == template.Id && s.SubmittedByCustomerId == employeeId)
+                        .Where(s => s.UpdateTemplateId == template.Id && s.SubmittedByCustomerId == customerId)
                         .OrderByDescending(s => s.Id)
                         .FirstOrDefaultAsync();
 
                     bool alreadySubmitted = existingSubmission != null;
-                    bool allowEdit = template.IsEditingAllowed;
+                   
 
-                    if (alreadySubmitted && !allowEdit)
+                    if (alreadySubmitted)
                         continue;
 
                     // --- Subject & body messages ---

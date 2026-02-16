@@ -1,0 +1,60 @@
+﻿@using System
+@using System.Collections.Generic
+@using App.Web.Models.Extensions.ProjectTasks
+@model IList<ChildTaskModel>
+
+<table class="table table-bordered table-sm child-task-table">
+    <thead>
+        <tr>
+            <th>Task Name</th>
+            <th>Status</th>
+            <th class="text-center">Estimated Time</th>
+            <th class="text-center">Development Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Count > 0)
+        {
+            foreach (var task in Model)
+            {
+                <tr>
+                    <td>
+                        <a href="@Url.Action("Edit", "ProjectTask", new { id = task.Id })"
+                           target="_blank">
+                            @task.TaskTitle
+                        </a>
+                    </td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(task.StatusName))
+                        {
+                            <span class="status-dot text-center"
+                                  style="background-color:@task.StatusColor">
+                            </span>
+                            <span class="status-text text-center">
+                                @task.StatusName
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        @task.EstimatedTime
+                    </td>
+                    <td class="text-center">
+                        @task.SpentTime
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="4" class="text-center text-muted">
+                    No child tasks found
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

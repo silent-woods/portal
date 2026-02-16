@@ -1,42 +1,32 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using App.Core;
+using App.Core.Domain.Employees;
+using App.Core.Domain.Extension.Leaves;
+using App.Core.Domain.Extension.TimeSheets;
+using App.Core.Domain.Security;
+using App.Services.Customers;
+using App.Services.EmployeeAttendances;
 using App.Services.Employees;
+using App.Services.Helpers;
+using App.Services.Holidays;
+using App.Services.Leaves;
 using App.Services.Localization;
 using App.Services.Messages;
+using App.Services.ProjectEmployeeMappings;
 using App.Services.Projects;
 using App.Services.ProjectTasks;
 using App.Services.Security;
 using App.Services.TimeSheets;
-
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using System;
-
-using NUglify.Helpers;
-using App.Core.Domain.Extension.TimeSheets;
-using System.Collections.Generic;
-using System.Linq;
-using App.Services.Holidays;
-using Pipelines.Sockets.Unofficial.Arenas;
-using App.Core.Domain.TimeSheets;
-using App.Services.Customers;
-using App.Core;
-using App.Web.Factories.Extensions;
-using App.Web.Factories;
 using App.Web.Factories.Extensions;
 using App.Web.Models.Extension.TimesheetReports;
-using App.Core.Domain.Customers;
-using App.Services.ProjectEmployeeMappings;
-using System.Net.WebSockets;
-using App.Core.Domain.Employees;
-using System.Dynamic;
-using App.Services.EmployeeAttendances;
-using App.Services.Leaves;
-using App.Core.Domain.Extension.Leaves;
-using App.Services.Helpers;
+using Microsoft.AspNetCore.Mvc;
+using NUglify.Helpers;
+using Pipelines.Sockets.Unofficial.Arenas;
 using Satyanam.Nop.Core.Services;
-using App.Core.Domain.Security;
-
-
+using System;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace App.Web.Controllers.Extensions
 {
@@ -115,12 +105,15 @@ namespace App.Web.Controllers.Extensions
 
         #endregion
 
-
-
         public virtual async Task<IActionResult> EmployeePerformanceReport()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeePerformaceReport, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             //prepare model
             TimesheetReportSearchModel timesheetReportSearchModel = new TimesheetReportSearchModel();
@@ -864,7 +857,12 @@ namespace App.Web.Controllers.Extensions
         public virtual async Task<IActionResult> TimeSummaryReport()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTimeSummaryReport, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             //prepare model
             TimesheetReportSearchModel timesheetReportSearchModel = new TimesheetReportSearchModel();
@@ -965,7 +963,12 @@ namespace App.Web.Controllers.Extensions
         public virtual async Task<IActionResult> AttendanceReport()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreEmployeeAttendanceReport, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             //prepare model
             TimesheetReportSearchModel timesheetReportSearchModel = new TimesheetReportSearchModel();

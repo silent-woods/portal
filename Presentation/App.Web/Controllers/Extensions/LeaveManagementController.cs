@@ -1,7 +1,4 @@
 ﻿using App.Core;
-using App.Core.Domain.Customers;
-using App.Core.Domain.Designations;
-using App.Core.Domain.Employees;
 using App.Core.Domain.Extension.Leaves;
 using App.Core.Domain.Leaves;
 using App.Core.Domain.Security;
@@ -13,17 +10,10 @@ using App.Services.Localization;
 using App.Services.Messages;
 using App.Services.ProjectEmployeeMappings;
 using App.Services.Security;
-using App.Web.Areas.Admin.Infrastructure.Mapper.Extensions;
 using App.Web.Factories.Extensions;
-using App.Web.Models.Boards;
 using App.Web.Models.Extensions.LeaveManagement;
-using Azure.Storage.Blobs.Models;
-using DocumentFormat.OpenXml.EMMA;
-using DocumentFormat.OpenXml.ExtendedProperties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.VisualBasic;
-using MimeKit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -281,13 +271,17 @@ namespace App.Web.Controllers.Extensions
         }
 
         [HttpPost]
-        public virtual async Task<IActionResult> InsertLeave(int leaveTypeId,
-     DateTime? from,
-     DateTime? to,
-     decimal? NoOfDays,
-     string ReasonForLeave,
-     string SelectedEmployeeIds)
+        public virtual async Task<IActionResult> InsertLeave(int leaveTypeId, DateTime? from, DateTime? to, decimal? NoOfDays, string ReasonForLeave,
+            string SelectedEmployeeIds)
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreLeaveManagement, PermissionAction.Add))
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
+
             // Parameter validation at the beginning
             if (leaveTypeId <= 0 || from == null || to == null || NoOfDays == null || string.IsNullOrWhiteSpace(ReasonForLeave))
             {
@@ -402,9 +396,6 @@ namespace App.Web.Controllers.Extensions
             return Json(new { success = false, message = "Model validation failed." });
         }
 
-
-  
-
         public async Task<IActionResult> LeaveBalance()
         {
             var customer = await _workContext.GetCurrentCustomerAsync();
@@ -467,7 +458,12 @@ namespace App.Web.Controllers.Extensions
         public async Task<IActionResult> SearchLeave(LeaveManagementSearchModel searchModel)
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreLeaveManagement, PermissionAction.View))
-                return Challenge();
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
 
             var currentcustomer = await _workContext.GetCurrentCustomerAsync();
 
@@ -482,6 +478,14 @@ namespace App.Web.Controllers.Extensions
 
         public async Task<IActionResult> SearchLeaveList(int leaveTypeId,int statusId, DateTime from , DateTime to)
         {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreLeaveManagement, PermissionAction.View))
+            {
+                if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+                    return Challenge();
+
+                return View("/Themes/DefaultClean/Views/Common/AccessDenied.cshtml");
+            }
+
             var currentcustomer = await _workContext.GetCurrentCustomerAsync();
             LeaveManagementSearchModel searchModel = new LeaveManagementSearchModel();
 
