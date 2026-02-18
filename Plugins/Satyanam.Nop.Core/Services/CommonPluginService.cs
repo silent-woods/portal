@@ -383,8 +383,7 @@ namespace Satyanam.Nop.Core.Services
             return overdueTasks;
         }
 
-        public async Task<IList<ProjectTask>> GetOverdueTasksByCurrentEmployeeForDashboardAsync(
-            int currEmployeeId)
+        public async Task<IList<ProjectTask>> GetOverdueTasksByCurrentEmployeeForDashboardAsync(int currEmployeeId=0,int projectId = 0,int employeeId = 0,string taskName = null,int statusId = 0)
         {
             var today = DateTime.UtcNow.Date;
             var employeeIds = await GetEmployeeIdsForOverdueAsync(currEmployeeId);
@@ -437,7 +436,7 @@ namespace Satyanam.Nop.Core.Services
                         .Distinct();
                 })
                 .ToList();
-            var tasks = await _projectTaskRepository.Table
+            var query = _projectTaskRepository.Table
                 .Where(t =>
                     !t.IsDeleted &&
                     employeeIds.Contains(t.AssignedTo) &&
@@ -448,8 +447,18 @@ namespace Satyanam.Nop.Core.Services
                 .Where(t =>
                     allowedStatuses.Any(s =>
                         s.WorkflowId == t.ProcessWorkflowId &&
-                        s.StatusId == t.StatusId))
-                .ToListAsync();
+                        s.StatusId == t.StatusId));
+            if (projectId > 0)
+                query = query.Where(t => t.ProjectId == projectId);
+            if (employeeId > 0)
+                query = query.Where(t =>
+                    t.AssignedTo == employeeId ||
+                    t.DeveloperId == employeeId);
+            if (statusId > 0)
+                query = query.Where(t => t.StatusId == statusId);
+            if (!string.IsNullOrWhiteSpace(taskName))
+                query = query.Where(t => t.TaskTitle.Contains(taskName));
+            var tasks = await query.ToListAsync();
             var overdueTasks = tasks
                 .GroupBy(t => t.Id)
                 .Select(g => g.First())

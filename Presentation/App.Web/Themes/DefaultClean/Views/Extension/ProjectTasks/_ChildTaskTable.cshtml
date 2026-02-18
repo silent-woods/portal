@@ -6,10 +6,10 @@
 <table class="table table-bordered table-sm child-task-table">
     <thead>
         <tr>
-            <th>Task Name</th>
-            <th>Status</th>
-            <th class="text-center">Estimated Time</th>
-            <th class="text-center">Development Time</th>
+            <th>@T("User.ProjectTask.Fields.TaskName")</th>
+            <th>@T("User.ProjectTask.Fields.Status")</th>
+            <th class="text-center">@T("User.ProjectTask.Fields.EstimatedTime")</th>
+            <th class="text-center">@T("User.ProjectTask.Fields.DevelopmentTime")</th>
         </tr>
     </thead>
     <tbody>
@@ -52,7 +52,7 @@
         {
             <tr>
                 <td colspan="4" class="text-center text-muted">
-                    No child tasks found
+                    @T("User.ProjectTask.NoChildTasksFound")
                 </td>
             </tr>
         }

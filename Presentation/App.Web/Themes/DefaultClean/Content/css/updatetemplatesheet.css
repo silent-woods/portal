@@ -223,13 +223,12 @@
     }
 /* Card body (collapsed by default) */
 .update-card-body {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.35s ease;
+    display: none;
+    padding: 15px;
 }
 /* Expanded */
 .update-card.open .update-card-body {
-    max-height: 2000px; /* large enough for content */
+    display: block; /* large enough for content */
 }
 /* Rotate arrow */
 .update-card.open .card-toggle-btn i {
@@ -253,3 +252,102 @@
 .comment-input{
     width:100%;
 }
+.grid-container {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.grid-item {
+    flex: 1 1 200px;
+}
+
+.jqx-grid-cell span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.action-button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.submission-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+    .submission-btn:hover {
+        background-color: #0056b3;
+        color: #fff;
+    }
+
+.reviewer-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+    .reviewer-btn:hover {
+        background-color: #6c757d;
+        color: #fff;
+    }
+
+.jqx-grid-column-header-action,
+.jqx-grid-column-header-action div {
+    text-align: center !important;
+    justify-content: center !important;
+}
+
+.action-button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+/* badge container */
+.user-badge-container {
+    display: flex;
+    flex-wrap: nowrap; /* ? no wrap */
+    gap: 4px;
+    overflow-x: auto; /* ? scroll if many */
+    white-space: nowrap;
+    max-width: 100%;
+    padding-bottom: 2px;
+}
+
+    /* hide ugly scrollbar (optional) */
+    .user-badge-container::-webkit-scrollbar {
+        height: 4px;
+    }
+
+
+/* common badge */
+.user-badge {
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+    /* green badge */
+    .user-badge.submitted {
+        background: #e6f7ee;
+        color: #198754;
+        border: 1px solid #b7e4c7;
+    }
+
+    /* red badge */
+    .user-badge.not-submitted {
+        background: #fdecea;
+        color: #dc3545;
+        border: 1px solid #f5c2c7;
+    }

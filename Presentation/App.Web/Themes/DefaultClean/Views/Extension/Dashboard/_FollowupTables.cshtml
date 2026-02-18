@@ -48,7 +48,7 @@
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text">
+                        <th class="sortable" data-type="percentage">
                             Alert <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
@@ -196,7 +196,7 @@
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text">
+                        <th class="sortable" data-type="percentage">
                             Alert <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
@@ -345,7 +345,7 @@
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text">
+                        <th class="sortable" data-type="percentage">
                             Alert <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
@@ -614,18 +614,22 @@
             var A = $(a).children("td").eq(index).text().trim();
             var B = $(b).children("td").eq(index).text().trim();
 
-            if (type === "number") {
-                A = parseFloat(A) || 0;
-                B = parseFloat(B) || 0;
-            }
-            else if (type === "date") {
-                A = A ? new Date(A) : new Date(0);
-                B = B ? new Date(B) : new Date(0);
-            }
-            else {
-                A = A.toLowerCase();
-                B = B.toLowerCase();
-            }
+    if (type === "number") {
+        A = parseFloat(A.replace(/[^\d.-]/g, "")) || 0;
+        B = parseFloat(B.replace(/[^\d.-]/g, "")) || 0;
+    }
+    else if (type === "percentage") {
+        A = parseFloat(A.replace("%", "")) || 0;
+        B = parseFloat(B.replace("%", "")) || 0;
+    }
+    else if (type === "date") {
+        A = A ? new Date(A) : new Date(0);
+        B = B ? new Date(B) : new Date(0);
+    }
+    else {
+        A = A.toLowerCase();
+        B = B.toLowerCase();
+    }
 
             if (A < B) return asc ? -1 : 1;
             if (A > B) return asc ? 1 : -1;

@@ -433,7 +433,7 @@ namespace App.Web.Controllers
             return PartialView("/Themes/DefaultClean/Views/Extension/Dashboard/_ReadyToTestTaskList.cshtml",model);
         }
         [HttpGet]
-        public async Task<IActionResult> SearchOverdueTasks(int projectId = 0,int employeeId = 0,string taskName = null)
+        public async Task<IActionResult> SearchOverdueTasks(int projectId = 0,int employeeId = 0,string taskName = null,int statusId = 0)
         {
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -445,7 +445,8 @@ namespace App.Web.Controllers
                     currEmployeeId: emp?.Id ?? 0,
                     projectId: projectId,
                     employeeId: employeeId,
-                    taskName: taskName
+                    taskName: taskName,
+                    statusId: statusId
                 );
 
             return PartialView("/Themes/DefaultClean/Views/Extension/Dashboard/_OverdueTaskList.cshtml",model);

@@ -4,6 +4,7 @@ using App.Core.Domain.Activities;
 using App.Core.Domain.EmployeeAttendances;
 using App.Core.Domain.Employees;
 using App.Core.Domain.Extension.EmployeeAttendanceSetting;
+using App.Core.Domain.Extension.ProjectTasks;
 using App.Core.Domain.Extension.TimeSheets;
 using App.Core.Domain.Projects;
 using App.Core.Domain.ProjectTasks;
@@ -421,11 +422,18 @@ namespace App.Services.TimeSheets
             {
                 query = query.Where(c => c.EmployeeId == employeeId && c.SpentDate >= from && c.SpentDate <= to);
                 if (!showHidden)
-                    query = query.Where(ts =>
-                        ts.TaskId == 0 ||
-                        _projectTaskRepository.Table
-                            .Any(t => t.Id == ts.TaskId && !t.IsDeleted));
-                
+                {
+                    query = query
+                        .Join(_projectTaskRepository.Table,
+                              ts => ts.TaskId,
+                              pt => pt.Id,
+                              (ts, pt) => new { ts, pt })
+                        .Where(x =>
+                            !x.pt.IsDeleted &&
+                            x.pt.Tasktypeid != (int)TaskTypeEnum.UserStory)
+                        .Select(x => x.ts);
+                }
+
                 return query.OrderBy(c => c.SpentDate);
             });
 
@@ -470,8 +478,17 @@ namespace App.Services.TimeSheets
         {
             var query = await _timeSheetRepository.GetAllAsync(async query =>
             {
-                query = query.Where(c => c.EmployeeId == employeeId && c.SpentDate >= from && c.SpentDate <= to).Where(c => !_projectTaskRepository.Table
-            .Any(t => t.Id == c.TaskId && t.IsDeleted)); ;
+               query = query.Join(_projectTaskRepository.Table,
+                          ts => ts.TaskId,
+                          pt => pt.Id,
+                          (ts, pt) => new { ts, pt })
+                .Where(x =>
+                    x.ts.EmployeeId == employeeId &&
+                    (!from.HasValue || x.ts.SpentDate >= from.Value) &&
+                    (!to.HasValue || x.ts.SpentDate <= to.Value) &&
+                    !x.pt.IsDeleted &&
+                    x.pt.Tasktypeid != (int)TaskTypeEnum.UserStory)
+                    .Select(x => x.ts);
 
                 if (projectIds != null)
                 {
@@ -540,8 +557,19 @@ namespace App.Services.TimeSheets
         {
             var query = await _timeSheetRepository.GetAllAsync(async query =>
             {
-                query = query.Where(c => c.ProjectId == projectId && c.SpentDate >= from && c.SpentDate <= to).Where(c => !_projectTaskRepository.Table
-            .Any(t => t.Id == c.TaskId && t.IsDeleted));
+                query = query
+                    .Join(_projectTaskRepository.Table,
+                          ts => ts.TaskId,
+                          pt => pt.Id,
+                          (ts, pt) => new { ts, pt })
+                .Where(x =>
+                    x.ts.ProjectId == projectId &&
+                    (!from.HasValue || x.ts.SpentDate >= from.Value) &&
+                    (!to.HasValue || x.ts.SpentDate <= to.Value) &&
+                    !x.pt.IsDeleted &&
+                    x.pt.Tasktypeid != (int)TaskTypeEnum.UserStory)
+                    .Select(x => x.ts);
+
                 if (employeeIds != null && employeeIds.Count > 0 && !employeeIds.Contains(0))
                 {
                     query = query.Where(c => employeeIds.Contains(c.EmployeeId));
@@ -615,6 +643,17 @@ namespace App.Services.TimeSheets
             {
                 query = query.Where(c => c.SpentDate >= from && c.SpentDate <= to).Where(c => !_projectTaskRepository.Table
             .Any(t => t.Id == c.TaskId && t.IsDeleted)); ;
+
+                query = query.Join(_projectTaskRepository.Table,
+           ts => ts.TaskId,
+           pt => pt.Id,
+           (ts, pt) => new { ts, pt }).Where(x =>
+     (!from.HasValue || x.ts.SpentDate >= from.Value) &&
+     (!to.HasValue || x.ts.SpentDate <= to.Value) &&
+     !x.pt.IsDeleted &&
+     x.pt.Tasktypeid != (int)TaskTypeEnum.UserStory)
+     .Select(x => x.ts);
+
                 if (projectIds != null)
                 {
                     query = query.Where(c => projectIds.Contains(c.ProjectId));
@@ -672,8 +711,18 @@ namespace App.Services.TimeSheets
         {
             var query = await _timeSheetRepository.GetAllAsync(async query =>
             {
-                query = query.Where(c => c.EmployeeId == employeeId && c.SpentDate >= from && c.SpentDate <= to).Where(c => !_projectTaskRepository.Table
-            .Any(t => t.Id == c.TaskId && t.IsDeleted));
+               query = query.Join(_projectTaskRepository.Table,
+                          ts => ts.TaskId,
+                          pt => pt.Id,
+                          (ts, pt) => new { ts, pt })
+                .Where(x =>
+                    x.ts.EmployeeId == employeeId &&
+                    (!from.HasValue || x.ts.SpentDate >= from.Value) &&
+                    (!to.HasValue || x.ts.SpentDate <= to.Value) &&
+                    !x.pt.IsDeleted &&
+                    x.pt.Tasktypeid != (int)TaskTypeEnum.UserStory)
+                    .Select(x => x.ts);
+
                 if (projectId != 0)
                 {
                     query = query.Where(c => c.ProjectId == projectId);
@@ -788,8 +837,18 @@ namespace App.Services.TimeSheets
         {
             var query = await _timeSheetRepository.GetAllAsync(async query =>
             {
-                query = query.Where(c => c.ProjectId == projectId && c.SpentDate >= from && c.SpentDate <= to).Where(c => !_projectTaskRepository.Table
-            .Any(t => t.Id == c.TaskId && t.IsDeleted)); ;
+               query = query.Join(_projectTaskRepository.Table,
+                          ts => ts.TaskId,
+                          pt => pt.Id,
+                          (ts, pt) => new { ts, pt })
+                .Where(x =>
+                    x.ts.ProjectId == projectId &&
+                    (!from.HasValue || x.ts.SpentDate >= from.Value) &&
+                    (!to.HasValue || x.ts.SpentDate <= to.Value) &&
+                    !x.pt.IsDeleted &&
+                    x.pt.Tasktypeid != (int)TaskTypeEnum.UserStory)
+                    .Select(x => x.ts);
+
                 if (employeeId != 0)
                 {
                     query = query.Where(c => c.EmployeeId == employeeId);
@@ -852,8 +911,18 @@ namespace App.Services.TimeSheets
         {
             var query = await _timeSheetRepository.GetAllAsync(async query =>
             {
-                query = query.Where(c => c.TaskId == taskId && c.SpentDate >= from && c.SpentDate <= to).Where(c => !_projectTaskRepository.Table
-            .Any(t => t.Id == c.TaskId && t.IsDeleted)); ;
+               query = query.Join(_projectTaskRepository.Table,
+                          ts => ts.TaskId,
+                          pt => pt.Id,
+                          (ts, pt) => new { ts, pt })
+                .Where(x =>
+                    x.ts.TaskId == taskId &&
+                    (!from.HasValue || x.ts.SpentDate >= from.Value) &&
+                    (!to.HasValue || x.ts.SpentDate <= to.Value) &&
+                    !x.pt.IsDeleted &&
+                    x.pt.Tasktypeid != (int)TaskTypeEnum.UserStory)
+                    .Select(x => x.ts);
+
                 if (projectId != 0)
                 {
                     query = query.Where(c => c.ProjectId == projectId);
@@ -920,8 +989,18 @@ namespace App.Services.TimeSheets
         {
             var query = await _timeSheetRepository.GetAllAsync(async query =>
             {
-                query = query.Where(c => c.SpentDate >= from && c.SpentDate <= to).Where(c => !_projectTaskRepository.Table
-            .Any(t => t.Id == c.TaskId && t.IsDeleted)); ;
+               query = query.Join(_projectTaskRepository.Table,
+                          ts => ts.TaskId,
+                          pt => pt.Id,
+                          (ts, pt) => new { ts, pt })
+                .Where(x =>
+                    x.ts.TaskId == taskId &&
+                    (!from.HasValue || x.ts.SpentDate >= from.Value) &&
+                    (!to.HasValue || x.ts.SpentDate <= to.Value) &&
+                    !x.pt.IsDeleted &&
+                    x.pt.Tasktypeid != (int)TaskTypeEnum.UserStory)
+                    .Select(x => x.ts);
+
                 if (employeeIds != null && employeeIds.Count > 0 && !employeeIds.Contains(0))
                 {
                     query = query.Where(c => employeeIds.Contains(c.EmployeeId));

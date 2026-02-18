@@ -325,6 +325,26 @@
                     </div>
                 </div>
             </div>
+            <div class="card card-default card-search">
+                <div class="card-body nop-card-body">
+                    <div class="timesheet-header parent-task-header"
+                         data-taskid="@Model.Id"
+                         data-target="#childTaskContainer_@Model.Id">
+                        <h3 class="section-title">
+                            Child Tasks
+                            <span class="accordion-arrow">&#9660;</span>
+                        </h3>
+                    </div>
+                    <div id="childTaskContainer_@Model.Id"
+                         class="child-task-container"
+                         style="display:none;">
+                        <div class="text-muted p-2 loader">
+                            Click to load child tasks
+                        </div>
+                        <div class="child-task-table subgrid-table"></div>
+                    </div>
+                </div>
+            </div>
             @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagementTimesheet, PermissionAction.View))
             {
                 <div class="card card-default card-search">
@@ -365,21 +385,18 @@
             {
                 <div class="card card-default card-search">
                     <div class="card-body nop-card-body">
-
                         <div class="timesheet-header accordion-header" data-target="#followupLogContainer">
                             <h3 class="section-title">
                                 Follow-Up Logs
                                 <span class="accordion-arrow">&#9660;</span>
                             </h3>
                         </div>
-
                         <div id="followupLogContainer" style="display:none;">
                             <div id="followupLogLoader" class="text-muted" style="padding:10px;">
                                 Click to load follow-up logs
                             </div>
                             <div id="followupLogTable"></div>
                         </div>
-
                     </div>
                 </div>
             }
@@ -424,112 +441,7 @@
                     </div>
                 </div>
             }
-            <div class="card card-default card-search">
-                <div class="card-body nop-card-body">
-                    <div class="timesheet-header" id="timesheetHeader">
-                        <h3 class="section-title">
-                            Timesheet
-                            <span id="timesheetArrow">&#9660;</span>
-                        </h3>
-                    </div>
-                    <div id="timesheetContainer" style="display:none;">
-                        <div id="timesheetFilter" class="timesheet-filter">
-                            <div class="grid-item">
-                                <label>Period:</label>
-                                <select id="SearchPeriodId" class="form-control">
-                                    @foreach (var p in Model.PeriodList)
-                                    {
-                                        <option value="@p.Value" selected="@p.Selected">@p.Text</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="grid-item" id="from-container">
-                                <label>From</label>
-                                <input type="date" id="From" class="form-control" />
-                            </div>
-                            <div class="grid-item" id="to-container">
-                                <label>To</label>
-                                <input type="date" id="To" class="form-control" />
-                            </div>
-                        </div>
-                        <div id="timesheetTable"></div>
-                    </div>
-                </div>
             </div>
-            <div class="card card-default card-search">
-                <div class="card-body nop-card-body">
-                    <div class="timesheet-header accordion-header" data-target="#followupLogContainer">
-                        <h3 class="section-title">
-                            Follow-Up Logs
-                            <span class="accordion-arrow">&#9660;</span>
-                        </h3>
-                    </div>
-                    <div id="followupLogContainer" style="display:none;">
-                        <div id="followupLogLoader" class="text-muted" style="padding:10px;">
-                            Click to load follow-up logs
-                        </div>
-                        <div id="followupLogTable"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="card card-default card-search">
-                <div class="card-body nop-card-body">
-                    <div class="timesheet-header parent-task-header"
-                         data-taskid="@Model.Id"
-                         data-target="#childTaskContainer_@Model.Id">
-                        <h3 class="section-title">
-                            Child Tasks
-                            <span class="accordion-arrow">&#9660;</span>
-                        </h3>
-                    </div>
-                    <div id="childTaskContainer_@Model.Id"
-                         class="child-task-container"
-                         style="display:none;">
-                        <div class="text-muted p-2 loader">
-                            Click to load child tasks
-                        </div>
-                        <div class="child-task-table subgrid-table"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="card card-default card-search task-change-log-card">
-                <div class="card-body nop-card-body">
-                    <div class="timesheet-header accordion-header" data-target="#taskChangeLogContainer">
-                        <h3 class="section-title">
-                            Task Change Logs
-                            <span class="accordion-arrow">&#9660;</span>
-                        </h3>
-                    </div>
-                    <div id="taskChangeLogContainer" style="display:none;">
-                        <div class="form-horizontal">
-                            <div class="task-commments-container scrollable-section-highhight">
-                                @if (Model.TaskChangeLogModel != null && Model.TaskChangeLogModel.Any())
-                                {
-                                    foreach (var taskLog in Model.TaskChangeLogModel)
-                                    {
-                                        <div class="comment-card">
-                                            <div class="comment-header">
-                                                <span class="comment-author">@taskLog.EmployeeName</span>
-                                                <span class="comment-date">
-                                                    @taskLog.CreatedOn.ToString("dd MMM yyyy hh:mm tt")
-                                                </span>
-                                            </div>
-                                            <div class="comments-body">
-                                                <p>@Html.Raw(taskLog.Notes)</p>
-                                            </div>
-                                        </div>
-                                    }
-                                }
-                                else
-                                {
-                                    <p class="no-comments">No logs</p>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
   <div class="half-page">
   <div class="card card-default card-search">

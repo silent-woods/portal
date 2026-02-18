@@ -63,6 +63,29 @@
             Search
         </button>
     </div>
+    <input type="hidden" id="selectedStatusId" value="0" />
+    <div class="status-filter-bar">
+        @foreach (var wfGroup in Model.StatusFilters
+                .Where(s => s.Count > 0)
+                .GroupBy(s => s.ProcessWorkflowName))
+        {
+            <div class="workflow-row">
+                <span class="workflow-title">@wfGroup.Key</span>
+
+                <div class="status-list">
+                    @foreach (var s in wfGroup)
+                    {
+                        <span class="status-pill @(s.StatusId == Model.SelectedStatusId ? "active" : "")"
+                              data-statusid="@s.StatusId">
+                            <span class="dot" style="background:@s.ColorCode"></span>
+                            @s.StatusName
+                            <span class="count">@s.Count</span>
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
     <div id="overdueTaskContainer">
         @await Html.PartialAsync("/Themes/DefaultClean/Views/Extension/Dashboard/_OverdueTaskList.cshtml",Model)
     </div>
@@ -70,19 +93,69 @@
 
 <script>
     $("#btnSearch").on("click", function () {
+          $("#selectedStatusId").val(0);
+    $(".status-pill").removeClass("active");
         loadOverdueTasks();
     });
     function loadOverdueTasks() {
+         var statusId = $("#selectedStatusId").val()
         $.get("/Dashboard/SearchOverdueTasks", {
             projectId: $("#projectId").val(),
             employeeId: $("#employeeId").val(),
-            taskName: $("#taskName").val()
+            taskName: $("#taskName").val(),
+            statusId: statusId
         })
         .done(function (html) {
             $("#overdueTaskContainer").html(html);
+            if(statusId ==0)
+             updateStatusCountsFromTasks();
         })
         .fail(function () {
             alert("Failed to load overdue tasks");
+        });
+    }
+
+      $(document).on("click", ".status-pill", function () {
+        var $this = $(this);
+        if ($this.hasClass("disabled"))
+            return;
+
+        var statusId = $this.data("statusid");
+        var $hidden = $("#selectedStatusId");
+        if ($this.hasClass("active")) {
+            $this.removeClass("active");
+            $hidden.val(0); 
+        } else {
+            $(".status-pill").removeClass("active");
+            $this.addClass("active");
+            $hidden.val(statusId);
+        }
+
+        loadOverdueTasks();
+    });
+
+       function updateStatusCountsFromTasks() {
+        var counts = {};
+        var selectedStatusId = $("#selectedStatusId").val();
+        $("#overdueTaskContainer tr[data-statusid]").each(function () {
+            var sid = $(this).data("statusid");
+            counts[sid] = (counts[sid] || 0) + 1;
+        });
+        $(".status-pill").each(function () {
+
+            var $pill = $(this);
+            var sid = $pill.data("statusid");
+            var count = counts[sid] || 0;
+            $pill.find(".count").text(count);
+            if (selectedStatusId == 0) {
+                if (count === 0) {
+                    $pill.hide();
+                } else {
+                    $pill.show();
+                }
+            } else {
+                $pill.show();
+            }
         });
     }
 </script>

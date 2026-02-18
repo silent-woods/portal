@@ -35,7 +35,7 @@ namespace Satyanam.Nop.Core.Services
         Task<IList<int>> GetEmployeeIdsForOverdueAsync(int currEmployeeId);
         Task<string> GetLearningTimeOfEmployeeByRange(int employeeId, DateTime from, DateTime to);
         Task<int> GetManaualTimeOfEmployeeByRange(int employeeId, DateTime from, DateTime to);
-        Task<IList<ProjectTask>> GetOverdueTasksByCurrentEmployeeForDashboardAsync(int currEmployeeId);
+        Task<IList<ProjectTask>> GetOverdueTasksByCurrentEmployeeForDashboardAsync(int currEmployeeId = 0,int projectId = 0,int employeeId = 0,string taskName = null,int statusId = 0);
         Task<int> GetDashboardOverdueCountAsync(int currEmployeeId);
     }
 }

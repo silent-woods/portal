@@ -288,10 +288,14 @@ namespace App.Services.ProjectTasks
         {
             var tasks = await _projectTaskRepository.GetAllAsync(async query =>
             {
+                query = query.Where(pt =>
+                    pt.ProjectId == projectId &&
+                    pt.Tasktypeid != (int)TaskTypeEnum.UserStory);
+
                 if (!showHidden)
                     query = query.Where(pt => !pt.IsDeleted);
-                query = query.Where(c => c.ProjectId == projectId);
-                return query.OrderByDescending(c => c.CreatedOnUtc);
+
+                return query.OrderByDescending(pt => pt.CreatedOnUtc);
             });
             return tasks;
         }

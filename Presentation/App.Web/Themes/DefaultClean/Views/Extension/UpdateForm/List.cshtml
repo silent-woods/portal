@@ -197,10 +197,22 @@
 </script>
 <script>
     document.addEventListener("click", function (e) {
-        const toggleBtn = e.target.closest(".card-toggle-btn");
-        if (!toggleBtn) return;
 
-        const card = toggleBtn.closest(".update-card");
+        // Check if clicked inside header
+        const header = e.target.closest(".collapsible-header");
+        if (!header) return;
+
+        const card = header.closest(".update-card");
+        if (!card) return;
+
+        // Toggle open class
         card.classList.toggle("open");
+
+        // Rotate arrow icon
+        const icon = header.querySelector(".card-toggle-btn i");
+        if (icon) {
+            icon.classList.toggle("fa-chevron-down");
+            icon.classList.toggle("fa-chevron-up");
+        }
     });
 </script>

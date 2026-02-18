@@ -22,7 +22,7 @@
                 foreach (var t in Model.OverdueTasks)
                 {
 
-                    <tr>
+                    <tr data-statusid="@t.StatusId">
                         <td>
                             <a href="@Url.Action("Edit", "ProjectTask", new { id = t.TaskId })"
                                target="_blank"

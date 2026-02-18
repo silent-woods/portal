@@ -58,6 +58,7 @@ namespace Nop.Web.Controllers
         private readonly IDownloadService _downloadService;
         private readonly IRepository<Download> _downloadRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IRepository<Customer> _customerRepository;
         #endregion
 
         #region Ctor
@@ -87,7 +88,8 @@ namespace Nop.Web.Controllers
             IWebHostEnvironment webHostEnvironment,
             IDownloadService downloadService,
             IRepository<Download> downloadRepository,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IRepository<Customer> customerRepository)
         {
             _permissionService = permissionService;
             _notificationService = notificationService;
@@ -115,6 +117,7 @@ namespace Nop.Web.Controllers
             _downloadService = downloadService;
             _downloadRepository = downloadRepository;
             _httpContextAccessor = httpContextAccessor;
+            _customerRepository = customerRepository;
         }
 
         #endregion
@@ -833,6 +836,10 @@ namespace Nop.Web.Controllers
                 return Json(Enumerable.Empty<object>()); // No employee record, return nothing
 
             var templates = await _updateTemplateRepository.Table.Where(t=>t.IsActive).ToListAsync();
+            var allEmployees = await _employeeRepository.Table.ToListAsync();
+            var allCustomers = await _customerRepository.Table.ToListAsync();
+            var allSubmissions = await _submissionRepository.Table.ToListAsync();
+            var allPeriods = await _periodRepository.Table.ToListAsync();
 
             var userSubmissions = await _submissionRepository.Table
                 .Where(x => x.SubmittedByCustomerId == customer.Id)
@@ -857,17 +864,62 @@ namespace Nop.Web.Controllers
                     if (!canSubmit && !canReview)
                         return null;
 
+                    var templateSubmissions = allSubmissions.Where(s => s.UpdateTemplateId == t.Id).ToList();
+
+                    var submittedEmployeeIds = templateSubmissions
+    .Select(x =>
+        allEmployees
+            .FirstOrDefault(e => e.Customer_Id == x.SubmittedByCustomerId)
+            ?.Id.ToString()
+    )
+    .Where(x => x != null)
+    .Distinct()
+    .ToList();
+
+                    var notSubmittedIds = submitterIds.Except(submittedEmployeeIds).ToList();
+                    string GetName(string empId)
+                    {
+                        var emp = allEmployees.FirstOrDefault(e => e.Id.ToString() == empId);
+                        if (emp == null) return "";
+
+                        var cust = allCustomers.FirstOrDefault(c => c.Id == emp.Customer_Id);
+                        return cust != null ? $"{cust.FirstName} {cust.LastName}" : "";
+                    }
+                    var submittedNames = submittedEmployeeIds
+            .Select(GetName)
+            .Where(x => !string.IsNullOrEmpty(x));
+
+                    var notSubmittedNames = notSubmittedIds
+                        .Select(GetName)
+                        .Where(x => !string.IsNullOrEmpty(x));
+
+
                     var submission = userSubmissions
                         .Where(s => s.UpdateTemplateId == t.Id)
                         .OrderByDescending(s => s.SubmittedOnUtc)
                         .FirstOrDefault();
+                    string periodText = "";
 
+                    if (submission != null)
+                    {
+                        var period = allPeriods.FirstOrDefault(p => p.Id == submission.PeriodId);
+
+                        if (period != null)
+                            periodText = $"{period.PeriodStart:MMM dd} - {period.PeriodEnd:MMM dd, yyyy}";
+                    }
                     return new
                     {
                         t.Id,
                         t.Title,
-                        IsSubmitted = submission != null,
+
                         PeriodId = submission?.PeriodId ?? 0,
+                        PeriodText = periodText,                     // ⭐ NEW
+
+                        SubmittedUsersText = string.Join(", ", submittedNames),      // ⭐ NEW
+                        NotSubmittedUsersText = string.Join(", ", notSubmittedNames),// ⭐ NEW
+
+                        IsSubmitted = submittedEmployeeIds.Contains(employeeIdStr),
+
                         CanSubmit = canSubmit,
                         CanReview = canReview
                     };

@@ -252,6 +252,7 @@ public partial class TrackerAPIController : BaseController
     {
         return taskTypeId switch
         {
+            (int)TaskTypeEnum.UserStory => $"UserStory: {title}",
             (int)TaskTypeEnum.Bug => $"Bug: {title}",
             (int)TaskTypeEnum.ChangeRequest => $"CR: {title}",
             _ => title

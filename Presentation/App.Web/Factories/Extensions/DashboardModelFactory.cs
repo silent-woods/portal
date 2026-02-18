@@ -681,7 +681,7 @@ namespace App.Web.Factories.Extensions
             return model;
         }
 
-        public async Task<PendingDashboardModel> PrepareOverdueDashboardModelAsync(int currEmployeeId = 0,int projectId = 0,int employeeId = 0,string taskName = null)
+        public async Task<PendingDashboardModel> PrepareOverdueDashboardModelAsync(int currEmployeeId = 0,int projectId = 0,int employeeId = 0,string taskName = null,int statusId =0)
         {
             var currEmployee = await _employeeService.GetEmployeeByIdAsync(currEmployeeId);
 
@@ -700,22 +700,8 @@ namespace App.Web.Factories.Extensions
             await PrepareEmployeeListAsync(model);
 
             var overdueTasks = new List<ProjectTask>();
-            overdueTasks = (List<ProjectTask>)await _commonPluginService.GetOverdueTasksByCurrentEmployeeForDashboardAsync(currEmployeeId);
+            overdueTasks = (List<ProjectTask>)await _commonPluginService.GetOverdueTasksByCurrentEmployeeForDashboardAsync(currEmployeeId:currEmployeeId,projectId:projectId,employeeId:employeeId,taskName:taskName,statusId:statusId);
             var today = DateTime.UtcNow.Date;
-
-            if (projectId > 0)
-                overdueTasks = overdueTasks.Where(t => t.ProjectId == projectId).ToList();
-
-            if (employeeId > 0)
-                overdueTasks = overdueTasks
-                    .Where(t => t.AssignedTo == employeeId || t.DeveloperId == employeeId)
-                    .ToList();
-
-            if (!string.IsNullOrWhiteSpace(taskName))
-                overdueTasks = overdueTasks
-                    .Where(t => t.TaskTitle.Contains(taskName))
-                    .ToList();
-
             var statusIds = overdueTasks
     .Select(t => t.StatusId)
     .Distinct()
@@ -739,6 +725,35 @@ namespace App.Web.Factories.Extensions
             var projectDict = projects.ToDictionary(p => p.Id, p => p.ProjectTitle);
             var employeeDict = employees.ToDictionary(e => e.Id, e => $"{e.FirstName} {e.LastName}");
             var developerDict = developers.ToDictionary(d => d.Id, d => $"{d.FirstName} {d.LastName}");
+
+            var workflows = await _processWorkflowService.GetAllProcessWorkflowsAsync();
+
+            var workflowDict = workflows
+                .ToDictionary(w => w.Id, w => w.Name);
+            var statusCountDict = overdueTasks
+                .GroupBy(t => t.StatusId)
+                .ToDictionary(g => g.Key, g => g.Count());
+            model.StatusFilters = statuses
+                .Select(s => new StatusFilterModel
+                {
+                    StatusId = s.Id,
+                    StatusName = s.StatusName,
+                    ColorCode = s.ColorCode,
+                    ProcessWorkflowId = s.ProcessWorkflowId,
+                    ProcessWorkflowName = workflowDict.TryGetValue(
+                        s.ProcessWorkflowId,
+                        out var wfName)
+                            ? wfName
+                            : string.Empty,
+
+                    Count = statusCountDict.TryGetValue(s.Id, out var count)
+                        ? count
+                        : 0
+                })
+                .Where(x => x.Count > 0)
+                .OrderBy(x => x.ProcessWorkflowName)
+                .ThenBy(x => x.StatusName)
+                .ToList();
 
             var ist = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
             model.OverdueTasks = (await Task.WhenAll(

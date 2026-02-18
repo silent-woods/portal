@@ -7,7 +7,7 @@
     NopHtml.AppendPageCssClassParts("html-account-page");
     NopHtml.AppendPageCssClassParts("html-update-submission-page");
 }
-
+<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/updatetemplatesheet.css")" />
 <!-- Styles -->
 <link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
@@ -21,36 +21,14 @@
 <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
     <h1>Update List</h1>
 </div>
-<br/>
+<br />
 <div class="content-body">
     <div class="card card-default card-search">
         <div class="card-body nop-card-body">
             <div class="form-horizontal">
-                @* <div class="grid-container">
-                    <div class="grid-item">
-                        <label for="Title">Title</label>
-                        <input id="Title" name="Title" type="text" class="form-control" />
-                    </div>
-
-                    <div class="grid-item">
-                        <label for="IsSubmitted">Submitted</label>
-                        <select id="IsSubmitted" name="IsSubmitted" class="form-control">
-                            <option value="">All</option>
-                            <option value="true">Submitted</option>
-                            <option value="false">Not Submitted</option>
-                        </select>
-                    </div>
-
-                    <div class="grid-item">
-                        <button type="button" id="search-submissions" class="btn btn-primary">
-                            <i class="fas fa-search"></i> Search
-                        </button>
-                    </div>
-                </div> *@
             </div>
         </div>
     </div>
-
     <div id="submission-grid-container">
         <div id="submission-grid"></div>
     </div>
@@ -64,14 +42,18 @@
 
             const source = {
                 datatype: 'json',
-                datafields: [
-                    { name: 'Id' },
-                    { name: 'Title' },
-                    { name: 'PeriodId' },
-                    { name: 'CanSubmit' },
-                    { name: 'CanReview' },
-                    { name: 'IsSubmitted' } 
-                ],
+                    datafields: [
+                        { name: 'Id' },
+                        { name: 'Title' },
+                        { name: 'PeriodId' },
+                        { name: 'PeriodText' },
+                        { name: 'SubmittedUsersText' },
+                        { name: 'NotSubmittedUsersText' },
+                        { name: 'CanSubmit' },
+                        { name: 'CanReview' },
+                        { name: 'IsSubmitted' }
+                    ],
+
                 url: '@Url.Action("UpdateSubmissionList", "UpdateSubmission")',
                 data: { Title: title, IsSubmitted: isSubmitted }
             };
@@ -87,14 +69,33 @@
                 pageable: true,
                 pagesize: 10,
                 columns: [
-                    { text: 'Title', datafield: 'Title', width: '60%' },
-                    {
-                        text: 'Submit',
-                        datafield: 'submitAction', // Changed to a unique datafield
-                        width: '20%',
-                        align: 'center',
-                        cellsalign: 'center',
-                        cellsrenderer: function (row, column, value, defaultHtml, columnSettings, rowData) {
+                    { text: 'Title', datafield: 'Title', width: '30%' },
+                    { text: 'Period',datafield: 'PeriodText',width: '20%'},
+                    { text: 'Submitted',datafield: 'SubmittedUsersText',width: '15%',
+                            cellsrenderer: function (row, column, value) 
+                            {
+                                if (!value) return "-";
+                                const names = value.split(',');
+                                let html = '<div class="user-badge-container">';
+                                names.forEach(n =>{html += `<span class="user-badge submitted">${n.trim()}</span>`;});
+                                html += '</div>';
+                                return html;
+                            }
+                    },
+                    { text: 'Not Submitted',datafield: 'NotSubmittedUsersText',width: '15%',
+                            cellsrenderer: function (row, column, value) 
+                            {
+                                 if (!value) return "-";
+                                 const names = value.split(',');
+                                 let html = '<div class="user-badge-container">';
+                                 names.forEach(n => {html += `<span class="user-badge not-submitted">${n.trim()}</span>`;});
+                                 html += '</div>';
+                                 return html;
+                            }
+                    },
+                    { text: 'Submit',datafield: 'submitAction',width: '10%',align: 'center',cellsalign: 'center',
+                        cellsrenderer: function (row, column, value, defaultHtml, columnSettings, rowData)
+                        {
                             const label = rowData.IsSubmitted ? 'View' : 'Submit';
                             const periodId = rowData.PeriodId || 0;
                             const canSubmit = rowData.CanSubmit;
@@ -114,13 +115,9 @@
                             return html;
                         }
                     },
-                    {
-                        text: 'Review',
-                        datafield: 'reviewAction', // Changed to a unique datafield
-                        width: '20%',
-                        align: 'center',
-                        cellsalign: 'center',
-                        cellsrenderer: function (row, column, value, defaultHtml, columnSettings, rowData) {
+                    { text: 'Review',datafield: 'reviewAction',width: '10%',align: 'center',cellsalign: 'center',
+                        cellsrenderer: function (row, column, value, defaultHtml, columnSettings, rowData)
+                        {
                             const canReview = rowData.CanReview;
                             let html = '';
 
@@ -158,69 +155,3 @@
         });
     });
 </script>
-
-
-<style>
-    .grid-container {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin-bottom: 15px;
-    }
-
-    .grid-item {
-        flex: 1 1 200px;
-    }
-
-    .jqx-grid-cell span {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-    }
-
-    .action-button-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-    }
-
-    .submission-btn {
-        padding: 6px 12px;
-        border-radius: 4px;
-        font-size: 14px;
-        transition: background-color 0.2s ease;
-    }
-
-        .submission-btn:hover {
-            background-color: #0056b3;
-            color: #fff;
-        }
-
-    .reviewer-btn {
-        padding: 6px 12px;
-        border-radius: 4px;
-        font-size: 14px;
-        transition: background-color 0.2s ease;
-    }
-
-        .reviewer-btn:hover {
-            background-color: #6c757d;
-            color: #fff;
-        }
-
-    .jqx-grid-column-header-action,
-    .jqx-grid-column-header-action div {
-        text-align: center !important;
-        justify-content: center !important;
-    }
-
-    .action-button-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-    }
-
-</style>

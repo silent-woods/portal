@@ -288,7 +288,10 @@ public partial class TrackerAPIService : ITrackerAPIService
             projectTasks = projectTasks.Where(pt => pt.AssignedTo == assignedTo || pt.DeveloperId == assignedTo);
 
         if (showHidden)
-            projectTasks = projectTasks.Where(pt => pt.ParentTaskId == 0 || pt.Tasktypeid == (int)TaskTypeEnum.ChangeRequest);
+            projectTasks = projectTasks.Where(pt => pt.Tasktypeid != (int)TaskTypeEnum.Bug);
+
+        if (!showHidden)
+            projectTasks = projectTasks.Where(pt => pt.Tasktypeid != (int)TaskTypeEnum.UserStory);
 
         projectTasks = projectTasks.OrderByDescending(pt => pt.Id);
 
