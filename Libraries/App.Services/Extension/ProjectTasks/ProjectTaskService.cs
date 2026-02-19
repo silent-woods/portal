@@ -8,6 +8,7 @@ using App.Core.Domain.TimeSheets;
 using App.Data;
 using App.Data.Extensions;
 using App.Services.Designations;
+using App.Services.Localization;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Vml.Spreadsheet;
 using Humanizer;
@@ -31,11 +32,12 @@ namespace App.Services.ProjectTasks
         private readonly MonthlyReportSetting _monthlyReportSetting;
         private readonly IDesignationService _designationService;
         private readonly IRepository<Employee> _employeeRepository;
+        private readonly ILocalizationService _localizationService;
         #endregion
 
         #region Ctor
         public ProjectTaskService(IRepository<ProjectTask> projectTaskRepository, IRepository<TimeSheet> timesheetRepository, MonthlyReportSetting monthlyReportSetting, IRepository<Project> projectRepository
-, IDesignationService designationService, IRepository<Employee> employeeRepository)
+, IDesignationService designationService, IRepository<Employee> employeeRepository, ILocalizationService localizationService)
         {
             _projectTaskRepository = projectTaskRepository;
             _timesheetRepository = timesheetRepository;
@@ -43,6 +45,7 @@ namespace App.Services.ProjectTasks
             _monthlyReportSetting = monthlyReportSetting;
             _designationService = designationService;
             _employeeRepository = employeeRepository;
+            _localizationService = localizationService;
         }
         #endregion
 
@@ -217,11 +220,22 @@ namespace App.Services.ProjectTasks
 
         public virtual async Task InsertProjectTaskAsync(ProjectTask projectTask)
         {
-            if (projectTask.Tasktypeid == (int)TaskTypeEnum.Bug && projectTask.TaskTitle != null)
-                projectTask.TaskTitle = "Bug: " + projectTask.TaskTitle.Trim();
-            else if (projectTask.Tasktypeid == (int)TaskTypeEnum.ChangeRequest && projectTask.TaskTitle != null)
-                projectTask.TaskTitle = "CR: " + projectTask.TaskTitle.Trim();
+            if (!string.IsNullOrWhiteSpace(projectTask.TaskTitle))
+            {
+                string prefix = string.Empty;
 
+                if (projectTask.Tasktypeid == (int)TaskTypeEnum.Bug)
+                    prefix = await _localizationService.GetResourceAsync("ProjectTask.Prefix.Bug");
+
+                else if (projectTask.Tasktypeid == (int)TaskTypeEnum.ChangeRequest)
+                    prefix = await _localizationService.GetResourceAsync("ProjectTask.Prefix.ChangeRequest");
+
+                else if (projectTask.Tasktypeid == (int)TaskTypeEnum.UserStory)
+                    prefix = await _localizationService.GetResourceAsync("ProjectTask.Prefix.UserStory");
+
+                if (!string.IsNullOrWhiteSpace(prefix))
+                    projectTask.TaskTitle = $"{prefix} {projectTask.TaskTitle.Trim()}";
+            }
             if (projectTask.Tasktypeid != 3)
             {
                 projectTask.WorkQuality = 100.00m;

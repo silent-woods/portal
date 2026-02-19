@@ -1,4 +1,5 @@
 ﻿using App.Core;
+using App.Core.Domain.Extension.ProjectTasks;
 using App.Core.Domain.ProjectTasks;
 using App.Core.Domain.TaskAlerts;
 using App.Data;
@@ -331,25 +332,28 @@ namespace Satyanam.Nop.Core.Services
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            FollowUpTask followUpTask = new FollowUpTask();
-            followUpTask.TaskId = entity.Id;
-            followUpTask.AlertId = -1;
-            followUpTask.ReviewerId = await _projectsService.GetReviewerIdByProjectIdAsync(entity.ProjectId);         
-            var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
-            followUpTask.CreatedOn = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, istTimeZone);
-            followUpTask.UpdatedOn = followUpTask.CreatedOn;
-            var existingNextAlertConfiguration = await _taskAlertService.GetNextTaskAlertConfigurationAsync(0);
-            if (existingNextAlertConfiguration != null)
+            if (entity.Tasktypeid != (int)TaskTypeEnum.UserStory)
             {
-                decimal percentageDifference = existingNextAlertConfiguration.Percentage;
-                int estimatedMinutes = await ConvertHoursToMinutes(entity.EstimatedTime);
-                int minutesToAdd = (int)Math.Round(estimatedMinutes * (percentageDifference / 100m));
-                TimeZoneInfo officeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
-                DateTime officeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, officeTimeZone);
-                DateTime adjustedOfficeTime = AdjustToOfficeHours(officeNow, minutesToAdd, officeTimeZone);
-                followUpTask.NextFollowupDateTime = TimeZoneInfo.ConvertTimeToUtc(adjustedOfficeTime, officeTimeZone);
+                FollowUpTask followUpTask = new FollowUpTask();
+                followUpTask.TaskId = entity.Id;
+                followUpTask.AlertId = -1;
+                followUpTask.ReviewerId = await _projectsService.GetReviewerIdByProjectIdAsync(entity.ProjectId);
+                var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+                followUpTask.CreatedOn = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, istTimeZone);
+                followUpTask.UpdatedOn = followUpTask.CreatedOn;
+                var existingNextAlertConfiguration = await _taskAlertService.GetNextTaskAlertConfigurationAsync(0);
+                if (existingNextAlertConfiguration != null)
+                {
+                    decimal percentageDifference = existingNextAlertConfiguration.Percentage;
+                    int estimatedMinutes = await ConvertHoursToMinutes(entity.EstimatedTime);
+                    int minutesToAdd = (int)Math.Round(estimatedMinutes * (percentageDifference / 100m));
+                    TimeZoneInfo officeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+                    DateTime officeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, officeTimeZone);
+                    DateTime adjustedOfficeTime = AdjustToOfficeHours(officeNow, minutesToAdd, officeTimeZone);
+                    followUpTask.NextFollowupDateTime = TimeZoneInfo.ConvertTimeToUtc(adjustedOfficeTime, officeTimeZone);
+                }
+                await InsertFollowUpTaskAsync(followUpTask);
             }
-            await InsertFollowUpTaskAsync(followUpTask);            
         }
 
         public virtual async Task<bool> CheckIfManaualFollowupExistsAsync(int taskId)

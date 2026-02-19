@@ -547,41 +547,19 @@ namespace App.Web.Factories.Extensions
                     model.AssignedTo = projectTask.AssignedTo;
                     model.EstimationTimeHHMM = await _timeSheetsService.ConvertToHHMMFormat(model.EstimatedTime);                  
                     var totalSpent = await _timeSheetsService.ConvertSpentTimeAsync(projectTask.SpentHours, projectTask.SpentMinutes);
-                    var spentTimeTable = await _timeSheetsService.GetSpentTimeWithTypesById(projectTask.Id);
+                    SpentTimeDto spentTimeTable = new SpentTimeDto();
+                    if (projectTask.Tasktypeid == 1)
+                    {
+                         spentTimeTable = await _timeSheetsService.GetUserStoryTotalSpentTimeAsync(projectTask.Id);
+                    }
+                    else
+                    {
+                         spentTimeTable = await _timeSheetsService.GetSpentTimeWithTypesById(projectTask.Id);
+                    }
                     var developerEmployee = await _employeeService.GetEmployeeByIdAsync(projectTask.DeveloperId);
                     if (developerEmployee != null)
                         model.DeveloperName = developerEmployee.FirstName + " " + developerEmployee.LastName;
-                    model.SpentTimeTable = $@"
-<table class='spent-time-table'>
-    <thead>
-        <tr>
-            <th>Category</th>
-            <th>Billable</th>
-            <th>Non-Billable</th>
-            <th class='nowrap'>Total</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Development</td>
-            <td>{spentTimeTable.BillableDevelopmentTime}</td>
-            <td>{spentTimeTable.NotBillableDevelopmentTime}</td>
-            <td class='nowrap'>{spentTimeTable.TotalDevelopmentTime}</td>
-        </tr>
-        <tr>
-            <td>QA</td>
-            <td>{spentTimeTable.BillableQATime}</td>
-            <td>{spentTimeTable.NotBillableQATime}</td>
-            <td class='nowrap'>{spentTimeTable.TotalQATime}</td>
-        </tr>
-        <tr class='total-row'>
-            <td>Total</td>
-            <td>{spentTimeTable.TotalBillableTime}</td>
-            <td>{spentTimeTable.TotalNotBillableTime}</td>
-            <td class='nowrap'>{spentTimeTable.TotalSpentTime}</td>
-        </tr>
-    </tbody>
-</table>";
+                    model.SpentTimeDetails = spentTimeTable;
                     var employee = await _employeeService.GetEmployeeByIdAsync(model.AssignedTo);
                     if (employee != null)
                     {

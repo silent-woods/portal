@@ -1735,6 +1735,116 @@ namespace App.Services.TimeSheets
             spentTimeDto.TotalSpentTime = await ConvertSpentTimeAsync(totalAddition.SpentHours, totalAddition.SpentMinutes);
             return spentTimeDto;
         }
+        public async Task<List<int>> GetAllDescendantTaskIdsAsync(int parentTaskId)
+        {
+            var allTaskIds = new List<int> { parentTaskId };
+
+            var childTasks = await _projectTaskRepository.Table
+                .Where(t => t.ParentTaskId == parentTaskId && !t.IsDeleted)
+                .Select(t => t.Id)
+                .ToListAsync();
+
+            foreach (var childId in childTasks)
+            {
+                var subChildren = await GetAllDescendantTaskIdsAsync(childId);
+                allTaskIds.AddRange(subChildren);
+            }
+
+            return allTaskIds;
+        }
+        public async Task<SpentTimeDto> GetUserStoryTotalSpentTimeAsync(int userStoryTaskId)
+        {
+            var allTaskIds = await GetAllDescendantTaskIdsAsync(userStoryTaskId);
+            SpentTimeDto spentTimeDto = new SpentTimeDto();
+            int totalDevHours = 0, totalDevMinutes = 0;
+            int totalQaHours = 0, totalQaMinutes = 0;
+            int totalBillDevHours = 0, totalBillDevMinutes = 0;
+            int totalBillQaHours = 0, totalBillQaMinutes = 0;
+
+            foreach (var taskId in allTaskIds)
+            {
+                var developmentTime = await GetDevelopmentTimeByTaskId(taskId);
+                var qaTime = await GetQATimeByTaskId(taskId);
+                var billableDevelopment = await GetBillableDevelopmentTimeByTaskId(taskId);
+                var billableQa = await GetBillableQATimeByTaskId(taskId);
+
+                totalDevHours += developmentTime.SpentHours;
+                totalDevMinutes += developmentTime.SpentMinutes;
+
+                totalQaHours += qaTime.SpentHours;
+                totalQaMinutes += qaTime.SpentMinutes;
+
+                totalBillDevHours += billableDevelopment.SpentHours;
+                totalBillDevMinutes += billableDevelopment.SpentMinutes;
+
+                totalBillQaHours += billableQa.SpentHours;
+                totalBillQaMinutes += billableQa.SpentMinutes;
+            }
+            totalDevHours += totalDevMinutes / 60;
+            totalDevMinutes %= 60;
+
+            totalQaHours += totalQaMinutes / 60;
+            totalQaMinutes %= 60;
+
+            totalBillDevHours += totalBillDevMinutes / 60;
+            totalBillDevMinutes %= 60;
+
+            totalBillQaHours += totalBillQaMinutes / 60;
+            totalBillQaMinutes %= 60;
+
+            var nonBillableDev = await SubtractSpentTimeAsync(
+                totalDevHours, totalDevMinutes,
+                totalBillDevHours, totalBillDevMinutes);
+
+            var nonBillableQa = await SubtractSpentTimeAsync(
+                totalQaHours, totalQaMinutes,
+                totalBillQaHours, totalBillQaMinutes);
+
+            var totalBillable = await AddSpentTimeAsync(
+                totalBillDevHours, totalBillDevMinutes,
+                totalBillQaHours, totalBillQaMinutes);
+
+            var totalNonBillable = await AddSpentTimeAsync(
+                nonBillableDev.SpentHours, nonBillableDev.SpentMinutes,
+                nonBillableQa.SpentHours, nonBillableQa.SpentMinutes);
+
+            var totalSpent = await AddSpentTimeAsync(
+                totalDevHours, totalDevMinutes,
+                totalQaHours, totalQaMinutes);
+
+            spentTimeDto.TotalDevelopmentTime =
+                await ConvertSpentTimeAsync(totalDevHours, totalDevMinutes);
+
+            spentTimeDto.TotalQATime =
+                await ConvertSpentTimeAsync(totalQaHours, totalQaMinutes);
+
+            spentTimeDto.BillableDevelopmentTime =
+                await ConvertSpentTimeAsync(totalBillDevHours, totalBillDevMinutes);
+
+            spentTimeDto.BillableQATime =
+                await ConvertSpentTimeAsync(totalBillQaHours, totalBillQaMinutes);
+
+            spentTimeDto.NotBillableDevelopmentTime =
+                await ConvertSpentTimeAsync(
+                    nonBillableDev.SpentHours,
+                    nonBillableDev.SpentMinutes);
+
+            spentTimeDto.NotBillableQATime =
+                await ConvertSpentTimeAsync(
+                    nonBillableQa.SpentHours,
+                    nonBillableQa.SpentMinutes);
+
+            spentTimeDto.TotalBillableTime =
+                await ConvertSpentTimeAsync(totalBillable.SpentHours, totalBillable.SpentMinutes);
+
+            spentTimeDto.TotalNotBillableTime =
+                await ConvertSpentTimeAsync(totalNonBillable.SpentHours, totalNonBillable.SpentMinutes);
+
+            spentTimeDto.TotalSpentTime =
+                await ConvertSpentTimeAsync(totalSpent.SpentHours, totalSpent.SpentMinutes);
+
+            return spentTimeDto;
+        }
 
         public async Task<(DateTime? FirstCheckIn, DateTime? LastCheckOut)> GetCheckInCheckOutAsync(int employeeId, DateTime spentDate)
         {

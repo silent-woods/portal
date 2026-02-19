@@ -23,6 +23,7 @@ namespace App.Services.TimeSheets
         Task<IList<TimeSheet>> GetAllTimeSheetsByTaskIdsAsync(List<int> taskIds);
         Task<IList<ProjectTask>> GetTasksByProjectIdAsync(int projectId);
         Task<IList<TimeSheet>> GetTimeSheetByEmpAndSpentDate(int employeeId, DateTime spentDate);
+        Task<SpentTimeDto> GetUserStoryTotalSpentTimeAsync(int userStoryTaskId);
         Task<IPagedList<MonthlyTimeSheetReport>> GetAllEmployeePerformanceReportAsync(int employeeId, DateTime? fromDate, DateTime? toDate, IList<int> projectIdList,
  int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? overridePublished = null, bool? isOnlyShowNotDOT = false);
         Task<MonthlyTimeSheetReport> GetEmployeePerformanceSummaryAsync(int searchEmployeeId, DateTime? From, DateTime? To, string ProjectIds);
@@ -62,6 +63,7 @@ namespace App.Services.TimeSheets
         Task<(DateTime from, DateTime to)> GetWeekByDate(DateTime date);
         Task<IList<int>> GetEmployeeIdsWorkOnProjects(IList<int> projectIds);
         Task<SpentTimeDto> GetSpentTimeWithTypesById(int taskId);
+        Task<List<int>> GetAllDescendantTaskIdsAsync(int parentTaskId);
         Task<(DateTime? FirstCheckIn, DateTime? LastCheckOut)> GetCheckInCheckOutAsync(int employeeId, DateTime spentDate);
         Task<(DateTime? From, DateTime? To)> GetDateRange(int periodId);
         Task<IPagedList<MonthlyTimeSheetReport>> GetAllEmployeePerformanceReportForParentTaskAsync(int employeeId, DateTime? fromDate, DateTime? toDate, IList<int> projectIdList, int pageIndex = 0, int pageSize = int.MaxValue,bool showHidden = false, bool? overridePublished = null, bool? isOnlyShowNotDOT = false);

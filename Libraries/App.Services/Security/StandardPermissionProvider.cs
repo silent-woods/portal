@@ -126,6 +126,7 @@ namespace App.Services.Security
         public static readonly PermissionRecord PublicStoreTaskManagementTimesheet = new() { Name = "Public store. Task Management - Timesheet", SystemName = "TaskManagementTimesheet", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreTaskManagementFollowupLogs = new() { Name = "Public store. Task Management - Follow-up Logs", SystemName = "TaskManagementFollowupLogs", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreTaskManagementTaskChangeLogs = new() { Name = "Public store. Task Management - Task Change Logs", SystemName = "TaskManagementTaskChangeLogs", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreTaskManagementChildTasks = new() { Name = "Public store. Task Management - Child Tasks", SystemName = "TaskManagementChildTasks", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreTimeSummaryReport = new() { Name = "Public store. Time Summary Report", SystemName = "TimeSummaryReport", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreEmployeePerformaceReport = new() { Name = "Public store. Employee Performance Report", SystemName = "EmployeePerformanceReport", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreAddRating = new() { Name = "Public store. Add Rating", SystemName = "AddRating", Category = "PublicStore" };

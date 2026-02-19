@@ -14,6 +14,7 @@ using App.Services.Messages;
 using App.Services.Security;
 using App.Web.Areas.Admin.Factories;
 using App.Web.Areas.Admin.Models.Security;
+using App.Core.Domain.Logging;
 
 namespace App.Web.Areas.Admin.Controllers
 {
@@ -85,72 +86,80 @@ namespace App.Web.Areas.Admin.Controllers
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAcl))
                 return AccessDeniedView();
 
-            var permissionRecords = await _permissionService.GetAllPermissionRecordsAsync();
-            var customerRoles = await _customerService.GetAllCustomerRolesAsync(true);
-
-            foreach (var cr in customerRoles)
+            try
             {
-                var formKey = "allow_" + cr.Id;
-                var permissionRecordSystemNamesToRestrict = !StringValues.IsNullOrEmpty(form[formKey])
-                    ? form[formKey].ToString().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList()
-                    : new List<string>();
+                var permissionRecords = await _permissionService.GetAllPermissionRecordsAsync();
+                var customerRoles = await _customerService.GetAllCustomerRolesAsync(true);
 
-                foreach (var pr in permissionRecords)
+                foreach (var cr in customerRoles)
                 {
-                    var allow = permissionRecordSystemNamesToRestrict.Contains(pr.SystemName);
+                    var formKey = "allow_" + cr.Id;
+                    var permissionRecordSystemNamesToRestrict = !StringValues.IsNullOrEmpty(form[formKey])
+                        ? form[formKey].ToString().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList()
+                        : new List<string>();
 
-                    var permissionKey = pr.SystemName.Replace(".", "_");
-
-                    bool add = form.ContainsKey($"perm_{permissionKey}_Add_{cr.Id}");
-                    bool edit = form.ContainsKey($"perm_{permissionKey}_Edit_{cr.Id}");
-                    bool delete = form.ContainsKey($"perm_{permissionKey}_Delete_{cr.Id}");
-                    bool view = form.ContainsKey($"perm_{permissionKey}_View_{cr.Id}");
-                    bool full = form.ContainsKey($"perm_{permissionKey}_Full_{cr.Id}");
-
-                    if (full) add = edit = delete = view = true;
-
-                    var existingPermissionRecord = await _permissionService.GetExistingActionsByPermissionAndRoleAsync(pr.Id, cr.Id);
-                    if (existingPermissionRecord != null)
+                    foreach (var pr in permissionRecords)
                     {
-                        existingPermissionRecord.Add = add;
-                        existingPermissionRecord.Edit = edit;
-                        existingPermissionRecord.Delete = delete;
-                        existingPermissionRecord.View = view;
-                        existingPermissionRecord.Full = full;
-                        existingPermissionRecord.UpdatedOnUtc = DateTime.UtcNow;
-                        await _permissionService.UpdatePermissionRecordCustomerRoleMappingAsync(existingPermissionRecord);
-                    }
+                        var allow = permissionRecordSystemNamesToRestrict.Contains(pr.SystemName);
 
-                    if (allow == await _permissionService.AuthorizeAsync(pr.SystemName, cr.Id))
-                        continue;
+                        var permissionKey = pr.SystemName.Replace(".", "_");
 
-                    if (allow)
-                    {
-                        await _permissionService.InsertPermissionRecordCustomerRoleMappingAsync(new PermissionRecordCustomerRoleMapping
+                        bool add = form.ContainsKey($"perm_{permissionKey}_Add_{cr.Id}");
+                        bool edit = form.ContainsKey($"perm_{permissionKey}_Edit_{cr.Id}");
+                        bool delete = form.ContainsKey($"perm_{permissionKey}_Delete_{cr.Id}");
+                        bool view = form.ContainsKey($"perm_{permissionKey}_View_{cr.Id}");
+                        bool full = form.ContainsKey($"perm_{permissionKey}_Full_{cr.Id}");
+
+                        if (full) add = edit = delete = view = true;
+
+                        var existingPermissionRecord = await _permissionService.GetExistingActionsByPermissionAndRoleAsync(pr.Id, cr.Id);
+                        if (existingPermissionRecord != null)
                         {
-                            PermissionRecordId = pr.Id,
-                            CustomerRoleId = cr.Id,
-                            Add = add,
-                            Edit = edit,
-                            Delete = delete,
-                            View = view,
-                            Full = full,
-                            CreatedOnUtc = DateTime.UtcNow,
-                            UpdatedOnUtc = DateTime.UtcNow
-                        });
-                    }
-                    else
-                    {
-                        await _permissionService.DeletePermissionRecordCustomerRoleMappingAsync(pr.Id, cr.Id);
-                    }
+                            existingPermissionRecord.Add = add;
+                            existingPermissionRecord.Edit = edit;
+                            existingPermissionRecord.Delete = delete;
+                            existingPermissionRecord.View = view;
+                            existingPermissionRecord.Full = full;
+                            existingPermissionRecord.UpdatedOnUtc = DateTime.UtcNow;
+                            await _permissionService.UpdatePermissionRecordCustomerRoleMappingAsync(existingPermissionRecord);
+                        }
 
-                    await _permissionService.UpdatePermissionRecordAsync(pr);
+                        if (allow == await _permissionService.AuthorizeAsync(pr.SystemName, cr.Id))
+                            continue;
+
+                        if (allow)
+                        {
+                            await _permissionService.InsertPermissionRecordCustomerRoleMappingAsync(new PermissionRecordCustomerRoleMapping
+                            {
+                                PermissionRecordId = pr.Id,
+                                CustomerRoleId = cr.Id,
+                                Add = add,
+                                Edit = edit,
+                                Delete = delete,
+                                View = view,
+                                Full = full,
+                                CreatedOnUtc = DateTime.UtcNow,
+                                UpdatedOnUtc = DateTime.UtcNow
+                            });
+                        }
+                        else
+                        {
+                            await _permissionService.DeletePermissionRecordCustomerRoleMappingAsync(pr.Id, cr.Id);
+                        }
+
+                        await _permissionService.UpdatePermissionRecordAsync(pr);
+                    }
                 }
+
+                _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.Configuration.ACL.Updated"));
+
+                return RedirectToAction("Permissions");
             }
-
-            _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.Configuration.ACL.Updated"));
-
-            return RedirectToAction("Permissions");
+            catch (Exception ex)
+            {
+                await _logger.InsertLogAsync(LogLevel.Error, "Save Permission: " + ex.Message, ex.ToString());
+                throw;
+            }
         }
 
         #endregion

@@ -1,4 +1,5 @@
-﻿using App.Web.Areas.Admin.Models.Extension.TaskChangeLogs;
+﻿using App.Core.Domain.ProjectTasks;
+using App.Web.Areas.Admin.Models.Extension.TaskChangeLogs;
 using App.Web.Areas.Admin.Models.Extension.TaskComments;
 using App.Web.Areas.Admin.Models.ProjectEmployeeMappings;
 using App.Web.Framework.Models;
@@ -65,7 +66,7 @@ namespace App.Web.Models.Extensions.ProjectTasks
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.SpentTime")]
         public string SpentTime { get; set; }
-        public string SpentTimeTable { get; set; }
+        public SpentTimeDto SpentTimeTable { get; set; }
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.BugCount")]
         [Required(ErrorMessage = "Bug Count Must be Positive Value")]
@@ -97,6 +98,7 @@ namespace App.Web.Models.Extensions.ProjectTasks
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.IsManualDOT")]
         public bool IsManualDOT { get; set; }
         public string AssignedEmployee {  get; set; }
+        public SpentTimeDto SpentTimeDetails { get; set; }
         public DateTime CreatedOnUtc { get; set; }
 
         [NopResourceDisplayName("Admin.ProjectTasks.Fields.Tasktypeid")]

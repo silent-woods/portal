@@ -313,8 +313,7 @@ namespace App.Services.Security
         /// A task that represents the asynchronous operation
         /// The task result contains the rue - authorized; otherwise, false
         /// </returns>
-        public virtual async Task<bool> AuthorizeAsync(string permissionRecordSystemName, Customer customer,
-            PermissionAction permissionAction = PermissionAction.View)
+        public virtual async Task<bool> AuthorizeAsync(string permissionRecordSystemName, Customer customer, PermissionAction permissionAction = PermissionAction.View)
         {
             if (string.IsNullOrEmpty(permissionRecordSystemName))
                 return false;
@@ -322,59 +321,58 @@ namespace App.Services.Security
             if (customer == null)
                 return false;
 
-            var permissionRecord =
-                await GetPermissionRecordBySystemNameAsync(permissionRecordSystemName);
-
+            var permissionRecord = await GetPermissionRecordBySystemNameAsync(permissionRecordSystemName);
             if (permissionRecord == null)
                 return false;
 
-            var customerRoles = await _customerService.GetCustomerRolesAsync(customer);
+            var userPermission = await _permissionRecordUserMappingRepository.Table
+                .Where(u => u.PermissionId == permissionRecord.Id && u.UserId == customer.Id)
+                .FirstOrDefaultAsync();
 
-            PermissionRecordCustomerRoleMapping rolePermission = null;
+            if (userPermission != null)
+            {
+                if (userPermission.Full)
+                    return true;
+
+                return permissionAction switch
+                {
+                    PermissionAction.Add => userPermission.Add,
+                    PermissionAction.Edit => userPermission.Edit,
+                    PermissionAction.Delete => userPermission.Delete,
+                    PermissionAction.View => userPermission.View,
+                    _ => false
+                };
+            }
+
+            var customerRoles = await _customerService.GetCustomerRolesAsync(customer);
 
             foreach (var customerRole in customerRoles)
             {
-                rolePermission = await _permissionRecordCustomerRoleMappingRepository.Table.Where(r => r.CustomerRoleId == customerRole.Id && r.PermissionRecordId == permissionRecord.Id).FirstOrDefaultAsync();
+                var rolePermission = await _permissionRecordCustomerRoleMappingRepository.Table
+                    .Where(r => r.CustomerRoleId == customerRole.Id && r.PermissionRecordId == permissionRecord.Id)
+                    .FirstOrDefaultAsync();
+
                 if (rolePermission != null)
-                    break;
+                {
+                    bool noExplicitRolePermission = !rolePermission.Full && !rolePermission.Add && !rolePermission.Edit && !rolePermission.Delete && !rolePermission.View;
+                    if (noExplicitRolePermission)
+                        continue;
+
+                    bool roleAllowed = rolePermission.Full || permissionAction switch
+                    {
+                        PermissionAction.Add => rolePermission.Add,
+                        PermissionAction.Edit => rolePermission.Edit,
+                        PermissionAction.Delete => rolePermission.Delete,
+                        PermissionAction.View => rolePermission.View,
+                        _ => false
+                    };
+
+                    if (roleAllowed)
+                        return true;
+                }
             }
 
-            if (rolePermission == null)
-                return false;
-
-            bool noExplicitRolePermission = !rolePermission.Full && !rolePermission.Add && !rolePermission.Edit && !rolePermission.Delete && !rolePermission.View;
-            if (noExplicitRolePermission)
-                return false;
-
-            bool roleAllowed = rolePermission.Full || permissionAction switch
-            {
-                PermissionAction.Add => rolePermission.Add,
-                PermissionAction.Edit => rolePermission.Edit,
-                PermissionAction.Delete => rolePermission.Delete,
-                PermissionAction.View => rolePermission.View,
-                _ => false
-            };
-
-            if (!roleAllowed)
-                return false;
-
-            var userPermission = await _permissionRecordUserMappingRepository.Table.Where(u =>
-                    u.PermissionId == permissionRecord.Id && u.UserId == customer.Id).FirstOrDefaultAsync();
-
-            if (userPermission == null)
-                return true;
-
-            if (userPermission.Full)
-                return true;
-
-            return permissionAction switch
-            {
-                PermissionAction.Add => userPermission.Add,
-                PermissionAction.Edit => userPermission.Edit,
-                PermissionAction.Delete => userPermission.Delete,
-                PermissionAction.View => userPermission.View,
-                _ => false
-            };
+            return false;
         }
 
         /// <summary>

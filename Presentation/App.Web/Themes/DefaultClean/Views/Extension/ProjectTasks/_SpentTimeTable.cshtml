@@ -1,0 +1,33 @@
+﻿@using App.Core.Domain.ProjectTasks
+@model SpentTimeDto
+
+<table class="spent-time-table">
+    <thead>
+        <tr>
+            <th>@T("ProjectTask.Edit.SpentTimeTable.Category")</th>
+            <th>@T("ProjectTask.Edit.SpentTimeTable.Billable")</th>
+            <th>@T("ProjectTask.Edit.SpentTimeTable.NonBillable")</th>
+            <th class="nowrap">@T("ProjectTask.Edit.SpentTimeTable.Total")</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>@T("ProjectTask.Edit.SpentTimeTable.Development")</td>
+            <td>@Model.BillableDevelopmentTime</td>
+            <td>@Model.NotBillableDevelopmentTime</td>
+            <td class="nowrap">@Model.TotalDevelopmentTime</td>
+        </tr>
+        <tr>
+            <td>@T("ProjectTask.Edit.SpentTimeTable.QA")</td>
+            <td>@Model.BillableQATime</td>
+            <td>@Model.NotBillableQATime</td>
+            <td class="nowrap">@Model.TotalQATime</td>
+        </tr>
+        <tr class="total-row">
+            <td>@T("ProjectTask.Edit.SpentTimeTable.Total")</td>
+            <td>@Model.TotalBillableTime</td>
+            <td>@Model.TotalNotBillableTime</td>
+            <td class="nowrap">@Model.TotalSpentTime</td>
+        </tr>
+    </tbody>
+</table>

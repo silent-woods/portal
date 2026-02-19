@@ -1823,6 +1823,25 @@ public partial class TrackerAPIController : BaseController
             model.AvailableTaskAlertConfigurations = model.AvailableTaskAlertConfigurations.GroupBy(x => new
             { x.TotalHours, x.TotalMinutes }).Select(g => g.OrderByDescending(x => x.Id).First()).ToList();
 
+            DateTime? nextFollowupDateTime = null;
+            if (existingTask != null && existingTask.SpentHours == 0 && existingTask.SpentMinutes == 0)
+            {
+                var existingTaskAlertConfiguration = (await _taskAlertService.GetAllTaskAlertConfigurationsAsync()).FirstOrDefault();
+                if (existingTaskAlertConfiguration != null)
+                {
+                    var existingFollowupTask = await _followUpTaskService.GetFollowUpTaskByTaskIdAsync(parameters.TaskId);
+                    decimal percentage = existingTaskAlertConfiguration.Percentage / 100m;
+                    decimal hoursToNextFollowup = existingTask.EstimatedTime * percentage;
+                    nextFollowupDateTime = DateTime.UtcNow.AddHours((double)hoursToNextFollowup);
+
+                    if (existingFollowupTask != null)
+                    {
+                        existingFollowupTask.NextFollowupDateTime = nextFollowupDateTime;
+                        await _followUpTaskService.UpdateFollowUpTaskAsync(existingFollowupTask);
+                    }
+                }
+            }
+
             parameters.Success = true;
             parameters.ResponseMessage = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.TrackerAPI.Common.ActivityStartedSuccessfully");
             return Json(new
@@ -2207,6 +2226,22 @@ public partial class TrackerAPIController : BaseController
                         existingActivityEvents.Add(jsonActivityEvent);
                         existingActivityEvent.JsonString = JsonConvert.SerializeObject(existingActivityEvents);
                         await _trackerAPIService.UpdateActivityEventAsync(existingActivityEvent);
+                    }
+                }
+
+                var existingTask = await _trackerAPIService.GetProjectTaskByIdAsync(timeSheet.TaskId);
+                if (existingTask != null)
+                {
+                    decimal spentTimeDecimal = timeSheet.SpentHours + (timeSheet.SpentMinutes / 60m);
+                    decimal difference = spentTimeDecimal - existingTask.EstimatedTime;
+
+                    int diffHours = (int)Math.Floor(difference);
+                    int diffMinutes = (int)Math.Round((difference - diffHours) * 60);
+
+                    var existingFollowupTask = await _followUpTaskService.GetFollowUpTaskByTaskIdAsync(parameters.TaskId);
+                    if (existingFollowupTask != null)
+                    {
+
                     }
                 }
 
