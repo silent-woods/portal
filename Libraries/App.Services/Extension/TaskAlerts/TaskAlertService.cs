@@ -233,5 +233,20 @@ public partial class TaskAlertService : ITaskAlertService
         return percentage;
     }
 
+    public virtual async Task<TaskAlertLog?> GetTaskAlertLogByEmployeeAndTaskIdAsync(int employeeId = 0, int taskId = 0)
+    {
+        ArgumentNullException.ThrowIfNull(employeeId);
+
+        ArgumentNullException.ThrowIfNull(taskId);
+
+        var existingTaskAlertLog = from tal in _taskAlertLogRepository.Table
+                                   join tac in _taskAlertConfigurationRepository.Table on tal.AlertId equals tac.Id
+                                   where tal.EmployeeId == employeeId && tal.TaskId == taskId
+                                   orderby tal.CreatedOnUtc descending
+                                   select tal;
+
+        return await existingTaskAlertLog.FirstOrDefaultAsync();
+    }
+
     #endregion
 }

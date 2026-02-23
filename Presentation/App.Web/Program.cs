@@ -3,6 +3,7 @@ using App.Core.Infrastructure;
 using App.Web.Framework.Infrastructure.Extensions;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,6 +42,11 @@ else
 
 //add services to the application and configure service provider
 builder.Services.ConfigureApplicationServices(builder);
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.ValueCountLimit = 50000;
+});
 
 var app = builder.Build();
 

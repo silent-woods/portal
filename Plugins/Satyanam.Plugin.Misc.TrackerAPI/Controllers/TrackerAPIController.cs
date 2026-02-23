@@ -1824,20 +1824,94 @@ public partial class TrackerAPIController : BaseController
             { x.TotalHours, x.TotalMinutes }).Select(g => g.OrderByDescending(x => x.Id).First()).ToList();
 
             DateTime? nextFollowupDateTime = null;
-            if (existingTask != null && existingTask.SpentHours == 0 && existingTask.SpentMinutes == 0)
+            if (existingTask != null)
             {
-                var existingTaskAlertConfiguration = (await _taskAlertService.GetAllTaskAlertConfigurationsAsync()).FirstOrDefault();
-                if (existingTaskAlertConfiguration != null)
-                {
-                    var existingFollowupTask = await _followUpTaskService.GetFollowUpTaskByTaskIdAsync(parameters.TaskId);
-                    decimal percentage = existingTaskAlertConfiguration.Percentage / 100m;
-                    decimal hoursToNextFollowup = existingTask.EstimatedTime * percentage;
-                    nextFollowupDateTime = DateTime.UtcNow.AddHours((double)hoursToNextFollowup);
+                var existingTaskAlertLog =
+                    await _taskAlertService.GetTaskAlertLogByEmployeeAndTaskIdAsync(
+                        employeeId: parameters.EmployeeId,
+                        taskId: existingTask.Id);
 
-                    if (existingFollowupTask != null)
+                TimeZoneInfo officeTimeZone =
+                    TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+
+                DateTime officeNow =
+                    TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, officeTimeZone);
+
+                int estimatedMinutes =
+                    await _trackerAPIService.ConvertHoursToMinutes(existingTask.EstimatedTime);
+
+                int totalSpentMinutes =
+                    (existingTask.SpentHours * 60) + existingTask.SpentMinutes;
+
+                if (existingTaskAlertLog == null)
+                {
+                    var firstConfiguration =
+                        (await _taskAlertService.GetAllTaskAlertConfigurationsAsync())
+                        .OrderBy(x => x.Percentage)
+                        .FirstOrDefault();
+
+                    if (firstConfiguration != null)
                     {
-                        existingFollowupTask.NextFollowupDateTime = nextFollowupDateTime;
-                        await _followUpTaskService.UpdateFollowUpTaskAsync(existingFollowupTask);
+                        int targetMinutes =
+                            (int)Math.Round(estimatedMinutes * (firstConfiguration.Percentage / 100m));
+
+                        int remainingMinutes = targetMinutes - totalSpentMinutes;
+
+                        if (remainingMinutes > 0)
+                        {
+                            DateTime adjustedOfficeTime =
+                                AdjustToOfficeHours(officeNow, remainingMinutes, officeTimeZone);
+
+                            nextFollowupDateTime =
+                                TimeZoneInfo.ConvertTimeToUtc(adjustedOfficeTime, officeTimeZone);
+
+                            var existingFollowupTask =
+                                await _followUpTaskService.GetFollowUpTaskByTaskIdAsync(parameters.TaskId);
+
+                            if (existingFollowupTask != null)
+                            {
+                                existingFollowupTask.NextFollowupDateTime = nextFollowupDateTime;
+                                await _followUpTaskService.UpdateFollowUpTaskAsync(existingFollowupTask);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var currentConfiguration =
+                        await _taskAlertService.GetTaskAlertConfigurationByIdAsync(existingTaskAlertLog.AlertId);
+
+                    if (currentConfiguration != null)
+                    {
+                        var nextConfiguration =
+                            await _taskAlertService.GetNextTaskAlertConfigurationAsync(
+                                currentConfiguration.Percentage);
+
+                        if (nextConfiguration != null)
+                        {
+                            int targetMinutes =
+                                (int)Math.Round(estimatedMinutes * (nextConfiguration.Percentage / 100m));
+
+                            int remainingMinutes = targetMinutes - totalSpentMinutes;
+
+                            if (remainingMinutes > 0)
+                            {
+                                DateTime adjustedOfficeTime =
+                                    AdjustToOfficeHours(officeNow, remainingMinutes, officeTimeZone);
+
+                                nextFollowupDateTime =
+                                    TimeZoneInfo.ConvertTimeToUtc(adjustedOfficeTime, officeTimeZone);
+
+                                var existingFollowupTask =
+                                    await _followUpTaskService.GetFollowUpTaskByTaskIdAsync(parameters.TaskId);
+
+                                if (existingFollowupTask != null)
+                                {
+                                    existingFollowupTask.NextFollowupDateTime = nextFollowupDateTime;
+                                    await _followUpTaskService.UpdateFollowUpTaskAsync(existingFollowupTask);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2226,22 +2300,6 @@ public partial class TrackerAPIController : BaseController
                         existingActivityEvents.Add(jsonActivityEvent);
                         existingActivityEvent.JsonString = JsonConvert.SerializeObject(existingActivityEvents);
                         await _trackerAPIService.UpdateActivityEventAsync(existingActivityEvent);
-                    }
-                }
-
-                var existingTask = await _trackerAPIService.GetProjectTaskByIdAsync(timeSheet.TaskId);
-                if (existingTask != null)
-                {
-                    decimal spentTimeDecimal = timeSheet.SpentHours + (timeSheet.SpentMinutes / 60m);
-                    decimal difference = spentTimeDecimal - existingTask.EstimatedTime;
-
-                    int diffHours = (int)Math.Floor(difference);
-                    int diffMinutes = (int)Math.Round((difference - diffHours) * 60);
-
-                    var existingFollowupTask = await _followUpTaskService.GetFollowUpTaskByTaskIdAsync(parameters.TaskId);
-                    if (existingFollowupTask != null)
-                    {
-
                     }
                 }
 

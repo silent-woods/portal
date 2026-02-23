@@ -56,5 +56,7 @@ public partial interface ITaskAlertService
 
     Task<decimal> GetTaskAlertLogByAlertIdAsync(int employeeId = 0, int taskId = 0);
 
+    Task<TaskAlertLog?> GetTaskAlertLogByEmployeeAndTaskIdAsync(int employeeId = 0, int taskId = 0);
+
     #endregion
 }
