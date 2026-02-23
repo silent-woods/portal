@@ -1,5 +1,6 @@
 ﻿using App.Core;
 using App.Core.Domain.Extension.Alerts;
+using App.Core.Domain.Extension.ProjectTasks;
 using App.Core.Domain.Extension.TimeSheets;
 using App.Core.Domain.ProjectTasks;
 using App.Core.Domain.TimeSheets;
@@ -15,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static LinqToDB.Reflection.Methods.LinqToDB.Insert;
 using static LinqToDB.Sql;
 
 namespace Satyanam.Nop.Core.Services
@@ -375,7 +377,8 @@ namespace Satyanam.Nop.Core.Services
                     t.DueDate.HasValue &&
                     t.ProcessWorkflowId != 0 &&
                     t.StatusId != 0 &&                   
-                    t.DueDate.Value.Date <= today)
+                    t.DueDate.Value.Date <= today && 
+                    t.Tasktypeid != (int)TaskTypeEnum.UserStory)
                 .ToListAsync();
             var overdueTasks = baseTasks
                 .Where(t => allowedStatusPairs.Contains((t.ProcessWorkflowId, t.StatusId)))
@@ -443,7 +446,8 @@ namespace Satyanam.Nop.Core.Services
                     t.DueDate.HasValue &&
                     t.DueDate.Value.Date < today &&
                     t.ProcessWorkflowId != 0 &&
-                    t.StatusId != 0)
+                    t.StatusId != 0 &&
+                    t.Tasktypeid != (int)TaskTypeEnum.UserStory)
                 .Where(t =>
                     allowedStatuses.Any(s =>
                         s.WorkflowId == t.ProcessWorkflowId &&
@@ -561,7 +565,8 @@ namespace Satyanam.Nop.Core.Services
                     t.DueDate.HasValue &&
                     t.DueDate.Value.Date < today &&
                     t.ProcessWorkflowId != 0 &&
-                    t.StatusId != 0)
+                    t.StatusId != 0 &&
+                    t.Tasktypeid != (int)TaskTypeEnum.UserStory)
                 .Where(t =>
                     allowedStatuses.Any(s =>
                         s.WorkflowId == t.ProcessWorkflowId &&

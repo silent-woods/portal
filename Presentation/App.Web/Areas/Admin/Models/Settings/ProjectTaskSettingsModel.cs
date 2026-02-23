@@ -17,6 +17,9 @@ namespace App.Web.Areas.Admin.Models.Settings
 
         public bool IsShowSelctAllCheckList_OverrideForStore { get; set; }
 
+        [NopResourceDisplayName("Admin.Configuration.Settings.ProjectTask.EnableProjectTaskDebugLog")]
+        public bool EnableProjectTaskDebugLog { get; set; }
+        public bool EnableProjectTaskDebugLog_OverrideForStore { get; set; }
 
 
     }

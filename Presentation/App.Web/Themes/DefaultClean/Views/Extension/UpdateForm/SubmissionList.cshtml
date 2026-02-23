@@ -36,31 +36,46 @@
 
 <script>
     $(document).ready(function () {
+
         function loadGrid() {
+
             const title = $('#Title').val();
             const isSubmitted = $('#IsSubmitted').val();
 
             const source = {
                 datatype: 'json',
-                    datafields: [
-                        { name: 'Id' },
-                        { name: 'Title' },
-                        { name: 'PeriodId' },
-                        { name: 'PeriodText' },
-                        { name: 'SubmittedUsersText' },
-                        { name: 'NotSubmittedUsersText' },
-                        { name: 'CanSubmit' },
-                        { name: 'CanReview' },
-                        { name: 'IsSubmitted' }
-                    ],
 
                 url: '@Url.Action("UpdateSubmissionList", "UpdateSubmission")',
-                data: { Title: title, IsSubmitted: isSubmitted }
+
+                data: { Title: title, IsSubmitted: isSubmitted },
+
+                datafields: [
+                    { name: 'Id' },
+                    { name: 'Title' },
+                    { name: 'PeriodId' },
+                    { name: 'PeriodText' },
+                    { name: 'SubmittedUsersText' },
+                    { name: 'NotSubmittedUsersText' },
+                    { name: 'CanSubmit', type: 'bool' },
+                    { name: 'CanReview', type: 'bool' },
+                    { name: 'IsSubmitted', type: 'bool' }
+                ]
             };
 
             const dataAdapter = new $.jqx.dataAdapter(source);
 
+            //----------------------------------
+            // Destroy grid if exists
+            //----------------------------------
+            if ($("#submission-grid").hasClass("jqx-grid")) {
+                $("#submission-grid").jqxGrid('destroy');
+            }
+
+            //----------------------------------
+            // Create grid normally
+            //----------------------------------
             $("#submission-grid").jqxGrid({
+
                 width: '100%',
                 autoheight: true,
                 source: dataAdapter,
@@ -68,90 +83,180 @@
                 sortable: true,
                 pageable: true,
                 pagesize: 10,
+
                 columns: [
-                    { text: 'Title', datafield: 'Title', width: '30%' },
-                    { text: 'Period',datafield: 'PeriodText',width: '20%'},
-                    { text: 'Submitted',datafield: 'SubmittedUsersText',width: '15%',
-                            cellsrenderer: function (row, column, value) 
-                            {
-                                if (!value) return "-";
-                                const names = value.split(',');
-                                let html = '<div class="user-badge-container">';
-                                names.forEach(n =>{html += `<span class="user-badge submitted">${n.trim()}</span>`;});
-                                html += '</div>';
-                                return html;
-                            }
+
+                    //----------------------------------
+                    // Title
+                    //----------------------------------
+                    {
+                        text: 'Title',
+                        datafield: 'Title',
+                        width: '30%'
                     },
-                    { text: 'Not Submitted',datafield: 'NotSubmittedUsersText',width: '15%',
-                            cellsrenderer: function (row, column, value) 
-                            {
-                                 if (!value) return "-";
-                                 const names = value.split(',');
-                                 let html = '<div class="user-badge-container">';
-                                 names.forEach(n => {html += `<span class="user-badge not-submitted">${n.trim()}</span>`;});
-                                 html += '</div>';
-                                 return html;
-                            }
+
+                    //----------------------------------
+                    // Period
+                    //----------------------------------
+                    {
+                        text: 'Period',
+                        datafield: 'PeriodText',
+                        width: '20%'
                     },
-                    { text: 'Submit',datafield: 'submitAction',width: '10%',align: 'center',cellsalign: 'center',
+
+                    //----------------------------------
+                    // Submitted (ONLY reviewer)
+                    //----------------------------------
+                    {
+                        text: 'Submitted',
+                        datafield: 'SubmittedUsersText',
+                        width: '15%',
+
                         cellsrenderer: function (row, column, value, defaultHtml, columnSettings, rowData)
                         {
-                            const label = rowData.IsSubmitted ? 'View' : 'Submit';
-                            const periodId = rowData.PeriodId || 0;
-                            const canSubmit = rowData.CanSubmit;
-                            let html = '';
+                            if (!rowData.CanReview)
+                                return "";
 
-                            if (canSubmit) {
-                                html = `
-                                    <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
-                                        <button class="btn btn-sm btn-primary submission-btn"
-                                                data-template-id="${rowData.Id}"
-                                                data-period-id="${periodId}"
-                                                title="View Submission">
-                                            <i class="fas fa-eye"></i> ${label}
-                                        </button>
-                                    </div>`;
-                            }
+                            if (!value)
+                                return "-";
+
+                            const names = value.split(',');
+
+                            let html = '<div class="user-badge-container">';
+
+                            names.forEach(function (n)
+                            {
+                                html += '<span class="user-badge submitted">'
+                                    + n.trim()
+                                    + '</span>';
+                            });
+
+                            html += '</div>';
+
                             return html;
                         }
                     },
-                    { text: 'Review',datafield: 'reviewAction',width: '10%',align: 'center',cellsalign: 'center',
+
+                    //----------------------------------
+                    // Not Submitted (ONLY reviewer)
+                    //----------------------------------
+                    {
+                        text: 'Not Submitted',
+                        datafield: 'NotSubmittedUsersText',
+                        width: '15%',
+
                         cellsrenderer: function (row, column, value, defaultHtml, columnSettings, rowData)
                         {
-                            const canReview = rowData.CanReview;
-                            let html = '';
+                            if (!rowData.CanReview)
+                                return "";
 
-                            if (canReview) {
-                                html = `
-                                    <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
-                                        <button class="btn btn-sm btn-secondary reviewer-btn"
-                                                data-template-id="${rowData.Id}"
-                                                title="Reviewer Mode">
-                                            <i class="fas fa-user-check"></i> Review
-                                        </button>
-                                    </div>`;
-                            }
+                            if (!value)
+                                return "-";
+
+                            const names = value.split(',');
+
+                            let html = '<div class="user-badge-container">';
+
+                            names.forEach(function (n)
+                            {
+                                html += '<span class="user-badge not-submitted">'
+                                    + n.trim()
+                                    + '</span>';
+                            });
+
+                            html += '</div>';
+
                             return html;
                         }
+                    },
+
+                    //----------------------------------
+                    // Submit button (ONLY submitter)
+                    //----------------------------------
+                    {
+                        text: 'Submit',
+                        datafield: 'submitAction',
+                        width: '10%',
+                        align: 'center',
+                        cellsalign: 'center',
+
+                            cellsrenderer: function (row, column, value, defaultHtml, columnSettings, rowData)
+    {
+        if (!rowData.CanSubmit)
+            return "";
+
+        const label = rowData.IsSubmitted ? 'View' : 'Submit';
+
+        return '<div style="display:flex; justify-content:center; align-items:center; height:100%;">'
+            + '<button class="btn btn-sm btn-primary submission-btn" '
+            + 'data-template-id="' + rowData.Id + '" '
+            + 'data-period-id="' + rowData.PeriodId + '">'
+            + '<i class="fas fa-eye"></i> ' + label
+            + '</button>'
+            + '</div>';
+    }
+                    },
+
+                    //----------------------------------
+                    // Review button (ONLY reviewer)
+                    //----------------------------------
+                    {
+                        text: 'Review',
+                        datafield: 'reviewAction',
+                        width: '10%',
+                        align: 'center',
+                        cellsalign: 'center',
+
+                            cellsrenderer: function (row, column, value, defaultHtml, columnSettings, rowData)
+    {
+        if (!rowData.CanReview)
+            return "";
+
+        return '<div style="display:flex; justify-content:center; align-items:center; height:100%;">'
+            + '<button class="btn btn-sm btn-secondary reviewer-btn" '
+            + 'data-template-id="' + rowData.Id + '">'
+            + '<i class="fas fa-user-check"></i> Review'
+            + '</button>'
+            + '</div>';
+    }
                     }
                 ]
             });
         }
 
-        // Initial load
+        //----------------------------------
+        // Load grid
+        //----------------------------------
         loadGrid();
 
-        $(document).on("click", ".submission-btn", function () {
+
+        //----------------------------------
+        // Submit click
+        //----------------------------------
+        $(document).on("click", ".submission-btn", function ()
+        {
             const templateId = $(this).data("template-id");
             const periodId = $(this).data("period-id");
-            const url = `/UpdateSubmission/Submit/${templateId}?periodId=${periodId}`;
-            window.location.href = url;
+
+            window.location.href =
+                "/UpdateSubmission/Submit/"
+                + templateId
+                + "?periodId="
+                + periodId;
         });
 
-        $(document).on("click", ".reviewer-btn", function () {
+
+        //----------------------------------
+        // Review click
+        //----------------------------------
+        $(document).on("click", ".reviewer-btn", function ()
+        {
             const templateId = $(this).data("template-id");
-            const url = `/UpdateSubmission/List?review=true&selectedTemplateId=${templateId}`;
-            window.location.href = url;
+
+            window.location.href =
+                "/UpdateSubmission/List?review=true&selectedTemplateId="
+                + templateId;
         });
+
     });
 </script>

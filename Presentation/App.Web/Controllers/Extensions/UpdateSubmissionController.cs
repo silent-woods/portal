@@ -822,7 +822,6 @@ namespace Nop.Web.Controllers
             var model = new UpdateSubmissionSearchModel();
             return View("~/Themes/DefaultClean/Views/Extension/UpdateForm/SubmissionList.cshtml", model);
         }
-
         public async Task<IActionResult> UpdateSubmissionList(UpdateSubmissionSearchModel searchModel)
         {
             var customer = await _workContext.GetCurrentCustomerAsync();
@@ -830,108 +829,159 @@ namespace Nop.Web.Controllers
             var employee = await _employeeRepository.Table
                 .FirstOrDefaultAsync(e => e.Customer_Id == customer.Id);
 
-            var employeeIdStr = employee?.Id.ToString();
+            if (employee == null)
+                return Json(Enumerable.Empty<object>());
 
-            if (employeeIdStr == null)
-                return Json(Enumerable.Empty<object>()); // No employee record, return nothing
+            var employeeIdStr = employee.Id.ToString();
 
-            var templates = await _updateTemplateRepository.Table.Where(t=>t.IsActive).ToListAsync();
+            // Load all required data
+            var templates = await _updateTemplateRepository.Table
+                .Where(t => t.IsActive)
+                .ToListAsync();
+
             var allEmployees = await _employeeRepository.Table.ToListAsync();
             var allCustomers = await _customerRepository.Table.ToListAsync();
             var allSubmissions = await _submissionRepository.Table.ToListAsync();
             var allPeriods = await _periodRepository.Table.ToListAsync();
 
-            var userSubmissions = await _submissionRepository.Table
-                .Where(x => x.SubmittedByCustomerId == customer.Id)
-                .ToListAsync();
-
             var result = templates
                 .Select(t =>
                 {
-                    // Get who can submit or review this template
+                    // STEP 1: Check permissions
                     var submitterIds = (t.SubmitterUserIds ?? "")
                         .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Select(x => x.Trim());
+                        .Select(x => x.Trim())
+                        .ToList();
 
                     var viewerIds = (t.ViewerUserIds ?? "")
                         .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Select(x => x.Trim());
+                        .Select(x => x.Trim())
+                        .ToList();
 
                     bool canSubmit = submitterIds.Contains(employeeIdStr);
                     bool canReview = viewerIds.Contains(employeeIdStr);
 
-                    // If user has no permission at all, skip this row
                     if (!canSubmit && !canReview)
                         return null;
 
-                    var templateSubmissions = allSubmissions.Where(s => s.UpdateTemplateId == t.Id).ToList();
+                    // STEP 2: Get LAST PERIOD from UpdateTemplatePeriod
+                    var lastPeriod = allPeriods
+                        .Where(p => p.UpdateTemplateId == t.Id)
+                        .OrderByDescending(p => p.PeriodEnd)
+                        .FirstOrDefault();
 
-                    var submittedEmployeeIds = templateSubmissions
-    .Select(x =>
-        allEmployees
-            .FirstOrDefault(e => e.Customer_Id == x.SubmittedByCustomerId)
-            ?.Id.ToString()
-    )
-    .Where(x => x != null)
-    .Distinct()
-    .ToList();
+                    if (lastPeriod == null)
+                    {
+                        return new
+                        {
+                            t.Id,
+                            t.Title,
+                            PeriodId = 0,
+                            PeriodText = "-",
+                            SubmittedUsersText = "-",
+                            NotSubmittedUsersText = "-",
+                            IsSubmitted = false,
+                            CanSubmit = canSubmit,
+                            CanReview = canReview
+                        };
+                    }
 
-                    var notSubmittedIds = submitterIds.Except(submittedEmployeeIds).ToList();
+                    // STEP 3: Get submissions ONLY for LAST PERIOD
+                    var lastPeriodSubmissions = allSubmissions
+                        .Where(s =>
+                            s.UpdateTemplateId == t.Id &&
+                            s.PeriodId == lastPeriod.Id)
+                        .ToList();
+
+                    // STEP 4: Find submitted employee ids
+                    var submittedEmployeeIds = lastPeriodSubmissions
+                        .Select(s =>
+                            allEmployees
+                                .FirstOrDefault(e => e.Customer_Id == s.SubmittedByCustomerId)
+                                ?.Id.ToString()
+                        )
+                        .Where(x => x != null)
+                        .Distinct()
+                        .ToList();
+
+                    // STEP 5: Find not submitted employee ids
+                    var notSubmittedEmployeeIds = submitterIds
+                        .Except(submittedEmployeeIds)
+                        .ToList();
+
+                    // STEP 6: Convert employee ids to names
                     string GetName(string empId)
                     {
                         var emp = allEmployees.FirstOrDefault(e => e.Id.ToString() == empId);
                         if (emp == null) return "";
 
                         var cust = allCustomers.FirstOrDefault(c => c.Id == emp.Customer_Id);
-                        return cust != null ? $"{cust.FirstName} {cust.LastName}" : "";
+
+                        return cust != null
+                            ? $"{cust.FirstName} {cust.LastName}"
+                            : "";
                     }
+
                     var submittedNames = submittedEmployeeIds
-            .Select(GetName)
-            .Where(x => !string.IsNullOrEmpty(x));
-
-                    var notSubmittedNames = notSubmittedIds
                         .Select(GetName)
-                        .Where(x => !string.IsNullOrEmpty(x));
+                        .Where(x => !string.IsNullOrEmpty(x))
+                        .ToList();
 
+                    var notSubmittedNames = notSubmittedEmployeeIds
+                        .Select(GetName)
+                        .Where(x => !string.IsNullOrEmpty(x))
+                        .ToList();
 
-                    var submission = userSubmissions
-                        .Where(s => s.UpdateTemplateId == t.Id)
-                        .OrderByDescending(s => s.SubmittedOnUtc)
-                        .FirstOrDefault();
-                    string periodText = "";
+                    // STEP 7: Create Period Text
+                    string periodText =
+                        $"{lastPeriod.PeriodStart:MMM dd} - {lastPeriod.PeriodEnd:MMM dd, yyyy}";
 
-                    if (submission != null)
-                    {
-                        var period = allPeriods.FirstOrDefault(p => p.Id == submission.PeriodId);
+                    // STEP 8: Check if CURRENT USER submitted
+                    bool isSubmitted = submittedEmployeeIds.Contains(employeeIdStr);
 
-                        if (period != null)
-                            periodText = $"{period.PeriodStart:MMM dd} - {period.PeriodEnd:MMM dd, yyyy}";
-                    }
+                    // STEP 9: Return result
                     return new
                     {
                         t.Id,
                         t.Title,
 
-                        PeriodId = submission?.PeriodId ?? 0,
-                        PeriodText = periodText,                     // ⭐ NEW
+                        PeriodId = lastPeriod.Id,
+                        PeriodText = periodText,
 
-                        SubmittedUsersText = string.Join(", ", submittedNames),      // ⭐ NEW
-                        NotSubmittedUsersText = string.Join(", ", notSubmittedNames),// ⭐ NEW
+                        SubmittedUsersText = submittedNames.Any()
+                            ? string.Join(", ", submittedNames)
+                            : "-",
 
-                        IsSubmitted = submittedEmployeeIds.Contains(employeeIdStr),
+                        NotSubmittedUsersText = notSubmittedNames.Any()
+                            ? string.Join(", ", notSubmittedNames)
+                            : "-",
+
+                        IsSubmitted = isSubmitted,
 
                         CanSubmit = canSubmit,
                         CanReview = canReview
                     };
+
                 })
-                .Where(x => x != null); // Remove nulls (unauthorized templates)
+                .Where(x => x != null);
+
             // Filters
             if (!string.IsNullOrEmpty(searchModel.Title))
-                result = result.Where(x => x.Title.Contains(searchModel.Title, StringComparison.OrdinalIgnoreCase));
+            {
+                result = result.Where(x =>
+                    x.Title.Contains(searchModel.Title,
+                    StringComparison.OrdinalIgnoreCase));
+            }
+
             if (searchModel.IsSubmitted.HasValue)
-                result = result.Where(x => x.IsSubmitted == searchModel.IsSubmitted.Value);
+            {
+                result = result.Where(x =>
+                    x.IsSubmitted == searchModel.IsSubmitted.Value);
+            }
+
             return Json(result);
         }
+        
 
         [HttpGet("UpdateSubmission/Submit/{id}")]
         public async Task<IActionResult> Submit(int? id, int? periodId)
@@ -1585,6 +1635,7 @@ namespace Nop.Web.Controllers
                 }
             }
             // Load available periods if template is selected
+            // Load available periods if template is selected
             if (selectedTemplateId.HasValue)
             {
                 var periods = await _updateTemplatePeriodRepository.Table
@@ -1592,6 +1643,17 @@ namespace Nop.Web.Controllers
                     .OrderByDescending(p => p.PeriodStart)
                     .Take(10)
                     .ToListAsync();
+
+                // FIX: Auto select LAST ACTIVE PERIOD on page load
+                if (!selectedPeriodId.HasValue && periods.Any())
+                {
+                    selectedPeriodId = periods.First().Id;
+                }
+
+                // Assign to model
+                model.SelectedPeriodId = selectedPeriodId;
+
+                // Build dropdown
                 model.AvailablePeriods = periods
                     .Select(p => new SelectListItem
                     {
@@ -1599,25 +1661,25 @@ namespace Nop.Web.Controllers
                         Text = $"{p.PeriodStart:MMM dd} - {p.PeriodEnd:MMM dd, yyyy}",
                         Selected = p.Id == selectedPeriodId
                     }).ToList();
+
                 model.AvailablePeriods.Insert(0, new SelectListItem
                 {
                     Value = "-1",
                     Text = "Custom Range",
                     Selected = selectedPeriodId == -1
                 });
-                model.AvailablePeriods.Insert(0, new SelectListItem
-                {
-                    Value = "",
-                    Text = "Select Period",
-                    Selected = selectedPeriodId == null
-                });
+                // FIX: Apply selected period filter automatically
                 if (selectedPeriodId.HasValue && selectedPeriodId != -1)
                 {
-                    var period = periods.FirstOrDefault(p => p.Id == selectedPeriodId.Value);
-                    if (period != null)
+                    var selectedPeriod = periods
+                        .FirstOrDefault(p => p.Id == selectedPeriodId.Value);
+
+                    if (selectedPeriod != null)
                     {
-                        model.FromDate = period.PeriodStart;
-                        model.ToDate = period.PeriodEnd.AddDays(1).AddTicks(-1);
+                        model.FromDate = selectedPeriod.PeriodStart;
+                        model.ToDate = selectedPeriod.PeriodEnd
+                            .AddDays(1)
+                            .AddTicks(-1);
                     }
                 }
             }

@@ -96,13 +96,46 @@ namespace Satyanam.Nop.Core.Services
                 if (!TimeSpan.TryParse(template.DueTime, out var dueTime))
                     dueTime = new TimeSpan(10, 0, 0);
 
-                var dueDate = template.DueDate ?? nowUtc.AddDays(-1);
-                var scheduledIst = DateTime.SpecifyKind(dueDate.Date + dueTime, DateTimeKind.Unspecified);
+                var indiaNow = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, indiaTimeZone);
+
+                DateTime lastScheduledIndia;
+
+                // WEEKLY
+                if (template.FrequencyId == 3 && !string.IsNullOrEmpty(template.SelectedWeekDays))
+                {
+                    var days = template.SelectedWeekDays
+                        .Split(',')
+                        .Select(int.Parse)
+                        .ToList();
+
+                    lastScheduledIndia = indiaNow.Date;
+
+                    while (!days.Contains((int)lastScheduledIndia.DayOfWeek))
+                        lastScheduledIndia = lastScheduledIndia.AddDays(-1);
+                }
+
+                // MONTHLY
+                else if (template.FrequencyId == 4 && template.OnDay.HasValue)
+                {
+                    var day = template.OnDay.Value;
+
+                    lastScheduledIndia = new DateTime(indiaNow.Year, indiaNow.Month, day);
+
+                    if (lastScheduledIndia > indiaNow)
+                        lastScheduledIndia = lastScheduledIndia.AddMonths(-1);
+                }
+
+                // DAILY or fallback
+                else
+                {
+                    lastScheduledIndia = indiaNow.Date;
+                }
+
+                var scheduledIst = DateTime.SpecifyKind(lastScheduledIndia.Date + dueTime, DateTimeKind.Unspecified);
+
                 var scheduledUtc = TimeZoneInfo.ConvertTimeToUtc(scheduledIst, indiaTimeZone);
 
-                var overdueDays = 0;
-                if (nowUtc.Date > scheduledUtc.Date)
-                    overdueDays = (nowUtc.Date - scheduledUtc.Date).Days;
+                var overdueDays = (indiaNow.Date - lastScheduledIndia.Date).Days;
                 // --- Decide overdue/due/future ---
                 bool shouldSend = false;
 
@@ -162,13 +195,26 @@ namespace Satyanam.Nop.Core.Services
                     var customerId = employee.Customer_Id;
 
                     // Check existing submission
+                    var currentPeriod = await _periodRepo.Table
+                    .Where(p =>
+                        p.UpdateTemplateId == template.Id &&
+                        p.PeriodStart <= nowUtc &&
+                        p.PeriodEnd >= nowUtc)
+                    .OrderByDescending(p => p.Id)
+                    .FirstOrDefaultAsync();
+
+                    if (currentPeriod == null)
+                        continue;
+
+                    // Check submission using PeriodId
                     var existingSubmission = await _submissionRepo.Table
-                        .Where(s => s.UpdateTemplateId == template.Id && s.SubmittedByCustomerId == customerId)
-                        .OrderByDescending(s => s.Id)
+                        .Where(s =>
+                            s.UpdateTemplateId == template.Id &&
+                            s.SubmittedByCustomerId == customerId &&
+                            s.PeriodId == currentPeriod.Id)
                         .FirstOrDefaultAsync();
 
                     bool alreadySubmitted = existingSubmission != null;
-                   
 
                     if (alreadySubmitted)
                         continue;
@@ -185,7 +231,7 @@ namespace Satyanam.Nop.Core.Services
                     }
                     else if (nowUtc.Date > scheduledUtc.Date)
                     {
-                        if (overdueDays >= 4)
+                        if (overdueDays >= 3)
                         {
                             addViewerInCc = true;
 

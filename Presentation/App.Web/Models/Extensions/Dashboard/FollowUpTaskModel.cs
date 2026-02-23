@@ -27,6 +27,7 @@ namespace App.Web.Models.Dashboard
         public string AlertType { get; set; }
         public string TrackReason { get; set; }
         public bool IsManual { get; set; }
+        public int UsedPercentage { get; set; }
         public DateTime? LastTrackedOn { get; set; }
         public DateTime? LastFollowupDateTime { get; set; }
         public DateTime? NextFollowupDateTime { get; set; }

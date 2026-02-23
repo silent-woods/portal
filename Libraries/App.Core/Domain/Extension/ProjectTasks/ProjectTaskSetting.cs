@@ -7,5 +7,6 @@ namespace App.Core.Domain.Extension.ProjectTasks
         public int ActiveStoreScopeConfiguration { get; set; }
 
         public bool IsShowSelctAllCheckList { get; set; }
+        public bool EnableProjectTaskDebugLog { get; set; }
     }
 }

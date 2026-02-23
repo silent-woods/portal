@@ -38,6 +38,7 @@
                 <div asp-validation-summary="All"></div>
                 <nop-cards id="blogsettings-cards">
                     <nop-card asp-name="blogsettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.ProjectTask.CheckListSettings")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_CheckListSettings.ProjectTask", Model)</nop-card>
+                    <nop-card asp-name="blogsettings-common" asp-icon="fas fa-info" asp-title="@T("Admin.Configuration.Settings.ProjectTask.LogSettings")" asp-hide-block-attribute-name="@hideCommonBlockAttributeName" asp-hide="@hideCommonBlock" asp-advanced="false">@await Html.PartialAsync("_LogSettings.ProjectTask", Model)</nop-card>
                 </nop-cards>
             </div>
         </div>

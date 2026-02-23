@@ -4,6 +4,9 @@
     Layout = "_ColumnsOne";
 }
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+<script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/dashboard.css")" />
@@ -48,20 +51,40 @@
 </div>
 <div class="filter-bar">
     <div class="filter-row">
-        <select id="projectFilter" class="filter-input">
-            <option value="">Select Project</option>
+        <select id="projectFilter"
+                name="projectFilter"
+                class="kendo-multi-select"
+                multiple>
             @foreach (var p in Model.AvailableProjects)
             {
                 <option value="@p.Value">@p.Text</option>
             }
         </select>
-        <select id="employeeId" class="filter-input">
-            <option value="0">Select Employee</option>
+
+        <select id="employeeId"
+                name="employeeId"
+                class="kendo-multi-select"
+                multiple>
             @foreach (var e in Model.AvailableEmployees)
             {
                 <option value="@e.Value">@e.Text</option>
             }
         </select>
+        <script>
+              $(document).ready(function () {
+                var projectMulti = $("#projectFilter").kendoMultiSelect({
+                    autoClose: true,
+                    filter: "contains",
+                    placeholder: "Select Project(s)"
+                }).data("kendoMultiSelect");
+
+                var employeeMulti = $("#employeeId").kendoMultiSelect({
+                    autoClose: true,
+                    filter: "contains",
+                    placeholder: "Select Employee(s)"
+                }).data("kendoMultiSelect");
+            });
+            </script>
         <input type="text"
                id="taskSearch"
                class="filter-input filter-task"
@@ -114,9 +137,6 @@
                         style="width:100%;">
                 </select>
             </div>
-       
-
-
         <label class="filter-checkbox">
             <input type="checkbox" id="showOnlyNotTrack" />
             Not On Track
@@ -230,8 +250,8 @@
     $('#SearchPeriodId').trigger('change');
        $("#btnSearch").click(function () {
         var keyword = $("#taskSearch").val();
-        var projectId = $("#projectFilter").val();
-        var employeeId = $("#employeeId").val();
+        var projectIds = $('#projectFilter').val() || [];
+        var employeeIds = $('#employeeId').val() || [];
         var showOnlyNotTrack = $("#showOnlyNotTrack").is(":checked");
         var sourceType = $("#typeFilter").val();
         var percentageFilter = $("#percentageFilter").val();
@@ -239,12 +259,13 @@
         var to = $("#To").val();
         var processWorkflow = $("#processWorkflow").val();
         var statusId = $("#SearchStatusId").val();
-
+        var postData = { taskName: keyword, projectIds: projectIds.join(","),employeeIds: employeeIds.join(","),showOnlyNotTrack:showOnlyNotTrack ,sourceType: sourceType , from:from,to:to,percentageFilter:percentageFilter, processWorkflow:processWorkflow, statusId:statusId};
+        addAntiForgeryToken(postData);
         $.ajax({
             url: "/Dashboard/SearchFollowup",
-            type: "GET",
-            data: { taskName: keyword, projectId: projectId, employeeId: employeeId,showOnlyNotTrack:showOnlyNotTrack ,sourceType: sourceType , from:from,to:to,percentageFilter:percentageFilter, processWorkflow:processWorkflow, statusId:statusId},
-                    success: function (html) {
+            type: "POST",
+            data: postData,
+            success: function (html) {
         $("#followupTablesContainer").html(html);
        restoreOpenedAccordions();
     },

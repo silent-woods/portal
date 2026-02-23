@@ -91,4 +91,12 @@ public static partial class TrackerAPIDefaults
     public const string EmployeeAutoTagEndPoint = "AutoTag";
 
     #endregion
+
+    #region Static System Names for Process Workflow Statuses
+
+    public const string Hold = "Hold";
+
+    public const string HoldComment = "This task is hold due to started.";
+
+    #endregion
 }

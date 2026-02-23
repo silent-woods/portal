@@ -239,10 +239,10 @@ namespace App.Web.Factories.Extensions
         #endregion
         #region Methods
 
-        public async Task<PendingDashboardModel> PrepareFollowUpDashboardModelAsync(string taskName = null, int statusType = 0, int currEmployeeId = 0, int projectId = 0, int employeeId = 0, int page = 1, int pageSize = int.MaxValue, IList<int> managedProjectIds = null, IList<int> visibleProjectIds = null, bool showOnlyNotOnTrack = false, string sourceType = null, DateTime? from = null, DateTime? to = null, int percentageFilter =0,int processWorkflow=0 ,int statusId =0)
+        public async Task<PendingDashboardModel> PrepareFollowUpDashboardModelAsync(string taskName = null, int statusType = 0, int currEmployeeId = 0, IList<int> projectIds = null, IList<int> employeeIds = null, int page = 1, int pageSize = int.MaxValue, IList<int> managedProjectIds = null, IList<int> visibleProjectIds = null, bool showOnlyNotOnTrack = false, string sourceType = null, DateTime? from = null, DateTime? to = null, int percentageFilter =0,int processWorkflow=0 ,int statusId =0)
         {
             var today = DateTime.UtcNow.Date;
-            var allFollowUps = await _followUpTaskService.GetAllFollowUpTasksAsync(taskName: taskName, statusType: statusType, projectId: projectId, employeeId: employeeId, currEmployeeId: currEmployeeId, visibleProjectIds: visibleProjectIds, managedProjectIds: managedProjectIds, showOnlyNotOnTrack: showOnlyNotOnTrack, sourceType: sourceType, from: from, to: to, percentageFilter: percentageFilter, processWorkflow: processWorkflow, statusId: statusId, pageIndex: page - 1, pageSize: pageSize);
+            var allFollowUps = await _followUpTaskService.GetAllFollowUpTasksAsync(taskName: taskName, statusType: statusType, projectIds: projectIds, employeeIds: employeeIds, currEmployeeId: currEmployeeId, visibleProjectIds: visibleProjectIds, managedProjectIds: managedProjectIds, showOnlyNotOnTrack: showOnlyNotOnTrack, sourceType: sourceType, from: from, to: to, processWorkflow: processWorkflow, statusId: statusId, pageIndex: page - 1, pageSize: pageSize);
             var model = new PendingDashboardModel();
 
             var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
@@ -262,6 +262,8 @@ namespace App.Web.Factories.Extensions
                           : x.CreateOnUtc)
               })
               .ToDictionaryAsync(x => x.TaskId, x => x.LastTrackedUtc);
+            var alertConfigs = await _taskAlertService
+    .GetAllTaskAlertConfigurationsAsync();
 
             foreach (var f in allFollowUps)
             {
@@ -273,20 +275,37 @@ namespace App.Web.Factories.Extensions
                 var project = await _projectService.GetProjectsByIdAsync(task.ProjectId);
                 var developemetTime = await _timeSheetsService.GetDevelopmentTimeByTaskId(task.Id);
                 var status = await _workflowStatusService.GetWorkflowStatusByIdAsync(task.StatusId);
+                // Convert spent time to minutes
+                var totalSpentMinutes = (developemetTime.SpentHours * 60) + developemetTime.SpentMinutes;
+
+                // Convert decimal estimated hours to minutes
+                var estimatedMinutes = (int)Math.Round(task.EstimatedTime * 60);
+
+                int usedPercentage = 0;
+
+                if (estimatedMinutes > 0)
+                {
+                    usedPercentage = (int)Math.Floor((double)totalSpentMinutes / estimatedMinutes * 100);
+                }
                 string alertType = string.Empty;
                 string reasonText = string.Empty;
+                if (usedPercentage > 0)
+                {
+                    var matchedAlert = alertConfigs
+        .Where(a => a.Percentage <= usedPercentage && a.IsActive)
+        .OrderByDescending(a => a.Percentage)
+        .FirstOrDefault();
+                    if (matchedAlert != null)
+                    {
+                        alertType = $"{Math.Round(matchedAlert.Percentage)}%";
+                    }
+                }
+                else
+                {
+                    alertType = "0%";
+                }
                 if (f.AlertId > 0)
                 {
-                    var alert = await _taskAlertService
-                        .GetTaskAlertConfigurationByIdAsync(f.AlertId);
-                    if (alert != null)
-                    {
-                        alertType = alert.Percentage > 0
-                        ? $"{Math.Round(alert.Percentage)}%"
-                        : "";
-
-                    }
-
                     var reason = (!f.OnTrack && f.ReasonId > 0)
            ? await _taskAlertService.GetTaskAlertReasonByIdAsync(f.ReasonId)
            : null;
@@ -302,6 +321,26 @@ namespace App.Web.Factories.Extensions
 
                 }
                 lastTrackedDict.TryGetValue(f.TaskId, out var lastTrackedUtc);
+
+                if (percentageFilter > 0)
+                {
+                    var filteredAlertConfigs = alertConfigs
+                        .Select(a => a.Percentage)
+                        .OrderBy(p => p)
+                        .ToList();
+
+                    var index = filteredAlertConfigs.IndexOf((decimal)percentageFilter);
+
+                    decimal lowerBound = percentageFilter;
+                    decimal upperBound = decimal.MaxValue;
+
+                    if (index >= 0 && index < alertConfigs.Count - 1)
+                        upperBound = filteredAlertConfigs[index + 1];
+
+                    if (usedPercentage < lowerBound || usedPercentage >= upperBound)
+                        continue;
+                }
+
                 var item = new FollowUpTaskModel
                 {
                     Id = f.Id,
@@ -324,6 +363,7 @@ namespace App.Web.Factories.Extensions
                     IsManual = f.AlertId == 0 ? true : false,
                     StatusName = status?.StatusName,
                     StatusColor = status?.ColorCode,
+                    UsedPercentage = usedPercentage,
                     CanTakeFollowUp = managedProjectIds != null && managedProjectIds.Contains(task.ProjectId)
                 };
                 if (statusType != 1)
@@ -390,7 +430,8 @@ namespace App.Web.Factories.Extensions
                     .GetProjectIdsManagedOrCoordinateByEmployeeIdAsync(currEmployeeId)
                 ?? new List<int>();
             var query = _projectTaskRepository.Table
-                .Where(t => codeReviewStatusIds.Contains(t.StatusId));
+                .Where(t => codeReviewStatusIds.Contains(t.StatusId))
+                .Where(t => !t.IsDeleted);
             query = query.Where(t =>
                 t.AssignedTo == currEmployeeId
                 || t.DeveloperId == currEmployeeId
@@ -556,7 +597,8 @@ namespace App.Web.Factories.Extensions
                 await _projectEmployeeMappingService
                     .GetProjectIdsQaByEmployeeIdAsync(currEmployeeId);
             var query = _projectTaskRepository.Table
-                  .Where(t => readyToTestStatusIds.Contains(t.StatusId));
+                  .Where(t => readyToTestStatusIds.Contains(t.StatusId))
+                  .Where(t => !t.IsDeleted);
             if (employeeId > 0)
             {
                 query = query.Where(t =>

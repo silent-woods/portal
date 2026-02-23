@@ -24,91 +24,106 @@
                     <tr>
                         <th></th>
                         <th class="sortable" data-type="text">
-                            Task Name <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.TaskName")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            Assign To <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.AssignTo")
+                            <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            @T("User.Dashboard.FollowUp.Fields.Status")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="number">
-                            Esti. <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Estimation")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
-
                         </th>
                         <th class="sortable" data-type="number">
-                            Deve.<span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Development")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="percentage">
-                            Alert <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Alert")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            On Track <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.OnTrack")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="date">
-                            Next Review <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.NextReview")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text comment">
-                            Comment <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Comment")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="date">
-                            Last FollowUp <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.LastFollowUp")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="date">
-                            Last TrackedOn<span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.LastTrackedOn")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            Status <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Project")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            Project <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Type")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text">
-                            Type<span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
+                        <th>
+                            @T("User.Dashboard.FollowUp.Fields.Action")
                         </th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var t in Model.Overdue)
                     {
-                        <tr class="overdue-row" data-id="@t.Id">
+                        <tr class="overdue-row @(t.UsedPercentage >= 75 && t.UsedPercentage < 100 ? "warning-usage" : "")
+            @(t.UsedPercentage >= 100 ? "over-usage" : "")" data-id="@t.Id">
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
                             </td>
@@ -120,6 +135,10 @@
                                 </a>
                             </td>
                             <td>@t.EmployeeName</td>
+                            <td>
+                                <span class="status-dot" style="background:@t.StatusColor"></span>
+                                @t.StatusName
+                            </td>
                             <td>@t.EstimationTime</td>
                             <td>@t.DevelopementTime</td>
                             <td>@t.AlertType</td>
@@ -133,10 +152,6 @@
                             </td>
                             <td>
                                 @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
-                            </td>
-                            <td>
-                                <span class="status-dot" style="background:@t.StatusColor"></span>
-                                @t.StatusName
                             </td>
                             <td>@t.ProjectName</td>
                             <td>@(t.IsManual ? "Manual" : "Auto")</td>
@@ -172,91 +187,106 @@
                     <tr>
                         <th></th>
                         <th class="sortable" data-type="text">
-                            Task Name <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.TaskName")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            Assign To <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.AssignTo")
+                            <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            @T("User.Dashboard.FollowUp.Fields.Status")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="number">
-                            Esti. <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Estimation")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
-
                         </th>
                         <th class="sortable" data-type="number">
-                            Deve.<span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Development")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="percentage">
-                            Alert <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Alert")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            On Track <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.OnTrack")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="date">
-                            Next Review <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.NextReview")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text comment">
-                            Comment <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Comment")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="date">
-                            Last FollowUp <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.LastFollowUp")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="date">
-                            Last TrackedOn<span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.LastTrackedOn")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            Status <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Project")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            Project <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Type")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text">
-                            Type<span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
+                        <th>
+                            @T("User.Dashboard.FollowUp.Fields.Action")
                         </th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var t in Model.DueToday)
                     {
-                        <tr class="today-row" data-id="@t.Id">
+                        <tr class="today-row @(t.UsedPercentage >= 75 && t.UsedPercentage < 100 ? "warning-usage" : "")
+            @(t.UsedPercentage >= 100 ? "over-usage" : "")" data-id="@t.Id">
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
                             </td>
@@ -268,6 +298,10 @@
                                 </a>
                             </td>
                             <td>@t.EmployeeName</td>
+                            <td>
+                                <span class="status-dot" style="background:@t.StatusColor"></span>
+                                @t.StatusName
+                            </td>
                             <td>@t.EstimationTime</td>
                             <td>@t.DevelopementTime</td>
                             <td>@t.AlertType</td>
@@ -281,10 +315,6 @@
                             </td>
                             <td>
                                 @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
-                            </td>
-                            <td>
-                                <span class="status-dot" style="background:@t.StatusColor"></span>
-                                @t.StatusName
                             </td>
                             <td>@t.ProjectName</td>
                             <td>@(t.IsManual ? "Manual" : "Auto")</td>
@@ -319,94 +349,107 @@
                 <thead>
                     <tr>
                         <th></th>
-
                         <th class="sortable" data-type="text">
-                            Task Name <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.TaskName")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            Assign To <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.AssignTo")
+                            <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
+                            @T("User.Dashboard.FollowUp.Fields.Status")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="number">
-                            Esti. <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Estimation")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
-
                         </th>
                         <th class="sortable" data-type="number">
-                            Deve.<span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Development")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="percentage">
-                            Alert <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Alert")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            On Track <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.OnTrack")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="date">
-                            Next Review <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.NextReview")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text comment">
-                            Comment <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Comment")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="date">
-                            Last FollowUp <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.LastFollowUp")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-
                         <th class="sortable" data-type="date">
-                            Last TrackedOn<span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.LastTrackedOn")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            Status <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Project")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            Project <span class="sort-icons">
+                            @T("User.Dashboard.FollowUp.Fields.Type")
+                            <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text">
-                            Type<span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
+                        <th>
+                            @T("User.Dashboard.FollowUp.Fields.Action")
                         </th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var t in Model.Upcoming)
                     {
-                        <tr class="upcoming-row" data-id="@t.Id">
+                        <tr class="upcoming-row @(t.UsedPercentage >= 75 && t.UsedPercentage < 100 ? "warning-usage" : "")
+            @(t.UsedPercentage >= 100 ? "over-usage" : "")" data-id="@t.Id">
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
                             </td>
@@ -418,6 +461,10 @@
                                 </a>
                             </td>
                             <td>@t.EmployeeName</td>
+                            <td>
+                                <span class="status-dot" style="background:@t.StatusColor"></span>
+                                @t.StatusName
+                            </td>
                             <td>@t.EstimationTime</td>
                             <td>@t.DevelopementTime</td>
                             <td>@t.AlertType</td>
@@ -432,10 +479,6 @@
                             <td>
                                 @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
-                            <td>
-                                <span class="status-dot" style="background:@t.StatusColor"></span>
-                                @t.StatusName
-                            </td>
                             <td>@t.ProjectName</td>
                             <td>@(t.IsManual ? "Manual" : "Auto")</td>
                             <td class="action-cell">
@@ -448,7 +491,7 @@
                             </td>
                         </tr>
                         <tr class="subgrid-row" style="display:none;">
-                            <td colspan="14"><div class="subgrid-container"></div></td>
+                            <td colspan="15"><div class="subgrid-container"></div></td>
                         </tr>
                     }
                 </tbody>
@@ -468,9 +511,9 @@
         var originalNext = row.data("originalNext");
         nextCell.html(`
             <div style="display:flex; flex-direction:column; gap:4px;">
-                <input type="datetime-local"
-                       class="next-input"
-                       value="${originalNext !== '-' ? originalNext : ''}" />
+         <select class="next-review-dropdown">
+        ${generateTimeOptions()}
+    </select>
 
                 <label style="font-size:13px;">
                     <input type="checkbox" class="mark-complete" /> Mark Completed
@@ -485,7 +528,20 @@
             <button class="cancel-btn btn-cancel">Cancel</button>
         `);
     });
+        function generateTimeOptions() {
+        let html = `<option value="">Select Duration</option>`;
+        for (let minutes = 30; minutes <= 1440; minutes += 30) {
+            let hours = Math.floor(minutes / 60);
+            let mins = minutes % 60;
 
+            let label =
+                String(hours).padStart(2, '0') + ":" +
+                String(mins).padStart(2, '0');
+
+            html += `<option value="${minutes}">${label}</option>`;
+        }
+        return html;
+    }
      $("table").on("click", ".btn-cancel", function () {
         var row = $(this).closest("tr");
         var nextCell = row.find(".next-followup");
@@ -525,20 +581,20 @@
         var commentCell = row.find(".comment");
         var actionCell = row.find(".action-cell");
 
-        var nextDate = nextCell.find(".next-input").val();
+        var selectedMinutes = parseInt(nextCell.find(".next-review-dropdown").val());
         var isCompleted = nextCell.find(".mark-complete").is(":checked");
         var comment = commentCell.find("input").val();
 
-        if (isCompleted) {
-            nextDate = null;
-        } else if (!nextDate) {
-            alert("Please select next follow-up date.");
+           if (!isCompleted) {
+        if (!selectedMinutes) {
+            alert("Please select review duration.");
             btn.prop("disabled", false).text("Save");
             return;
         }
+    }
         var data = {
             id: taskId,
-            nextDate: nextDate,
+            durationMinutes: selectedMinutes,
             comment: comment,
             isCompleted: isCompleted
         };

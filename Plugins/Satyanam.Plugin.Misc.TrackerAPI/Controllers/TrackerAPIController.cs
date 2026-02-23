@@ -1739,6 +1739,8 @@ public partial class TrackerAPIController : BaseController
                 StatusId = existingProjectTask.StatusId
             };
 
+            int assignedTo = (await _trackerAPIService.CheckIfQaOrNotAsync(trackerAPIResponseModel.EmployeeId)) ? 0 : trackerAPIResponseModel.EmployeeId;
+
             foreach (var project in projects)
             {
                 var projectsRootObject = new ProjectRootObject()
@@ -1746,8 +1748,6 @@ public partial class TrackerAPIController : BaseController
                     Id = project.Id,
                     ProjectName = project.ProjectTitle
                 };
-
-                int assignedTo = (await _trackerAPIService.CheckIfQaOrNotAsync(trackerAPIResponseModel.EmployeeId)) ? 0 : trackerAPIResponseModel.EmployeeId;
 
                 var projectTasks = await _trackerAPIService.GetProjectTasksByProjectIdAsync(projectId: project.Id, assignedTo: assignedTo);
                 foreach (var projectTask in projectTasks)
@@ -1774,6 +1774,31 @@ public partial class TrackerAPIController : BaseController
                 }
 
                 model.AvailableProjects.Add(projectsRootObject);
+            }
+
+            var activeProjectTasks = await _trackerAPIService.GetActiveProjectTasksByProjectIdAsync(projectId: existingTask.ProjectId, taskId: parameters.TaskId,
+                assignedTo: assignedTo, statusId: existingTask.StatusId);
+            foreach (var activeProjectTask in activeProjectTasks)
+            {
+                var workflowStatus = (await _trackerAPIService.GetWorkflowStatusesByProcessWorkflowIdAsync(activeProjectTask.ProcessWorkflowId)).Where(ws => ws.StatusName == TrackerAPIDefaults.Hold).FirstOrDefault();
+                if (workflowStatus != null)
+                {
+                    activeProjectTask.StatusId = workflowStatus.Id;
+                    await _trackerAPIService.UpdateProjectTaskAsync(activeProjectTask);
+
+                    string taskLink = (await _storeContext.GetCurrentStoreAsync()).Url + "ProjectTask/Edit?id=" + parameters.TaskId;
+
+                    var taskComments = new TaskComments()
+                    {
+                        EmployeeId = trackerAPIResponseModel.EmployeeId,
+                        TaskId = activeProjectTask.Id,
+                        StatusId = workflowStatus.Id,
+                        Description = $"{TrackerAPIDefaults.HoldComment} [{existingTask.TaskTitle} {taskLink}]",
+                        CreatedOn = DateTime.UtcNow,
+                        UpdatedOn = DateTime.UtcNow
+                    };
+                    await _trackerAPIService.InsertTaskCommentsAsync(taskComments);
+                }
             }
 
             var existingTaskAlertConfigurations = await _taskAlertService.GetAllTaskAlertConfigurationsAsync(showHidden: true);

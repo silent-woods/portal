@@ -99,7 +99,7 @@ namespace App.Web.Controllers
         }
 
         [HttpPost]
-        public virtual async Task<IActionResult> SaveFollowUp(int id, DateTime? nextDate, string comment, bool isCompleted)
+        public virtual async Task<IActionResult> SaveFollowUp(int id, int durationMinutes, string comment, bool isCompleted)
         {
             if (id == 0)
                 return Json(new { success = false, message = "Invalid request" });
@@ -120,12 +120,19 @@ namespace App.Web.Controllers
                 if (follow == null)
                     return Json(new { success = false, message = "Followup not found" });
                 follow.LastFollowupDateTime = DateTime.UtcNow;
-                if (nextDate.HasValue)
+                if (!isCompleted && durationMinutes > 0)
                 {
-                    var istZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
-                    var istDateTime = DateTime.SpecifyKind(nextDate.Value, DateTimeKind.Unspecified);
+                    var officeTimeZone =
+                        TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+
+                    DateTime officeNow =
+                        TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, officeTimeZone);
+
+                    DateTime adjustedOfficeTime =
+                       _followUpTaskService.AdjustToOfficeHours(officeNow, durationMinutes, officeTimeZone);
+
                     follow.NextFollowupDateTime =
-                        TimeZoneInfo.ConvertTimeToUtc(istDateTime, istZone);
+                        TimeZoneInfo.ConvertTimeToUtc(adjustedOfficeTime, officeTimeZone);
                 }
                 follow.IsCompleted = isCompleted;
                 follow.LastComment = comment;
@@ -157,24 +164,26 @@ namespace App.Web.Controllers
                 taskalertlog.AlertId = 0;
                 await _taskAlertService.InsertTaskAlertLogAsync(taskalertlog);
 
-                TaskComments taskComment = new TaskComments();
+                if (!string.IsNullOrWhiteSpace(comment))
+                {
+                    TaskComments taskComment = new TaskComments();
 
-                taskComment.EmployeeId = currEmployeeId;
-                taskComment.StatusId = task.StatusId;
-                taskComment.TaskId = task.Id;
-                taskComment.CreatedOn = await _dateTimeHelper.GetUTCAsync();
+                    taskComment.EmployeeId = currEmployeeId;
+                    taskComment.StatusId = task.StatusId;
+                    taskComment.TaskId = task.Id;
+                    taskComment.CreatedOn = await _dateTimeHelper.GetUTCAsync();
 
-                var assignTo = await _employeeService.GetEmployeeByIdAsync(task.AssignedTo);
+                    var assignTo = await _employeeService.GetEmployeeByIdAsync(task.AssignedTo);
 
-                var assignedUserName = assignTo != null
-                    ? $"{assignTo.FirstName} {assignTo.LastName}".Trim()
-                    : "";
+                    var assignedUserName = assignTo != null
+                        ? $"{assignTo.FirstName} {assignTo.LastName}".Trim()
+                        : "";
 
-                taskComment.Description = $"@<{assignedUserName}> {comment}";
+                    taskComment.Description = $"@<{assignedUserName}> {comment}";
 
-                await _taskCommentsService.InsertTaskCommentsAsync(taskComment);
-                await _workflowMessageService.SendEmployeeMentionMessageAsync((await _workContext.GetWorkingLanguageAsync()).Id, taskComment.EmployeeId, taskComment.TaskId, taskComment.Description);
-
+                    await _taskCommentsService.InsertTaskCommentsAsync(taskComment);
+                    await _workflowMessageService.SendEmployeeMentionMessageAsync((await _workContext.GetWorkingLanguageAsync()).Id, taskComment.EmployeeId, taskComment.TaskId, taskComment.Description);
+                }
                 return Json(new { success = true });
             }
             catch (Exception ex)
@@ -211,7 +220,8 @@ namespace App.Web.Controllers
                 model
             );
         }
-        public virtual async Task<IActionResult> SearchFollowup(string taskName, int projectId, int employeeId, bool showOnlyNotTrack, string sourceType, DateTime? from = null, DateTime? to = null,int percentageFilter = 0,int processWorkflow = 0,int statusId =0)
+        [HttpPost]
+        public virtual async Task<IActionResult> SearchFollowup(string taskName,string projectIds, string employeeIds, bool showOnlyNotTrack, string sourceType, DateTime? from = null, DateTime? to = null,int percentageFilter = 0,int processWorkflow = 0,int statusId =0)
         {
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -222,11 +232,13 @@ namespace App.Web.Controllers
             var visibleProjectIds =await _projectEmployeeMappingService.GetVisibleProjectIdsForDashboardAsync(currEmployeeId);
             var managedProjectIds =
                 await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeIdAsync(currEmployeeId);
+            var projectIdList = string.IsNullOrEmpty(projectIds)? new List<int>(): projectIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList();
+            var employeeIdList = string.IsNullOrEmpty(employeeIds) ? new List<int>(): employeeIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList();
             var model = await _dashboardModelFactory.PrepareFollowUpDashboardModelAsync(
                 taskName: taskName,
                 statusType: 2,
-                projectId: projectId,
-                employeeId: employeeId,
+                projectIds: projectIdList,
+                employeeIds: employeeIdList,
                 currEmployeeId: currEmployeeId,
                 visibleProjectIds: visibleProjectIds,
                 managedProjectIds: managedProjectIds,

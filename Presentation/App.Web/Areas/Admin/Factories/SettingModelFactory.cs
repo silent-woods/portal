@@ -1640,8 +1640,9 @@ namespace App.Web.Areas.Admin.Factories
             model ??= projectTaskSettings.ToSettingsModel<ProjectTaskSettingsModel>();
             model.ActiveStoreScopeConfiguration = storeId;
             if (storeId <= 0)
-                return model;
+                return model; 
             model.IsShowSelctAllCheckList_OverrideForStore = await _settingService.SettingExistsAsync(projectTaskSettings, x => x.IsShowSelctAllCheckList, storeId);
+            model.EnableProjectTaskDebugLog_OverrideForStore = await _settingService.SettingExistsAsync(projectTaskSettings, x => x.EnableProjectTaskDebugLog, storeId);
             await _settingService.ClearCacheAsync();
             return model;
         }

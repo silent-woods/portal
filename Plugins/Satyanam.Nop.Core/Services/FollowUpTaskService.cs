@@ -73,208 +73,150 @@ namespace Satyanam.Nop.Core.Services
 
             return date;
         }
-        private static DateTime AdjustToOfficeHours(DateTime startTime, int minutesToAdd, TimeZoneInfo officeTimeZone)
-        {
-            DateTime officeStart = startTime.Date.AddHours(10);
-            DateTime officeEnd = startTime.Date.AddHours(19);
-
-            if (startTime < officeStart)
-                startTime = officeStart;
-
-            if (startTime >= officeEnd)
-                startTime = GetNextWorkingDay(startTime).Date.AddHours(10);
-
-            while (minutesToAdd > 0)
-            {
-                officeEnd = startTime.Date.AddHours(19);
-
-                int availableMinutes =
-                    (int)(officeEnd - startTime).TotalMinutes;
-
-                if (minutesToAdd <= availableMinutes)
-                {
-                    startTime = startTime.AddMinutes(minutesToAdd);
-                    minutesToAdd = 0;
-                }
-                else
-                {
-                    minutesToAdd -= availableMinutes;
-                    startTime = GetNextWorkingDay(startTime).Date.AddHours(10);
-                }
-            }
-
-            return startTime;
-        }
         #endregion
         #region Methods
         public virtual async Task<IPagedList<FollowUpTask>> GetAllFollowUpTasksAsync(
-      int taskId = 0,
-      int reviewerId = 0,
-      int projectId = 0,
-      int employeeId = 0,
-      string comment = null,
-      string type = null,       
-      string taskName = null,   
-      int statusType =0,
-      int pageIndex = 0,
-      int pageSize = int.MaxValue,
-      int currEmployeeId = 0,
-      bool showOnlyNotOnTrack =false,
-      string sourceType = null,
-       DateTime? from = null,  
-       DateTime? to = null,
-       int percentageFilter =0,
-       int processWorkflow =0,
-       int statusId=0,
-      IList<int> visibleProjectIds = null,
-      IList<int> managedProjectIds = null)
+            int taskId = 0,
+            int reviewerId = 0,
+            IList<int> projectIds = null,
+            IList<int> employeeIds = null,
+            string comment = null,
+            string type = null,
+            string taskName = null,
+            int statusType = 0,
+            int pageIndex = 0,
+            int pageSize = int.MaxValue,
+            int currEmployeeId = 0,
+            bool showOnlyNotOnTrack = false,
+            string sourceType = null,
+            DateTime? from = null,
+            DateTime? to = null,
+            int percentageFilter = 0,
+            int processWorkflow = 0,
+            int statusId = 0,
+            IList<int> visibleProjectIds = null,
+            IList<int> managedProjectIds = null)
         {
             var today = DateTime.UtcNow.Date;
-            var query = _followUpTaskRepository.Table;
+            var query =
+                from f in _followUpTaskRepository.Table
+                join t in _projectTaskRepository.Table
+                    on f.TaskId equals t.Id
+                where !t.IsDeleted
+                select new { f, t };
             if (taskId > 0)
-                query = query.Where(f => f.TaskId == taskId);
+                query = query.Where(x => x.f.TaskId == taskId);
             if (reviewerId > 0)
-                query = query.Where(f => f.ReviewerId == reviewerId);
+                query = query.Where(x => x.f.ReviewerId == reviewerId);
             if (!string.IsNullOrWhiteSpace(comment))
             {
                 var trimmed = comment.Trim().ToLower();
-                query = query.Where(f => f.LastComment != null &&
-                                         f.LastComment.ToLower().Contains(trimmed));
+                query = query.Where(x =>
+                    x.f.LastComment != null &&
+                    x.f.LastComment.ToLower().Contains(trimmed));
             }
             if (visibleProjectIds != null && visibleProjectIds.Any())
-            {
-                query =
-                    from f in query
-                    join t in _projectTaskRepository.Table
-                        on f.TaskId equals t.Id
-                    where visibleProjectIds.Contains(t.ProjectId)
-                    select f;
-            }
+                query = query.Where(x =>
+                    visibleProjectIds.Contains(x.t.ProjectId));
             if (currEmployeeId > 0)
             {
-                query =
-                    from f in query
-                    join t in _projectTaskRepository.Table
-                        on f.TaskId equals t.Id
-                    where
-                        (managedProjectIds != null && managedProjectIds.Contains(t.ProjectId))
-                        || t.AssignedTo == currEmployeeId
-                    select f;
+                query = query.Where(x =>
+                    (managedProjectIds != null &&
+                     managedProjectIds.Contains(x.t.ProjectId))
+                    || x.t.AssignedTo == currEmployeeId);
             }
-            if(processWorkflow > 0)
-            {
-                query =
-     from f in query
-     join t in _projectTaskRepository.Table
-         on f.TaskId equals t.Id
-     where t.ProcessWorkflowId == processWorkflow
-     select f;
-            }
+            if (processWorkflow > 0)
+                query = query.Where(x =>
+                    x.t.ProcessWorkflowId == processWorkflow);
             if (statusId > 0)
-            {
-                query =
-     from f in query
-     join t in _projectTaskRepository.Table
-         on f.TaskId equals t.Id
-     where t.StatusId == statusId
-     select f;
-            }
-            if(showOnlyNotOnTrack)
-                query = query.Where(f =>
-              !f.OnTrack && f.AlertId >0);
-
+                query = query.Where(x =>
+                    x.t.StatusId == statusId);
+            if (showOnlyNotOnTrack)
+                query = query.Where(x =>
+                    !x.f.OnTrack && x.f.AlertId > 0);
             if (statusType != 0)
             {
-                if(statusType == 1)
-                {
-                    query = query.Where(f =>
-               f.IsCompleted);
-                }
-                else if(statusType == 2)
-                {
-                    query = query.Where(f =>
-                !f.IsCompleted);
-                }
+                if (statusType == 1)
+                    query = query.Where(x => x.f.IsCompleted);
+                else if (statusType == 2)
+                    query = query.Where(x => !x.f.IsCompleted);
             }
             if (!string.IsNullOrWhiteSpace(taskName))
             {
                 var taskIds = await GetFollowupByTaskNameAsync(taskName);
-                query = query.Where(c => taskIds.Contains(c.TaskId));
+                query = query.Where(x => taskIds.Contains(x.f.TaskId));
             }
             if (!string.IsNullOrWhiteSpace(sourceType))
             {
                 if (sourceType == "manual")
-                    query = query.Where(c => c.AlertId==0);
-                if (sourceType == "auto")
-                    query = query.Where(c => c.AlertId > 0);
+                    query = query.Where(x => x.f.AlertId == 0);
+                else if (sourceType == "auto")
+                    query = query.Where(x => x.f.AlertId > 0);
             }
-            if (projectId > 0)
-            {
-                query = from f in query
-                        join t in _projectTaskRepository.Table
-                            on f.TaskId equals t.Id
-                        where t.ProjectId == projectId
-                        select f;
-            }
+            if (projectIds != null && projectIds.Any())
+                query = query.Where(x =>
+                    projectIds.Contains(x.t.ProjectId));
+
+            if (employeeIds != null && employeeIds.Any())
+                query = query.Where(x =>
+                    employeeIds.Contains(x.t.AssignedTo));
             if (from.HasValue)
             {
                 var fromDate = from.Value.Date;
-                query = query.Where(f =>
-                    f.NextFollowupDateTime.HasValue &&
-                    f.NextFollowupDateTime.Value.Date >= fromDate);
+                query = query.Where(x =>
+                    x.f.NextFollowupDateTime.HasValue &&
+                    x.f.NextFollowupDateTime.Value.Date >= fromDate);
             }
-
             if (to.HasValue)
             {
                 var toDate = to.Value.Date;
-                query = query.Where(f =>
-                    f.NextFollowupDateTime.HasValue &&
-                    f.NextFollowupDateTime.Value.Date <= toDate);
-            }
-
-            if (employeeId > 0)
-            {
-                query = from f in query
-                        join t in _projectTaskRepository.Table
-                            on f.TaskId equals t.Id
-                        where t.AssignedTo == employeeId
-                        select f;
+                query = query.Where(x =>
+                    x.f.NextFollowupDateTime.HasValue &&
+                    x.f.NextFollowupDateTime.Value.Date <= toDate);
             }
             if (!string.IsNullOrWhiteSpace(type))
             {
                 switch (type.ToLower())
                 {
                     case "new":
-                        query = query.Where(f => f.LastFollowupDateTime == null);
+                        query = query.Where(x => x.f.LastFollowupDateTime == null);
                         break;
+
                     case "overdue":
-                        query = query.Where(f => f.NextFollowupDateTime < today);
+                        query = query.Where(x =>
+                            x.f.NextFollowupDateTime < today);
                         break;
+
                     case "today":
-                        query = query.Where(f => f.NextFollowupDateTime == today);
+                        query = query.Where(x =>
+                            x.f.NextFollowupDateTime == today);
                         break;
+
                     case "upcoming":
-                        query = query.Where(f => f.NextFollowupDateTime > today);
+                        query = query.Where(x =>
+                            x.f.NextFollowupDateTime > today);
                         break;
                 }
             }
             if (percentageFilter > 0)
             {
                 query =
-                    from f in query
+                    from x in query
                     join ac in _taskAlertConfigurationRepository.Table
-                        on f.AlertId equals ac.Id
-                    where
-                        f.AlertId > 0 &&              
-                        ac.Percentage == percentageFilter &&
-                        ac.IsActive &&
-                        !ac.Deleted
-                    select f;
+                        on x.f.AlertId equals ac.Id
+                    where x.f.AlertId > 0 &&
+                          ac.Percentage == percentageFilter &&
+                          ac.IsActive &&
+                          !ac.Deleted
+                    select x;
             }
-            query = query.OrderByDescending(f => f.UpdatedOn);
-            var list = await query.ToPagedListAsync(pageIndex, pageSize);
-            return list;
+            var finalQuery = query
+                .Select(x => x.f)
+                .OrderByDescending(f => f.UpdatedOn);
+
+            return await finalQuery.ToPagedListAsync(pageIndex, pageSize);
         }
+
 
         public virtual async Task<FollowUpTask> GetFollowUpTaskByIdAsync(int id)
         {
@@ -365,6 +307,38 @@ namespace Satyanam.Nop.Core.Services
                                select ft;
 
             return followupTask.Any();
+        }
+        public virtual DateTime AdjustToOfficeHours(DateTime startTime, int minutesToAdd, TimeZoneInfo officeTimeZone)
+        {
+            DateTime officeStart = startTime.Date.AddHours(10);
+            DateTime officeEnd = startTime.Date.AddHours(19);
+
+            if (startTime < officeStart)
+                startTime = officeStart;
+
+            if (startTime >= officeEnd)
+                startTime = GetNextWorkingDay(startTime).Date.AddHours(10);
+
+            while (minutesToAdd > 0)
+            {
+                officeEnd = startTime.Date.AddHours(19);
+
+                int availableMinutes =
+                    (int)(officeEnd - startTime).TotalMinutes;
+
+                if (minutesToAdd <= availableMinutes)
+                {
+                    startTime = startTime.AddMinutes(minutesToAdd);
+                    minutesToAdd = 0;
+                }
+                else
+                {
+                    minutesToAdd -= availableMinutes;
+                    startTime = GetNextWorkingDay(startTime).Date.AddHours(10);
+                }
+            }
+
+            return startTime;
         }
         #endregion
     }

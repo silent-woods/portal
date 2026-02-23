@@ -1662,9 +1662,11 @@ namespace App.Web.Areas.Admin.Controllers
                 var storeScope = await _storeContext.GetActiveStoreScopeConfigurationAsync();
                 var projectTaskSettings = await _settingService.LoadSettingAsync<ProjectTaskSetting>(storeScope);
                 projectTaskSettings = model.ToSettings(projectTaskSettings);
-    
+
                 await _settingService.SaveSettingOverridablePerStoreAsync(projectTaskSettings, x => x.IsShowSelctAllCheckList, model.IsShowSelctAllCheckList_OverrideForStore, storeScope, false);
 
+                await _settingService.SaveSettingOverridablePerStoreAsync(projectTaskSettings, x => x.EnableProjectTaskDebugLog, model.EnableProjectTaskDebugLog_OverrideForStore, storeScope, false);
+                
                 await _settingService.ClearCacheAsync();
 
                 _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.Configuration.Updated"));

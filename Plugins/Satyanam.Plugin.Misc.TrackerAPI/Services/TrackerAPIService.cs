@@ -275,6 +275,20 @@ public partial class TrackerAPIService : ITrackerAPIService
         return await projectTask.FirstOrDefaultAsync();
     }
 
+    public virtual async Task<IList<ProjectTask>> GetActiveProjectTasksByProjectIdAsync(int projectId = 0, int taskId = 0, int assignedTo = 0, int statusId = 0)
+    {
+        var projectTasks = from pt in _projectTaskRepository.Table
+                           where pt.ProjectId == projectId && !pt.IsDeleted
+                           select pt;
+
+        if (assignedTo > 0)
+            projectTasks = projectTasks.Where(pt => pt.AssignedTo == assignedTo);
+
+        projectTasks = projectTasks.Where(pt => pt.Id != taskId && pt.StatusId == statusId);
+
+        return await projectTasks.ToListAsync();
+    }
+
     public virtual async Task<IList<ProjectTask>> GetProjectTasksByProjectIdAsync(int projectId = 0, int assignedTo = 0,
         bool showHidden = false)
     {

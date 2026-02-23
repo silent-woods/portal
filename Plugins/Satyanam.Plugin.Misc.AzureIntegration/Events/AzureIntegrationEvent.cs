@@ -45,7 +45,7 @@ public partial class AzureIntegrationEvent : IConsumer<EntityInsertedEvent<Proje
 	protected readonly ISettingService _settingService;
     protected readonly IWorkflowStatusService _workflowStatusService;
     protected readonly IFollowUpTaskService _followUpTaskService;
-
+    protected readonly ProjectTaskSetting _projectTaskSetting;
     #endregion
 
     #region Ctor
@@ -59,7 +59,8 @@ public partial class AzureIntegrationEvent : IConsumer<EntityInsertedEvent<Proje
         IProjectTaskService projectTaskService,
         ISettingService settingService,
         IWorkflowStatusService workflowStatusService,
-        IFollowUpTaskService followUpTaskService)
+        IFollowUpTaskService followUpTaskService,
+        ProjectTaskSetting projectTaskSetting)
     {
         _httpClient = httpClient;
         _azureIntegrationService = azureIntegrationService;
@@ -71,6 +72,7 @@ public partial class AzureIntegrationEvent : IConsumer<EntityInsertedEvent<Proje
         _settingService = settingService;
         _workflowStatusService = workflowStatusService;
         _followUpTaskService = followUpTaskService;
+        _projectTaskSetting = projectTaskSetting;
     }
 
     #endregion
@@ -397,7 +399,21 @@ public partial class AzureIntegrationEvent : IConsumer<EntityInsertedEvent<Proje
             if (projectTaskInsertedEvent.Entity is ProjectTask projectTask)
             {
                 await _followUpTaskService.InsertFollowupTaskByTask(projectTask);
+                if (_projectTaskSetting.EnableProjectTaskDebugLog)
+                {
+                    var json = System.Text.Json.JsonSerializer.Serialize(projectTask,
+                              new System.Text.Json.JsonSerializerOptions
+                              {
+                                  WriteIndented = true
+                              });
 
+                    var shortMessage = $"ProjectTask Inserted - TaskId: {projectTask.Id}";
+
+                    await _logger.InformationAsync(
+                        shortMessage,
+                        new Exception(json)
+                    );
+                }
                 if (!projectTask.IsSync)
                     return;
 
@@ -466,6 +482,21 @@ public partial class AzureIntegrationEvent : IConsumer<EntityInsertedEvent<Proje
         {
             if (projectTaskUpdatedEvent.Entity is ProjectTask projectTask)
             {
+                if (_projectTaskSetting.EnableProjectTaskDebugLog)
+                {
+                    var json = System.Text.Json.JsonSerializer.Serialize(projectTask,
+                              new System.Text.Json.JsonSerializerOptions
+                              {
+                                  WriteIndented = true
+                              });
+
+                    var shortMessage = $"ProjectTask Updated - TaskId: {projectTask.Id}";
+
+                    await _logger.InformationAsync(
+                        shortMessage,
+                        new Exception(json)
+                    );
+                }
                 if (!projectTask.IsSync)
                     return;
 
