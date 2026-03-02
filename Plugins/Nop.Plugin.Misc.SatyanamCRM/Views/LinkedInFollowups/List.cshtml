@@ -42,6 +42,7 @@
                     <input type="hidden" name="SearchWebsiteUrl" />
                     <input type="hidden" name="NextFollowUpDate" />
                     <input type="hidden" name="SearchStatus" />
+                    <input type="hidden" name="SearchCreatedByUserId" />
                 </form>
 
                 <ul class="dropdown-menu" role="menu">
@@ -188,7 +189,16 @@
                                         </div>
                                     </div>
                                 </div>
-
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchCreatedByUserId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchCreatedByUserId" asp-items="Model.AvailableUser" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="row">
                                 <div class="text-center col-12">
@@ -316,14 +326,15 @@
                                     new FilterParameter(nameof(Model.SearchWebsiteUrl)),
                                     new FilterParameter(nameof(Model.SearchLastMessDate)),
                                     new FilterParameter(nameof(Model.NextFollowUpDate)),
-                                    new FilterParameter(nameof(Model.SearchStatus))
+                                    new FilterParameter(nameof(Model.SearchStatus)),
+                                    new FilterParameter(nameof(Model.SearchCreatedByUserId))
                                 },
                             };
 
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.Id))
                             {
                                 IsMasterCheckBox = true,
-                                Render = new RenderCheckBox("checkbox_linkedin_followups"),
+                                Render = new RenderCheckBox("checkboxes"),
                                 ClassName = NopColumnClassDefaults.CenterAll,
                                 Width = "50"
                             });
@@ -426,6 +437,13 @@
                                 Editable = true,
                                 EditType = EditType.String
                             });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.CreatedByUserName))
+                            {
+                                Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.LeadOwner").Text,
+                                Width = "150",
+                                ClassName = NopColumnClassDefaults.Button,
+                                Render = new RenderCustom("renderCreatedByPopup")
+                            });
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.CreatedOnUtc))
                             {
                                 Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.CreatedOnUtc").Text,
@@ -452,6 +470,15 @@
             return '<button onclick="javascript:OpenWindow(\'@Url.Action("ChangeStatus", "LinkedInFollowups")/'
                 + row.Id + '?btnId=btnRefreshLinkedInFollowups&formId=LinkedInFollowups-form\', 570, 400, true); return false;"'
                 + ' class="btn btn-sm btn-secondary">' + statusText + '</button>';
+        }
+                                      function renderCreatedByPopup(data, type, row, meta) {
+
+            var name = row.CreatedByUserName || "Select User";
+
+            return '<button onclick="javascript:OpenWindow(\'@Url.Action("ChangeCreatedBy", "LinkedInFollowups")/'
+                + row.Id +
+                '?btnId=btnRefreshLinkedInFollowups&formId=LinkedInFollowups-form\', 500, 300, true); return false;"'
+                + ' class="btn btn-sm btn-info">' + name + '</button>';
         }
     </script>
     <script>
@@ -717,6 +744,7 @@
                 form.find('[name=SearchWebsiteUrl]').val($('#@Html.IdFor(m => m.SearchWebsiteUrl)').val());
                 form.find('[name=NextFollowUpDate]').val($('#@Html.IdFor(m => m.NextFollowUpDate)').val());
                 form.find('[name=SearchStatus]').val($('#@Html.IdFor(m => m.SearchStatus)').val());
+                form.find('[name=SearchCreatedByUserId]').val($('#@Html.IdFor(m => m.SearchCreatedByUserId)').val());
 
 
                 // Submit the form via POST
@@ -774,21 +802,24 @@
         <input type="hidden" id="selectedIds" name="selectedIds" value="" />
     </form>
     <script>
-        $(document).ready(function () {
+                $(document).ready(function () {
+
             $('#exportexcel-selected').click(function (e) {
+
                 e.preventDefault();
-                var ids = selectedIds.join(",");
-                if (!ids) {
-                    $('#exportExcelSelected-info').text("@T("Admin.Products.NoProducts")");
-                    $("#selectedExportExcel").click();
+
+                if (typeof selectedIds === 'undefined' || selectedIds.length === 0) {
+                    alert("Please select at least one record.");
+                    return false;
                 }
-                else {
-                    $('#export-excel-selected-form #selectedIds').val(ids);
-                    $('#export-excel-selected-form').submit();
-                    updateTable('#products-grid');
-                }
+
+                $('#selectedIds').val(selectedIds.join(','));
+
+                $('#export-excel-selected-form').submit();
+
                 return false;
             });
+
         });
     </script>
     <script>

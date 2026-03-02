@@ -29,11 +29,12 @@ namespace Satyanam.Nop.Core.Services
         private readonly IProjectTaskService _projectTaskService;
         private readonly ICheckListMasterService _checkListMasterService;
         private readonly ITaskCategoryService _taskCategoryService;
+        private readonly IFollowUpTaskService _followUpTaskService;
         #endregion
 
         #region Ctor
 
-        public TaskChangeLogService(IRepository<TaskChangeLog> taskChangeLogRepository, IEmployeeService employeeService, ITimeSheetsService timeSheetsService, IProcessWorkflowService processWorkflowService, IWorkflowStatusService workflowStatusService, IProjectTaskService projectTaskService, ICheckListMasterService checkListMasterService, ITaskCategoryService taskCategoryService)
+        public TaskChangeLogService(IRepository<TaskChangeLog> taskChangeLogRepository, IEmployeeService employeeService, ITimeSheetsService timeSheetsService, IProcessWorkflowService processWorkflowService, IWorkflowStatusService workflowStatusService, IProjectTaskService projectTaskService, ICheckListMasterService checkListMasterService, ITaskCategoryService taskCategoryService, IFollowUpTaskService followUpTaskService)
         {
             _taskChangeLogRepository = taskChangeLogRepository;
             _employeeService = employeeService;
@@ -43,6 +44,7 @@ namespace Satyanam.Nop.Core.Services
             _projectTaskService = projectTaskService;
             _checkListMasterService = checkListMasterService;
             _taskCategoryService = taskCategoryService;
+            _followUpTaskService = followUpTaskService;
         }
 
         #endregion
@@ -150,6 +152,11 @@ namespace Satyanam.Nop.Core.Services
                     projectChangeLog.EmployeeId = currentEmployeeId;
 
                     await InsertTaskChangeLogAsync(projectChangeLog);
+                    await _followUpTaskService.UpdateNextFollowupDateOnStatusChangeAsync(
+                       newProjectTask.Id,
+                       newProjectTask.ProcessWorkflowId,
+                       prevProjectTask.StatusId,
+                       newProjectTask.StatusId);
                 }
 
 

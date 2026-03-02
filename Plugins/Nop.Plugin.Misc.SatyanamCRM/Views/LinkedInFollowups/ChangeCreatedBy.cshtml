@@ -10,7 +10,7 @@
     <script>
         try {
             window.opener.document.getElementById('btnRefreshLinkedInFollowups').click();
-        } catch (e) { console.error('Parent refresh failed', e); }
+        } catch (e) { console.error(e); }
         window.close();
     </script>
 }
@@ -18,11 +18,11 @@
 
 <div class="content-header clearfix">
     <h1 class="float-left">
-        @T("Plugin.SatyanamCRM.LinkedInFollowups.ChangeStatus")
+        @T("Plugin.SatyanamCRM.LinkedInFollowups.ChangeLeadOwner")
     </h1>
 </div>
 
-<form asp-controller="LinkedInFollowups" asp-action="ChangeStatus" method="post">
+<form asp-controller="LinkedInFollowups" asp-action="ChangeCreatedBy" method="post">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
     <section class="content">
@@ -31,11 +31,11 @@
                 <div class="card-body">
                     <div class="form-group row align-items-center">
                         <div class="col-md-3">
-                            <nop-label asp-for="StatusId" />
+                            <nop-label asp-for="CreatedByUserId" />
                         </div>
                         <div class="col-md-6">
-                            <nop-select asp-for="StatusId" asp-items="Model.Status" />
-                            <span asp-validation-for="StatusId"></span>
+                            <nop-select asp-for="CreatedByUserId" asp-items="Model.AvailableUser" />
+                            <span asp-validation-for="CreatedByUserId"></span>
                         </div>
                     </div>
                     
@@ -43,7 +43,7 @@
                             <div class="col-sm-9 offset-sm-3">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-check"></i> @T("Admin.Common.Save")
-                                </button>
+                                </button>   
                                 <button type="button" class="btn btn-secondary" onclick="window.close();">
                                     <i class="fas fa-times"></i> @T("Admin.Common.Cancel")
                                 </button>

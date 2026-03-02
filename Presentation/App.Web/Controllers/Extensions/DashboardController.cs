@@ -196,6 +196,40 @@ namespace App.Web.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetFollowUpDurations()
+        {
+            var officeTimeZone =
+                TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+
+            DateTime officeNow =
+                TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, officeTimeZone);
+
+            var result = new List<object>();
+
+            for (int minutes = 30; minutes <= 1440; minutes += 30)
+            {
+                DateTime adjustedOfficeTime =
+                    _followUpTaskService.AdjustToOfficeHours(
+                        officeNow,
+                        minutes,
+                        officeTimeZone);
+                int hours = minutes / 60;
+                int mins = minutes % 60;
+
+                string durationLabel = $"{hours:D2}:{mins:D2}";
+                string formattedDateTime =
+                    adjustedOfficeTime.ToString("hh:mm tt dd/MM");
+
+                result.Add(new
+                {
+                    value = minutes,
+                    text = $"{durationLabel} ({formattedDateTime})"
+                });
+            }
+
+            return Json(result);
+        }
         public virtual async Task<IActionResult> ReloadFollowupTables()
         {
             var customer = await _workContext.GetCurrentCustomerAsync();

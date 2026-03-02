@@ -275,18 +275,24 @@ public partial class TrackerAPIService : ITrackerAPIService
         return await projectTask.FirstOrDefaultAsync();
     }
 
-    public virtual async Task<IList<ProjectTask>> GetActiveProjectTasksByProjectIdAsync(int projectId = 0, int taskId = 0, int assignedTo = 0, int statusId = 0)
+    public virtual async Task<IList<ProjectTask>> GetActiveProjectTasksForStartAsync(int projectId = 0, int taskId = 0, int assignedTo = 0, int statusId = 0)
     {
-        var projectTasks = from pt in _projectTaskRepository.Table
-                           where pt.ProjectId == projectId && !pt.IsDeleted
-                           select pt;
+        var currentTask = await _projectTaskRepository.GetByIdAsync(taskId);
+
+        if (currentTask == null)
+            return new List<ProjectTask>();
+
+        var query = _projectTaskRepository.Table.Where(pt => pt.ProjectId == projectId && !pt.IsDeleted && pt.Id != taskId && pt.StatusId == statusId && pt.Tasktypeid != (int)TaskTypeEnum.UserStory);
 
         if (assignedTo > 0)
-            projectTasks = projectTasks.Where(pt => pt.AssignedTo == assignedTo);
+            query = query.Where(pt => pt.AssignedTo == assignedTo);
 
-        projectTasks = projectTasks.Where(pt => pt.Id != taskId && pt.StatusId == statusId);
+        if (currentTask.ParentTaskId > 0)
+            query = query.Where(pt => pt.ParentTaskId == currentTask.ParentTaskId);
+        else
+            query = query.Where(pt => pt.ParentTaskId == 0);
 
-        return await projectTasks.ToListAsync();
+        return await query.ToListAsync();
     }
 
     public virtual async Task<IList<ProjectTask>> GetProjectTasksByProjectIdAsync(int projectId = 0, int assignedTo = 0,
@@ -700,6 +706,11 @@ public partial class TrackerAPIService : ITrackerAPIService
     public virtual async Task<WorkflowStatus> GetWorkflowStatusByIdAsync(int id)
     {
         return await _workFlowStatusRepository.GetByIdAsync(id);
+    }
+
+    public virtual async Task<WorkflowStatus> GetWorkflowStatusByNameAsync(string statusName)
+    {
+        return await _workFlowStatusRepository.Table.Where(ws => ws.StatusName == statusName).FirstOrDefaultAsync();
     }
 
     public virtual async Task<WorkflowStatus> GetWorkflowStatusByProcessWorkflowIdAsync(int processWorkflowId)

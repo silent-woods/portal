@@ -19,6 +19,8 @@ namespace Satyanam.Nop.Plugin.SatyanamCRM.Models.LinkedInFollowups
         public int StatusId { get; set; }
         public string StatusName { get; set; } 
         public string Notes { get; set; }
+        public int? CreatedByUserId { get; set; }
+        public string LeadOwnerName { get; set; }
         public DateTime CreatedOnUtc { get; set; }
     }
 

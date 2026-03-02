@@ -24,6 +24,13 @@
                     <tr>
                         <th></th>
                         <th class="sortable" data-type="text">
+                            @T("User.Dashboard.FollowUp.Fields.Project")
+                            <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
                             @T("User.Dashboard.FollowUp.Fields.TaskName")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
@@ -101,13 +108,6 @@
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            @T("User.Dashboard.FollowUp.Fields.Project")
-                            <span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="text">
                             @T("User.Dashboard.FollowUp.Fields.Type")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
@@ -127,6 +127,7 @@
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
                             </td>
+                            <td>@t.ProjectName</td>
                             <td class="task-name-cell">
                                 <a href="/ProjectTask/Edit?id=@t.TaskId"
                                    class="task-link"
@@ -153,13 +154,12 @@
                             <td>
                                 @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
-                            <td>@t.ProjectName</td>
                             <td>@(t.IsManual ? "Manual" : "Auto")</td>
                             <td class="action-cell">
                                 @if (t.CanTakeFollowUp)
                                 {
                                     <button class="follow-btn btn-followup" data-id="@t.Id">
-                                        Follow-Up
+                                        @T("User.Dashboard.FollowUp.Button.FollowUp")
                                     </button>
                                 }
                             </td>
@@ -187,6 +187,13 @@
                     <tr>
                         <th></th>
                         <th class="sortable" data-type="text">
+                            @T("User.Dashboard.FollowUp.Fields.Project")
+                            <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
                             @T("User.Dashboard.FollowUp.Fields.TaskName")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
@@ -264,13 +271,6 @@
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            @T("User.Dashboard.FollowUp.Fields.Project")
-                            <span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="text">
                             @T("User.Dashboard.FollowUp.Fields.Type")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
@@ -290,6 +290,7 @@
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
                             </td>
+                            <td>@t.ProjectName</td>
                             <td class="task-name-cell">
                                 <a href="/ProjectTask/Edit?id=@t.TaskId"
                                    class="task-link"
@@ -316,13 +317,12 @@
                             <td>
                                 @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
-                            <td>@t.ProjectName</td>
                             <td>@(t.IsManual ? "Manual" : "Auto")</td>
                             <td class="action-cell">
                                 @if (t.CanTakeFollowUp)
                                 {
                                     <button class="follow-btn btn-followup" data-id="@t.Id">
-                                        Follow-Up
+                                        @T("User.Dashboard.FollowUp.Button.FollowUp")
                                     </button>
                                 }
                             </td>
@@ -350,6 +350,13 @@
                     <tr>
                         <th></th>
                         <th class="sortable" data-type="text">
+                            @T("User.Dashboard.FollowUp.Fields.Project")
+                            <span class="sort-icons">
+                                <span class="arrow up">▲</span>
+                                <span class="arrow down">▼</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="text">
                             @T("User.Dashboard.FollowUp.Fields.TaskName")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
@@ -427,13 +434,6 @@
                             </span>
                         </th>
                         <th class="sortable" data-type="text">
-                            @T("User.Dashboard.FollowUp.Fields.Project")
-                            <span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="text">
                             @T("User.Dashboard.FollowUp.Fields.Type")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
@@ -453,6 +453,7 @@
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
                             </td>
+                            <td>@t.ProjectName</td>
                             <td class="task-name-cell">
                                 <a href="/ProjectTask/Edit?id=@t.TaskId"
                                    class="task-link"
@@ -479,13 +480,12 @@
                             <td>
                                 @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
-                            <td>@t.ProjectName</td>
                             <td>@(t.IsManual ? "Manual" : "Auto")</td>
                             <td class="action-cell">
                                 @if (t.CanTakeFollowUp)
                                 {
                                     <button class="follow-btn btn-followup" data-id="@t.Id">
-                                        Follow-Up
+                                        @T("User.Dashboard.FollowUp.Button.FollowUp")
                                     </button>
                                 }
                             </td>
@@ -501,47 +501,75 @@
 }
 <script>
     $(document).ready(function () {
-      $("table").on("click", ".btn-followup", function () {
+        function getCurrentFilters() {
+    return {
+        taskName: $("#taskSearch").val(),
+        projectIds: $('#projectFilter').val() || [],
+        employeeIds: $('#employeeId').val() || [],
+        showOnlyNotTrack: $("#showOnlyNotTrack").is(":checked"),
+        sourceType: $("#typeFilter").val(),
+        percentageFilter: $("#percentageFilter").val(),
+        from: $("#From").val(),
+        to: $("#To").val(),
+        processWorkflow: $("#processWorkflow").val(),
+        statusId: $("#SearchStatusId").val()
+    };
+    }
+         $("table").on("click", ".btn-followup", function () {
+
         var row = $(this).closest("tr");
         var nextCell = row.find(".next-followup");
         var commentCell = row.find(".comment");
         var actionCell = row.find(".action-cell");
+
         row.data("originalNext", nextCell.text().trim());
         row.data("originalComment", commentCell.text().trim());
-        var originalNext = row.data("originalNext");
-        nextCell.html(`
-            <div style="display:flex; flex-direction:column; gap:4px;">
-         <select class="next-review-dropdown">
-        ${generateTimeOptions()}
-    </select>
 
-                <label style="font-size:13px;">
-                    <input type="checkbox" class="mark-complete" /> Mark Completed
-                </label>
+        nextCell.html("<div>Loading...</div>");
+
+        $.ajax({
+            url: "/Dashboard/GetFollowUpDurations",
+            type: "GET",
+            success: function (options) {
+
+                let dropdownHtml = `<select class="next-review-dropdown">
+                                        <option value="">Select Duration</option>`;
+
+                options.forEach(function (opt) {
+                    dropdownHtml += `<option value="${opt.value}">
+                                        ${opt.text}
+                                     </option>`;
+                });
+
+                dropdownHtml += `</select>`;
+
+    nextCell.html(`
+        <div class="followup-editor">
+            <div class="duration-wrapper">
+                ${dropdownHtml}
             </div>
-        `);
-        commentCell.html(
-            `<input type="text" class="comment-input" value="" placeholder="Enter follow-up comment" />`
-        );
-        actionCell.html(`
-            <button class="save-btn btn-save">Save</button>
-            <button class="cancel-btn btn-cancel">Cancel</button>
-        `);
+            <label class="complete-wrapper">
+                <input type="checkbox" class="mark-complete" />
+                <span>Mark Completed</span>
+            </label>
+        </div>
+    `);
+
+                commentCell.html(
+                    `<input type="text" class="comment-input"
+                     placeholder="Enter follow-up comment" />`
+                );
+
+                actionCell.html(`
+                    <button class="save-btn btn-save">Save</button>
+                    <button class="cancel-btn btn-cancel">Cancel</button>
+                `);
+            },
+            error: function () {
+                nextCell.html("Failed to load durations");
+            }
+        });
     });
-        function generateTimeOptions() {
-        let html = `<option value="">Select Duration</option>`;
-        for (let minutes = 30; minutes <= 1440; minutes += 30) {
-            let hours = Math.floor(minutes / 60);
-            let mins = minutes % 60;
-
-            let label =
-                String(hours).padStart(2, '0') + ":" +
-                String(mins).padStart(2, '0');
-
-            html += `<option value="${minutes}">${label}</option>`;
-        }
-        return html;
-    }
      $("table").on("click", ".btn-cancel", function () {
         var row = $(this).closest("tr");
         var nextCell = row.find(".next-followup");
@@ -606,15 +634,36 @@
             success: function (res) {
                 if (res && res.success) {
                     captureOpenedAccordions();
+                        var filters = getCurrentFilters();
 
-                    $.ajax({
-                        url: "/Dashboard/ReloadFollowupTables",
-                        type: "GET",
-                        success: function (html) {
-                            $("#followupTablesContainer").html(html);
-                            restoreOpenedAccordions();
-                        }
-                    });
+    var postData = {
+        taskName: filters.taskName,
+        projectIds: filters.projectIds.join(","),
+        employeeIds: filters.employeeIds.join(","),
+        showOnlyNotTrack: filters.showOnlyNotTrack,
+        sourceType: filters.sourceType,
+        from: filters.from,
+        to: filters.to,
+        percentageFilter: filters.percentageFilter,
+        processWorkflow: filters.processWorkflow,
+        statusId: filters.statusId
+    };
+
+    addAntiForgeryToken(postData);
+
+    $.ajax({
+        url: "/Dashboard/SearchFollowup",
+        type: "POST",
+        data: postData,
+        success: function (html) {
+            $("#followupTablesContainer").html(html);
+            restoreOpenedAccordions();
+        },
+        error: function () {
+            alert("Error reloading filtered data.");
+        }
+    });
+ 
                 } else {
                     alert("Error saving follow-up.");
                     btn.prop("disabled", false).text("Save");

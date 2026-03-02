@@ -12,6 +12,7 @@ namespace Satyanam.Nop.Plugin.SatyanamCRM.Models.LinkedInFollowups
         public LinkedInFollowupsSearchModel()
         {
             Status = new List<SelectListItem>();
+            AvailableUser = new List<SelectListItem>();
         }
 
         #region Properties
@@ -35,6 +36,9 @@ namespace Satyanam.Nop.Plugin.SatyanamCRM.Models.LinkedInFollowups
         [NopResourceDisplayName("Nop.Plugin.Misc.SatyanamCRM.Models.Titles.TitleSearchModel.SearchStatus")]
         public int? SearchStatus { get; set; }
         public IList<SelectListItem> Status { get; set; }
+        [NopResourceDisplayName("Nop.Plugin.Misc.SatyanamCRM.Model.TitleSearchModel.SearchCreatedByUserId")]
+        public int SearchCreatedByUserId { get; set; }
+        public IList<SelectListItem> AvailableUser { get; set; }
 
         #endregion
     }

@@ -7,6 +7,7 @@
     NopHtml.AddTitleParts(T("PageTitle.TaskEdit").Text);
     NopHtml.AppendPageCssClassParts("html-account-page");
     NopHtml.AppendPageCssClassParts("html-customer-info-page");
+    var canEditEstimation = await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagementEditEstimationTime, PermissionAction.Edit);
 }
 <link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
@@ -76,6 +77,9 @@
     }
     $(document).on('click', '#save-info-button', function (e) {
         e.preventDefault();
+                var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+        $btn.prop('disabled', true);
         var TaskTitle = $('#BugTitle').val();
         var Description = $('#BugDescription').val();
         var EstimationTimeHHMM = $('#BugEstimation').val();
@@ -103,10 +107,12 @@
                 } else {
                     const errorMessage = response.message || "An error occurred. Please try again.";
                     $('.validation-error-message').text(errorMessage).show();
+                    $btn.prop('disabled', false);
                 }
             },
             error: function (xhr, status, error) {
                 $('.validation-error-message').text("An error occurred: " + error).show();
+                $btn.prop('disabled', false);
             }
         });
     });
@@ -169,9 +175,10 @@
                                                         });
                                 </script>
                             </div>
+
                             <div class="grid-item">
                                 <label asp-for="EstimationTimeHHMM" asp-postfix=":"></label>
-                                <input type="text" name="EstimationTimeHHMM" class="readonly-input" id="EstimationTimeHHMM" value="@Model.EstimationTimeHHMM" readonly />
+                                <input type="text" name="EstimationTimeHHMM" class="readonly-input" id="EstimationTimeHHMM" value="@Model.EstimationTimeHHMM" @(canEditEstimation ? "" : "readonly") />
                                 <span asp-validation-for="EstimationTimeHHMM"></span>
                             </div>
 

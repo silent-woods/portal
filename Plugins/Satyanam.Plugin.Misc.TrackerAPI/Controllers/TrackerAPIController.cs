@@ -1657,7 +1657,18 @@ public partial class TrackerAPIController : BaseController
 
                     if (matchingRule != null)
                         existingTask.StatusId = matchingRule.rule.ToStateId;
+                    else
+                    {
+                        var workflowStatus = await _trackerAPIService.GetWorkflowStatusByIdAsync(existingTask.StatusId);
+                        if (workflowStatus != null && workflowStatus.StatusName == TrackerAPIDefaults.Hold)
+                        {
+                            var activeStatus = await _trackerAPIService.GetWorkflowStatusByNameAsync(TrackerAPIDefaults.Active);
+                            if (activeStatus != null)
+                                existingTask.StatusId = activeStatus.Id;
+                        }
+                    }
                 }
+
 
                 string prevStatus = (await _trackerAPIService.GetWorkflowStatusByIdAsync(statusId)).StatusName;
                 string newStatus = (await _trackerAPIService.GetWorkflowStatusByIdAsync(existingTask.StatusId)).StatusName;
@@ -1776,7 +1787,7 @@ public partial class TrackerAPIController : BaseController
                 model.AvailableProjects.Add(projectsRootObject);
             }
 
-            var activeProjectTasks = await _trackerAPIService.GetActiveProjectTasksByProjectIdAsync(projectId: existingTask.ProjectId, taskId: parameters.TaskId,
+            var activeProjectTasks = await _trackerAPIService.GetActiveProjectTasksForStartAsync(projectId: existingTask.ProjectId, taskId: parameters.TaskId,
                 assignedTo: assignedTo, statusId: existingTask.StatusId);
             foreach (var activeProjectTask in activeProjectTasks)
             {

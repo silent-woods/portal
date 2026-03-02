@@ -6,14 +6,10 @@ using Satyanam.Nop.Core.Domains;
 
 namespace Satyanam.Nop.Core.Data
 {
-    [NopMigration("2026/01/05 12:30:00", "Misc.SatyanamNopCore schema", MigrationProcessType.Update)]
+    [NopMigration("2026/02/25 12:00:00", "Misc.SatyanamNopCore schema", MigrationProcessType.Update)]
     public class UpdateSchemaMigration : AutoReversingMigration
-    {
+    {   
         #region Methods
-
-        /// <summary>
-        /// Collect the UP migration expressions
-        /// </summary>
         public override void Up()
         {
             if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(Title))).Exists())
@@ -111,7 +107,6 @@ namespace Satyanam.Nop.Core.Data
                 Alter.Table(NameCompatibilityManager.GetTableName(typeof(UpdateQuestionOption)))
                     .AddColumn(nameof(UpdateQuestionOption.IsRequired)).AsBoolean().WithDefaultValue(false);
             }
-            // Create if not exists
             if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(UpdateSubmission))).Exists())
             {
                 Create.TableFor<UpdateSubmission>();
@@ -147,12 +142,18 @@ namespace Satyanam.Nop.Core.Data
             {
                 Create.TableFor<LinkedInFollowups>();
             }
+            if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(LinkedInFollowups))).Column(nameof(LinkedInFollowups.CreatedByUserId)).Exists())
+            {
+                Alter.Table(NameCompatibilityManager.GetTableName(typeof(LinkedInFollowups)))
+                    .AddColumn(nameof(LinkedInFollowups.CreatedByUserId))
+                    .AsInt32()
+                    .WithDefaultValue(0)
+                    .NotNullable();
+            }
             if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(ConnectionRequest))).Exists())
             {
                 Create.TableFor<ConnectionRequest>();
             }
-
-
             if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(TaskChangeLog))).Exists())
             {
                 Create.TableFor<TaskChangeLog>();
@@ -174,7 +175,15 @@ namespace Satyanam.Nop.Core.Data
             {
                 Create.TableFor<ProcessRules>();
             }
-
+            var processRulesTable = NameCompatibilityManager.GetTableName(typeof(ProcessRules));
+            if (!Schema.Table(processRulesTable).Column(nameof(ProcessRules.NextReviewSetAfterHours)).Exists())
+            {
+                Alter.Table(processRulesTable)
+                    .AddColumn(nameof(ProcessRules.NextReviewSetAfterHours))
+                    .AsInt32()
+                    .NotNullable()
+                    .WithDefaultValue(0);
+            }
             if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(Announcement))).Exists())
             {
                 Create.TableFor<Announcement>();
@@ -209,7 +218,6 @@ namespace Satyanam.Nop.Core.Data
                 Create.TableFor<FollowUpTask>();
             }
         }
-
         #endregion
     }
 }

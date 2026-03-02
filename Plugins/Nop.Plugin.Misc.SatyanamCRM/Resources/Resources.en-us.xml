@@ -2177,5 +2177,32 @@
 	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequests.Moved">
 		<Value>{0} new record(s) added and {1} record(s) updated in LinkedIn Followups.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.ChangeLeadOwner">
+		<Value>Change Lead Owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.CreatedByUserId">
+		<Value>Lead Owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.CreatedByUserId.Hint">
+		<Value>Select lead owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.LinkedInFollowups.CreatedByUserId.Hint">
+		<Value>Select lead owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.StatusText">
+		<Value>Status</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowups.Fields.LeadOwner">
+		<Value>Lead Owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.TitleSearchModel.SearchCreatedByUserId">
+		<Value>Lead Owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Nop.Plugin.Misc.SatyanamCRM.Model.TitleSearchModel.SearchCreatedByUserId.Hint">
+		<Value>Select lead owner</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Fields.StatusText">
+		<Value>Status</Value>
+	</LocaleResource>
 </Language>
 

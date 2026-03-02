@@ -1,4 +1,5 @@
-﻿using App.Services.Messages;
+﻿using App.Services.Employees;
+using App.Services.Messages;
 using ClosedXML.Excel;
 using Microsoft.AspNetCore.Http;
 using Satyanam.Nop.Core.Domains;
@@ -19,14 +20,16 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
         #region Fields
         private readonly ILinkedInFollowupsService _linkedInFollowupsService;
         private readonly INotificationService _notificationService;
+        private readonly IEmployeeService _employeeService;
         #endregion
 
         #region Ctor
 
-        public LinkedInFollowupsImportService(ILinkedInFollowupsService linkedInFollowupsService, INotificationService notificationService)
+        public LinkedInFollowupsImportService(ILinkedInFollowupsService linkedInFollowupsService, INotificationService notificationService, IEmployeeService employeeService)
         {
             _linkedInFollowupsService = linkedInFollowupsService;
             _notificationService = notificationService;
+            _employeeService = employeeService;
         }
 
         #endregion
@@ -63,7 +66,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                 if (!headers.ContainsKey(cell.Name))
                     headers[cell.Name] = cell.Index;
             }
-
+            var employees = await _employeeService.GetAllEmployeeNameAsync("");
             var existing = (await _linkedInFollowupsService.GetAllLinkedInFollowupsAsync(
                 firstname: "",
                 lastname: "",
@@ -73,6 +76,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                 lastMessageDate:null,
                 nextFollowUpDate:null,
                 statusId:0,
+                createdByUserId:null,
                 pageIndex: 0,
                 pageSize: int.MaxValue,
                 showHidden: true
@@ -112,6 +116,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                 var remainingRaw = Read("Remaining Follow-ups");
                 var autoStatus = Read("Auto Status");
                 var status = Read("Status (manual)", "Status");
+                var leadOwnerName = Read("Lead Owner");
                 var notes = Read("Notes", "Note");
 
                 string keyForSeen = !string.IsNullOrWhiteSpace(email) ? email.ToLowerInvariant() :
@@ -124,7 +129,17 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                     continue;
                 }
                 seenKeys.Add(keyForSeen);
+                int? createdByUserId = null;
 
+                if (!string.IsNullOrWhiteSpace(leadOwnerName))
+                {
+                    var emp = employees.FirstOrDefault(e =>
+                        (e.FirstName + " " + e.LastName)
+                        .Equals(leadOwnerName, StringComparison.OrdinalIgnoreCase));
+
+                    if (emp != null)
+                        createdByUserId = emp.Id;
+                }
                 // --- Formula-based recalculation if needed ---
                 DateTime? lastMsgDate = DateTime.TryParse(lastMsg, out var parsedLastMsg) ? parsedLastMsg : (DateTime?)null;
                 int? followUpNum = int.TryParse(followUpRaw, out var parsedFU) ? parsedFU : (int?)null;
@@ -204,7 +219,11 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                     }
 
                     if (!string.IsNullOrWhiteSpace(notes) && existingRecord.Notes != notes) { existingRecord.Notes = notes; changed = true; }
-
+                    if (createdByUserId.HasValue && existingRecord.CreatedByUserId != createdByUserId.Value)
+                    {
+                        existingRecord.CreatedByUserId = createdByUserId.Value;
+                        changed = true;
+                    }
                     if (changed)
                     {
                         existingRecord.UpdatedOnUtc = DateTime.UtcNow;
@@ -226,6 +245,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                         Email = string.IsNullOrWhiteSpace(email) ? null : email,
                         WebsiteUrl = string.IsNullOrWhiteSpace(website) ? null : website,
                         Notes = string.IsNullOrWhiteSpace(notes) ? null : notes,
+                        CreatedByUserId = createdByUserId??0,
                         LastMessageDate = lastMsgDate,
                         FollowUp = followUpNum ?? 0,
                         NextFollowUpDate = nextFollowDate,

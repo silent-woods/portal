@@ -50,6 +50,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                 worksheet.Column("K").Width = 30; // AutoStatus
                 worksheet.Column("L").Width = 14; // Status
                 worksheet.Column("M").Width = 40; // Notes
+                worksheet.Column("N").Width = 40; // Notes
 
                 int row = 1;
 
@@ -67,9 +68,10 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                 worksheet.Cell(row, 11).Value = "Auto Status";
                 worksheet.Cell(row, 12).Value = "Status (manual)";
                 worksheet.Cell(row, 13).Value = "Notes";
+                worksheet.Cell(row, 14).Value = "Lead Owner";
 
                 worksheet.Row(row).Style.Font.Bold = true;
-                worksheet.Range($"A{row}:M{row}").Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent1, 0.75);
+                worksheet.Range($"A{row}:N{row}").Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent1, 0.75);
 
                 row++;
 
@@ -106,7 +108,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
 
                     worksheet.Cell(currentRow, 12).Value = item.StatusId > 0? ((FollowUpStatusEnum)item.StatusId).ToString(): "None";
                     worksheet.Cell(currentRow, 13).Value = item.Notes;
-
+                    worksheet.Cell(currentRow, 14).Value = item.LeadOwnerName;
                     //worksheet.Row(currentRow).Style.Alignment.WrapText = true;
                     row++;
                 }

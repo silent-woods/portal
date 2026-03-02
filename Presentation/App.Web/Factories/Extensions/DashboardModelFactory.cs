@@ -242,7 +242,7 @@ namespace App.Web.Factories.Extensions
         public async Task<PendingDashboardModel> PrepareFollowUpDashboardModelAsync(string taskName = null, int statusType = 0, int currEmployeeId = 0, IList<int> projectIds = null, IList<int> employeeIds = null, int page = 1, int pageSize = int.MaxValue, IList<int> managedProjectIds = null, IList<int> visibleProjectIds = null, bool showOnlyNotOnTrack = false, string sourceType = null, DateTime? from = null, DateTime? to = null, int percentageFilter =0,int processWorkflow=0 ,int statusId =0)
         {
             var today = DateTime.UtcNow.Date;
-            var allFollowUps = await _followUpTaskService.GetAllFollowUpTasksAsync(taskName: taskName, statusType: statusType, projectIds: projectIds, employeeIds: employeeIds, currEmployeeId: currEmployeeId, visibleProjectIds: visibleProjectIds, managedProjectIds: managedProjectIds, showOnlyNotOnTrack: showOnlyNotOnTrack, sourceType: sourceType, from: from, to: to, processWorkflow: processWorkflow, statusId: statusId, pageIndex: page - 1, pageSize: pageSize);
+            var allFollowUps = await _followUpTaskService.GetAllFollowUpTasksAsync(taskName: taskName, statusType: statusType, projectIds: projectIds, employeeIds: employeeIds, currEmployeeId: currEmployeeId, visibleProjectIds: visibleProjectIds, managedProjectIds: managedProjectIds, showOnlyNotOnTrack: showOnlyNotOnTrack, sourceType: sourceType, from: from, to: to, processWorkflow: processWorkflow, statusId: statusId,isAvoidNewStatus:true, pageIndex: page - 1, pageSize: pageSize);
             var model = new PendingDashboardModel();
 
             var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
@@ -275,10 +275,7 @@ namespace App.Web.Factories.Extensions
                 var project = await _projectService.GetProjectsByIdAsync(task.ProjectId);
                 var developemetTime = await _timeSheetsService.GetDevelopmentTimeByTaskId(task.Id);
                 var status = await _workflowStatusService.GetWorkflowStatusByIdAsync(task.StatusId);
-                // Convert spent time to minutes
                 var totalSpentMinutes = (developemetTime.SpentHours * 60) + developemetTime.SpentMinutes;
-
-                // Convert decimal estimated hours to minutes
                 var estimatedMinutes = (int)Math.Round(task.EstimatedTime * 60);
 
                 int usedPercentage = 0;
@@ -287,7 +284,7 @@ namespace App.Web.Factories.Extensions
                 {
                     usedPercentage = (int)Math.Floor((double)totalSpentMinutes / estimatedMinutes * 100);
                 }
-                string alertType = string.Empty;
+                string alertType = "0%";
                 string reasonText = string.Empty;
                 if (usedPercentage > 0)
                 {
@@ -299,10 +296,6 @@ namespace App.Web.Factories.Extensions
                     {
                         alertType = $"{Math.Round(matchedAlert.Percentage)}%";
                     }
-                }
-                else
-                {
-                    alertType = "0%";
                 }
                 if (f.AlertId > 0)
                 {

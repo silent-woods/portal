@@ -47,7 +47,7 @@ namespace Satyanam.Nop.Core.Services
 
         public virtual async Task<IPagedList<LinkedInFollowups>> GetAllLinkedInFollowupsAsync(string firstname, string lastname,
              string email, string linkedinUrl, string website, DateTime? lastMessageDate = null, DateTime? nextFollowUpDate = null,
-    int? statusId = null, int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? isSyncedToReply = null)
+    int? statusId = null, int? createdByUserId = null, int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? isSyncedToReply = null)
         {
             var query = await _linkedInFollowupsRepository.GetAllAsync(async query =>
             {
@@ -76,6 +76,8 @@ namespace Satyanam.Nop.Core.Services
 
                 if (statusId.HasValue)
                     query = query.Where(c => c.StatusId == statusId.Value);
+                if (createdByUserId.HasValue)
+                    query = query.Where(x => x.CreatedByUserId == createdByUserId.Value);
 
                 return query.OrderBy(c => c.Id);
             });

@@ -12,8 +12,8 @@ namespace Satyanam.Nop.Core.Services
     public partial interface ILinkedInFollowupsService
     {
         Task<IPagedList<LinkedInFollowups>> GetAllLinkedInFollowupsAsync(string firstname, string lastname,
-         string email, string linkedinUrl, string website, DateTime? lastMessageDate = null, DateTime? nextFollowUpDate = null,
-         int? statusId = null, int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? isSyncedToReply = null);
+             string email, string linkedinUrl, string website, DateTime? lastMessageDate = null, DateTime? nextFollowUpDate = null,
+    int? statusId = null, int? createdByUserId=null, int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? isSyncedToReply = null);
         Task<LinkedInFollowups> GetLinkedInFollowupsByIdAsync(int id);
         Task<IList<LinkedInFollowups>> GetLinkedInFollowupsByIdsAsync(int[] linkedInFollowUpsIds);
         Task InsertLinkedInFollowupsAsync(LinkedInFollowups linkedInFollowups);

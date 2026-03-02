@@ -1,14 +1,20 @@
 ﻿using App.Core;
+using App.Core.Domain.Employees;
 using App.Core.Domain.Security;
 using App.Data.Extensions;
 using App.Services;
+using App.Services.Employees;
 using App.Services.Helpers;
 using App.Services.Localization;
 using App.Services.Messages;
 using App.Services.Security;
+using App.Web.Areas.Admin.Models.Extension.UpdateTemplate;
 using App.Web.Framework.Controllers;
 using App.Web.Framework.Models.Extensions;
 using App.Web.Framework.Mvc.Filters;
+using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Office2010.ExcelAc;
+using DocumentFormat.OpenXml.Vml.Office;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -39,6 +45,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         private readonly IDateTimeHelper _dateTimeHelper;
         private readonly ILinkedInFollowupsExportService _linkedInFollowupsExportService;
         private readonly ILinkedInFollowupsImportService _linkedInFollowupsImportService;
+        private readonly IEmployeeService _employeeService;
 
         #endregion
 
@@ -50,7 +57,8 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                                ILocalizationService localizationService,
                                IDateTimeHelper dateTimeHelper,
                                ILinkedInFollowupsExportService linkedInFollowupsExportService,
-                               ILinkedInFollowupsImportService linkedInFollowupsImportService)
+                               ILinkedInFollowupsImportService linkedInFollowupsImportService,
+                               IEmployeeService employeeService)
         {
             _permissionService = permissionService;
             _linkedInFollowupsService = linkedInFollowupsService;
@@ -59,6 +67,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             _dateTimeHelper = dateTimeHelper;
             _linkedInFollowupsExportService = linkedInFollowupsExportService;
             _linkedInFollowupsImportService = linkedInFollowupsImportService;
+            _employeeService = employeeService;
         }
 
         #endregion
@@ -94,7 +103,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         {
             // Fetch all records
             var all = await _linkedInFollowupsService.GetAllLinkedInFollowupsAsync(
-                "", "", "", "", "", null, null, null, 0, int.MaxValue, true, null);
+                "", "", "", "", "", null, null, null,null, 0, int.MaxValue, true, null);
 
             // Group by StatusId to count how many per status
             var summary = all
@@ -144,7 +153,27 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             };
         }
 
+        public virtual async Task PrepareLeadOwnerAsync(LinkedInFollowupsModel model)
+        {
+            var employees = await _employeeService.GetAllEmployeeNameAsync(""); // get all employees
 
+            var list = employees.Select(emp => new SelectListItem
+            {
+                Text = emp.FirstName + " " + emp.LastName,
+                Value = emp.Id.ToString(),
+                Selected = emp.Id == model.CreatedByUserId
+            }).ToList();
+
+            // Add default option at top
+            list.Insert(0, new SelectListItem
+            {
+                Text = "Select",
+                Value = "0",
+                Selected = model.CreatedByUserId == 0
+            });
+
+            model.AvailableUser = list;
+        }
 
         public virtual async Task<LinkedInFollowupsSearchModel> PrepareLinkedInFollowupsSearchModelAsync(LinkedInFollowupsSearchModel searchModel)
         {
@@ -161,6 +190,20 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
             // Add "All" option
             searchModel.Status.Insert(0, new SelectListItem { Text = "All", Value = "" });
+            var employees = await _employeeService.GetAllEmployeeNameAsync("");
+
+            searchModel.AvailableUser = employees.Select(emp => new SelectListItem
+            {
+                Text = emp.FirstName + " " + emp.LastName,
+                Value = emp.Id.ToString()
+            }).ToList();
+
+            // Add Select option
+            searchModel.AvailableUser.Insert(0, new SelectListItem
+            {
+                Text = "Select",
+                Value = ""
+            });
             //prepare page parameters
             searchModel.SetGridPageSize();
 
@@ -182,6 +225,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 lastMessageDate: searchModel.SearchLastMessDate,
                 nextFollowUpDate: searchModel.NextFollowUpDate,
                 statusId: searchModel.SearchStatus,
+                createdByUserId: searchModel.SearchCreatedByUserId > 0 ? searchModel.SearchCreatedByUserId : null,
                 pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize);
 
             //prepare grid model
@@ -213,6 +257,14 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     if (selectedAvailableOption != 0 || selectedAvailableOption != null) linkedInFollowupsModel.StatusId
                         = (int)((FollowUpStatusEnum)selectedAvailableOption);
                     linkedInFollowupsModel.Notes = linkedInFollowups.Notes;
+                    linkedInFollowupsModel.CreatedByUserId = linkedInFollowups.CreatedByUserId;
+
+                    var employee = await _employeeService.GetEmployeeByIdAsync(linkedInFollowups.CreatedByUserId);
+
+                    if (employee != null)
+                        linkedInFollowupsModel.CreatedByUserName = employee.FirstName + " " + employee.LastName;
+                    else
+                        linkedInFollowupsModel.CreatedByUserName = "";
                     linkedInFollowupsModel.CreatedOnUtc = await _dateTimeHelper.ConvertToUserTimeAsync(linkedInFollowups.CreatedOnUtc, DateTimeKind.Utc);
                     linkedInFollowupsModel.UpdatedOnUtc = await _dateTimeHelper.ConvertToUserTimeAsync(linkedInFollowups.UpdatedOnUtc, DateTimeKind.Utc);
 
@@ -245,10 +297,12 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     model.AutoStatus = linkedInFollowups.AutoStatus;
                     model.StatusId = linkedInFollowups.StatusId;
                     model.Notes = linkedInFollowups.Notes;
+                    model.CreatedByUserId = linkedInFollowups.CreatedByUserId;
                     model.CreatedOnUtc = linkedInFollowups.CreatedOnUtc;
                     model.UpdatedOnUtc = linkedInFollowups.UpdatedOnUtc;
                 }
             }
+            await PrepareLeadOwnerAsync(model);
             model.Status = statusList.Select(s => new SelectListItem
             {
                 Value = s.Value,
@@ -412,6 +466,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 AutoStatus = model.AutoStatus,
                 StatusId = model.StatusId,
                 Notes = model.Notes,
+                CreatedByUserId =model.CreatedByUserId,
                 CreatedOnUtc = DateTime.UtcNow,
                 UpdatedOnUtc = DateTime.UtcNow,
             };
@@ -503,6 +558,10 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             linkedInFollowUps.AutoStatus = autoStatus;
             linkedInFollowUps.StatusId = model.StatusId;
             linkedInFollowUps.Notes = model.Notes;
+            if (model.CreatedByUserId > 0)
+            {
+                linkedInFollowUps.CreatedByUserId = model.CreatedByUserId;
+            }
             linkedInFollowUps.UpdatedOnUtc = DateTime.UtcNow;
 
             await _linkedInFollowupsService.UpdateLinkedInFollowupsAsync(linkedInFollowUps);
@@ -525,6 +584,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     RemainingFollowUps = remainingFollowUps ?? 0,
                     AutoStatus = autoStatus,
                     StatusId = model.StatusId,
+                    CreatedByUserId=model.CreatedByUserId,
                     Notes = model.Notes,
                     UpdatedOnUtc = DateTime.UtcNow.ToString("yyyy-MM-dd")
                 }
@@ -570,13 +630,69 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 return RedirectToAction("List");
 
             entity.StatusId = model.StatusId;
+            entity.UpdatedOnUtc = DateTime.UtcNow;
             await _linkedInFollowupsService.UpdateLinkedInFollowupsAsync(entity);
 
             ViewBag.RefreshPage = true; // important
             return View("~/Plugins/Misc.SatyanamCRM/Views/LinkedInFollowups/StatusChange.cshtml", model);
         }
+        [HttpGet]
+        public async Task<IActionResult> ChangeCreatedBy(int id, string btnId, string formId)
+        {
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
+                return AccessDeniedView();
 
+            var entity = await _linkedInFollowupsService.GetLinkedInFollowupsByIdAsync(id);
 
+            if (entity == null)
+                return RedirectToAction("List");
+
+            var model = new LinkedInFollowupsModel
+            {
+                Id = entity.Id,
+                CreatedByUserId = entity.CreatedByUserId
+            };
+
+            // Load employees dropdown
+            var employees = await _employeeService.GetAllEmployeeNameAsync("");
+
+            model.AvailableUser = employees.Select(x => new SelectListItem
+            {
+                Value = x.Id.ToString(),
+                Text = x.FirstName + " " + x.LastName,
+                Selected = x.Id == entity.CreatedByUserId
+            }).ToList();
+            ViewBag.RefreshButtonId = btnId;
+            ViewBag.FormId = formId;
+
+            return View("~/Plugins/Misc.SatyanamCRM/Views/LinkedInFollowups/ChangeCreatedBy.cshtml", model);
+        }
+        [HttpPost]
+        public async Task<IActionResult> ChangeCreatedBy(LinkedInFollowupsModel model)
+        {
+            var entity = await _linkedInFollowupsService.GetLinkedInFollowupsByIdAsync(model.Id);
+
+            if (entity == null)
+                return RedirectToAction("List");
+
+            entity.CreatedByUserId = model.CreatedByUserId;
+            entity.UpdatedOnUtc = DateTime.UtcNow;
+            await _linkedInFollowupsService.UpdateLinkedInFollowupsAsync(entity);
+
+            // reload dropdown
+            var employees = await _employeeService.GetAllEmployeeNameAsync("");
+
+            model.AvailableUser = employees.Select(x => new SelectListItem
+            {
+                Value = x.Id.ToString(),
+                Text = x.FirstName + " " + x.LastName,
+                Selected = x.Id == model.CreatedByUserId
+            }).ToList();
+
+            ViewBag.RefreshPage = true;
+
+            return View("~/Plugins/Misc.SatyanamCRM/Views/LinkedInFollowups/ChangeCreatedBy.cshtml", model);
+        }
         public virtual async Task<IActionResult> DeleteSelected(ICollection<int> selectedIds)
         {
             if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Delete))
@@ -616,13 +732,26 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 lastMessageDate: searchModel.SearchLastMessDate,
                 nextFollowUpDate: searchModel.NextFollowUpDate,
                 statusId: searchModel.SearchStatus,
+                createdByUserId: searchModel.SearchCreatedByUserId > 0 ? searchModel.SearchCreatedByUserId : null,
                 pageIndex: 0,
                 pageSize: int.MaxValue);
 
+            var employees = await _employeeService.GetAllEmployeeNameAsync("");
+
+            var employeeDict = employees.ToDictionary(
+                e => e.Id,
+                e => $"{e.FirstName} {e.LastName}"
+            );
             // convert to DTOs for export
             var dtoList = new List<LinkedInFollowupsDto>();
             foreach (var item in list)
             {
+                string leadOwnerName = "";
+
+                if (item.CreatedByUserId > 0 && employeeDict.ContainsKey(item.CreatedByUserId))
+                {
+                    leadOwnerName = employeeDict[item.CreatedByUserId];
+                }
                 var dto = new LinkedInFollowupsDto
                 {
                     Id = item.Id,
@@ -639,7 +768,9 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     AutoStatus = item.AutoStatus ?? " ",
                     StatusId = item.StatusId,
                     StatusName = item.StatusId > 0 ? ((FollowUpStatusEnum)item.StatusId).ToString() : "None",
-                    Notes = item.Notes ?? " "
+                    Notes = item.Notes ?? " ",
+                    CreatedByUserId = item.CreatedByUserId,
+                    LeadOwnerName = leadOwnerName
                 };
                 dtoList.Add(dto);
             }
@@ -675,7 +806,15 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 {
                     var item = await _linkedInFollowupsService.GetLinkedInFollowupsByIdAsync(id)
                         ?? throw new ArgumentException("No LinkedInFollowup found with the specified id");
+                    string leadOwnerName = "";
 
+                    if (item.CreatedByUserId > 0)
+                    {
+                        var employee = await _employeeService.GetEmployeeByIdAsync(item.CreatedByUserId);
+
+                        if (employee != null)
+                            leadOwnerName = $"{employee.FirstName} {employee.LastName}";
+                    }
                     dtoList.Add(new LinkedInFollowupsDto
                     {
                         Id = item.Id,
@@ -692,7 +831,9 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         AutoStatus = item.AutoStatus ?? " ",
                         StatusId = item.StatusId,
                         StatusName = item.StatusId > 0 ? ((FollowUpStatusEnum)item.StatusId).ToString() : "None",
-                        Notes = item.Notes ?? " "
+                        Notes = item.Notes ?? " ",
+                        CreatedByUserId = item.CreatedByUserId,
+                        LeadOwnerName = leadOwnerName
                     });
                 }
 

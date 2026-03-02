@@ -25,10 +25,12 @@ namespace Satyanam.Nop.Core.Services
         private readonly ITaskAlertService _taskAlertService;
         private readonly ITimeSheetsService _timeSheetsService;
         private readonly IRepository<TaskAlertConfiguration> _taskAlertConfigurationRepository;
+        private readonly IRepository<WorkflowStatus> _workflowStatusRepository;
+        private readonly IProcessRulesService _processRulesService;
         #endregion
 
         #region Ctor
-        public FollowUpTaskService(IRepository<FollowUpTask> followUpTaskRepository, IProjectsService projectsService, IRepository<ProjectTask> projectTaskRepository, ITaskAlertService taskAlertService, ITimeSheetsService timeSheetsService, IRepository<TaskAlertConfiguration> taskAlertConfigurationRepository)
+        public FollowUpTaskService(IRepository<FollowUpTask> followUpTaskRepository, IProjectsService projectsService, IRepository<ProjectTask> projectTaskRepository, ITaskAlertService taskAlertService, ITimeSheetsService timeSheetsService, IRepository<TaskAlertConfiguration> taskAlertConfigurationRepository, IRepository<WorkflowStatus> workflowStatusRepository, IProcessRulesService processRulesService)
         {
             _followUpTaskRepository = followUpTaskRepository;
             _projectsService = projectsService;
@@ -36,6 +38,8 @@ namespace Satyanam.Nop.Core.Services
             _taskAlertService = taskAlertService;
             _timeSheetsService = timeSheetsService;
             _taskAlertConfigurationRepository = taskAlertConfigurationRepository;
+            _workflowStatusRepository = workflowStatusRepository;
+            _processRulesService = processRulesService;
         }
         #endregion
 
@@ -94,6 +98,7 @@ namespace Satyanam.Nop.Core.Services
             int percentageFilter = 0,
             int processWorkflow = 0,
             int statusId = 0,
+            bool isAvoidNewStatus = false,
             IList<int> visibleProjectIds = null,
             IList<int> managedProjectIds = null)
         {
@@ -134,6 +139,15 @@ namespace Satyanam.Nop.Core.Services
             if (showOnlyNotOnTrack)
                 query = query.Where(x =>
                     !x.f.OnTrack && x.f.AlertId > 0);
+            if (isAvoidNewStatus)
+            {
+                query = query.Where(x =>
+                    x.t.StatusId > 0 &&
+                    !_workflowStatusRepository.Table
+                        .Where(s => s.Id == x.t.StatusId)
+                        .Select(s => s.StatusName.Trim().ToLower())
+                        .Contains("new"));
+            }
             if (statusType != 0)
             {
                 if (statusType == 1)
@@ -216,13 +230,10 @@ namespace Satyanam.Nop.Core.Services
 
             return await finalQuery.ToPagedListAsync(pageIndex, pageSize);
         }
-
-
         public virtual async Task<FollowUpTask> GetFollowUpTaskByIdAsync(int id)
         {
             return await _followUpTaskRepository.GetByIdAsync(id);
         }
-
         public virtual async Task<IList<FollowUpTask>> GetFollowUpTasksByIdsAsync(int[] ids)
         {
             if (ids == null || ids.Length == 0)
@@ -297,7 +308,6 @@ namespace Satyanam.Nop.Core.Services
                 await InsertFollowUpTaskAsync(followUpTask);
             }
         }
-
         public virtual async Task<bool> CheckIfManaualFollowupExistsAsync(int taskId)
         {
             ArgumentNullException.ThrowIfNull(nameof(taskId));
@@ -339,6 +349,21 @@ namespace Satyanam.Nop.Core.Services
             }
 
             return startTime;
+        }
+        public virtual async Task UpdateNextFollowupDateOnStatusChangeAsync(
+           int taskId, int processWorkflowId, int fromStatusId, int toStatusId)
+        {
+            if (fromStatusId == toStatusId)
+                return;
+            var rule = await _processRulesService.GetRulesByStatesAsync(
+                processWorkflowId, fromStatusId, toStatusId);
+            if (rule == null || rule.NextReviewSetAfterHours <= 0)
+                return;
+            var followUpTask = await GetFollowUpTaskByTaskIdAsync(taskId);
+            if (followUpTask == null)
+                return;
+            followUpTask.NextFollowupDateTime = DateTime.UtcNow.AddHours(rule.NextReviewSetAfterHours);
+            await UpdateFollowUpTaskAsync(followUpTask);
         }
         #endregion
     }

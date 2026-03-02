@@ -94,6 +94,8 @@ public static partial class TrackerAPIDefaults
 
     #region Static System Names for Process Workflow Statuses
 
+    public const string Active = "Active";
+
     public const string Hold = "Hold";
 
     public const string HoldComment = "This task is hold due to started.";
