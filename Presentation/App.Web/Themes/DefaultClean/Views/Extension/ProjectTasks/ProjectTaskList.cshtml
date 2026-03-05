@@ -19,26 +19,39 @@
 <script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
 <link rel="stylesheet" href="https://jqwidgets.com/public/jqwidgets/styles/jqx.base.css" type="text/css" />
 <script type="text/javascript" src="https://jqwidgets.com/public/jqwidgets/jqx-all.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
     <h1>@T("Admin.Catalog.ProjectTask.List")</h1>
     @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreTaskManagement, PermissionAction.Add))
     {
-        <button type="button" class="add-btn button-1 save-customer-info-button" onclick="openProjectTaskPopup()">Add Task</button>
+        <button type="button" class="add-btn button-1 save-customer-info-button" onclick="openProjectTaskPopup(@(Model.SelectedProjectIds?.FirstOrDefault() ?? 0))">Add Task</button>
     }
 </div>
 <script>
-    function openProjectTaskPopup() {
+    function openProjectTaskPopup(projectId) {
         $.ajax({
-            url: '/TimeSheet/CreateProjectTask',
+            url: '/TimeSheet/CreateProjectTask?projectId=' + (projectId || 0),
             type: 'GET',
             dataType: 'html',
             success: function (data) {
                 $('#popupDialog .custom-modal-body').html($(data).find('.page-body').html());
                 $('#popupDialog').fadeIn();
+                if (projectId) {
+                    $.ajax({
+                        url: '/TimeSheet/GetProcessWorkflowsByProjectId',
+                        type: 'GET',
+                        data: { projectId: projectId },
+                        success: function (workflows) {
+                            var workflowDropdown = $('#ProcessWorkflowId');
+                            workflowDropdown.empty();
+                            if (workflows && workflows.length > 0) {
+                                $.each(workflows, function (i, item) {
+                                    workflowDropdown.append($('<option></option>').val(item.Value).text(item.Text));
+                                });
+                            }
+                        }
+                    });
+                }
             },
             error: function (xhr, status, error) {
                 console.error("Error loading the popup content: ", error);
@@ -181,11 +194,6 @@
                         <span asp-validation-for="TaskId"></span>
                     </div>
                     <div class="grid-item">
-                        <label asp-for="SearchProcessWorkflowId" asp-postfix=":"></label>
-                        <nop-select asp-for="SearchProcessWorkflowId" class="select1" asp-items="Model.AvailableProcessWorkflow" />
-                    </div>
-                  
-                    <div class="grid-item">
                         <label asp-for="DueDate" asp-postfix=":"></label>
                         <input asp-for="DueDate" type="date" id="SearchDueDate" />
                         <span asp-validation-for="DueDate"></span>
@@ -206,18 +214,6 @@
                         <nop-select asp-for="SearchTaskTypeId" class="select1" asp-items="Model.AvailableTaskTypes" />
                     </div>
 
-                    <div class="grid-item" style="padding:10px;">
-                        <label asp-for="SearchStatusId" asp-postfix=":"></label>
-
-                        <div class="select2-wrap" style="width:200px;">
-                            <select id="SearchStatusId"
-                                    asp-for="SearchStatusId"
-                                    asp-items="Model.AvailableStatus"
-                                    style="width:100%;">
-                            </select>
-                        </div>
-                    </div>
-
                     <div class="grid-item">
                      <label asp-for="SearchParentTaskId" asp-postfix=":"></label>
                      <select id="SearchParentTaskId" name="SearchParentTaskId" class="form-control" style="border: none; box-shadow: none; height:35px;"></select>
@@ -225,49 +221,13 @@
 
                     <script>
                         $(document).ready(function () {
-
-                        var searchParentTaskId = $("#SearchParentTaskId").kendoDropDownList({
-                            dataTextField: "Text",
-                            dataValueField: "Value",
-                            filter: "contains",
-                            autoBind: false,
-                            dataSource: @Html.Raw(Json.Serialize(Model.AvailableParentTasks))
-                        }).data("kendoDropDownList");
-
-                            function formatStatus(state) {
-                                if (!state.id) return state.text;
-
-                                const [text, color] = state.text.split("|||");
-                                return $(`
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};"></div>
-                                        <span>${text}</span>
-                                    </div>
-                                `);
-                            }
-
-                        var $sel = $('#SearchStatusId');
-                        var $wrap = $sel.closest('.select2-wrap'); 
-
-                        if ($sel.data('select2')) {
-                          $sel.select2('destroy');
-                        }
-
-                        $sel.select2({
-                          width: '100%',           
-                          dropdownParent: $wrap,    
-                          templateResult: formatStatus,
-                          templateSelection: formatStatus,
-                          escapeMarkup: function (m) { return m; },
-                          minimumResultsForSearch: Infinity
-                        });
-                        var s2 = $sel.data('select2');
-                        if (s2 && s2.$container) {
-                          s2.$container.css({ 'width': '220px', 'min-width': '220px' });
-                          s2.$container.find('.select2-selection').css({ 'width': '220px', 'min-width': '220px' });
-                        } else {
-                          $sel.next('.select2-container').css({ 'width': '220px' }).find('.select2-selection').css({ 'width': '220px' });
-                        }
+                            var searchParentTaskId = $("#SearchParentTaskId").kendoDropDownList({
+                                dataTextField: "Text",
+                                dataValueField: "Value",
+                                filter: "contains",
+                                autoBind: false,
+                                dataSource: @Html.Raw(Json.Serialize(Model.AvailableParentTasks))
+                            }).data("kendoDropDownList");
                         });
                     </script>
                     <div class="grid-item button-container">
@@ -279,9 +239,7 @@
             </div>
         </div>
         </div>
-    <div id="status-summary"
-         style="display: none; overflow-x: auto; max-width: 100%; background-color: #f9f9f9; padding: 16px; margin-top: 20px; margin-bottom: 10px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
-    </div>
+    <div id="status-summary"></div>
     <div id="timesheet-table-container">
         <div id="timesheet-table"></div>
     </div>
@@ -293,42 +251,47 @@
           window.onload = function () {
         document.getElementById("search-brands").click();
     };
-        function performSearch(pageIndex, pageSize) {
+        var selectedStatusId = null;
+        var lastSearchData = null;
 
-            pageIndex = pageIndex || 0; 
-            pageSize = pageSize || 10;
+        function buildSearchParams() {
             var selectedProjects = $('#SelectedProjectIds').val() || [];
-            var selectedEmployees = $('#SelectedEmployeeIds').val() || [];
-               var selectedProjects = $('#SelectedProjectIds').val() || [];
-    if (!Array.isArray(selectedProjects)) {
-        selectedProjects = [selectedProjects];
-    }
-    selectedProjects = selectedProjects.join(',');
-            selectedEmployees = selectedEmployees.join(',');
-            var taskName = $('#TaskName').val();
-            var fromDate = $('#From').val();
-            var toDate = $('#To').val();
-            var statusId = $('#SearchStatusId').val();
-            var taskId = $('#TaskId').val();
-            var taskTypeId = $('#SearchTaskTypeId').val();
-            var searchProcessWorkflowId = $('#SearchProcessWorkflowId').val();
-            var searchDeliveryOnTime = $('#SearchDeliveryOnTime').val();
-            var searchParentTaskId = $('#SearchParentTaskId').val();
-            var dueDate = $('#SearchDueDate').val();
+            if (!Array.isArray(selectedProjects)) selectedProjects = [selectedProjects];
+            selectedProjects = selectedProjects.join(',');
 
-            var data = {
+            var selectedEmployees = $('#SelectedEmployeeIds').val() || [];
+            if (Array.isArray(selectedEmployees)) selectedEmployees = selectedEmployees.join(',');
+
+            return {
                 projectIds: selectedProjects,
                 employeeIds: selectedEmployees,
-                taskName: taskName,
-                fromDate: fromDate,
-                toDate: toDate,
-                statusId: statusId,
-                taskId: taskId,
-                taskTypeId: taskTypeId,
-                searchProcessWorkflowId: searchProcessWorkflowId,
-                dueDate : dueDate,
-                searchDeliveryOnTime:searchDeliveryOnTime,
-                SearchParentTaskId:searchParentTaskId
+                taskName: $('#TaskName').val(),
+                taskId: $('#TaskId').val(),
+                taskTypeId: $('#SearchTaskTypeId').val(),
+                dueDate: $('#SearchDueDate').val(),
+                searchDeliveryOnTime: $('#SearchDeliveryOnTime').val(),
+                SearchParentTaskId: $('#SearchParentTaskId').val()
+            };
+        }
+
+        function performSearch(pageIndex, pageSize) {
+            pageIndex = pageIndex || 0;
+            pageSize = pageSize || 10;
+
+            var params = buildSearchParams();
+            lastSearchData = params;
+
+            var data = {
+                projectIds: params.projectIds,
+                employeeIds: params.employeeIds,
+                taskName: params.taskName,
+                statusId: selectedStatusId || '',
+                taskId: params.taskId,
+                taskTypeId: params.taskTypeId,
+                searchProcessWorkflowId: '',
+                dueDate: params.dueDate,
+                searchDeliveryOnTime: params.searchDeliveryOnTime,
+                SearchParentTaskId: params.SearchParentTaskId
             };
 
             $("#timesheet-table").jqxGrid({
@@ -436,17 +399,16 @@
         });
 
        function loadStatusSummary() {
-        const data = {
-            SearchTaskTitle: $('#SearchTaskTitle').val(),
-            SearchStatusId: $('#SearchStatusId').val(),
-            SearchTaskId: $('#SearchTaskId').val(),
-            SelectedProjectIds: $('#SelectedProjectIds').val(),
-            SearchTaskTypeId: $('#SearchTaskTypeId').val(),
-            SelectedEmployeeIds: $('#SelectedEmployeeIds').val(),
-            SearchProcessWorkflowId: $('#SearchProcessWorkflowId').val(),
-            DueDate: $('#DueDate').val(),
-            SearchDeliveryOnTime: $('#SearchDeliveryOnTime').val(),
-            SearchParentTaskId : $('#SearchParentTaskId').val()
+        var params = lastSearchData || buildSearchParams();
+        var data = {
+            projectIds: params.projectIds,
+            employeeIds: params.employeeIds,
+            taskId: params.taskId,
+            taskTypeId: params.taskTypeId,
+            taskName: params.taskName,
+            dueDate: params.dueDate,
+            searchDeliveryOnTime: params.searchDeliveryOnTime,
+            searchParentTaskId: params.SearchParentTaskId
         };
         addAntiForgeryToken(data);
         $.post('@Url.Action("GetStatusSummary", "ProjectTask")', data, function (response) {
@@ -468,15 +430,17 @@
                 }
                 grouped[item.WorkflowId].Statuses.push(item);
             });
-            const table = $('<table style="border-collapse: collapse; min-width: 100%; width: max-content; background-color: #fff; border: 1px solid #ddd;"></table>');
+            const table = $('<table></table>');
             for (const [workflowId, data] of Object.entries(grouped)) {
                 const { WorkflowName, Statuses } = data;
                 const row = $('<tr></tr>');
-                const workflowCell = $(`<td style="padding: 12px 16px; border: 1px solid #ddd; font-weight: bold; background-color: #e9f0f5; white-space: nowrap;">${WorkflowName}</td>`);
+                const workflowCell = $(`<td class="status-workflow-cell">${WorkflowName}</td>`);
                 row.append(workflowCell);
                 Statuses.forEach(s => {
                     const cell = $(`
-                        <td style="padding: 12px 16px; border: 1px solid #ddd; background-color: #fefefe;">
+                        <td class="status-cell"
+                            data-status-id="${s.StatusId}"
+                            data-workflow-id="${s.WorkflowId}">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div style="width: 10px; height: 10px; border-radius: 50%; background-color: ${s.ColorCode};"></div>
                                 <span>${s.StatusName} (${s.TaskCount})</span>
@@ -488,7 +452,10 @@
                 table.append(row);
             }
             container.append(table);
-            container.show(); 
+            if (selectedStatusId) {
+                container.find('.status-cell[data-status-id="' + selectedStatusId + '"]').addClass('selected');
+            }
+            container.show();
         });
     }
  
@@ -502,38 +469,16 @@
             });
         });
 
-         var processWorkflowSelector = $('#@Html.IdFor(model => model.SearchProcessWorkflowId)');
-          var statusSelector = $('#SearchStatusId');
-                   processWorkflowSelector.change(function () {
-            getStatusByProcessWorkflow()
-            });
-         
-          function getStatusByProcessWorkflow() {
-            var processWorkflowId = processWorkflowSelector.val();
-            statusSelector.empty();
-            if (processWorkflowId) {
-                $.ajax({
-                    url: '/ProjectTask/GetStatusesByProcessWorkflow',
-                    type: 'GET',
-                    data: {
-                        processWorkflowId: processWorkflowId
-                    },
-                    success: function (data) {
-                        statusSelector.empty();
-                        if (data && data.length > 0) {
-                            $.each(data, function (index, item) {
-                                statusSelector.append($('<option>').val(item.Value).text(item.Text));
-                            });
-                        } else {
-                            statusSelector.append($('<option>').val('').text('No statuses available'));
-                        }
-                    },
-                    error: function () {
-                        alert('Failed to load statuses.');
-                    }
-                });
+        $(document).on('click', '#status-summary .status-cell', function () {
+            var clickedStatusId = parseInt($(this).data('status-id'));
+            if (selectedStatusId === clickedStatusId) {
+                selectedStatusId = null;
+            } else {
+                selectedStatusId = clickedStatusId;
             }
-        }
+            $('#search-brands').click();
+        });
+
     });
 </script>
 

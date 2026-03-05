@@ -861,38 +861,43 @@ namespace App.Web.Controllers.Extensions
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetStatusSummary(ProjectTaskSearchModel searchModel)
+        public async Task<IActionResult> GetStatusSummary(
+            string projectIds,
+            string employeeIds,
+            int taskId = 0,
+            int taskTypeId = 0,
+            string taskName = null,
+            DateTime? dueDate = null,
+            int searchDeliveryOnTime = 0,
+            int searchParentTaskId = 0)
         {
+            var projectIdsList = new List<int>();
+            if (!string.IsNullOrWhiteSpace(projectIds))
+                projectIdsList = projectIds.Split(',').Select(int.Parse).ToList();
+
+            var selectedEmployeeIds = new List<int>();
+            if (!string.IsNullOrWhiteSpace(employeeIds))
+                selectedEmployeeIds = employeeIds.Split(',').Select(int.Parse).ToList();
+
             var filteredTasks = await _commonPluginService.GetAllProjectTasksAsync(
-                taskId: searchModel.TaskId,
-                taskTypeId: searchModel.SearchTaskTypeId,
-                employeeIds: searchModel.SelectedEmployeeIds,
-                projectIds: searchModel.SelectedProjectIds,
-                taskName: searchModel.SearchTaskTitle,
+                taskId: taskId,
+                taskTypeId: taskTypeId,
+                employeeIds: selectedEmployeeIds,
+                projectIds: projectIdsList,
+                taskName: taskName,
                 from: null,
                 to: null,
-                dueDate: searchModel.DueDate,
-                SelectedStatusId: searchModel.SearchStatusId,
-                processWorkflowId: searchModel.SearchProcessWorkflowId,
-                pageIndex: searchModel.Page - 1,
+                dueDate: dueDate,
+                SelectedStatusId: 0,
+                processWorkflowId: 0,
+                pageIndex: 0,
                 pageSize: int.MaxValue,
                 showHidden: false,
-                filterDeliveryOnTime: searchModel.SearchDeliveryOnTime,
-                searchParentTaskId: searchModel.SearchParentTaskId);
+                filterDeliveryOnTime: searchDeliveryOnTime,
+                searchParentTaskId: searchParentTaskId);
 
             var allStatuses = await _workflowStatusService.GetAllWorkflowStatusAsync(0);
-            var pagedStatuses = new PagedList<WorkflowStatus>(allStatuses, 0, int.MaxValue); 
             var allWorkflows = await _processWorkflowService.GetAllProcessWorkflowsAsync();
-
-            if (searchModel.SearchProcessWorkflowId > 0)
-                allStatuses = new PagedList<WorkflowStatus>(
-     allStatuses.Where(s => s.ProcessWorkflowId == searchModel.SearchProcessWorkflowId).ToList(),
-     0,
-     int.MaxValue
- );
-
-            if (searchModel.SearchStatusId > 0)
-                allStatuses = new PagedList<WorkflowStatus>(allStatuses.Where(s => s.Id == searchModel.SearchStatusId).ToList(), 0, int.MaxValue);
 
             var taskCounts = filteredTasks
                 .GroupBy(t => t.StatusId)

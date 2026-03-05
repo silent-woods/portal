@@ -365,6 +365,46 @@ namespace Satyanam.Nop.Core.Services
             followUpTask.NextFollowupDateTime = DateTime.UtcNow.AddHours(rule.NextReviewSetAfterHours);
             await UpdateFollowUpTaskAsync(followUpTask);
         }
+
+        public virtual async Task MassFollowUpAsync(
+            IList<int> followUpTaskIds,
+            int durationMinutes,
+            bool isCompleted,
+            string comment,
+            int reviewerId)
+        {
+            if (followUpTaskIds == null || !followUpTaskIds.Any())
+                throw new ArgumentException("No follow-up tasks selected.");
+
+            var now = DateTime.UtcNow;
+            DateTime? nextFollowupDateTime = null;
+
+            if (!isCompleted && durationMinutes > 0)
+            {
+                var officeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+                DateTime officeNow = TimeZoneInfo.ConvertTimeFromUtc(now, officeTimeZone);
+                DateTime adjustedOfficeTime = AdjustToOfficeHours(officeNow, durationMinutes, officeTimeZone);
+                nextFollowupDateTime = TimeZoneInfo.ConvertTimeToUtc(adjustedOfficeTime, officeTimeZone);
+            }
+
+            foreach (var id in followUpTaskIds)
+            {
+                var follow = await GetFollowUpTaskByIdAsync(id);
+                if (follow == null)
+                    continue;
+
+                follow.LastFollowupDateTime = now;
+                follow.IsCompleted = isCompleted;
+                follow.LastComment = comment;
+                follow.ReviewerId = reviewerId;
+                follow.AlertId = 0;
+
+                if (nextFollowupDateTime.HasValue)
+                    follow.NextFollowupDateTime = nextFollowupDateTime;
+
+                await UpdateFollowUpTaskAsync(follow);
+            }
+        }
         #endregion
     }
 }

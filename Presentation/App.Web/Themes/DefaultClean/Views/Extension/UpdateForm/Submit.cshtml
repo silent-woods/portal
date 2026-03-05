@@ -62,6 +62,7 @@
                 <input type="hidden"  asp-for="PeriodId" />
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div id="questions-section">
                 @for (int i = 0; i < Model.Questions.Count; i++)
                 {
                     var question = Model.Questions[i];
@@ -302,6 +303,7 @@
                         </div>
                     </div>
                 }
+                </div>
                 @if (!Model.HasAlreadySubmitted || Model.AllowEditingAfterSubmit)
                 {
                     <div class="submit-wrapper">
@@ -470,7 +472,26 @@
 
     })();
 </script>
+<script>
+    $(document).ready(function () {
 
+        var isLocked = @((Model.HasAlreadySubmitted && !Model.AllowEditingAfterSubmit).ToString().ToLower());
+
+        if (isLocked) {
+
+            // Disable only question inputs
+            $('#questions-section')
+                .find('input, textarea, select')
+                .prop('disabled', true);
+
+            // Make textboxes readonly also (extra safety)
+            $('#questions-section')
+                .find('input[type="text"], textarea')
+                .attr('readonly', true);
+        }
+
+    });
+</script>
 
 
 

@@ -12,6 +12,7 @@ namespace Satyanam.Nop.Core.Services
     public partial interface IProcessRulesService
     {
         Task<IPagedList<ProcessRules>> GetAllProcessRulesAsync(int processWorkflowId,
+            int fromStateId = 0, int toStateId = 0,
             int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? overridePublished = null);
         Task<ProcessRules> GetProcessRuleByIdAsync(int Id);
         Task<IList<ProcessRules>> GetProcessRulesByIdsAsync(int[] processRuleIds);

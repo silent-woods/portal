@@ -141,6 +141,8 @@
     display: flex;
     flex-direction: column;
     padding: 10px;
+    min-width: 0;
+    overflow: hidden;
 }
 
     .grid-item label {
@@ -159,6 +161,21 @@
         .grid-item select {
             width: 100%;
         }
+
+    .grid-item .k-widget,
+    .grid-item .k-dropdownlist,
+    .grid-item .k-dropdown {
+        width: 100% !important;
+        max-width: 100%;
+    }
+
+    .grid-item .k-input-value-text,
+    .grid-item .k-dropdown .k-input,
+    .grid-item .k-dropdownlist .k-input {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 
 .button-container {
     grid-column: 1 / -1; 
@@ -1100,6 +1117,93 @@ button {
 }
 .task-filter-grid {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+}
+
+/* ── Create-task popup: 2-column grid (scoped so nothing else is touched) ── */
+#popupDialog .custom-modal-dialog {
+    width: 780px;
+    max-width: 95vw;
+}
+
+#popupDialog .popup-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+}
+
+#popupDialog .popup-form-grid .inputs-popup {
+    margin-bottom: 0;
+    align-items: flex-start;
+}
+
+#popupDialog .popup-form-grid .inputs-popup label {
+    text-align: left;
+}
+
+#popupDialog .popup-form-grid .inputs-popup textarea {
+    height: 98px;
+    min-height: 98px;
+    resize: vertical;
+}
+
+#popupDialog .popup-form-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+#popupDialog .popup-isync-row {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+#status-summary {
+    display: none;
+    overflow-x: auto;
+    max-width: 100%;
+    background-color: #f9f9f9;
+    padding: 16px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+#status-summary table {
+    border-collapse: collapse;
+    min-width: 100%;
+    width: max-content;
+    background-color: #fff;
+    border: 1px solid #ddd;
+}
+
+#status-summary .status-workflow-cell {
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    font-weight: bold;
+    background-color: #e9f0f5;
+    white-space: nowrap;
+}
+
+#status-summary .status-cell {
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    background-color: #fefefe;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+#status-summary .status-cell:hover {
+    background-color: #e8f0fe;
+}
+
+#status-summary .status-cell.selected {
+    background-color: #cde4ff;
+    font-weight: bold;
+    outline: 2px solid #007bff;
 }
 .status-dot {
     display: inline-block;

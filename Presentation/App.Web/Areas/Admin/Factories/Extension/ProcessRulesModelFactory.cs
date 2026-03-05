@@ -101,8 +101,16 @@ namespace App.Web.Areas.Admin.Factories
 
         public virtual async Task<ProcessRulesSearchModel> PrepareProcessRulesSearchModelAsync(ProcessRulesSearchModel searchModel)
         {
-          
             searchModel.SetGridPageSize();
+
+            searchModel.AvailableStatuses.Clear();
+            if (searchModel.ProcessWorkflowId > 0)
+            {
+                var statuses = await _workflowStatusService.GetAllWorkflowStatusAsync(searchModel.ProcessWorkflowId);
+                foreach (var status in statuses)
+                    searchModel.AvailableStatuses.Add(status.ToModel<WorkflowStatusModel>());
+            }
+
             return searchModel;
         }
 
@@ -111,21 +119,25 @@ namespace App.Web.Areas.Admin.Factories
         {
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));
-            var processRules = await _processRulesService.GetAllProcessRulesAsync(processWorkflowId: searchModel.ProcessWorkflowId,
+            var processRules = await _processRulesService.GetAllProcessRulesAsync(
+                processWorkflowId: searchModel.ProcessWorkflowId,
+                fromStateId: searchModel.FromStateId,
+                toStateId: searchModel.ToStateId,
                 showHidden: true,
-                pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize);
+                pageIndex: searchModel.Page - 1,
+                pageSize: searchModel.PageSize);
             var model = await new ProcessRulesListModel().PrepareToGridAsync(searchModel, processRules, () =>
             {
                 return processRules.SelectAwait(async processRule =>
                 {
                     var processRulesModel = processRule.ToModel<ProcessRulesModel>();
                     processRulesModel.CreatedOn = await _dateTimeHelper.ConvertToUserTimeAsync(processRule.CreatedOn, DateTimeKind.Utc);
-                    WorkflowStatus fromWorkflowStatus =await _workflowStatusService.GetWorkflowStatusByIdAsync(processRule.FromStateId);
+                    WorkflowStatus fromWorkflowStatus = await _workflowStatusService.GetWorkflowStatusByIdAsync(processRule.FromStateId);
                     if (fromWorkflowStatus != null)
-                        processRulesModel.FromStateName = fromWorkflowStatus.StatusName;
+                        processRulesModel.FromStateName = $"{fromWorkflowStatus.StatusName}|||{fromWorkflowStatus.ColorCode ?? "#cccccc"}";
                     WorkflowStatus toWorkflowState = await _workflowStatusService.GetWorkflowStatusByIdAsync(processRule.ToStateId);
                     if (toWorkflowState != null)
-                        processRulesModel.ToStateName = toWorkflowState.StatusName;
+                        processRulesModel.ToStateName = $"{toWorkflowState.StatusName}|||{toWorkflowState.ColorCode ?? "#cccccc"}";
                     return processRulesModel;
 
                 });

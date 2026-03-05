@@ -124,9 +124,46 @@ namespace Satyanam.Nop.Core.Services
             if (template == null) return;
 
             var currentDate = DateTime.UtcNow.Date;
+
             var repeatEvery = template.RepeatEvery > 0 ? template.RepeatEvery : 1;
 
-            // Get the latest period for this template
+            // Handle MONTHLY separately (calendar-based)
+            if (template.FrequencyId == (int)UpdatedFrequency.Monthly)
+            {
+                var year = currentDate.Year;
+                var month = currentDate.Month;
+
+                // Go back 3 months (optional safety window)
+                for (int i = 3; i >= 0; i--)
+                {
+                    var targetDate = currentDate.AddMonths(-i);
+
+                    var periodStart = new DateTime(targetDate.Year, targetDate.Month, 1);
+                    var periodEnd = periodStart.AddMonths(1).AddDays(-1);
+
+                    var exists = await _periodRepository.GetAllAsync(q =>
+                        q.Where(x => x.UpdateTemplateId == template.Id &&
+                                     x.PeriodStart == periodStart &&
+                                     x.PeriodEnd == periodEnd));
+
+                    if (!exists.Any())
+                    {
+                        var newPeriod = new UpdateTemplatePeriod
+                        {
+                            UpdateTemplateId = template.Id,
+                            PeriodStart = periodStart,
+                            PeriodEnd = periodEnd,
+                            CreatedOnUtc = DateTime.UtcNow
+                        };
+
+                        await _periodRepository.InsertAsync(newPeriod);
+                    }
+                }
+
+                return; // Stop here for monthly
+            }
+
+            // 🔹 For Daily / Weekly keep your rolling logic
             var lastPeriods = await _periodRepository.GetAllAsync(query =>
                 query.Where(x => x.UpdateTemplateId == template.Id)
                      .OrderByDescending(x => x.PeriodStart)
@@ -136,45 +173,31 @@ namespace Satyanam.Nop.Core.Services
             DateTime nextPeriodStart;
 
             if (lastPeriods.Any())
-            {
                 nextPeriodStart = lastPeriods.First().PeriodEnd.Date;
-            }
             else
-            {
                 nextPeriodStart = template.CreatedOnUTC.Date;
-            }
 
-            // Safety check - don't go too far back
-            var minStartDate = currentDate.AddDays(-90); // Don't generate periods older than 90 days
-            if (nextPeriodStart < minStartDate)
-            {
-                nextPeriodStart = minStartDate;
-            }
-
-            // Generate periods up to current date
-            var maxIterations = 100; // Safety limit to prevent infinite loops
+            var maxIterations = 50;
             var iterations = 0;
 
             while (nextPeriodStart <= currentDate && iterations < maxIterations)
             {
                 iterations++;
 
-                var nextPeriodEnd = CalculatePeriodEnd(nextPeriodStart, template.FrequencyId, repeatEvery);
+                var nextPeriodEnd = CalculatePeriodEnd(
+                    nextPeriodStart,
+                    template.FrequencyId,
+                    repeatEvery);
 
-                // Safety check for period end
                 if (nextPeriodEnd <= nextPeriodStart)
-                {
                     nextPeriodEnd = nextPeriodStart.AddDays(1);
-                }
 
-                // Check if this period already exists
-                var existingPeriods = await _periodRepository.GetAllAsync(query =>
+                var exists = await _periodRepository.GetAllAsync(query =>
                     query.Where(x => x.UpdateTemplateId == template.Id &&
                                x.PeriodStart == nextPeriodStart &&
-                               x.PeriodEnd == nextPeriodEnd)
-                );
+                               x.PeriodEnd == nextPeriodEnd));
 
-                if (!existingPeriods.Any())
+                if (!exists.Any())
                 {
                     var newPeriod = new UpdateTemplatePeriod
                     {

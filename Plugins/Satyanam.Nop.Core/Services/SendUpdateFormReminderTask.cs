@@ -267,9 +267,32 @@ namespace Satyanam.Nop.Core.Services
                     if (periodId > 0)
                         formLink += $"?periodId={periodId}";
 
-                    var body = $"<p>Dear {employee.FirstName} {employee.LastName},</p>" +
-                               bodyMessage +
-                               $"<p><a href=\"{formLink}\" target=\"_blank\">Click here to fill the form</a></p>";
+                    var body = $@"
+                        <p>Dear {employee.FirstName} {employee.LastName},</p>
+
+                        {bodyMessage}
+
+                        <p style='margin-top:20px;'>
+                        <table cellspacing='0' cellpadding='0' border='0'>
+                          <tr>
+                            <td align='center' bgcolor='#007bff' style='border-radius:6px;'>
+                              <a href='{formLink}'
+                                 target='_blank'
+                                 style='
+                                    display:inline-block;
+                                    padding:12px 24px;
+                                    font-size:14px;
+                                    font-family:Arial, sans-serif;
+                                    color:#ffffff;
+                                    text-decoration:none;
+                                    font-weight:bold;
+                                    border-radius:6px;'>
+                                Fill The Form
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                        </p>";
 
                     var email = new QueuedEmail
                     {

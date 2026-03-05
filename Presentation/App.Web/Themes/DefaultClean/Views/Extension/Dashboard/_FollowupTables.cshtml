@@ -23,6 +23,9 @@
                 <thead>
                     <tr>
                         <th></th>
+                        <th class="checkbox-col">
+                            <input type="checkbox" class="select-all-checkbox" title="Select All" />
+                        </th>
                         <th class="sortable" data-type="text">
                             @T("User.Dashboard.FollowUp.Fields.Project")
                             <span class="sort-icons">
@@ -123,9 +126,12 @@
                     @foreach (var t in Model.Overdue)
                     {
                         <tr class="overdue-row @(t.UsedPercentage >= 75 && t.UsedPercentage < 100 ? "warning-usage" : "")
-            @(t.UsedPercentage >= 100 ? "over-usage" : "")" data-id="@t.Id">
+            @(t.UsedPercentage >= 100 ? "over-usage" : "")" data-id="@t.Id" data-statusid="@t.StatusId">
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
+                            </td>
+                            <td class="checkbox-cell">
+                                <input type="checkbox" class="row-checkbox" value="@t.Id" @(!t.CanTakeFollowUp ? "disabled=\"disabled\"" : "") />
                             </td>
                             <td>@t.ProjectName</td>
                             <td class="task-name-cell">
@@ -165,7 +171,7 @@
                             </td>
                         </tr>
                         <tr class="subgrid-row" style="display:none;">
-                            <td colspan="14"><div class="subgrid-container"></div></td>
+                            <td colspan="15"><div class="subgrid-container"></div></td>
                         </tr>
                     }
                 </tbody>
@@ -186,6 +192,9 @@
                 <thead>
                     <tr>
                         <th></th>
+                        <th class="checkbox-col">
+                            <input type="checkbox" class="select-all-checkbox" title="Select All" />
+                        </th>
                         <th class="sortable" data-type="text">
                             @T("User.Dashboard.FollowUp.Fields.Project")
                             <span class="sort-icons">
@@ -286,9 +295,12 @@
                     @foreach (var t in Model.DueToday)
                     {
                         <tr class="today-row @(t.UsedPercentage >= 75 && t.UsedPercentage < 100 ? "warning-usage" : "")
-            @(t.UsedPercentage >= 100 ? "over-usage" : "")" data-id="@t.Id">
+            @(t.UsedPercentage >= 100 ? "over-usage" : "")" data-id="@t.Id" data-statusid="@t.StatusId">
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
+                            </td>
+                            <td class="checkbox-cell">
+                                <input type="checkbox" class="row-checkbox" value="@t.Id" @(!t.CanTakeFollowUp ? "disabled=\"disabled\"" : "") />
                             </td>
                             <td>@t.ProjectName</td>
                             <td class="task-name-cell">
@@ -328,7 +340,7 @@
                             </td>
                         </tr>
                         <tr class="subgrid-row" style="display:none;">
-                            <td colspan="14"><div class="subgrid-container"></div></td>
+                            <td colspan="15"><div class="subgrid-container"></div></td>
                         </tr>
                     }
                 </tbody>
@@ -349,6 +361,9 @@
                 <thead>
                     <tr>
                         <th></th>
+                        <th class="checkbox-col">
+                            <input type="checkbox" class="select-all-checkbox" title="Select All" />
+                        </th>
                         <th class="sortable" data-type="text">
                             @T("User.Dashboard.FollowUp.Fields.Project")
                             <span class="sort-icons">
@@ -449,9 +464,12 @@
                     @foreach (var t in Model.Upcoming)
                     {
                         <tr class="upcoming-row @(t.UsedPercentage >= 75 && t.UsedPercentage < 100 ? "warning-usage" : "")
-            @(t.UsedPercentage >= 100 ? "over-usage" : "")" data-id="@t.Id">
+            @(t.UsedPercentage >= 100 ? "over-usage" : "")" data-id="@t.Id" data-statusid="@t.StatusId">
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
+                            </td>
+                            <td class="checkbox-cell">
+                                <input type="checkbox" class="row-checkbox" value="@t.Id" @(!t.CanTakeFollowUp ? "disabled=\"disabled\"" : "") />
                             </td>
                             <td>@t.ProjectName</td>
                             <td class="task-name-cell">
@@ -491,7 +509,7 @@
                             </td>
                         </tr>
                         <tr class="subgrid-row" style="display:none;">
-                            <td colspan="15"><div class="subgrid-container"></div></td>
+                            <td colspan="16"><div class="subgrid-container"></div></td>
                         </tr>
                     }
                 </tbody>
@@ -501,6 +519,29 @@
 }
 <script>
     $(document).ready(function () {
+        $("table").on("change", ".select-all-checkbox", function () {
+            var table = $(this).closest("table");
+            var checked = $(this).is(":checked");
+            table.find(".row-checkbox:not(:disabled)").prop("checked", checked);
+            updateMassFollowUpButton();
+        });
+        $("table").on("change", ".row-checkbox", function () {
+            updateMassFollowUpButton();
+            var table = $(this).closest("table");
+            var total = table.find(".row-checkbox:not(:disabled)").length;
+            var checkedCount = table.find(".row-checkbox:not(:disabled):checked").length;
+            table.find(".select-all-checkbox").prop("checked", total > 0 && total === checkedCount);
+        });
+        function updateMassFollowUpButton() {
+            var count = $(".row-checkbox:checked:not(:disabled)").length;
+            if (count > 0) {
+                $("#btnMassFollowUp").show();
+                $("#massSelectedCount").text(count + " task(s) selected");
+            } else {
+                $("#btnMassFollowUp").hide();
+                $("#massSelectedCount").text("");
+            }
+        }
         function getCurrentFilters() {
     return {
         taskName: $("#taskSearch").val(),
@@ -511,22 +552,18 @@
         percentageFilter: $("#percentageFilter").val(),
         from: $("#From").val(),
         to: $("#To").val(),
-        processWorkflow: $("#processWorkflow").val(),
-        statusId: $("#SearchStatusId").val()
+        processWorkflow: 0,
+        statusId: $("#selectedStatusId").val() || 0
     };
     }
          $("table").on("click", ".btn-followup", function () {
-
         var row = $(this).closest("tr");
         var nextCell = row.find(".next-followup");
         var commentCell = row.find(".comment");
         var actionCell = row.find(".action-cell");
-
         row.data("originalNext", nextCell.text().trim());
         row.data("originalComment", commentCell.text().trim());
-
         nextCell.html("<div>Loading...</div>");
-
         $.ajax({
             url: "/Dashboard/GetFollowUpDurations",
             type: "GET",
@@ -540,7 +577,6 @@
                                         ${opt.text}
                                      </option>`;
                 });
-
                 dropdownHtml += `</select>`;
 
     nextCell.html(`
@@ -608,7 +644,6 @@
         var nextCell = row.find(".next-followup");
         var commentCell = row.find(".comment");
         var actionCell = row.find(".action-cell");
-
         var selectedMinutes = parseInt(nextCell.find(".next-review-dropdown").val());
         var isCompleted = nextCell.find(".mark-complete").is(":checked");
         var comment = commentCell.find("input").val();
@@ -658,12 +693,15 @@
         success: function (html) {
             $("#followupTablesContainer").html(html);
             restoreOpenedAccordions();
+            if (parseInt($("#selectedStatusId").val()) === 0) {
+                if (typeof updateStatusCountsFromTasks === "function") updateStatusCountsFromTasks();
+            }
         },
         error: function () {
             alert("Error reloading filtered data.");
         }
     });
- 
+
                 } else {
                     alert("Error saving follow-up.");
                     btn.prop("disabled", false).text("Save");

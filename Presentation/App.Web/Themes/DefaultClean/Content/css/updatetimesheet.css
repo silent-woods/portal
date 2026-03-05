@@ -765,3 +765,44 @@ button {
     #fetchRecentBtn:hover {
         background-color: #aaa;
     }
+
+/* ── Create-task popup: 2-column grid (scoped so nothing else is touched) ── */
+#popupDialog .custom-modal-dialog {
+    width: 780px;
+    max-width: 95vw;
+}
+
+#popupDialog .popup-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+}
+
+#popupDialog .popup-form-grid .inputs-popup {
+    margin-bottom: 0;
+    align-items: flex-start;
+}
+
+#popupDialog .popup-form-grid .inputs-popup label {
+    text-align: left;
+}
+
+#popupDialog .popup-form-grid .inputs-popup textarea {
+    height: 98px;
+    min-height: 98px;
+    resize: vertical;
+}
+
+#popupDialog .popup-form-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+#popupDialog .popup-isync-row {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+/* ─────────────────────────────────────────────────────────────────────────── */

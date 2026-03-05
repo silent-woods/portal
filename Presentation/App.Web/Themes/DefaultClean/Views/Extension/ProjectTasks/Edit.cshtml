@@ -282,6 +282,7 @@
                                         dataValueField: "Value",
                                         filter: "contains"
                                     }).data("kendoDropDownList");
+                                    taskDropdown.wrapper.css({ "width": "100%", "max-width": "100%" });
                                     function loadParentTasks(projectId, preselectId) {
                                         if (!projectId) {
                                             taskDropdown.dataSource.data([]);

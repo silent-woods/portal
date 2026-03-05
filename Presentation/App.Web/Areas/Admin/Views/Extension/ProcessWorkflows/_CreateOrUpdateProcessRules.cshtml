@@ -2,11 +2,43 @@
 @using App.Web.Areas.Admin.Models.Extension.ProcessRules
 @model ProcessWorkflowModel
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<style>
+    #FromStateId + .select2-container .select2-selection--single,
+    #ToStateId + .select2-container .select2-selection--single { height: 35px; }
+    #FromStateId + .select2-container--default .select2-selection--single .select2-selection__arrow,
+    #ToStateId + .select2-container--default .select2-selection--single .select2-selection__arrow { height: 35px; }
+</style>
+
 <div class="card-body">
     @if (Model.Id > 0)
     {
         <div class="card card-default">
             <div class="card-body">
+                <div class="row mb-3" id="processRules-filter-row">
+                    <div class="col-md-3">
+                        <label>From State</label>
+                        <select id="FromStateId" class="form-control">
+                            <option value="0">All</option>
+                            @foreach (var status in Model.processRulesSearchModel.AvailableStatuses)
+                            {
+                                <option value="@status.Id" data-color="@status.ColorCode">@status.StatusName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>To State</label>
+                        <select id="ToStateId" class="form-control">
+                            <option value="0">All</option>
+                            @foreach (var status in Model.processRulesSearchModel.AvailableStatuses)
+                            {
+                                <option value="@status.Id" data-color="@status.ColorCode">@status.StatusName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
                 @{
                     var gridModel = new DataTablesModel
                     {
@@ -14,17 +46,25 @@
                         UrlRead = new DataUrl("List", "ProcessRules", new RouteValueDictionary { [nameof(Model.processRulesSearchModel.ProcessWorkflowId)] = Model.Id }),
                         UrlDelete = new DataUrl("Delete", "ProcessRules", new RouteValueDictionary { [nameof(Model.Id)] = Model.ProcessRulesModel.FirstOrDefault()?.Id }),
                         Length = Model.processRulesSearchModel.PageSize,
-                        LengthMenu = Model.processRulesSearchModel.AvailablePageSizes
+                        LengthMenu = Model.processRulesSearchModel.AvailablePageSizes,
+                        Filters = new List<FilterParameter>
+                        {
+                            // Single-argument constructor: generates data.FromStateId = $('#FromStateId').val()
+                            new FilterParameter(nameof(ProcessRulesSearchModel.FromStateId)),
+                            new FilterParameter(nameof(ProcessRulesSearchModel.ToStateId)),
+                        }
                     };
                     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProcessRulesModel.FromStateName))
                     {
                         Title = T("Admin.ProcessRulesModel.Fields.FromStateName").Text,
-                        Width = "200"
+                        Width = "200",
+                        Render = new RenderCustom("renderRuleStatusDot")
                     });
                     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProcessRulesModel.ToStateName))
                     {
                         Title = T("Admin.ProcessRulesModel.Fields.ToStateName").Text,
-                        Width = "200"
+                        Width = "200",
+                        Render = new RenderCustom("renderRuleStatusDot")
                     });
                     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ProcessRulesModel.IsCommentRequired))
                     {
@@ -76,16 +116,60 @@
                 @await Html.PartialAsync("Table", gridModel)
             </div>
             <script>
+                // Colored dot renderer for From State / To State grid columns
+                function renderRuleStatusDot(data, type, row, meta) {
+                    if (!data) return '';
+                    var parts = data.split('|||');
+                    var text = parts[0] || '';
+                    var color = parts[1] || '#cccccc';
+                    return '<div style="display:flex;align-items:center;gap:6px;">' +
+                           '<div style="width:12px;height:12px;border-radius:50%;background-color:' + color + ';flex-shrink:0;"></div>' +
+                           '<span>' + text + '</span>' +
+                           '</div>';
+                }
+
                 function renderColumnEdit(data, type, row, meta) {
                     var processWorkflowId = @Model.Id;
                     var url = '@Url.Action("Edit", "ProcessRules")' + '?processWorkflowId=' + processWorkflowId + '&id=' + data;
                     return '<button onclick="javascript:OpenWindow(\'' + url + '&btnId=btnRefreshWorkProcessRules&formId=processWorkflow-form\', 800, 800, true); return false;" class="btn btn-default"><i class="fas fa-pencil-alt"></i>@T("Admin.Common.Edit").Text</button>';
                 }
 
+                // Select2 template for colored dots in filter dropdowns
+                function formatRuleStateOption(state) {
+                    if (!state.id || state.id === '0') return state.text;
+                    var color = $(state.element).data('color');
+                    if (!color) return state.text;
+                    return '<div style="display:flex;align-items:center;gap:6px;">' +
+                           '<div style="width:12px;height:12px;border-radius:50%;background-color:' + color + ';flex-shrink:0;"></div>' +
+                           '<span>' + state.text + '</span>' +
+                           '</div>';
+                }
+
                 $(document).ready(function () {
+                    // Initialise Select2 — element IDs must match FilterParameter names exactly
+                    $('#FromStateId').select2({
+                        templateResult: formatRuleStateOption,
+                        templateSelection: formatRuleStateOption,
+                        escapeMarkup: function (m) { return m; },
+                        minimumResultsForSearch: Infinity,
+                        width: '100%'
+                    });
+                    $('#ToStateId').select2({
+                        templateResult: formatRuleStateOption,
+                        templateSelection: formatRuleStateOption,
+                        escapeMarkup: function (m) { return m; },
+                        minimumResultsForSearch: Infinity,
+                        width: '100%'
+                    });
+
+                    // Reload grid when either filter changes
+                    $('#FromStateId, #ToStateId').on('change', function () {
+                        updateTable('#processRules-grid');
+                    });
+
+                    // Reload grid after popup (add/edit rule) closes
                     $(window).on('refreshGrid', function () {
                         updateTable('#processRules-grid');
-                        console.log("Grid refreshed");
                     });
                 });
             </script>

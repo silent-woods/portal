@@ -56,13 +56,20 @@ namespace Satyanam.Nop.Core.Services
         /// The task result contains the title
         /// </returns>
 
-        public virtual async Task<IPagedList<ProcessRules>> GetAllProcessRulesAsync(int processWorkflowId, 
+        public virtual async Task<IPagedList<ProcessRules>> GetAllProcessRulesAsync(int processWorkflowId,
+            int fromStateId = 0, int toStateId = 0,
             int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? overridePublished = null)
         {
             var query = _processRulesRepository.Table;
-          
-            if (processWorkflowId !=0)
+
+            if (processWorkflowId != 0)
                 query = query.Where(c => c.ProcessWorkflowId == processWorkflowId);
+
+            if (fromStateId > 0)
+                query = query.Where(c => c.FromStateId == fromStateId);
+
+            if (toStateId > 0)
+                query = query.Where(c => c.ToStateId == toStateId);
 
             query = query.OrderByDescending(c => c.Id);
 

@@ -5,6 +5,7 @@ using App.Data.Extensions;
 using App.Services.Customers;
 using App.Services.Employees;
 using App.Services.Helpers;
+using App.Services.Localization;
 using App.Services.Messages;
 using App.Services.ProjectEmployeeMappings;
 using App.Services.Projects;
@@ -43,10 +44,12 @@ namespace App.Web.Controllers
         private readonly IDateTimeHelper _dateTimeHelper;
         private readonly IWorkflowMessageService _workflowMessageService;
         private readonly IProcessWorkflowService _processWorkflowService;
+        private readonly ILocalizationService _localizationService;
+
         #endregion
 
         #region Ctor
-        public DashboardController(IFollowUpTaskService followUpTaskService, IDashboardModelFactory dashboardModelFactory, IWorkContext workContext, IEmployeeService employeeService, ICustomerService customerService, ITaskAlertService taskAlertService, IProjectTaskService projectTaskService, IProjectsService projectsService, IProjectEmployeeMappingService projectEmployeeMappingService, ITaskCommentsService taskCommentsService, IWorkflowStatusService workflowStatusService, IProcessRulesService processRulesService, IDateTimeHelper dateTimeHelper, IWorkflowMessageService workflowMessageService, IProcessWorkflowService processWorkflowService)
+        public DashboardController(IFollowUpTaskService followUpTaskService, IDashboardModelFactory dashboardModelFactory, IWorkContext workContext, IEmployeeService employeeService, ICustomerService customerService, ITaskAlertService taskAlertService, IProjectTaskService projectTaskService, IProjectsService projectsService, IProjectEmployeeMappingService projectEmployeeMappingService, ITaskCommentsService taskCommentsService, IWorkflowStatusService workflowStatusService, IProcessRulesService processRulesService, IDateTimeHelper dateTimeHelper, IWorkflowMessageService workflowMessageService, IProcessWorkflowService processWorkflowService, ILocalizationService localizationService)
         {
             _followUpTaskService = followUpTaskService;
             _dashboardModelFactory = dashboardModelFactory;
@@ -63,6 +66,7 @@ namespace App.Web.Controllers
             _dateTimeHelper = dateTimeHelper;
             _workflowMessageService = workflowMessageService;
             _processWorkflowService = processWorkflowService;
+            _localizationService = localizationService;
         }
 
         #endregion
@@ -84,16 +88,12 @@ namespace App.Web.Controllers
                 await _projectEmployeeMappingService.GetVisibleProjectIdsForDashboardAsync(currEmployeeId);
             var manageableProjectIds =
                 await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeIdAsync(currEmployeeId);
-            var workflows = (await _processWorkflowService.GetAllProcessWorkflowsAsync()).OrderBy(w => w.DisplayOrder).ToList();
-            var defaultWorkflowId = workflows.Any()
-                ? workflows.First().Id
-                : 0;
             var model = await _dashboardModelFactory.PrepareFollowUpDashboardModelAsync(
                 statusType: 2,
                 currEmployeeId: currEmployeeId,
                 visibleProjectIds: visibleProjectIds,
                 managedProjectIds: manageableProjectIds,
-                processWorkflow: defaultWorkflowId);
+                processWorkflow: 0);
 
             return View("/Themes/DefaultClean/Views/Extension/Dashboard/FollowUp.cshtml", model);
         }
@@ -102,7 +102,7 @@ namespace App.Web.Controllers
         public virtual async Task<IActionResult> SaveFollowUp(int id, int durationMinutes, string comment, bool isCompleted)
         {
             if (id == 0)
-                return Json(new { success = false, message = "Invalid request" });
+                return Json(new { success = false, message = await _localizationService.GetResourceAsync("Dashboard.FollowUp.InvalidRequest")});
             try
             {
                 var customer = await _workContext.GetCurrentCustomerAsync();
@@ -118,7 +118,7 @@ namespace App.Web.Controllers
                 }
                 var follow = await _followUpTaskService.GetFollowUpTaskByIdAsync(id);
                 if (follow == null)
-                    return Json(new { success = false, message = "Followup not found" });
+                    return Json(new { success = false, message = await _localizationService.GetResourceAsync("Dashboard.FollowUp.NotFound")});
                 follow.LastFollowupDateTime = DateTime.UtcNow;
                 if (!isCompleted && durationMinutes > 0)
                 {
@@ -141,14 +141,14 @@ namespace App.Web.Controllers
 
                 var task = await _projectTaskService.GetProjectTasksWithoutCacheByIdAsync(follow.TaskId);
                 if (task == null)
-                    return Json(new { success = false, message = "Task not found" });
+                    return Json(new { success = false, message = await _localizationService.GetResourceAsync("Dashboard.FollowUp.TaskNotFound")});
 
                 var managedProjectIds = await _projectEmployeeMappingService.GetProjectIdsManagedOrCoordinateByEmployeeIdAsync(currEmployeeId);
                 bool isAllowed =
                     managedProjectIds.Contains(task.ProjectId);
                 if (!isAllowed)
                 {
-                    return Json(new { success = false, message = "You are not allowed to take follow-up for this task." });
+                    return Json(new { success = false, message = await _localizationService.GetResourceAsync("Dashboard.FollowUp.NotAllowed")});
                 }
 
                 await _followUpTaskService.UpdateFollowUpTaskAsync(follow);
@@ -193,6 +193,123 @@ namespace App.Web.Controllers
                     success = false,
                     message = ex.Message
                 });
+            }
+        }
+
+        [HttpPost]
+        public virtual async Task<IActionResult> MassFollowUp(
+            string followUpIds,
+            int durationMinutes,
+            string comment,
+            bool isCompleted)
+        {
+            if (string.IsNullOrWhiteSpace(followUpIds))
+                return Json(new { success = false, message = await _localizationService.GetResourceAsync("Dashboard.MassFollowUp.NoTasksSelected")});
+
+            if (!isCompleted && durationMinutes <= 0)
+                return Json(new { success = false, message = await _localizationService.GetResourceAsync("Dashboard.MassFollowUp.InvalidDuration")});
+
+            try
+            {
+                var customer = await _workContext.GetCurrentCustomerAsync();
+                if (!await _customerService.IsRegisteredAsync(customer))
+                    return Challenge();
+
+                int currEmployeeId = 0;
+                var currEmployee = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
+                if (currEmployee != null)
+                    currEmployeeId = currEmployee.Id;
+
+                var managedProjectIds = await _projectEmployeeMappingService
+                    .GetProjectIdsManagedOrCoordinateByEmployeeIdAsync(currEmployeeId);
+
+                var idList = followUpIds
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => int.TryParse(s.Trim(), out int v) ? v : 0)
+                    .Where(v => v > 0)
+                    .Distinct()
+                    .ToList();
+
+                if (!idList.Any())
+                    return Json(new { success = false, message = await _localizationService.GetResourceAsync("Dashboard.MassFollowUp.NoValidTasks")});
+
+                var allowedIds = new List<int>();
+                var taskLookup = new Dictionary<int, ProjectTask>();
+
+                foreach (var id in idList)
+                {
+                    var follow = await _followUpTaskService.GetFollowUpTaskByIdAsync(id);
+                    if (follow == null) continue;
+
+                    var task = await _projectTaskService.GetProjectTasksWithoutCacheByIdAsync(follow.TaskId);
+                    if (task == null) continue;
+
+                    if (!managedProjectIds.Contains(task.ProjectId)) continue;
+
+                    allowedIds.Add(id);
+                    taskLookup[id] = task;
+                }
+
+                if (!allowedIds.Any())
+                    return Json(new { success = false, message = await _localizationService.GetResourceAsync("Dashboard.MassFollowUp.NotAllowed")});
+
+                await _followUpTaskService.MassFollowUpAsync(
+                    allowedIds, durationMinutes, isCompleted, comment, currEmployeeId);
+
+                var now = DateTime.UtcNow;
+                DateTime? nextFollowupUtc = null;
+                if (!isCompleted && durationMinutes > 0)
+                {
+                    var officeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+                    DateTime officeNow = TimeZoneInfo.ConvertTimeFromUtc(now, officeTimeZone);
+                    DateTime adjusted = _followUpTaskService.AdjustToOfficeHours(officeNow, durationMinutes, officeTimeZone);
+                    nextFollowupUtc = TimeZoneInfo.ConvertTimeToUtc(adjusted, officeTimeZone);
+                }
+
+                foreach (var id in allowedIds)
+                {
+                    var follow = await _followUpTaskService.GetFollowUpTaskByIdAsync(id);
+                    var task = taskLookup[id];
+
+                    TaskAlertLog alertLog = new TaskAlertLog();
+                    alertLog.Comment = comment;
+                    alertLog.CreatedOnUtc = now;
+                    alertLog.NextFollowupDateTime = nextFollowupUtc;
+                    alertLog.ReviewerId = currEmployeeId;
+                    alertLog.TaskId = follow.TaskId;
+                    alertLog.EmployeeId = task.AssignedTo;
+                    alertLog.FollowUpTaskId = follow.Id;
+                    alertLog.AlertId = 0;
+                    await _taskAlertService.InsertTaskAlertLogAsync(alertLog);
+
+                    if (!string.IsNullOrWhiteSpace(comment))
+                    {
+                        var assignTo = await _employeeService.GetEmployeeByIdAsync(task.AssignedTo);
+                        var assignedName = assignTo != null
+                            ? $"{assignTo.FirstName} {assignTo.LastName}".Trim()
+                            : "";
+
+                        TaskComments taskComment = new TaskComments();
+                        taskComment.EmployeeId = currEmployeeId;
+                        taskComment.StatusId = task.StatusId;
+                        taskComment.TaskId = task.Id;
+                        taskComment.CreatedOn = await _dateTimeHelper.GetUTCAsync();
+                        taskComment.Description = $"@<{assignedName}> {comment}";
+
+                        await _taskCommentsService.InsertTaskCommentsAsync(taskComment);
+                        await _workflowMessageService.SendEmployeeMentionMessageAsync(
+                            (await _workContext.GetWorkingLanguageAsync()).Id,
+                            taskComment.EmployeeId,
+                            taskComment.TaskId,
+                            taskComment.Description);
+                    }
+                }
+
+                return Json(new { success = true, count = allowedIds.Count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
             }
         }
 

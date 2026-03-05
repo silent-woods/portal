@@ -338,6 +338,7 @@ namespace App.Web.Factories.Extensions
                 {
                     Id = f.Id,
                     TaskId = f.TaskId,
+                    StatusId = task.StatusId,
                     TaskName = task?.TaskTitle ?? "",
                     EmployeeId = task?.AssignedTo ?? 0,
                     EmployeeName = employee?.FirstName + " " + employee?.LastName,
@@ -375,6 +376,32 @@ namespace App.Web.Factories.Extensions
                     model.CompletedList.Add(item);
                 }
             }
+            model.SearchStatusId = statusId;
+            var allItems = model.Overdue.Concat(model.DueToday).Concat(model.Upcoming).ToList();
+            var uniqueStatusIds = allItems.Select(t => t.StatusId).Where(id => id > 0).Distinct().ToArray();
+            if (uniqueStatusIds.Any())
+            {
+                var workflowStatuses = await _workflowStatusService.GetWorkflowStatusByIdsAsync(uniqueStatusIds);
+                var workflows = await _processWorkflowService.GetAllProcessWorkflowsAsync();
+                var workflowDict = workflows.ToDictionary(w => w.Id, w => w.Name);
+                var statusCountDict = allItems.GroupBy(t => t.StatusId).ToDictionary(g => g.Key, g => g.Count());
+
+                model.StatusFilters = workflowStatuses
+                    .Select(s => new StatusFilterModel
+                    {
+                        StatusId = s.Id,
+                        StatusName = s.StatusName,
+                        ColorCode = s.ColorCode,
+                        ProcessWorkflowId = s.ProcessWorkflowId,
+                        ProcessWorkflowName = workflowDict.TryGetValue(s.ProcessWorkflowId, out var wfName) ? wfName : string.Empty,
+                        Count = statusCountDict.TryGetValue(s.Id, out var cnt) ? cnt : 0
+                    })
+                    .Where(x => x.Count > 0)
+                    .OrderBy(x => x.ProcessWorkflowName)
+                    .ThenBy(x => x.StatusName)
+                    .ToList();
+            }
+
             model.CurrentEmployeeId = currEmployeeId;
             model.PendingCodeReviewCount = await _workflowStatusService.GetPendingCodeReviewCountAsync(currEmployeeId);
             model.PendingReadyToTestCount = await _workflowStatusService.GetPendingReadyToTestCountAsync(currEmployeeId);

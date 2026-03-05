@@ -1052,7 +1052,7 @@ public partial class AccountManagementController : BaseAdminController
 
             var existingContactEmails = new List<string>();
             if (mailType == AccountManagementDefaults.Test)
-                existingContactEmails.Add(model.SendEmail.Email);
+                existingContactEmails.Add((await _workContext.GetCurrentCustomerAsync()).Email);
             else
             {
                 var existingContacts = await _contactsService.GetContactByCompanyIdAsync(companyId: existingProjectBilling.CompanyId, pageIndex: 0,
@@ -1629,6 +1629,12 @@ public partial class AccountManagementController : BaseAdminController
             };
             await _accountManagementService.InsertAccountTransactionAsync(accountTransaction);
 
+            if (model.IsPartialPayment)
+                existingInvoice.StatusId = (int)InvoiceEnum.PartiallyPaid;
+            else
+                existingInvoice.StatusId = (int)InvoiceEnum.Paid;
+            await _accountManagementService.UpdateInvoiceAsync(existingInvoice);
+
             ViewBag.RefreshPage = true;
 
             return View(model);
@@ -1695,6 +1701,12 @@ public partial class AccountManagementController : BaseAdminController
                 existingAccountTransaction.UpdatedOnUtc = DateTime.UtcNow;
                 await _accountManagementService.UpdateAccountTransactionAsync(existingAccountTransaction);
             }
+
+            if (model.IsPartialPayment)
+                existingInvoice.StatusId = (int)InvoiceEnum.PartiallyPaid;
+            else
+                existingInvoice.StatusId = (int)InvoiceEnum.Paid;
+            await _accountManagementService.UpdateInvoiceAsync(existingInvoice);
 
             ViewBag.RefreshPage = true;
 

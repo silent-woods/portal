@@ -48,6 +48,7 @@ namespace App.Web.Areas.Admin.Factories
         private readonly IProjectTaskService _projectTaskService;
         private readonly ITaskChangeLogService _taskChangeLogService;
         private readonly IProcessWorkflowService _processWorkflowService;
+        private readonly IProcessRulesModelFactory _processRulesModelFactory;
         #endregion
 
         #region Ctor
@@ -61,8 +62,8 @@ namespace App.Web.Areas.Admin.Factories
             ITaskCommentsService taskCommentsService,
             IProjectTaskService projectTaskService,
             ITaskChangeLogService taskChangeLogService,
-            IProcessWorkflowService processWorkflowService
-            )
+            IProcessWorkflowService processWorkflowService,
+            IProcessRulesModelFactory processRulesModelFactory)
         {
             _projectEmployeeMappingService = projectEmployeeMappingService;
             _projectService = projectsService;
@@ -74,6 +75,7 @@ namespace App.Web.Areas.Admin.Factories
             _projectTaskService = projectTaskService;
             _taskChangeLogService = taskChangeLogService;
             _processWorkflowService = processWorkflowService;
+            _processRulesModelFactory = processRulesModelFactory;
         }
 
         #endregion
@@ -189,16 +191,13 @@ namespace App.Web.Areas.Admin.Factories
                 if (model == null)
                 {
                     model = processWorkflow.ToModel<ProcessWorkflowModel>();
-
-                   
                 }
-              
 
-              
-         
+                // Populate the nested process rules search model with workflow statuses for filter dropdowns
+                model.processRulesSearchModel.ProcessWorkflowId = processWorkflow.Id;
+                model.processRulesSearchModel = await _processRulesModelFactory.PrepareProcessRulesSearchModelAsync(model.processRulesSearchModel);
             }
 
-         
             return model;
         }
         #endregion

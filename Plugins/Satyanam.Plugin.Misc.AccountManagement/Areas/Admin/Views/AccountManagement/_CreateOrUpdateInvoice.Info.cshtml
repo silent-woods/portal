@@ -189,6 +189,24 @@
             });
         }
 
+        function bindEvents(id) {
+            var widget = $("#" + id).data("kendoNumericTextBox");
+
+            if (widget) {
+                widget.bind("change", updateTotalPrimaryAmount);
+                widget.bind("spin", updateTotalPrimaryAmount);
+                widget.element.on("input", updateTotalPrimaryAmount);
+                widget.element.on("blur", updateTotalPrimaryAmount);
+            }
+            else {
+                $("#" + id).on("input blur", updateTotalPrimaryAmount);
+            }
+        }
+
+        bindEvents("SubTotalAmount");
+        bindEvents("TaxAmount");
+        bindEvents("DiscountAmount");
+
         $('#SubTotalAmount, #TaxAmount, #DiscountAmount').on('input', updateTotalPrimaryAmount);
 
         updateTotalPrimaryAmount();

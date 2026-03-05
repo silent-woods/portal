@@ -824,11 +824,27 @@
     </script>
     <script>
         async function loadStatusSummary() {
+
             try {
-                const response = await fetch('@Url.Action("GetStatusSummary", "LinkedInFollowups")');
+
+                const params = new URLSearchParams({
+                    searchFirstName: $('#@Html.IdFor(m => m.SearchFirstName)').val(),
+                    searchLastName: $('#@Html.IdFor(m => m.SearchLastName)').val(),
+                    searchEmail: $('#@Html.IdFor(m => m.SearchEmail)').val(),
+                    searchLinkedinUrl: $('#@Html.IdFor(m => m.SearchLinkedinUrl)').val(),
+                    searchWebsiteUrl: $('#@Html.IdFor(m => m.SearchWebsiteUrl)').val(),
+                    searchLastMessDate: $('#@Html.IdFor(m => m.SearchLastMessDate)').val(),
+                    nextFollowUpDate: $('#@Html.IdFor(m => m.NextFollowUpDate)').val(),
+                    searchStatus: $('#@Html.IdFor(m => m.SearchStatus)').val(),
+                    searchCreatedByUserId: $('#@Html.IdFor(m => m.SearchCreatedByUserId)').val()
+                });
+
+                const response = await fetch('@Url.Action("GetStatusSummary", "LinkedInFollowups")?' + params.toString());
+
                 if (!response.ok) throw new Error("Network error");
 
                 const data = await response.json();
+
                 const container = document.getElementById("status-summary");
                 container.innerHTML = "";
 
@@ -837,7 +853,6 @@
                     return;
                 }
 
-                // Create a full-width table
                 const table = document.createElement("table");
                 table.style.width = "100%";
                 table.style.borderCollapse = "collapse";
@@ -845,34 +860,51 @@
 
                 const row = document.createElement("tr");
 
-                // First cell (Title) like "QA Process"
                 const titleCell = document.createElement("td");
                 titleCell.innerHTML = "<strong>Status</strong>";
                 titleCell.style.padding = "12px 18px";
                 titleCell.style.border = "1px solid #ddd";
-                titleCell.style.whiteSpace = "nowrap";
                 titleCell.style.background = "#eef3f7";
                 row.appendChild(titleCell);
 
-                // Add each status cell
                 data.forEach(item => {
+
                     const cell = document.createElement("td");
                     cell.style.padding = "12px 18px";
                     cell.style.border = "1px solid #ddd";
                     cell.style.cursor = "pointer";
                     cell.style.whiteSpace = "nowrap";
-                    cell.style.backgroundColor = "#fff";
 
-                    cell.innerHTML = `
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <div style="width:12px;height:12px;border-radius:50%;background:${item.ColorCode};"></div>
-                            <span>${item.StatusName} (${item.Count})</span>
-                        </div>
-                    `;
+                    // ? SHOW COUNT ONLY IF NOT ALL
+                    if (item.IsAll) {
+                        cell.innerHTML = `
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <div style="width:12px;height:12px;border-radius:50%;background:${item.ColorCode};"></div>
+                                <span>${item.StatusName}</span>
+                            </div>
+                        `;
+                    } else {
+                        cell.innerHTML = `
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <div style="width:12px;height:12px;border-radius:50%;background:${item.ColorCode};"></div>
+                                <span>${item.StatusName} (${item.Count})</span>
+                            </div>
+                        `;
+                    }
 
-                    // Click ? filter table
-                    cell.onclick = () => {
-                        $('#@Html.IdFor(m => m.SearchStatus)').val(item.StatusId).trigger("change");
+                    // ? CLICK FILTER LOGIC
+                    cell.onclick = function () {
+
+                        if (item.IsAll) {
+                            $('#@Html.IdFor(m => m.SearchStatus)')
+                                .val('')
+                                .trigger("change");
+                        } else {
+                            $('#@Html.IdFor(m => m.SearchStatus)')
+                                .val(item.StatusId)
+                                .trigger("change");
+                        }
+
                         $('#search-linkedInFollowups').click();
                     };
 
@@ -890,10 +922,16 @@
         }
 
         // Load on page load
-        document.addEventListener("DOMContentLoaded", loadStatusSummary);
+        document.addEventListener("DOMContentLoaded", function () {
+            loadStatusSummary();
+        });
 
-        // Refresh when grid reloads
-        $('#linkedInFollowups-grid').on('draw.dt', loadStatusSummary);
+        // Reload when search clicked
+        $('#search-linkedInFollowups').on('click', function () {
+            setTimeout(function () {
+                loadStatusSummary();
+            }, 400);
+        });
     </script>
 
 

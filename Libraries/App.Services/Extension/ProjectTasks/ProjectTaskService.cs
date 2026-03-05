@@ -348,11 +348,7 @@ namespace App.Services.ProjectTasks
         {
             return await _projectTaskRepository.Table
                 .Where(t => showHidden || !t.IsDeleted)
-                .Where(t =>
-                    (projectId == 0 ||
-                     (t.ProjectId == projectId && t.ParentTaskId == 0))
-                     ||
-                    (t.Tasktypeid == 4 && t.ProjectId == projectId))
+                .Where(t => projectId == 0 || t.ProjectId == projectId)
                 .OrderBy(t => t.CreatedOnUtc)
                 .ToListAsync();
         }

@@ -681,7 +681,7 @@ namespace App.Web.Controllers.Extensions
 
             return Json(items);
         }
-        public virtual async Task<IActionResult> CreateProjectTask(int employeeId)
+        public virtual async Task<IActionResult> CreateProjectTask(int employeeId, int projectId = 0)
         {
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -702,6 +702,8 @@ namespace App.Web.Controllers.Extensions
             var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
             if (employee != null)
                 model.AssignedEmployee = employee.FirstName + " " + employee.LastName;
+            if (projectId != 0)
+                model.ProjectId = projectId;
             model.IsSync = true;
             return View("/Themes/DefaultClean/Views/Extension/TimeSheets/CreateProjectTask.cshtml", model);
         }

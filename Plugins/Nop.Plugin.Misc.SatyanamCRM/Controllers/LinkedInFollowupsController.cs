@@ -99,41 +99,100 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 }).ToList();
         }
         [HttpGet]
-        public async Task<IActionResult> GetStatusSummary()
+        public async Task<IActionResult> GetStatusSummary(
+    string searchFirstName,
+    string searchLastName,
+    string searchEmail,
+    string searchLinkedinUrl,
+    string searchWebsiteUrl,
+    string searchLastMessDate,
+    string nextFollowUpDate,
+    int? searchStatus,
+    int? searchCreatedByUserId)
         {
-            // Fetch all records
-            var all = await _linkedInFollowupsService.GetAllLinkedInFollowupsAsync(
-                "", "", "", "", "", null, null, null,null, 0, int.MaxValue, true, null);
+            try
+            {
+                DateTime? lastMessDate = null;
+                DateTime? nextFollowDate = null;
 
-            // Group by StatusId to count how many per status
-            var summary = all
-                .GroupBy(x => x.StatusId)
-                .ToDictionary(g => g.Key, g => g.Count());
-
-            // Build the final list including all enum values
-            var result = Enum.GetValues(typeof(FollowUpStatusEnum))
-                .Cast<FollowUpStatusEnum>()
-                .Select(status =>
+                if (!string.IsNullOrWhiteSpace(searchLastMessDate))
                 {
-                    var displayName = status
-                        .GetType()
-                        .GetMember(status.ToString())
-                        .First()
-                        .GetCustomAttributes(false)
-                        .OfType<DisplayAttribute>()
-                        .FirstOrDefault()?.Name ?? status.ToString();
+                    if (DateTime.TryParse(searchLastMessDate, out DateTime parsedLast))
+                        lastMessDate = parsedLast;
+                }
 
-                    return new
+                if (!string.IsNullOrWhiteSpace(nextFollowUpDate))
+                {
+                    if (DateTime.TryParse(nextFollowUpDate, out DateTime parsedNext))
+                        nextFollowDate = parsedNext;
+                }
+
+                var all = await _linkedInFollowupsService.GetAllLinkedInFollowupsAsync(
+                    searchFirstName,
+                    searchLastName,
+                    searchEmail,
+                    searchLinkedinUrl,
+                    searchWebsiteUrl,
+                    lastMessDate,
+                    nextFollowDate,
+                    searchStatus,
+                    searchCreatedByUserId,
+                    0,
+                    int.MaxValue,
+                    true,
+                    null);
+
+                var summary = all
+                    .GroupBy(x => x.StatusId)
+                    .ToDictionary(g => g.Key, g => g.Count());
+
+                var result = new List<object>();
+
+                // ✅ ALL (special UI item)
+                result.Add(new
+                {
+                    StatusId = 0,
+                    StatusName = "All",
+                    Count = 0,
+                    ColorCode = "#6c757d",
+                    IsAll = true
+                });
+
+                // ✅ ENUM STATUSES
+                var enumResults = Enum.GetValues(typeof(FollowUpStatusEnum))
+                    .Cast<FollowUpStatusEnum>()
+                    .Select(status =>
                     {
-                        StatusId = (int)status,
-                        StatusName = displayName,
-                        Count = summary.ContainsKey((int)status) ? summary[(int)status] : 0,
-                        ColorCode = GetColorForStatus(status) // Optional helper for colors
-                    };
-                })
-                .ToList();
+                        var member = typeof(FollowUpStatusEnum)
+                            .GetMember(status.ToString())
+                            .FirstOrDefault();
 
-            return Json(result);
+                        var displayAttr = member?
+                            .GetCustomAttributes(typeof(DisplayAttribute), false)
+                            .FirstOrDefault() as DisplayAttribute;
+
+                        var displayName = displayAttr?.Name ?? status.ToString();
+
+                        return new
+                        {
+                            StatusId = (int)status,
+                            StatusName = displayName,
+                            Count = summary.ContainsKey((int)status)
+                                ? summary[(int)status]
+                                : 0,
+                            ColorCode = GetColorForStatus(status),
+                            IsAll = false
+                        };
+                    });
+
+                result.AddRange(enumResults);
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "StatusSummary Error: " + ex.Message);
+            }
         }
 
         // Optional helper method for color coding (you can adjust colors)

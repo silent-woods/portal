@@ -14,7 +14,7 @@
         <input asp-for="Id" type="hidden" />
         <div>
             <div class="form-container">
-                <div class="form-fields">
+                <div class="form-fields popup-form-grid">
                     <div class="inputs-popup">
                             <label asp-for="ProjectId" asp-postfix=":" class="required-label"></label>
                         <select id="ProjectId" name="ProjectId" class="form-control input-field" style="border: none; box-shadow: none; height:35px; width:100%; "></select>
@@ -26,16 +26,15 @@
                         <span asp-validation-for="TaskTitle"></span>
                     </div>
                     <div class="inputs-popup">
-                        <label asp-for="Description" asp-postfix=":" class="required-label"></label>
-                        <nop-textarea asp-for="Description" class="form-control input-field" />
-                        <span asp-validation-for="Description"></span>
-                    </div>
-                    <div class="inputs-popup">
                         <label asp-for="TaskCategoryId" asp-postfix=":" class="required-label"></label>
                         <nop-select asp-for="TaskCategoryId" id="TaskCategoryId" class="form-control input-field" asp-items="Model.AvailableTaskCategories" />
                         <span asp-validation-for="TaskCategoryId"></span>
                     </div>
-
+                    <div class="inputs-popup">
+                        <label asp-for="Description" asp-postfix=":" class="required-label"></label>
+                        <nop-textarea asp-for="Description" class="form-control input-field" />
+                        <span asp-validation-for="Description"></span>
+                    </div>
                     <div class="inputs-popup">
                         <label asp-for="EstimationTimeHHMM" asp-postfix=":" class="required-label"></label>
                         <input asp-for="EstimationTimeHHMM" class="form-control input-field" placeholder="HH:MM" />
@@ -114,6 +113,9 @@
                             }
 
                             loadParentTasks(initialProjectId, initialParentTaskId);
+                            if (initialProjectId) {
+                                loadTaskCategory(initialProjectId);
+                            }
 
                             $('#@Html.IdFor(m => m.ProjectId)').change(function () {
                                 loadParentTasks($(this).val(), null);
@@ -171,18 +173,18 @@
                     </script>
                     
                     <div class="inputs-popup">
-                        <label  asp-postfix=":" class="required-label">Assigned To:</label>
+                        <label asp-postfix=":" class="required-label">Assigned To:</label>
                         <select id="EmployeeId" name="EmployeeId" class="form-control input-field" style="border: none; box-shadow: none; height:35px; width:100%; "></select>
                         <span style="color:red; " id="employeeError"></span>
                     </div>
-                   
+
                     <div class="inputs-popup">
                         <label asp-for="ProcessWorkflowId" asp-postfix=":" class="required-label"></label>
                         <nop-select asp-for="ProcessWorkflowId" id="ProcessWorkflowId" class="form-control input-field" asp-items="Model.AvailableProcessWorkflows" />
                         <span asp-validation-for="ProcessWorkflowId"></span>
                     </div>
 
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                    <div class="popup-isync-row">
                         <label asp-for="IsSync" style="font-weight: bold; margin: 0;">@Html.DisplayNameFor(model => model.IsSync)</label>
                         <input asp-for="IsSync" type="checkbox" style="margin: 0;" />
                     </div>

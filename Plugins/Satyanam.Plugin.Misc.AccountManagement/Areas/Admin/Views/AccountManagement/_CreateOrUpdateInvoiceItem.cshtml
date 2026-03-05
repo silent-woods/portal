@@ -62,7 +62,8 @@
 </section>
 
 <script>
-    $(function () {
+    $(document).ready(function () {
+
         function updateAmount() {
             var hours = parseFloat($('#Hours').val()) || 0;
             var rate = parseInt($('#Rate').val()) || 0;
@@ -72,6 +73,23 @@
 
             $("#Amount").data("kendoNumericTextBox").value(formattedAmount);
         }
+
+        function bindEvents(id) {
+            var widget = $("#" + id).data("kendoNumericTextBox");
+
+            if (widget) {
+                widget.bind("change", updateAmount);
+                widget.bind("spin", updateAmount);
+                widget.element.on("input", updateAmount);
+                widget.element.on("blur", updateAmount);
+            }
+            else {
+                $("#" + id).on("input blur", updateAmount);
+            }
+        }
+
+        bindEvents("Hours");
+        bindEvents("Rate");
 
         $('#Hours, #Rate').on('input', updateAmount);
 

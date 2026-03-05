@@ -1,16 +1,15 @@
-﻿using App.Core;
-using App.Core.Security;
-using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.SqlServer;
-using Microsoft.Data.SqlClient;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SqlServer;
+using Microsoft.Data.SqlClient;
+using App.Core;
 
 namespace App.Data.DataProviders
 {
@@ -24,8 +23,6 @@ namespace App.Data.DataProviders
         protected virtual SqlConnectionStringBuilder GetConnectionStringBuilder()
         {
             var connectionString = DataSettingsManager.LoadSettings().ConnectionString;
-
-            var decrypted = ConnectionSecurity.Decrypt(connectionString);
 
             return new SqlConnectionStringBuilder(connectionString);
         }

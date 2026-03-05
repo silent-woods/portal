@@ -41,5 +41,6 @@ namespace Satyanam.Nop.Core.Services
         Task<bool> CheckIfManaualFollowupExistsAsync(int taskId);
         DateTime AdjustToOfficeHours(DateTime startTime, int minutesToAdd, TimeZoneInfo officeTimeZone);
         Task UpdateNextFollowupDateOnStatusChangeAsync(int taskId, int processWorkflowId, int fromStatusId, int toStatusId);
+        Task MassFollowUpAsync(IList<int> followUpTaskIds, int durationMinutes, bool isCompleted, string comment, int reviewerId);
     }
 }

@@ -275,92 +275,114 @@ namespace Nop.Web.Controllers
             }
         }
 
-        public async Task<IList<SubmissionCardModel>> GetSubmissionCardsAsync(int currentUserId,int? filterSubmitterId,DateTime? from,DateTime? to,int? selectedTemplateId)
+        public async Task<IList<SubmissionCardModel>> GetSubmissionCardsAsync(
+    int currentUserId,
+    int? filterSubmitterId,
+    DateTime? from,
+    DateTime? to,
+    int? selectedTemplateId,
+    int? selectedPeriodId)
         {
             var submissionsQuery = _submissionRepository.Table;
 
+            // ✅ Filter by template
+            if (selectedTemplateId.HasValue)
+            {
+                submissionsQuery = submissionsQuery
+                    .Where(x => x.UpdateTemplateId == selectedTemplateId.Value);
+            }
+
+            // ✅ Filter by submitter
             if (filterSubmitterId.HasValue)
-                submissionsQuery = submissionsQuery.Where(x => x.SubmittedByCustomerId == filterSubmitterId.Value);
+            {
+                submissionsQuery = submissionsQuery
+                    .Where(x => x.SubmittedByCustomerId == filterSubmitterId.Value);
+            }
 
-            var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+            // ✅ Filter by PeriodId (VERY IMPORTANT)
+            if (selectedPeriodId.HasValue && selectedPeriodId != -1)
+            {
+                submissionsQuery = submissionsQuery
+                    .Where(x => x.PeriodId == selectedPeriodId.Value);
+            }
 
-            DateTime? fromUtc = null;
-            DateTime? toUtc = null;
-
+            // ✅ CRITICAL FIX — Filter by submission date range
             if (from.HasValue)
-                fromUtc = TimeZoneInfo.ConvertTimeToUtc(from.Value, istTimeZone);
+            {
+                submissionsQuery = submissionsQuery
+                    .Where(x => x.SubmittedOnUtc >= from.Value);
+            }
 
             if (to.HasValue)
             {
-                var inclusiveTo = to.Value.Date.AddDays(1).AddTicks(-1);
-                toUtc = TimeZoneInfo.ConvertTimeToUtc(inclusiveTo, istTimeZone);
+                submissionsQuery = submissionsQuery
+                    .Where(x => x.SubmittedOnUtc <= to.Value);
             }
 
-            if (fromUtc.HasValue)
-                submissionsQuery = submissionsQuery.Where(x => x.SubmittedOnUtc >= fromUtc.Value);
+            var submissions = await submissionsQuery
+                .OrderByDescending(x => x.SubmittedOnUtc)
+                .ToListAsync();
 
-            if (toUtc.HasValue)
-                submissionsQuery = submissionsQuery.Where(x => x.SubmittedOnUtc <= toUtc.Value);
-
-
-            if (selectedTemplateId.HasValue)
-                submissionsQuery = submissionsQuery.Where(x => x.UpdateTemplateId == selectedTemplateId.Value);
-
-            var submissions = await submissionsQuery.ToListAsync();
             if (!submissions.Any())
                 return new List<SubmissionCardModel>();
 
             var submissionIds = submissions.Select(s => s.Id).ToList();
-            //var submitterIds = submissions.Select(s => s.SubmittedByCustomerId).Distinct().ToList();
-            var submitterIds = submissions
-            .Select(s => s.SubmittedByCustomerId)
-            .Where(id => id.HasValue)
-            .Select(id => id.Value)
-            .Distinct()
-            .ToList();
-            var templateIds = submissions.Select(s => s.UpdateTemplateId).Distinct().ToList();
 
-            // answers/questions/templates/submitters as earlier
+            var submitterIds = submissions
+                .Where(s => s.SubmittedByCustomerId.HasValue)
+                .Select(s => s.SubmittedByCustomerId.Value)
+                .Distinct()
+                .ToList();
+
+            var templateIds = submissions
+                .Select(s => s.UpdateTemplateId)
+                .Distinct()
+                .ToList();
+
             var allAnswers = await _answerRepository.Table
                 .Where(a => submissionIds.Contains(a.UpdateSubmissionId))
                 .ToListAsync();
 
-            var questionIds = allAnswers.Select(a => a.UpdateTemplateQuestionId).Distinct().ToList();
+            var questionIds = allAnswers
+                .Select(a => a.UpdateTemplateQuestionId)
+                .Distinct()
+                .ToList();
+
             var allQuestions = await _questionRepository.Table
                 .Where(q => questionIds.Contains(q.Id))
                 .ToListAsync();
 
-            var allSubmitters = await _customerService.GetCustomersByIdsAsync(submitterIds.ToArray());
+            var allSubmitters = await _customerService
+                .GetCustomersByIdsAsync(submitterIds.ToArray());
+
             var allTemplates = await _updateTemplateRepository.Table
                 .Where(t => templateIds.Contains(t.Id))
                 .ToListAsync();
 
-            // load *all comments* for these submissions in one query
             var allComments = await _updateSubmissionCommentRepository.Table
                 .Where(c => submissionIds.Contains(c.UpdateSubmissionId))
                 .OrderBy(c => c.CreatedOnUtc)
                 .ToListAsync();
 
-            // Build models (iterate submissions in the desired ordering)
-            var groupedSubmissions = submissions
-                .GroupBy(s => s.SubmittedByCustomerId)
-                .OrderByDescending(g => g.Max(x => x.SubmittedOnUtc))
-                .SelectMany(g => g.OrderByDescending(x => x.SubmittedOnUtc))
-                .ToList();
+            var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
 
             var result = new List<SubmissionCardModel>();
-            foreach (var sub in groupedSubmissions)
+
+            foreach (var sub in submissions)
             {
-                var answers = allAnswers.Where(a => a.UpdateSubmissionId == sub.Id).ToList();
+                var answers = allAnswers
+                    .Where(a => a.UpdateSubmissionId == sub.Id)
+                    .ToList();
+
                 var questionModels = new List<SubmitUpdateQuestionModel>();
 
                 foreach (var ans in answers)
                 {
-                    var question = allQuestions.FirstOrDefault(q => q.Id == ans.UpdateTemplateQuestionId);
+                    var question = allQuestions
+                        .FirstOrDefault(q => q.Id == ans.UpdateTemplateQuestionId);
 
                     var displayAnswer = ans.AnswerText;
 
-                    // ✅ FIX FOR CHECKBOXES
                     if (question != null &&
                         (question.ControlTypeId == (int)ControlTypeEnum.Checkboxes ||
                          question.ControlTypeId == (int)ControlTypeEnum.ReadonlyCheckboxes))
@@ -380,35 +402,40 @@ namespace Nop.Web.Controllers
                     });
                 }
 
-                var submitter = allSubmitters.FirstOrDefault(c => c.Id == sub.SubmittedByCustomerId);
-                var submitterName = submitter != null ? $"{submitter.FirstName} {submitter.LastName}".Trim() : "Unknown";
-                var template = allTemplates.FirstOrDefault(t => t.Id == sub.UpdateTemplateId);
+                var submitter = allSubmitters
+                    .FirstOrDefault(c => c.Id == sub.SubmittedByCustomerId);
+
+                var submitterName = submitter != null
+                    ? $"{submitter.FirstName} {submitter.LastName}".Trim()
+                    : "Unknown";
+
+                var template = allTemplates
+                    .FirstOrDefault(t => t.Id == sub.UpdateTemplateId);
+
                 var templateName = template?.Title ?? "Unknown Template";
 
                 var model = new SubmissionCardModel
                 {
-                    Id = sub.Id,                  // ensures your view's submission.Id still works
-                    SubmissionId = sub.Id,        // duplicate if you want explicit prop
+                    Id = sub.Id,
+                    SubmissionId = sub.Id,
                     SubmitterName = submitterName,
-                    SubmittedOn = TimeZoneInfo.ConvertTimeFromUtc(sub.SubmittedOnUtc, istTimeZone),
+                    SubmittedOn = TimeZoneInfo
+                        .ConvertTimeFromUtc(sub.SubmittedOnUtc, istTimeZone),
                     TemplateName = templateName,
                     Questions = questionModels
                 };
 
-                // Get comment entities for this submission and map using PrepareCommentModels
-                var commentsForThisSubmission = allComments.Where(c => c.UpdateSubmissionId == sub.Id).ToList();
-                if (commentsForThisSubmission.Any())
-                {
-                    var commentModels = await PrepareCommentModels(commentsForThisSubmission);
-                    model.Comments = commentModels;
-                }
-                else
-                {
-                    model.Comments = new List<UpdateSubmissionCommentModel>();
-                }
+                var commentsForSubmission = allComments
+                    .Where(c => c.UpdateSubmissionId == sub.Id)
+                    .ToList();
+
+                model.Comments = commentsForSubmission.Any()
+                    ? await PrepareCommentModels(commentsForSubmission)
+                    : new List<UpdateSubmissionCommentModel>();
 
                 result.Add(model);
             }
+
             return result;
         }
 
@@ -735,7 +762,12 @@ namespace Nop.Web.Controllers
 
                 <p>Submitted On: {ConvertToIst(DateTime.UtcNow):M/d/yyyy h:mm tt}</p>
 
-                <p><a href='{reviewLink}'>Open submission</a></p>";
+                <p style='margin-top:20px;'>
+                            <a href='{reviewLink}'
+                               style='background-color:#007bff;color:#ffffff;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;font-weight:bold;'>
+                                Open Submission
+                            </a>
+                </p>";
                 }
                 else
                 {
@@ -754,7 +786,11 @@ namespace Nop.Web.Controllers
 
                 <p>Updated On: {ConvertToIst(DateTime.UtcNow):M/d/yyyy h:mm tt}</p>
 
-                <p><a href='{reviewLink}'>Open updated submission</a></p>";
+                <p style='margin-top:20px;'>
+                        <a href='{reviewLink}'style='background-color:#28a745;color:#ffffff;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;font-weight:bold;'>
+                            Open Updated Submission
+                        </a>
+                </p>";
                 }
 
                 await _queuedEmailService.InsertQueuedEmailAsync(new QueuedEmail
@@ -807,7 +843,43 @@ namespace Nop.Web.Controllers
 
             return File(download.DownloadBinary, contentType, finalFileName);
         }
+        private string GetDisplayPeriodText(UpdateTemplate template, UpdateTemplatePeriod dbPeriod)
+        {
+            var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+            var indiaNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indiaTimeZone);
 
+            // ----------------------------
+            // MONTHLY DISPLAY
+            // ----------------------------
+            if (template.FrequencyId == 4 && template.OnDay.HasValue)
+            {
+                var start = new DateTime(indiaNow.Year, indiaNow.Month, 1);
+                var end = start.AddMonths(1).AddDays(-1);
+
+                return $"{start:MMM dd} - {end:MMM dd, yyyy}";
+            }
+
+            // ----------------------------
+            // WEEKLY DISPLAY
+            // ----------------------------
+            if (template.FrequencyId == 3 && !string.IsNullOrEmpty(template.SelectedWeekDays))
+            {
+                var firstWeekday = (DayOfWeek)int.Parse(
+                    template.SelectedWeekDays.Split(',').First());
+
+                int diff = (7 + (indiaNow.DayOfWeek - firstWeekday)) % 7;
+
+                var start = indiaNow.Date.AddDays(-diff);
+                var end = start.AddDays(6);
+
+                return $"{start:MMM dd} - {end:MMM dd, yyyy}";
+            }
+
+            // ----------------------------
+            // Default (Use DB)
+            // ----------------------------
+            return $"{dbPeriod.PeriodStart:MMM dd} - {dbPeriod.PeriodEnd:MMM dd, yyyy}";
+        }
         [HttpGet]
         public virtual async Task<IActionResult> SubmissionList()
         {
@@ -933,8 +1005,7 @@ namespace Nop.Web.Controllers
                         .ToList();
 
                     // STEP 7: Create Period Text
-                    string periodText =
-                        $"{lastPeriod.PeriodStart:MMM dd} - {lastPeriod.PeriodEnd:MMM dd, yyyy}";
+                    string periodText = GetDisplayPeriodText(t, lastPeriod);
 
                     // STEP 8: Check if CURRENT USER submitted
                     bool isSubmitted = submittedEmployeeIds.Contains(employeeIdStr);
@@ -1569,24 +1640,24 @@ namespace Nop.Web.Controllers
                 SelectedPeriodId = selectedPeriodId,
                 CanSeeSubmitterDropdown = isViewer
             };
+            List<int> submitterEmployeeIds = new();
             if (isViewer && selectedTemplateId.HasValue)
             {
                 var template = await _updateTemplateRepository.GetByIdAsync(selectedTemplateId.Value);
                 model.TemplateTitle = template?.Title;
-                var submitterIds = new List<int>();
                 if (!string.IsNullOrEmpty(template?.SubmitterUserIds))
                 {
-                    submitterIds = template.SubmitterUserIds
+                    submitterEmployeeIds = template.SubmitterUserIds
                         .Split(',', StringSplitOptions.RemoveEmptyEntries)
                         .Select(x => int.TryParse(x.Trim(), out var id) ? id : (int?)null)
                         .Where(x => x.HasValue)
                         .Select(x => x.Value)
                         .ToList();
                 }
-                if (submitterIds.Any())
+                if (submitterEmployeeIds.Any())
                 {
                     var employees = await _employeeRepository.Table
-                        .Where(e => submitterIds.Contains(e.Id))
+                        .Where(e => submitterEmployeeIds.Contains(e.Id))
                         .Select(e => new
                         {
                             EmployeeId = e.Id,
@@ -1608,30 +1679,6 @@ namespace Nop.Web.Controllers
                         Value = "",
                         Selected = selectedSubmitterId == null
                     });
-                    // ADD THIS: Determine not-submitted employees
-                    var periodIdToCheck = selectedPeriodId ?? 0;
-                    var submittedCustomerIds = await _submissionRepository.Table
-                        .Where(s => s.UpdateTemplateId == selectedTemplateId.Value &&
-                                    (periodIdToCheck == 0 || s.PeriodId == periodIdToCheck))
-                        .Select(s => s.SubmittedByCustomerId)
-                        .Distinct()
-                        .ToListAsync();
-                    var notSubmittedNames = employees
-                        .Where(e => !submittedCustomerIds.Contains(e.CustomerId))
-                        .Select(e => $"{e.CustomerFirstName} {e.CustomerLastName}".Trim())
-                        .ToList();
-                    model.NotSubmittedNames = notSubmittedNames;
-                }
-                else
-                {
-                    model.AvailableSubmitters = new List<SelectListItem>
-                    {
-                        new SelectListItem
-                        {
-                            Text = "No Submitters Found",
-                            Value = ""
-                        }
-                    };
                 }
             }
             // Load available periods if template is selected
@@ -1639,26 +1686,24 @@ namespace Nop.Web.Controllers
             if (selectedTemplateId.HasValue)
             {
                 var periods = await _updateTemplatePeriodRepository.Table
-                    .Where(p => p.UpdateTemplateId == selectedTemplateId.Value)
-                    .OrderByDescending(p => p.PeriodStart)
-                    .Take(10)
-                    .ToListAsync();
+            .Where(p => p.UpdateTemplateId == selectedTemplateId.Value)
+            .OrderByDescending(p => p.PeriodStart)
+            .Take(12)
+            .ToListAsync();
 
-                // FIX: Auto select LAST ACTIVE PERIOD on page load
+                var template = await _updateTemplateRepository
+                    .GetByIdAsync(selectedTemplateId.Value);
+
                 if (!selectedPeriodId.HasValue && periods.Any())
-                {
                     selectedPeriodId = periods.First().Id;
-                }
 
-                // Assign to model
                 model.SelectedPeriodId = selectedPeriodId;
 
-                // Build dropdown
                 model.AvailablePeriods = periods
                     .Select(p => new SelectListItem
                     {
                         Value = p.Id.ToString(),
-                        Text = $"{p.PeriodStart:MMM dd} - {p.PeriodEnd:MMM dd, yyyy}",
+                        Text = GetDisplayPeriodText(template, p),
                         Selected = p.Id == selectedPeriodId
                     }).ToList();
 
@@ -1668,7 +1713,7 @@ namespace Nop.Web.Controllers
                     Text = "Custom Range",
                     Selected = selectedPeriodId == -1
                 });
-                // FIX: Apply selected period filter automatically
+
                 if (selectedPeriodId.HasValue && selectedPeriodId != -1)
                 {
                     var selectedPeriod = periods
@@ -1683,27 +1728,55 @@ namespace Nop.Web.Controllers
                     }
                 }
             }
-            if (!selectedTemplateId.HasValue)
+            if (selectedTemplateId.HasValue &&
+       model.SelectedPeriodId.HasValue &&
+       model.SelectedPeriodId != -1 &&
+       model.AvailableSubmitters?.Any() == true)
             {
-                model.AvailablePeriods = new List<SelectListItem>
-                {
-                    new SelectListItem { Value = "", Text = "Select Period", Selected = true },
-                    new SelectListItem { Value = "-1", Text = "Custom Range" }
-                };
-                model.FromDate = DateTime.UtcNow.Date.AddDays(-7);
-                model.ToDate = DateTime.UtcNow.Date;
+                var submittedCustomerIds = await _submissionRepository.Table
+    .Where(s => s.UpdateTemplateId == selectedTemplateId.Value
+             && s.PeriodId == model.SelectedPeriodId.Value)
+    .Select(s => (int?)s.SubmittedByCustomerId)
+    .Distinct()
+    .ToListAsync();
+
+                var submittedIds = submittedCustomerIds
+                    .Where(x => x.HasValue)
+                    .Select(x => x.Value)
+                    .ToList();
+
+                var allSubmitterCustomerIds = model.AvailableSubmitters
+                    .Where(x => !string.IsNullOrEmpty(x.Value))
+                    .Select(x => int.Parse(x.Value))
+                    .ToList();
+
+                var notSubmittedCustomerIds = allSubmitterCustomerIds
+                    .Except(submittedIds)
+                    .ToList();
+
+                var notSubmittedNames = await _employeeRepository.Table
+                    .Where(e => notSubmittedCustomerIds.Contains(e.Customer_Id))
+                    .Select(e => e.FirstName + " " + e.LastName)
+                    .ToListAsync();
+
+                model.NotSubmittedNames = notSubmittedNames;
             }
+            else
+            {
+                model.NotSubmittedNames = new List<string>();
+            }
+            // LOAD SUBMISSIONS
             int? filterSubmitterId = null;
+
             if (model.CanSeeSubmitterDropdown && model.SelectedSubmitterId.HasValue)
-            {
                 filterSubmitterId = model.SelectedSubmitterId;
-            }
             model.Submissions = await GetSubmissionCardsAsync(
                 currentUserId: customer.Id,
                 filterSubmitterId: filterSubmitterId,
                 from: model.FromDate,
                 to: model.ToDate,
-                selectedTemplateId: model.SelectedTemplateId
+                selectedTemplateId: model.SelectedTemplateId,
+                selectedPeriodId:model.SelectedPeriodId
             );
             return View("~/Themes/DefaultClean/Views/Extension/UpdateForm/List.cshtml", model);
         }

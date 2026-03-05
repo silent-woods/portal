@@ -4,6 +4,7 @@ using App.Data;
 using App.Data.Extensions;
 using App.Data.Migrations;
 using DocumentFormat.OpenXml.Wordprocessing;
+using FluentAssertions.Execution;
 using FluentMigrator;
 using LinqToDB.DataProvider;
 using Satyanam.Plugin.Misc.AccountManagement.Domain;
@@ -33,6 +34,19 @@ public partial class AccountManagementSchemaMigration : AutoReversingMigration
 
     public override void Up()
     {
+        Execute.Sql(@"
+            CREATE TABLE Satyanam_BankAccount (
+                Id INT PRIMARY KEY IDENTITY,
+                AccountNo NVARCHAR(200)
+                ENCRYPTED WITH (
+                    COLUMN_ENCRYPTION_KEY = BankAccountKey,
+                    ENCRYPTION_TYPE = RANDOMIZED,
+                    ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256'
+                )
+            );
+        ");
+
+
         Create.TableFor<AccountGroup>();
         Create.TableFor<AccountTransaction>();
         Create.TableFor<BankAccount>();
