@@ -1669,7 +1669,6 @@ public partial class TrackerAPIController : BaseController
                     }
                 }
 
-
                 string prevStatus = (await _trackerAPIService.GetWorkflowStatusByIdAsync(statusId)).StatusName;
                 string newStatus = (await _trackerAPIService.GetWorkflowStatusByIdAsync(existingTask.StatusId)).StatusName;
 
@@ -1787,8 +1786,7 @@ public partial class TrackerAPIController : BaseController
                 model.AvailableProjects.Add(projectsRootObject);
             }
 
-            var activeProjectTasks = await _trackerAPIService.GetActiveProjectTasksForStartAsync(projectId: existingTask.ProjectId, taskId: parameters.TaskId,
-                assignedTo: assignedTo, statusId: existingTask.StatusId);
+            var activeProjectTasks = await _trackerAPIService.GetActiveProjectTasksToHoldAsync(taskId: parameters.TaskId, assignedTo: assignedTo, statusId: existingTask.StatusId);
             foreach (var activeProjectTask in activeProjectTasks)
             {
                 var workflowStatus = (await _trackerAPIService.GetWorkflowStatusesByProcessWorkflowIdAsync(activeProjectTask.ProcessWorkflowId)).Where(ws => ws.StatusName == TrackerAPIDefaults.Hold).FirstOrDefault();

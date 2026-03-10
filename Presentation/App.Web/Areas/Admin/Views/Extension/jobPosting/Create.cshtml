@@ -3,10 +3,10 @@
 @{
     //page title
     ViewBag.PageTitle = T("Admin.Configuration.JobPosting.AddNew").Text;
-    //active menu item (system name)
+    //active menu item (system name) 
     NopHtml.SetActiveMenuItemSystemName("JobPostings");
 }
-<form asp-controller="jobPostings" asp-action="Create" method="post">
+<form asp-controller="JobPostings" asp-action="Create" method="post">
     <div class="content-header clearfix">
         <h1 class="float-left">
             @T("Admin.Configuration.JobPosting.AddNew")

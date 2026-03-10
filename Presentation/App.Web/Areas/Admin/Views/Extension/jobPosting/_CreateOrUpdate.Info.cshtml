@@ -1,6 +1,356 @@
 ﻿@using App.Web.Areas.Admin.Models.JobPostings;
 @model JobPostingModel
+<input type="hidden" asp-for="Id" />
 <div class="card-body">
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-popup">
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="Title" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="Title" asp-required="true" />
+                                    <span asp-validation-for="Title"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="Description" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-textarea asp-for="Description" asp-required="true" />
+                                    <span asp-validation-for="Description"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-3">
+                                    <nop-label asp-for="PositionId" />
+                                </div>
+                                <div class="col-sm-3">
+                                    <nop-select asp-for="PositionId" asp-items="Model.AvailablePosition" asp-required="true" />
+                                    <span asp-validation-for="PositionId"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-3">
+                                    <nop-label asp-for="CandidateTypeId" />
+                                </div>
+                                <div class="col-sm-3">
+                                    <nop-select asp-for="CandidateTypeId" asp-items="Model.AvailableCandidateTypes" asp-required="true" />
+                                    <span asp-validation-for="CandidateTypeId"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+
+                                <div class="col-md-3">
+                                    <nop-label asp-for="SelectedTechnologyIds" />
+                                </div>
+
+                                <div class="col-md-5">
+
+                                    <input type="hidden" name="SelectedTechnologyIds" id="SelectedTechnologyIds" />
+
+                                    <select id="TechnologyIds"></select>
+                                    <input type="hidden" id="NewTechnologyNames" name="NewTechnologyNames" />
+                                </div>
+                            </div>
+                            <!-- SKILL MULTISELECT -->
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="SelectedSkillIds" />
+                                </div>
+                                <div class="col-md-5">
+                                    <input type="hidden" name="SelectedSkillIds" id="SelectedSkillIds" />
+                                    <select id="SkillIds"></select>
+                                    <input type="hidden" id="NewSkillNames" name="NewSkillNames" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="Publish" />
+                                </div>
+                                <div class="col-md-5">
+                                    <nop-editor asp-for="Publish" />
+                                    <span asp-validation-for="Publish"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<script>
+
+    $(document).ready(function () {
+        // LOAD DATA FROM MODEL
+        var technologies = @Html.Raw(Json.Serialize(Model.AvailableTechnologies ?? new List<SelectListItem>()));
+
+        var selectedTechIds = @Html.Raw(Json.Serialize(Model.SelectedTechnologyIds ?? new List<int>()));
+        var selectedSkillIds = @Html.Raw(Json.Serialize(Model.SelectedSkillIds ?? new List<int>()));
+        // TECHNOLOGY MULTISELECT
+        var techMulti = $("#TechnologyIds").kendoMultiSelect({
+
+            dataTextField: "Text",
+            dataValueField: "Value",
+
+            dataSource: technologies,
+
+            value: selectedTechIds,
+
+            filter: "contains",
+            autoClose: false,
+            tagMode: "multiple",
+
+            placeholder: "Type technology and press Enter",
+
+            change: function () {
+
+                updateTechnologyHidden();
+
+                var numericIds = getNumericValues(techMulti.value());
+
+                // FIX: preserve already selected skills
+                var currentSkillIds = [];
+
+                var hiddenSkills = $("#SelectedSkillIds").val();
+
+                if(hiddenSkills && hiddenSkills.length > 0)
+                    currentSkillIds = hiddenSkills.split(",");
+
+                loadSkills(numericIds, currentSkillIds);
+            }
+
+        }).data("kendoMultiSelect");
+        // TECHNOLOGY ENTER KEY CREATE TAG
+        techMulti.input.on("keydown", function (e) {
+
+            if (e.keyCode === 13) {
+
+                var value = techMulti.input.val().trim();
+
+                if (value === "")
+                    return;
+
+                var exists = techMulti.dataSource.data().some(function(item){
+                    return item.Text.toLowerCase() === value.toLowerCase();
+                });
+
+                if (!exists) {
+
+                    techMulti.dataSource.add({
+                        Text: value,
+                        Value: value
+                    });
+
+                    var currentValues = techMulti.value();
+
+                    currentValues.push(value);
+
+                    techMulti.value(currentValues);
+                }
+
+                techMulti.input.val("");
+
+                updateTechnologyHidden();
+
+                e.preventDefault();
+            }
+
+        });
+        // SKILL MULTISELECT
+        var skillMulti = $("#SkillIds").kendoMultiSelect({
+
+            dataTextField: "Text",
+            dataValueField: "Value",
+
+            filter: "contains",
+            autoClose: false,
+            tagMode: "multiple",
+
+            placeholder: "Type skill and press Enter",
+
+            change: function () {
+
+                updateSkillHidden();
+            }
+
+        }).data("kendoMultiSelect");
+        // SKILL ENTER KEY CREATE TAG
+        skillMulti.input.on("keydown", function (e) {
+
+            if (e.keyCode === 13) {
+
+                var value = skillMulti.input.val().trim();
+
+                if (value === "")
+                    return;
+
+                var exists = skillMulti.dataSource.data().some(function(item){
+                    return item.Text.toLowerCase() === value.toLowerCase();
+                });
+
+                if (!exists) {
+
+                    skillMulti.dataSource.add({
+                        Text: value,
+                        Value: value
+                    });
+
+                    var currentValues = skillMulti.value();
+
+                    currentValues.push(value);
+
+                    skillMulti.value(currentValues);
+                }
+
+                skillMulti.input.val("");
+
+                updateSkillHidden();
+
+                e.preventDefault();
+            }
+
+        });
+        // INITIAL LOAD
+        $("#SelectedTechnologyIds").val(selectedTechIds.join(","));
+        $("#SelectedSkillIds").val(selectedSkillIds.join(","));
+
+        if (selectedTechIds.length > 0)
+            loadSkills(selectedTechIds, selectedSkillIds);
+
+        // UPDATE TECHNOLOGY HIDDEN
+        function updateTechnologyHidden()
+        {
+            var values = techMulti.value();
+
+            var numericIds = [];
+            var newNames = [];
+
+            values.forEach(function(val){
+
+                if ($.isNumeric(val))
+                    numericIds.push(val);
+                else
+                    newNames.push(val);
+
+            });
+
+            $("#SelectedTechnologyIds").val(numericIds.join(","));
+            $("#NewTechnologyNames").val(newNames.join(","));
+        }
+        // UPDATE SKILL HIDDEN
+        function updateSkillHidden()
+        {
+            var values = skillMulti.value();
+
+            var numericIds = [];
+            var newNames = [];
+
+            values.forEach(function(val){
+
+                if ($.isNumeric(val))
+                    numericIds.push(val);
+                else
+                    newNames.push(val);
+
+            });
+
+            $("#SelectedSkillIds").val(numericIds.join(","));
+            $("#NewSkillNames").val(newNames.join(","));
+        }
+        // HELPER FUNCTION
+        function getNumericValues(values)
+        {
+            return values.filter(function(v){
+
+                return $.isNumeric(v);
+
+            });
+        }
+        // BEFORE SUBMIT FIX
+        $("form").on("submit", function () {
+
+            updateTechnologyHidden();
+            updateSkillHidden();
+
+        });
+
+    });
+       //LOAD SKILLS BASED ON TECHNOLOGY
+        function loadSkills(technologyIds, preselectedSkills)
+    {
+        var skillMulti = $("#SkillIds").data("kendoMultiSelect");
+
+        if (!technologyIds || technologyIds.length === 0)
+        {
+            skillMulti.dataSource.data([]);
+            skillMulti.value([]);
+            $("#SelectedSkillIds").val("");
+            return;
+        }
+
+        var postData = {
+            technologyIds: technologyIds
+        };
+
+        addAntiForgeryToken(postData);
+
+        $.ajax({
+
+            type: "POST",
+
+            url: '@Url.Action("GetSkillsByTechnologies", "JobPostings", new { area = "Admin" })',
+
+            data: postData,
+
+            traditional: true,
+
+            success: function(data)
+            {
+                // Load skills into dropdown
+                skillMulti.dataSource.data(data);
+
+                var finalSelected = [];
+                // FIX: AUTO SELECT SKILLS IF NONE PASSED
+                if(preselectedSkills && preselectedSkills.length > 0)
+                {
+                    // select only previously selected skills
+                    finalSelected = preselectedSkills.filter(function(id){
+
+                        return data.some(function(skill){
+
+                            return skill.Value.toString() === id.toString();
+
+                        });
+
+                    });
+                }
+                else
+                {
+                    // AUTO SELECT ALL SKILLS FOR NEW TECHNOLOGY
+                    finalSelected = data.map(function(skill){
+
+                        return skill.Value;
+
+                    });
+                }
+
+                skillMulti.value(finalSelected);
+
+                $("#SelectedSkillIds").val(finalSelected.join(","));
+            }
+
+        });
+    }
+
+</script>
+
 
     <div class="form-group row">
         <div class="col-md-3">

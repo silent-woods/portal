@@ -1,0 +1,484 @@
+﻿@using App.Web.Areas.Admin.Models.JobPostings
+@model JobPostingModel
+
+<input type="hidden" asp-for="Id" />
+<input type="hidden" asp-for="jobPostingCandidateSearchModel.JobPostingId" />
+<div class="card-body">
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <div class="col-md-4">
+                                    <nop-label asp-for="jobPostingCandidateSearchModel.Name" />
+                                </div>
+                                <div class="col-md-8">
+                                    <nop-editor asp-for="jobPostingCandidateSearchModel.Name" />
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Email -->
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <div class="col-md-4">
+                                    <nop-label asp-for="jobPostingCandidateSearchModel.Email" />
+                                </div>
+                                <div class="col-md-8">
+                                    <nop-editor asp-for="jobPostingCandidateSearchModel.Email" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Candidate Type -->
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <div class="col-md-4">
+                                    <nop-label asp-for="jobPostingCandidateSearchModel.CandidateTypeId" />
+                                </div>
+                                <div class="col-md-8">
+                                    <nop-select asp-for="jobPostingCandidateSearchModel.CandidateTypeId"
+                                                asp-items="Model.jobPostingCandidateSearchModel.AvailableCandidateTypes" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <div class="col-md-4">
+                                    <nop-label asp-for="jobPostingCandidateSearchModel.StatusId" />
+                                </div>
+                                <div class="col-md-8">
+                                    <nop-select asp-for="jobPostingCandidateSearchModel.StatusId"
+                                                asp-items="Model.jobPostingCandidateSearchModel.AvailableStatuses" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="text-center">
+                <button type="button" id="search-candidates" class="btn btn-primary btn-search">
+                    <i class="fas fa-search"></i>  @T("Admin.Common.Search")
+                </button>
+            </div>
+
+            @if (Model.Id > 0)
+            {
+                <!-- Job Posting Candidate Summary -->
+                <div id="jobposting-candidate-summary"
+                     style="overflow-x:auto;max-width:100%;background-color:#f9f9f9;
+                     padding:12px;margin-bottom:15px;
+                     border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+                </div>
+
+                <div class="mb-3">
+
+                    <button type="button" class="btn btn-warning mr-2"
+                            onclick="updateCandidateStatus(2)">
+                        <i class="fas fa-user-check"></i> Mark Shortlisted
+                    </button>
+
+                    <button type="button" class="btn btn-info mr-2"
+                            onclick="updateCandidateStatus(3)">
+                        <i class="fas fa-comments"></i> Mark Interview
+                    </button>
+
+                    <button type="button" class="btn btn-success mr-2"
+                            onclick="updateCandidateStatus(4)">
+                        <i class="fas fa-check-circle"></i> Mark Hired
+                    </button>
+
+                    <button type="button" class="btn btn-danger mr-2"
+                            onclick="updateCandidateStatus(5)">
+                        <i class="fas fa-times-circle"></i> Mark Rejected
+                    </button>
+
+                </div>
+                @await Html.PartialAsync("Table", new DataTablesModel
+                {
+                    Name = "jobposting-candidates-grid",
+
+                        UrlRead = new DataUrl(
+                        "JobPostingCandidates",
+                        "JobPostings",
+                        new RouteValueDictionary { ["jobPostingId"] = Model.Id }),
+
+                        UrlDelete = new DataUrl(
+                        "JobPostingCandidateDelete",
+                        "JobPosting",
+                        null),
+
+                        Length = Model.CandidateSearchModel.PageSize,
+                        LengthMenu = Model.CandidateSearchModel.AvailablePageSizes,
+                        SearchButtonId = "search-candidates",
+
+                        ColumnCollection = new List<ColumnProperty>
+                        {
+                        new ColumnProperty(nameof(JobPostingCandidateModel.Id))
+                        {
+                        IsMasterCheckBox = true,
+                        Render = new RenderCheckBox("checkbox_categories"),
+                        ClassName =  NopColumnClassDefaults.CenterAll,
+                        Width = "30"
+                        },
+                        new ColumnProperty(nameof(JobPostingCandidateModel.Name))
+                        {
+                        Title = T("Admin.JobPosting.Candidates.Name").Text
+                        },
+
+                        new ColumnProperty(nameof(JobPostingCandidateModel.Email))
+                        {
+                        Title = T("Admin.JobPosting.Candidates.Email").Text
+                        },
+
+                        new ColumnProperty(nameof(JobPostingCandidateModel.CandidateTypeName))
+                        {
+                        Title = T("Admin.JobPosting.Candidates.CandidateTypeName").Text
+                        },
+                        new ColumnProperty(nameof(JobPostingCandidateModel.Status))
+                        {
+                        Title = T("Admin.JobPosting.Candidates.Status").Text,
+                        Width = "120",
+                        ClassName = NopColumnClassDefaults.CenterAll,
+                        Render = new RenderCustom("renderStatusBadge")
+                        },
+
+                        new ColumnProperty(nameof(JobPostingCandidateModel.CreatedOnUtc))
+                        {
+                        Title = T("Admin.JobPosting.Candidates.CreatedOn").Text,
+                        Render = new RenderDate()
+                        },
+                        new ColumnProperty(nameof(JobPostingCandidateModel.ResumeDownloadId))
+                        {
+                        Title = T("Admin.JobPosting.Candidates.ResumeDownloadId").Text,
+                        Width = "120",
+                        ClassName =  NopColumnClassDefaults.Button,
+                        Render = new RenderCustom("renderColumnDownloadId")
+                        },
+                        // EDIT BUTTON
+                        new ColumnProperty(nameof(JobPostingCandidateModel.Id))
+                        {
+                        Title = T("Admin.Common.Edit").Text,
+                        Width = "100",
+                        ClassName = NopColumnClassDefaults.Button,
+                        Render = new RenderButtonEdit(
+                        new DataUrl("~/Admin/Candidate/Edit"))
+                        }
+
+                        }
+                        })
+
+                        }
+            else
+            {
+                <div class="alert alert-info">
+
+                    Please save the Job Posting before viewing associated candidates.
+
+                </div>
+            }
+
+
+        </div>
+</div>
+</section>
+</div>
+<script>
+        $(function () {
+
+        $('body').tooltip({
+            selector: '.history-icon',
+            html: true,
+            placement: 'right',
+            container: 'body'
+        });
+
+    });
+    function renderStatusBadge(data, type, row, meta) {
+
+        if (!data) return "";
+
+        var colorClass = "";
+
+        switch (data.toLowerCase()) {
+
+            case "applied":
+                colorClass = "badge badge-primary";
+                break;
+
+            case "reviewed":
+                colorClass = "badge badge-warning";
+                break;
+
+            case "selected":
+                colorClass = "badge badge-success";
+                break;
+
+            case "rejected":
+                colorClass = "badge badge-danger";
+                break;
+
+            case "interview":
+                colorClass = "badge badge-info";
+                break;
+
+            default:
+                colorClass = "badge badge-secondary";
+        }
+       return `
+        <span class="${colorClass}" style="padding:6px 12px;border-radius:20px;font-size:12px;">
+            ${data}
+        </span>
+
+        <span class="history-container"
+              data-email="${row.Email}"
+              style="margin-left:5px;">
+        </span>
+    `;
+    }
+</script>
+<script>
+    var currentJobPostingId = @Model.Id;
+        function updateCandidateStatus(statusId)
+    {
+        var selectedIds = [];
+
+        $('input[name="checkbox_categories"]:checked').each(function () {
+            selectedIds.push($(this).val());
+        });
+
+        if (selectedIds.length === 0)
+        {
+            alert("Please select at least one candidate.");
+            return;
+        }
+
+        var postData = {
+            candidateIds: selectedIds,
+            statusId: statusId,
+            jobPostingId: currentJobPostingId
+        };
+
+        addAntiForgeryToken(postData); // REQUIRED for nopCommerce
+
+        $.ajax({
+            url: '@Url.Action("BulkUpdateCandidateStatus", "JobPostings")',
+            type: 'POST',
+            data: postData,
+            traditional: true,
+            success: function ()
+            {
+                $('#jobposting-candidates-grid').DataTable().ajax.reload();
+            },
+            error: function (xhr)
+            {
+                console.log(xhr.responseText);
+                alert("Error updating status.");
+            }
+        });
+    }
+
+</script>
+<script>
+        function renderColumnDownloadId(data, type, row, meta) {
+
+        if (row.ResumeDownloadId > 0) {
+
+            return '<a class="btn btn-success" href="@Url.Action("DownloadResume", "JobPostings")?candidateId='
+                + row.Id +
+                '&jobPostingId=' + row.JobPostingId +
+                '"><i class="fas fa-download"></i> Download</a>';
+        }
+
+        return 'No file attached';
+    }
+</script>
+<script>
+    $(document).ready(function () {
+
+        var table = $('#jobposting-candidates-grid').DataTable();
+
+        table.on('preXhr.dt', function (e, settings, data) {
+
+            data.Name = $('#jobPostingCandidateSearchModel_Name').val();
+            data.Email = $('#jobPostingCandidateSearchModel_Email').val();
+            data.CandidateTypeId = $('#jobPostingCandidateSearchModel_CandidateTypeId').val();
+            data.StatusId = $('#jobPostingCandidateSearchModel_StatusId').val();
+
+            data.JobPostingId = @Model.Id;
+        });
+
+    });
+                      $('#jobposting-candidates-grid').on('draw.dt', function () {
+
+        $('.history-container').each(function () {
+
+            var container = $(this);
+
+            // prevent duplicate loading
+            if (container.data('loaded'))
+                return;
+
+            var email = container.data('email');
+
+            $.ajax({
+                url: '/Admin/JobPostings/GetCandidateHistoryTooltip',
+                type: 'GET',
+                data: {
+                    email: email,
+                    currentJobPostingId: @Model.Id
+                },
+                success: function (result)
+                {
+                    // no history → do nothing
+                    if (!result || result.trim() === "") {
+                        container.data('loaded', true);
+                        return;
+                    }
+
+                    var icon = $('<i class="fas fa-info-circle text-primary ml-1" style="cursor:pointer;"></i>');
+
+                    icon.tooltip({
+                        title: result,
+                        html: true,
+                        placement: 'right',
+                        container: 'body'
+                    });
+
+                    container.append(icon);
+
+                    container.data('loaded', true);
+                },
+                error: function ()
+                {
+                    container.data('loaded', true);
+                }
+            });
+
+        });
+
+    });
+</script>
+<script>
+    async function loadJobPostingCandidateSummary() {
+        try {
+            const response = await fetch('@Url.Action("GetJobPostingCandidateSummary", "JobPostings")?jobPostingId=@Model.Id');
+            if (!response.ok) throw new Error("Network error");
+
+            const data = await response.json();
+            const container = document.getElementById("jobposting-candidate-summary");
+            container.innerHTML = "";
+
+            if (!data || data.length === 0) return;
+
+            const table = document.createElement("table");
+            table.style.width = "100%";
+            table.style.borderCollapse = "collapse";
+            table.style.background = "#fff";
+
+            // STATUS ROW
+            const statusRow = document.createElement("tr");
+
+            const statusTitle = document.createElement("td");
+            statusTitle.innerHTML = "<strong>Status</strong>";
+            statusTitle.style.padding = "10px";
+            statusTitle.style.background = "#eef3f7";
+            statusTitle.style.border = "1px solid #ddd";
+            statusRow.appendChild(statusTitle);
+
+            // ALL STATUS
+            const allStatus = document.createElement("td");
+            allStatus.innerHTML = "<strong>All</strong>";
+            allStatus.style.padding = "10px";
+            allStatus.style.cursor = "pointer";
+            allStatus.style.border = "1px solid #ddd";
+
+            allStatus.onclick = () => {
+                $('#jobPostingCandidateSearchModel_StatusId').val(0);
+                $('#jobPostingCandidateSearchModel_CandidateTypeId').val(0);
+                $('#search-candidates').click();
+            };
+
+            statusRow.appendChild(allStatus);
+
+            data.filter(x => x.Type === "Status")
+                .forEach(item => {
+
+                    const cell = document.createElement("td");
+                    cell.innerHTML = `${item.Name} (${item.Count})`;
+                    cell.style.padding = "10px";
+                    cell.style.cursor = "pointer";
+                    cell.style.border = "1px solid #ddd";
+
+                    // Reset CandidateType when clicking Status
+                    cell.onclick = () => {
+                        $('#jobPostingCandidateSearchModel_CandidateTypeId').val(0);
+                        $('#jobPostingCandidateSearchModel_StatusId').val(item.Id);
+                        $('#search-candidates').click();
+                    };
+
+                    statusRow.appendChild(cell);
+                });
+
+            table.appendChild(statusRow);
+
+            //TYPE ROW
+            const typeRow = document.createElement("tr");
+
+            const typeTitle = document.createElement("td");
+            typeTitle.innerHTML = "<strong>Candidate Type</strong>";
+            typeTitle.style.padding = "10px";
+            typeTitle.style.background = "#eef3f7";
+            typeTitle.style.border = "1px solid #ddd";
+            typeRow.appendChild(typeTitle);
+
+            // ALL TYPE
+            const allType = document.createElement("td");
+            allType.innerHTML = "<strong>All</strong>";
+            allType.style.padding = "10px";
+            allType.style.cursor = "pointer";
+            allType.style.border = "1px solid #ddd";
+
+            allType.onclick = () => {
+                $('#jobPostingCandidateSearchModel_StatusId').val(0);
+                $('#jobPostingCandidateSearchModel_CandidateTypeId').val(0);
+                $('#search-candidates').click();
+            };
+
+            typeRow.appendChild(allType);
+
+            data.filter(x => x.Type === "CandidateType")
+                .forEach(item => {
+
+                    const cell = document.createElement("td");
+                    cell.innerHTML = `${item.Name} (${item.Count})`;
+                    cell.style.padding = "10px";
+                    cell.style.cursor = "pointer";
+                    cell.style.border = "1px solid #ddd";
+
+                    // Reset Status when clicking Type
+                    cell.onclick = () => {
+                        $('#jobPostingCandidateSearchModel_StatusId').val(0);
+                        $('#jobPostingCandidateSearchModel_CandidateTypeId').val(item.Id);
+                        $('#search-candidates').click();
+                    };
+
+                    typeRow.appendChild(cell);
+                });
+
+            table.appendChild(typeRow);
+            container.appendChild(table);
+
+        } catch (err) {
+            console.error("JobPosting Summary Error:", err);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadJobPostingCandidateSummary);
+    $('#jobposting-candidates-grid').on('draw.dt', loadJobPostingCandidateSummary);
+</script>

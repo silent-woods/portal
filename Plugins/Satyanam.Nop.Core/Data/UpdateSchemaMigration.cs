@@ -11,7 +11,7 @@ namespace Satyanam.Nop.Core.Data
     {   
         #region Methods
         public override void Up()
-        {
+         {
             if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(Title))).Exists())
             {
                 Create.TableFor<Title>();
@@ -153,6 +153,34 @@ namespace Satyanam.Nop.Core.Data
             if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(ConnectionRequest))).Exists())
             {
                 Create.TableFor<ConnectionRequest>();
+            }
+            if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(Candidate))).Exists())
+            {
+                Create.TableFor<Candidate>();
+            }
+            if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(JobApplication))).Exists())
+            {
+                Create.TableFor<JobApplication>();
+            }
+            if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(Technology))).Exists())
+            {
+                Create.TableFor<Technology>();
+            }
+            if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(SkillSet))).Exists())
+            {
+                Create.TableFor<SkillSet>();
+            }
+            if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(TechnologySkillMapping))).Exists())
+            {
+                Create.TableFor<TechnologySkillMapping>();
+            }
+            if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(JobPostingSkillMapping))).Exists())
+            {
+                Create.TableFor<JobPostingSkillMapping>();
+            }
+            if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(JobPostingTechnologyMapping))).Exists())
+            {
+                Create.TableFor<JobPostingTechnologyMapping>();
             }
             if (!Schema.Table(NameCompatibilityManager.GetTableName(typeof(TaskChangeLog))).Exists())
             {

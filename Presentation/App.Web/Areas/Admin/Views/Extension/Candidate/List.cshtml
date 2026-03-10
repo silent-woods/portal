@@ -1,0 +1,659 @@
+@using App.Web.Areas.Admin.Models.Extension.Candidates
+@model CandidateSearchModel
+@{
+    //page title
+    ViewBag.PageTitle = T("Admin.CandidateModel.Candidate").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("Candidate");
+
+    const string hideSearchBlockAttributeName = "CandidateListPage.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.CandidateModel.Candidate")
+    </h1>
+    <div class="float-right">
+        <div class="btn-group">
+
+            <button type="button" class="btn btn-success">
+                <i class="fas fa-download"></i>
+                @T("Admin.Common.Export")
+            </button>
+
+            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown"></button>
+
+            <ul class="dropdown-menu">
+
+                <!-- Export All -->
+                <li>
+                    <button type="button"
+                            class="dropdown-item export-btn"
+                            data-action="@Url.Action("ExportToExcel", "Candidate")"
+                            data-button-name="exportexcel-all">
+                        <i class="far fa-file-excel"></i>
+                        @T("Admin.Common.ExportToExcel.All")
+                    </button>
+                </li>
+
+                <!-- Export Selected -->
+                <li>
+                    <button type="button" id="exportexcel-selected" class="dropdown-item">
+                        <i class="far fa-file-excel"></i>
+                        @T("Admin.Common.ExportToExcel.Selected")
+                    </button>
+                </li>
+
+            </ul>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn bg-olive" data-toggle="modal" data-target="#importexcel-window">
+                <i class="fas fa-upload"></i>
+                @T("Admin.Common.Import")
+            </button>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus-square"></i>
+            @T("Admin.Common.AddNew")
+        </a>
+        <button type="button" id="delete-selected" class="btn btn-danger">
+            <i class="far fa-trash-alt"></i>
+            @T("Admin.Common.Delete.Selected")
+        </button>
+        <nop-action-confirmation asp-button-id="delete-selected" />
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-5">
+                                            <nop-label asp-for="SearchName" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <nop-editor asp-for="SearchName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-5">
+                                            <nop-label asp-for="SearchEmail" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <nop-editor asp-for="SearchEmail" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-5">
+                                            <nop-label asp-for="SearchPositionApplied" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <nop-editor asp-for="SearchPositionApplied" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-5">
+                                            <nop-label asp-for="SearchCandidateTypeId" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <nop-select asp-for="SearchCandidateTypeId" asp-items="Model.CandidateTypes" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-5">
+                                            <nop-label asp-for="SearchStatusId" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <nop-select asp-for="SearchStatusId" asp-items="Model.Status" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-Candidate" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Candidate Summary -->
+                <div id="candidate-summary"
+                     style="overflow-x:auto;max-width:100%;background-color:#f9f9f9;
+     padding:12px;margin-top:10px;margin-bottom:20px;
+     border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+                </div>
+                <div class="mb-3">
+
+                    <button type="button" class="btn btn-warning mr-2"
+                            onclick="bulkUpdateCandidateStatus(2)">
+                        <i class="fas fa-user-check"></i> Mark Shortlisted
+                    </button>
+
+                    <button type="button" class="btn btn-info mr-2"
+                            onclick="bulkUpdateCandidateStatus(3)">
+                        <i class="fas fa-comments"></i>Mark Interview
+                    </button>
+
+                    <button type="button" class="btn btn-success mr-2"
+                            onclick="bulkUpdateCandidateStatus(4)">
+                        <i class="fas fa-check-circle"></i>Mark Hired
+                    </button>
+
+                    <button type="button" class="btn btn-danger mr-2"
+                            onclick="bulkUpdateCandidateStatus(5)">
+                        <i class="fas fa-times-circle"></i>Mark Rejected
+                    </button>
+
+                </div>
+                <div class="card card-default">
+                    <div class="card-body">
+                        @await Html.PartialAsync("Table", new DataTablesModel
+                        {
+                            Name = "candidate-grid",
+                                                UrlRead = new DataUrl("List", "Candidate", null),
+                                                SearchButtonId = "search-Candidate",
+                                                Length = Model.PageSize,
+                                                LengthMenu = Model.AvailablePageSizes,
+                                                Filters = new List<FilterParameter>
+                                                {
+                                                new FilterParameter(nameof(Model.SearchName)),
+                                                new FilterParameter(nameof(Model.SearchEmail)),
+                                                new FilterParameter(nameof(Model.SearchStatusId)),
+                                                new FilterParameter(nameof(Model.SearchCandidateTypeId)),
+                                                new FilterParameter(nameof(Model.SearchPositionApplied))
+
+                                                },
+                                                ColumnCollection = new List<ColumnProperty>
+                                                {
+                                                new ColumnProperty(nameof(CandidateModel.Id))
+                                                {
+                                                IsMasterCheckBox = true,
+                                                Render = new RenderCheckBox("checkbox_categories"),
+                                                ClassName =  NopColumnClassDefaults.CenterAll,
+                                                Width = "50"
+                                                },
+                                                new ColumnProperty(nameof(CandidateModel.Name))
+                                                {
+                                                Title = T("Admin.Candidate.Fields.Name").Text
+                                                },
+                                                new ColumnProperty(nameof(CandidateModel.Email))
+                                                {
+                                                Title = T("Admin.Candidate.Fields.Email").Text
+                                                },
+                                                new ColumnProperty(nameof(CandidateModel.PositionApplied))
+                                                {
+                                                Title = T("Admin.Candidate.Fields.PositionApplied").Text
+                                                },
+                                                new ColumnProperty(nameof(CandidateModel.CandidateTypeName))
+                                                {
+                                                Title = T("Admin.Candidate.Fields.CandidateTypeName").Text
+                                                },
+                                                new ColumnProperty(nameof(CandidateModel.Status))
+                                                {
+                                                Title = T("Admin.Candidate.Fields.Status").Text,
+                                                Width = "120",
+                                                ClassName = NopColumnClassDefaults.CenterAll,
+                                                Render = new RenderCustom("renderStatusBadge")
+                                                },
+                                                new ColumnProperty(nameof(CandidateModel.CreatedOnUtc))
+                                                {
+                                                Title = T("Admin.Candidate.Fields.CreatedOnUtc").Text,
+                                                Render = new RenderDate()
+                                                },
+                                                new ColumnProperty(nameof(CandidateModel.UpdatedOnUtc))
+                                                {
+                                                Title = T("Admin.Candidate.Fields.UpdatedOnUtc").Text,
+                                                Render = new RenderDate()
+                                                },
+                                                new ColumnProperty(nameof(CandidateModel.ResumeDownloadId))
+                                                {
+                                                Title = T("Admin.Candidate.Fields.ResumeDownloadId").Text,
+                                                Width = "120",
+                                                ClassName =  NopColumnClassDefaults.Button,
+                                                Render = new RenderCustom("renderColumnDownloadId")
+                                                },
+                                                new ColumnProperty(nameof(CandidateModel.Id))
+                                                {
+                                                Title = T("Admin.Common.Edit").Text,
+                                                Width = "100",
+                                                ClassName =  NopColumnClassDefaults.Button,
+                                                Render = new RenderCustom("renderEditButton")
+                                                //Render = new RenderButtonEdit(new DataUrl("Edit"))
+                                                }
+                                                }
+                                                })
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- shared export form -->
+    <form id="export-shared-form"
+          asp-controller="Candidate"
+          asp-action="ExportToExcel"
+          method="post">
+
+        <input type="hidden" name="SearchName" />
+        <input type="hidden" name="SearchEmail" />
+        <input type="hidden" name="SearchPositionApplied" />
+        <input type="hidden" name="SearchCandidateTypeId" />
+        <input type="hidden" name="SearchStatusId" />
+
+    </form>
+
+    <!-- selected export -->
+    <form asp-controller="Candidate"
+          asp-action="SelectedExportToExcel"
+          method="post"
+          id="export-excel-selected-form">
+        <input type="hidden" id="selectedIds" name="selectedIds" />
+    </form>
+    <div id="importexcel-window" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <form asp-controller="Candidate"
+                      asp-action="ImportFromExcel"
+                      method="post"
+                      enctype="multipart/form-data">
+
+                    <div class="modal-header">
+                        <h4>Import Candidates</h4>
+                    </div>
+
+                    <div class="modal-body">
+                        <input type="file" name="importFile" class="form-control" />
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Import</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        function renderStatusBadge(data, type, row, meta)
+        {
+            if (!data) return "";
+
+            var colorClass = "";
+
+            switch (data.toLowerCase())
+            {
+                case "applied":
+                    colorClass = "badge badge-primary";
+                    break;
+
+                case "shortlisted":
+                    colorClass = "badge badge-warning";
+                    break;
+
+                case "interview":
+                    colorClass = "badge badge-info";
+                    break;
+
+                case "hired":
+                    colorClass = "badge badge-success";
+                    break;
+
+                case "rejected":
+                    colorClass = "badge badge-danger";
+                    break;
+
+                default:
+                    colorClass = "badge badge-secondary";
+            }
+
+                return `
+            <span class="${colorClass}" style="padding:6px 12px;border-radius:20px;font-size:12px;">
+                ${data}
+            </span>
+            <span class="history-container"
+                  data-candidate-id="${row.Id}"
+                  style="margin-left:5px;">
+            </span>
+        `;
+        }
+                function renderEditButton(data, type, row, meta)
+        {
+            return '<a class="btn btn-default" href="/Admin/Candidate/Edit?id='
+                + row.Id + '&jobPostingId=' + row.JobPostingId + '">Edit</a>';
+        }
+    </script>
+    <script>
+
+        function bulkUpdateCandidateStatus(statusId)
+        {
+            if (!selectedIds.length)
+            {
+                alert("Select at least one candidate");
+                return;
+            }
+
+            var postData =
+            {
+                candidateIds: selectedIds,
+                statusId: statusId
+            };
+
+            addAntiForgeryToken(postData);
+
+            $.ajax({
+                url: '@Url.Action("BulkUpdateStatus", "Candidate")',
+                type: 'POST',
+                data: postData,
+                traditional: true,
+                success: function ()
+                {
+                    updateTable('#candidate-grid');
+                    displayBarNotification("Status updated successfully", "success");
+                },
+                error: function ()
+                {
+                    alert("Error updating status");
+                }
+            });
+        }
+
+    </script>
+    <script>
+        $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
+            var postData = {
+                selectedIds: selectedIds
+            };
+            addAntiForgeryToken(postData);
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "@(Url.Action("DeleteSelected", "Candidate"))",
+                data: postData,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showAlert('deleteSelectedFailed', errorThrown);
+                },
+                complete: function (jqXHR, textStatus) {
+                    if (jqXHR.status === 204)
+                    {
+                        showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                        return;
+                    }
+                    updateTable('#candidate-grid');
+                }
+            });
+            $('#delete-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    </script>
+    <script>
+
+        var selectedIds = [];
+
+        // checkbox tracking
+        $(document).on('change', 'input[name="checkbox_categories"]', function () {
+
+            selectedIds = [];
+
+            $('input[name="checkbox_categories"]:checked').each(function () {
+                selectedIds.push($(this).val());
+            });
+        });
+
+        // EXPORT ALL (IMPORTANT FIX)
+                $(document).ready(function () {
+
+            $('.export-btn').click(function () {
+
+                const actionUrl = $(this).data('action');
+                const buttonName = $(this).data('button-name');
+
+                const form = $('#export-shared-form');
+
+                form.attr('action', actionUrl);
+
+                // Add hidden button required by [FormValueRequired]
+                form.find('button[type=submit]').remove();
+
+                const btn = $('<button type="submit" style="display:none;"></button>');
+                btn.attr('name', buttonName);
+
+                form.append(btn);
+
+                // Copy search values into hidden inputs
+                form.find('[name=SearchName]').val($('#@Html.IdFor(m => m.SearchName)').val());
+                form.find('[name=SearchEmail]').val($('#@Html.IdFor(m => m.SearchEmail)').val());
+                form.find('[name=SearchPositionApplied]').val($('#@Html.IdFor(m => m.SearchPositionApplied)').val());
+                form.find('[name=SearchCandidateTypeId]').val($('#@Html.IdFor(m => m.SearchCandidateTypeId)').val());
+                form.find('[name=SearchStatusId]').val($('#@Html.IdFor(m => m.SearchStatusId)').val());
+
+                btn.trigger('click');
+            });
+
+        });
+        // EXPORT SELECTED
+        $('#exportexcel-selected').click(function () {
+
+            if (!selectedIds.length) {
+                alert("Select at least one candidate");
+                return;
+            }
+
+            $('#selectedIds').val(selectedIds.join(','));
+            $('#export-excel-selected-form').submit();
+        });
+                     $('#candidate-grid').on('draw.dt', function () {
+
+            var table = $('#candidate-grid').DataTable();
+
+            table.rows().every(function () {
+
+                var rowData = this.data();
+                var rowNode = this.node();
+
+                var container = $(rowNode).find('.history-container');
+
+                if (!container.length || container.data('loaded'))
+                    return;
+
+                var candidateId = container.data('candidate-id');
+                var currentJobPostingId = rowData.JobPostingId; // IMPORTANT
+
+                $.ajax({
+                    url: '/Admin/Candidate/GetCandidateHistoryTooltip',
+                    type: 'GET',
+                    data: {
+                        candidateId: candidateId,
+                        currentJobPostingId: currentJobPostingId
+                    },
+                    success: function (result)
+                    {
+                        if (!result || result.trim() === "")
+                        {
+                            container.data('loaded', true);
+                            return;
+                        }
+
+                        var icon = $('<i class="fas fa-info-circle text-primary ml-1" style="cursor:pointer;"></i>');
+
+                        icon.tooltip({
+                            title: result,
+                            html: true,
+                            placement: 'right',
+                            container: 'body'
+                        });
+
+                        container.append(icon);
+                        container.data('loaded', true);
+                    },
+                    error: function ()
+                    {
+                        container.data('loaded', true);
+                    }
+                });
+            });
+
+        });
+    </script>
+    <script>
+                       function renderColumnDownloadId(data, type, row, meta)
+        {
+            return '<a class="btn btn-success" href="/Admin/JobPostings/DownloadResume?candidateId='
+                + row.Id +
+                '&jobPostingId=' + row.JobPostingId +
+                '"><i class="fas fa-download"></i> Download</a>';
+        }
+    </script>
+    <script>
+        async function loadCandidateSummary() {
+            try {
+                const response = await fetch('@Url.Action("GetCandidateSummary", "Candidate")');
+                if (!response.ok) throw new Error("Network error");
+
+                const data = await response.json();
+                const container = document.getElementById("candidate-summary");
+                container.innerHTML = "";
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = "<p>No summary found.</p>";
+                    return;
+                }
+
+                const table = document.createElement("table");
+                table.style.width = "100%";
+                table.style.borderCollapse = "collapse";
+                table.style.background = "#fff";
+                // STATUS ROW
+                const statusRow = document.createElement("tr");
+
+                const statusTitle = document.createElement("td");
+                statusTitle.innerHTML = "<strong>Status </strong>";
+                statusTitle.style.padding = "10px 15px";
+                statusTitle.style.border = "1px solid #ddd";
+                statusTitle.style.background = "#eef3f7";
+                statusRow.appendChild(statusTitle);
+
+                // ALL STATUS (reset everything)
+                const allStatusCell = document.createElement("td");
+                allStatusCell.style.padding = "10px 15px";
+                allStatusCell.style.border = "1px solid #ddd";
+                allStatusCell.style.cursor = "pointer";
+                allStatusCell.style.fontWeight = "bold";
+                allStatusCell.innerHTML = "All";
+
+                allStatusCell.onclick = () => {
+                    $('#SearchStatusId').val(0).trigger("change");
+                    $('#SearchCandidateTypeId').val(0).trigger("change");
+                    $('#search-Candidate').click();
+                };
+
+                statusRow.appendChild(allStatusCell);
+
+                data.filter(x => x.Type === "Status")
+                    .forEach(item => {
+
+                        const cell = document.createElement("td");
+                        cell.style.padding = "10px 15px";
+                        cell.style.border = "1px solid #ddd";
+                        cell.style.cursor = "pointer";
+                        cell.style.whiteSpace = "nowrap";
+
+                        cell.innerHTML = `${item.Name} (${item.Count})`;
+
+                        // Clicking STATUS resets Candidate Type
+                        cell.onclick = () => {
+                            $('#SearchCandidateTypeId').val(0).trigger("change"); // reset type
+                            $('#SearchStatusId').val(item.Id).trigger("change");
+                            $('#search-Candidate').click();
+                        };
+
+                        statusRow.appendChild(cell);
+                    });
+
+                table.appendChild(statusRow);
+                // CANDIDATE TYPE ROW
+                const typeRow = document.createElement("tr");
+
+                const typeTitle = document.createElement("td");
+                typeTitle.innerHTML = "<strong>Candidate Type </strong>";
+                typeTitle.style.padding = "10px 15px";
+                typeTitle.style.border = "1px solid #ddd";
+                typeTitle.style.background = "#eef3f7";
+                typeRow.appendChild(typeTitle);
+
+                //ALL TYPE (reset everything)
+                const allTypeCell = document.createElement("td");
+                allTypeCell.style.padding = "10px 15px";
+                allTypeCell.style.border = "1px solid #ddd";
+                allTypeCell.style.cursor = "pointer";
+                allTypeCell.style.fontWeight = "bold";
+                allTypeCell.innerHTML = "All";
+
+                allTypeCell.onclick = () => {
+                    $('#SearchStatusId').val(0).trigger("change");
+                    $('#SearchCandidateTypeId').val(0).trigger("change");
+                    $('#search-Candidate').click();
+                };
+
+                typeRow.appendChild(allTypeCell);
+
+                data.filter(x => x.Type === "CandidateType")
+                    .forEach(item => {
+
+                        const cell = document.createElement("td");
+                        cell.style.padding = "10px 15px";
+                        cell.style.border = "1px solid #ddd";
+                        cell.style.cursor = "pointer";
+                        cell.style.whiteSpace = "nowrap";
+
+                        cell.innerHTML = `${item.Name} (${item.Count})`;
+
+                        // ?? Clicking TYPE resets Status
+                        cell.onclick = () => {
+                            $('#SearchStatusId').val(0).trigger("change"); // reset status
+                            $('#SearchCandidateTypeId').val(item.Id).trigger("change");
+                            $('#search-Candidate').click();
+                        };
+
+                        typeRow.appendChild(cell);
+                    });
+
+                table.appendChild(typeRow);
+                container.appendChild(table);
+
+            } catch (err) {
+                console.error("Candidate Summary Error:", err);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadCandidateSummary);
+        $('#candidate-grid').on('draw.dt', loadCandidateSummary);
+    </script>
+    <nop-alert asp-alert-id="deleteSelectedFailed" />
+    <nop-alert asp-alert-id="nothingSelectedAlert" />
+</section>

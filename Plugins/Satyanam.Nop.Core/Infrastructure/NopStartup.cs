@@ -44,6 +44,12 @@ namespace Satyanam.Nop.Core.Infrastructure
             services.AddScoped<IUpdateSubmissionCommentService, UpdateSubmissionCommentService>();
             services.AddScoped<ILinkedInFollowupsService, LinkedInFollowupsService>();
             services.AddScoped<IConnectionRequestService, ConnectionRequestService>();
+            services.AddScoped<ICandidatesService, CandidatesService>();
+            services.AddScoped<ITechnologyService, TechnologyService>();
+            services.AddScoped<ISkillSetService, SkillSetService>();
+            services.AddScoped<ITechnologySkillMappingService, TechnologySkillMappingService>();
+            services.AddScoped<IJobPostingSkillMappingService, JobPostingSkillMappingService>();
+            services.AddScoped<IJobPostingTechnologyMappingService, JobPostingTechnologyMappingService>();
 
             services.AddScoped<ITaskCommentsService, TaskCommentsService>();
             services.AddScoped<ITaskChangeLogService, TaskChangeLogService>();

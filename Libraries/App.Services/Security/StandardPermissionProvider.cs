@@ -14,6 +14,10 @@ namespace App.Services.Security
 
         public static readonly PermissionRecord ManageTeamPerformanceMeasurement = new() { Name = "Admin area. Manage TeamPerformanceMeasurement", SystemName = "ManageTeamPerformanceMeasurement", Category = "Standard" };
         public static readonly PermissionRecord ManageAnnouncements = new() { Name = "Admin area. Manage Announcements", SystemName = "ManageAnnouncements", Category = "Standard" };
+        public static readonly PermissionRecord ManageCandidates = new() { Name = "Admin area. Manage Candidates", SystemName = "ManageCandidates", Category = "Standard" };
+        public static readonly PermissionRecord ManageTechnology = new() { Name = "Admin area. Manage Technology", SystemName = "ManageTechnology", Category = "Standard" };
+        public static readonly PermissionRecord ManageSkillSet = new() { Name = "Admin area. Manage SkillSet", SystemName = "ManageSkillSet", Category = "Standard" };
+
         public static readonly PermissionRecord ManageAnnouncementAcknowledgments = new() { Name = "Admin area. Manage Announcement Acknowledgments", SystemName = "ManageAnnouncementAcknowledgments", Category = "Standard" };
         public static readonly PermissionRecord AllowCustomerImpersonation = new() { Name = "Admin area. Allow Customer Impersonation", SystemName = "AllowCustomerImpersonation", Category = "Customers" };
         public static readonly PermissionRecord ManageCustomers = new() { Name = "Admin area. Manage Customers", SystemName = "ManageCustomers", Category = "Customers" };
@@ -248,7 +252,11 @@ namespace App.Services.Security
                 ManageAddRating,
                 ManageMonthlyReview,
                 ManageYearlyReview,
-                ManageProjectLeaderReview
+                ManageProjectLeaderReview,
+                ManageAlertReport,
+                ManageCandidates,
+                ManageTechnology,
+                ManageSkillSet
             };
         }
 

@@ -69,7 +69,7 @@ public partial interface ITrackerAPIService
 
     Task<ProjectTask> GetTaskTitleByProjectIdAsync(int projectId = 0, string projectTitle = null);
 
-    Task<IList<ProjectTask>> GetActiveProjectTasksForStartAsync(int projectId = 0, int taskId = 0, int assignedTo = 0, int statusId = 0);
+    Task<IList<ProjectTask>> GetActiveProjectTasksToHoldAsync(int taskId = 0, int assignedTo = 0, int statusId = 0);
 
     Task<IList<ProjectTask>> GetProjectTasksByProjectIdAsync(int projectId = 0, int assignedTo = 0, bool showHidden = false);
 

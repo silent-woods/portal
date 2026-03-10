@@ -1,0 +1,23 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.Technologys
+@model TechnologyModel
+@{
+    const string hideInfoBlockAttributeName = "TechnologyDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+<input asp-for="Id" type="hidden" />
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="Technology-item-cards">
+                <nop-card asp-name="Technology-item-info"
+                          asp-icon="fas fa-info" 
+                          asp-title="@T("Admin.Technology.Info")"
+                          asp-hide-block-attribute-name="@hideInfoBlockAttributeName"
+                          asp-hide="@hideInfoBlock">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Technology/_CreateOrUpdate.Info.cshtml", Model)
+                </nop-card>
+            </nop-cards>
+        </div>
+    </div>
+</section>

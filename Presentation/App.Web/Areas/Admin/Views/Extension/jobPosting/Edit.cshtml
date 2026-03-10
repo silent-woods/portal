@@ -5,8 +5,13 @@
     ViewBag.PageTitle = T("Admin.Configuration.JobPosting.EditJobPostingDetails").Text;
     //active menu item (system name)
     NopHtml.SetActiveMenuItemSystemName("JobPostings");
+
+    const string hideCandidatesBlockAttributeName = "JobPostingCandidates.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
+    var hideCandidatesBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCandidatesBlockAttributeName);
 }
-<form asp-controller="jobPostings" asp-action="Edit" method="post">
+<form asp-controller="JobPostings" asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
     <div class="content-header clearfix">
         <h1 class="float-left">
             @T("Admin.Configuration.JobPosting.EditJobPosting")
@@ -16,6 +21,25 @@
             </small>
         </h1>
         <div class="float-right">
+            <button type="button"
+                    class="btn btn-success"
+                    onclick="javascript:OpenWindow('@(Url.Action("InvitationCandidatesPopup", "JobPostings", new { jobPostingId = Model.Id }))', 1000, 650, true); return false;">
+                <i class="fas fa-paper-plane"></i>
+                Send Invitation
+            </button>
+
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.Save")
+            </button>
+            <button type="submit" name="save-continue" class="btn btn-primary">
+                <i class="far fa-save"></i>
+                @T("Admin.Common.SaveContinue")
+            </button>
+            <span id="JobPosting-delete" class="btn btn-danger">
+                <i class="far fa-trash-alt"></i>
+                @T("Admin.Common.Delete")
+            </span>
             @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageJobPosting, PermissionAction.Edit))
             {
                 <button type="submit" name="save" class="btn btn-primary">
@@ -39,3 +63,22 @@
     @await Html.PartialAsync("/Areas/Admin/Views/Extension/JobPosting/_CreateOrUpdate.cshtml", Model)
 </form>
 <nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="JobPosting-delete" />
+
+@if (Model.Id > 0)
+{
+    <div class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <nop-cards id="jobposting-candidate-cards">
+                    <nop-card asp-name="jobPosting-candidates"
+                              asp-icon="fas fa-users"
+                              asp-title="Candidates"
+                              asp-hide-block-attribute-name="@hideCandidatesBlockAttributeName"
+                              asp-hide="@hideCandidatesBlock">
+                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/JobPosting/_JobPostingCandidates.cshtml", Model)
+                    </nop-card>
+                </nop-cards>
+            </div>
+        </div>
+    </div>
+}

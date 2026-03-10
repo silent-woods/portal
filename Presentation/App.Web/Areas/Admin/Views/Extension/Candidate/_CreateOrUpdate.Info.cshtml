@@ -1,0 +1,237 @@
+﻿@using App.Web.Areas.Admin.Models.Extension.Candidates
+@model CandidateModel
+<input type="hidden" asp-for="Id" />
+<input type="hidden" asp-for="JobPostingId" />
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="FirstName" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="FirstName" asp-required="true" />
+            <span asp-validation-for="FirstName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="LastName" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="LastName" asp-required="true" />
+            <span asp-validation-for="LastName"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Email" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Email" asp-required="true" />
+            <span asp-validation-for="Email"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Phone" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Phone" />
+            <span asp-validation-for="Phone"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="PositionApplied" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="PositionApplied" />
+            <span asp-validation-for="PositionApplied"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ExperienceYears" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="ExperienceYears" />
+            <span asp-validation-for="ExperienceYears"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="SourceTypeId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="SourceTypeId" asp-items="Model.SourceTypeList" />
+            <span asp-validation-for="SourceTypeId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="StatusId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="StatusId" asp-items="Model.StatusList" />
+            <span asp-validation-for="StatusId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CandidateTypeId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="CandidateTypeId" asp-items="Model.AvailableCandidateTypes" asp-required="true" />
+            <span asp-validation-for="CandidateTypeId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="PositionId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="PositionId" asp-items="Model.AvailablePosition" asp-required="true" />
+            <span asp-validation-for="PositionId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CurrentCompany" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="CurrentCompany" />
+            <span asp-validation-for="CurrentCompany"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CurrentCTC" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="CurrentCTC" />
+            <span asp-validation-for="CurrentCTC"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ExpectedCTC" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="ExpectedCTC" />
+            <span asp-validation-for="ExpectedCTC"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="NoticePeriodId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="NoticePeriodId" asp-items="Model.AvailableNoticePeriodDays" />
+            <span asp-validation-for="NoticePeriodId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="City" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="City" />
+            <span asp-validation-for="City"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="RateTypeId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="RateTypeId" asp-items="Model.RateTypeList" />
+            <span asp-validation-for="RateTypeId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="LinkTypeId" />
+        </div>
+        <div class="col-md-4">
+            <nop-select asp-for="LinkTypeId" asp-items="Model.LinkTypeList" />
+            <span asp-validation-for="LinkTypeId"></span>
+        </div>
+    </div>
+    <div class="form-group row" id="due-date-wrapper">
+        <div class="col-md-3">
+            <nop-label asp-for="Url" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Url" />
+            <span asp-validation-for="Url"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Amount" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="Amount" />
+            <span asp-validation-for="Amount"></span>
+        </div>
+    </div>
+    <div class="form-group row" id="resume-upload">
+        <div class="col-md-3">
+            <nop-label asp-for="ResumeDownloadId" />
+        </div>
+        <div class="col-md-7">
+            <nop-editor asp-for="ResumeDownloadId" />
+            <span asp-validation-for="ResumeDownloadId"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Skills" />
+        </div>
+        <div class="col-md-4">
+            <nop-textarea asp-for="Skills" />
+            <span asp-validation-for="Skills"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CoverLetter" />
+        </div>
+        <div class="col-md-4">
+            <nop-textarea asp-for="CoverLetter" />
+            <span asp-validation-for="CoverLetter"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="AdditionalInformation" />
+        </div>
+        <div class="col-md-4">
+            <nop-textarea asp-for="AdditionalInformation" />
+            <span asp-validation-for="AdditionalInformation"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="HrNotes" />
+        </div>
+        <div class="col-md-4">
+            <nop-textarea asp-for="HrNotes" />
+            <span asp-validation-for="HrNotes"></span>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+
+        // remove ANY checkbox inside resume uploader (this is the "Use download URL")
+        $("#resume-upload").find("input[type='checkbox']").closest("div").remove();
+        $("#resume-upload label:contains('Use download URL')")
+            .closest("div")
+            .remove();
+
+    });
+</script>

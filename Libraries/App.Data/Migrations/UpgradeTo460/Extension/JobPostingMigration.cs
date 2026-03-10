@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Nop.Data.Migrations.UpgradeTo460
 {
-    [NopMigration("2024-06-26 01:01:12", "JobPostingMigration for 4.60.0", MigrationProcessType.Update)]
+    [NopMigration("2026-02-11 12:00:00", "JobPostingMigration for 4.60.0", MigrationProcessType.Update)]
     public class JobPostingMigration : Migration
     {
         #region Fields

@@ -1,0 +1,67 @@
+@using Satyanam.Nop.Core.Domains
+@model IList<App.Core.Domain.JobPostings.JobPosting>
+
+@{
+    Layout = "_ColumnsOne";
+    ViewBag.Title = "Careers";
+}
+<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/updatetemplatesheet.css")" />
+
+<div class="careers-page">
+    <div class="careers-hero">
+        <div class="badge"> @T("Career.Title")</div>
+        <h2>@T("Career.Title.JoinOurTeam")</h2>
+        <p>@T("Career.Title.SubTitle")</p>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="no-openings">
+            <p>@T("Career.Title.NoOpening")</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var job in Model)
+        {
+            <div class="job-card">
+                <div class="job-card-header">
+                    <div class="job-title">@job.Title</div>
+                    <button class="toggle-btn" data-target="job-@job.Id">
+                        @T("Career.ViewDetails")
+                    </button>
+                </div>
+                <div id="job-@job.Id" class="job-detail-box" style="display:none;">
+                    <div class="job-description">
+                        @Html.Raw(job.Description)
+                    </div>
+                    <div>
+                        <a asp-controller="CandidatePublic" asp-action="Apply" asp-route-jobId="@job.Id" class="apply-btn">
+                            @T("Career.Title.ApplyNow")
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".toggle-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                var targetId = this.getAttribute("data-target");
+                var target = document.getElementById(targetId);
+
+                if (target.style.display === "none") {
+                    target.style.display = "block";
+                    this.innerText = "Hide Details ";
+                    this.classList.add("active");
+                } else {
+                    target.style.display = "none";
+                    this.innerText = "View Details ";
+                    this.classList.remove("active");
+                }
+            });
+        });
+    });
+</script>

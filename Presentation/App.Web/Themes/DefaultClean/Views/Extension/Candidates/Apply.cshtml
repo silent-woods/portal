@@ -1,0 +1,159 @@
+@using App.Web.Models.Extensions.Candidate
+@model CandidatePublicModel
+@{
+    Layout = "_ColumnsOne";
+    NopHtml.AddTitleParts("Apply");
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-update-form-page");
+}
+<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/updatetemplatesheet.css")" />
+<div class="cv-wrapper">
+    <div class="cv-card">
+        <form asp-controller="CandidatePublic"
+              asp-action="Apply"
+              method="post"
+              enctype="multipart/form-data">
+            <input type="hidden" asp-for="JobPostingId" />
+            <input type="hidden" asp-for="CandidateTypeId" />
+            <input type="hidden" asp-for="IsFreelancer" />
+            <input type="hidden" asp-for="CandidateId" />
+
+            <div class="cv-group">
+                <label asp-for="FirstName" class="cv-label"></label>
+                <input asp-for="FirstName" class="cv-input" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+
+            <div class="cv-group">
+                <label asp-for="LastName" class="cv-label"></label>
+                <input asp-for="LastName" class="cv-input" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+
+            <div class="cv-group">
+                <label asp-for="Email" class="cv-label"></label>
+                <input asp-for="Email" class="cv-input" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="cv-group">
+                <label asp-for="Phone" class="cv-label"></label>
+                <input asp-for="Phone" class="cv-input" />
+            </div>
+            @if (Model.IsFreelancer)
+            {
+                <div class="cv-group">
+                    <label asp-for="RateTypeId" class="cv-label"></label>
+                    <select asp-for="RateTypeId"
+                            asp-items="Model.AvailableRateTypes"
+                            class="cv-input">
+                    </select>
+                </div>
+
+                <div class="cv-group">
+                    <label asp-for="Amount" class="cv-label"></label>
+                    <input asp-for="Amount"type="number"class="cv-input"placeholder="Enter your rate" />
+                </div>
+
+                <div class="cv-group">
+                    <label asp-for="CoverLetter" class="cv-label"></label>
+                    <textarea asp-for="CoverLetter"
+                              class="cv-textarea"></textarea>
+                </div>
+            }
+            else
+            {
+                <div class="cv-group">
+                    <label asp-for="ExperienceYears" class="cv-label"></label>
+                    <input asp-for="ExperienceYears" class="cv-input" />
+                </div>
+                <div class="cv-group">
+                    <label asp-for="CurrentCompany" class="cv-label"></label>
+                    <input asp-for="CurrentCompany" class="cv-input" />
+                </div>
+                <div class="cv-flex-row">
+                    <div class="cv-group">
+                        <label asp-for="CurrentCTC" class="cv-label"></label>
+                        <input asp-for="CurrentCTC" type="number" class="cv-input" placeholder="Current CTC" />
+                    </div>
+                    <div class="cv-group">
+                        <label asp-for="ExpectedCTC" class="cv-label"></label>
+                        <input asp-for="ExpectedCTC" type="number" class="cv-input" placeholder="Expected CTC" />
+                    </div>
+                </div>
+                <div class="cv-group">
+                    <label asp-for="City" class="cv-label"></label>
+                    <input asp-for="City" class="cv-input" />
+                </div>
+                <div class="cv-group">
+                    <label asp-for="NoticePeriodId" class="cv-label"></label>
+                    <select asp-for="NoticePeriodId" asp-items="Model.AvailableNoticePeriods" class="cv-input"></select>
+                    <span asp-validation-for="NoticePeriodId" class="text-danger"></span>
+                </div>
+                <div class="cv-group">
+                    <label asp-for="Skills" class="cv-label"></label>
+                    <textarea asp-for="Skills" class="cv-textarea"></textarea>
+                </div>
+                <div class="cv-group">
+                    <label asp-for="AdditionalInformation" class="cv-label"></label>
+                    <textarea asp-for="AdditionalInformation" class="cv-textarea"></textarea>
+                </div>
+            }
+            <div class="cv-group">
+                <label class="cv-label">@T("Apply.Uploadfile")</label>
+                <div class="cv-upload-box">
+                    <input asp-for="ResumeFile" type="file" id="resumeInput" class="cv-hidden-file" />
+                    <button type="button" id="btnChooseFile" class="cv-btn-upload">
+                        @T("Apply.Uploadfile")
+                    </button>
+                    <span id="fileName" class="cv-file-name text-success"></span>
+                    <button type="button" id="btnRemoveFile"
+                            class="cv-btn-remove"
+                            style="display:none;">
+                        @T("Apply.Remove")
+                    </button>
+
+                    <span asp-validation-for="ResumeFile" class="text-danger"></span>
+                </div>
+            </div>
+            <button type="submit" class="cv-btn">
+                @T("Apply.Submit")
+            </button>
+        </form>
+        @if (TempData["success"] != null)
+        {
+            <div class="alert alert-success mt-3">
+                @TempData["success"]
+            </div>
+        }
+    </div>
+</div>
+<script>
+       document.addEventListener("DOMContentLoaded", function () {
+
+        const input = document.getElementById("resumeInput");
+        const chooseBtn = document.getElementById("btnChooseFile");
+        const removeBtn = document.getElementById("btnRemoveFile");
+        const fileName = document.getElementById("fileName");
+
+        chooseBtn.onclick = () => input.click();
+
+        input.onchange = function () {
+            if (this.files.length > 0) {
+                fileName.innerText = this.files[0].name;
+                removeBtn.style.display = "inline-block";
+
+                // trigger validation refresh
+                $(input).valid();
+            }
+        };
+
+        removeBtn.onclick = function () {
+            input.value = "";
+            fileName.innerText = "";
+            removeBtn.style.display = "none";
+
+            $(input).valid();
+        };
+    });
+</script>

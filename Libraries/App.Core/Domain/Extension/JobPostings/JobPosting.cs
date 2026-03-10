@@ -11,6 +11,7 @@ namespace App.Core.Domain.JobPostings
         public string Description { get; set; }
         public int PositionId { get; set; }
         public bool Publish { get; set; }
+        public int CandidateTypeId { get; set; }
         public DateTime CreatedOn { get; set; }
         public DateTime UpdatedOn { get; set; }
        

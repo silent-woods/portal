@@ -351,3 +351,326 @@
         color: #dc3545;
         border: 1px solid #f5c2c7;
     }
+}
+
+
+/* ===== PAGE BG ===== */
+body {
+    background: #f5f6f8;
+}
+
+/* ===== WRAPPER ===== */
+.cv-wrapper {
+    max-width: 600px;
+    margin: 60px auto;
+}
+
+/* ===== CARD ===== */
+.cv-card {
+    background: #fff;
+    padding: 35px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* ===== TITLE ===== */
+.cv-title {
+    font-size: 26px;
+    font-weight: 600;
+}
+
+.cv-subtitle {
+    color: #777;
+    margin-bottom: 25px;
+}
+
+/* ===== FORM GROUP ===== */
+.cv-group {
+    margin-bottom: 18px;
+}
+
+/* ===== INPUTS ===== */
+.cv-input,
+.cv-textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #dcdcdc;
+    background: #fff;
+}
+
+    .cv-input:focus,
+    .cv-textarea:focus {
+        border-color: #2bb673;
+        outline: none;
+    }
+
+.cv-textarea {
+    height: 110px;
+}
+
+/* ===== DRAG DROP BOX ===== */
+.cv-upload {
+    border: 2px dashed #dcdcdc;
+    border-radius: 8px;
+    text-align: center;
+    padding: 30px;
+    background: #fafafa;
+    cursor: pointer;
+    position: relative;
+}
+
+    .cv-upload:hover {
+        border-color: #2bb673;
+    }
+
+    .cv-upload input {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+.cv-upload-icon {
+    font-size: 32px;
+    color: #bbb;
+    margin-bottom: 8px;
+}
+
+/* ===== BUTTON ===== */
+.cv-btn {
+    width: 100%;
+    padding: 12px;
+    background: #2bb673;
+    border: none;
+    color: white;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+    .cv-btn:hover {
+        background: #239a61;
+    }
+.cv-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #444;
+}
+.cv-upload-box {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.cv-btn-upload {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+}
+
+.cv-btn-remove {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+.cv-file-name {
+    font-weight: 600;
+}
+.cv-hidden-file {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+}
+
+.careers-page {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 16px 40px;
+}
+
+.careers-hero {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    border-radius: 16px;
+    padding: 48px 24px;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+    .careers-hero .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(8px);
+        border-radius: 999px;
+        padding: 6px 16px;
+        font-size: 14px;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 16px;
+        border: none;
+    }
+
+    .careers-hero h2 {
+        font-size: 36px;
+        font-weight: 800;
+        color: #fff;
+        margin: 0 0 8px;
+        letter-spacing: -0.5px;
+    }
+
+    .careers-hero p {
+        font-size: 17px;
+        color: rgba(255,255,255,0.8);
+        margin: 0;
+    }
+
+.jobs-header {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .jobs-header .count {
+        font-weight: 400;
+        color: #64748b;
+        font-size: 15px;
+    }
+
+.job-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px -2px rgba(37,99,235,0.08);
+    transition: box-shadow 0.3s ease;
+    overflow: hidden;
+}
+
+    .job-card:hover {
+        box-shadow: 0 8px 30px -4px rgba(37,99,235,0.15);
+    }
+
+.job-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+}
+
+    .job-card-header .job-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+    }
+
+.toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+    .toggle-btn:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #1e293b;
+    }
+
+    .toggle-btn.active {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        color: #2563eb;
+    }
+
+.job-detail-box {
+    border-top: 1px solid #e2e8f0;
+    padding: 20px 24px;
+    animation: slideDown 0.2s ease-out;
+}
+
+
+    .job-detail-box .job-description {
+        font-size: 14px;
+        line-height: 1.7;
+        color: #64748b;
+    }
+
+        .job-detail-box .job-description strong {
+            color: #1e293b;
+        }
+
+        .job-detail-box .job-description ul {
+            padding-left: 20px;
+            margin: 12px 0;
+        }
+
+        .job-detail-box .job-description li {
+            margin-bottom: 6px;
+        }
+
+            .job-detail-box .job-description li::marker {
+                color: #2563eb;
+            }
+
+.apply-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    background: #2563eb;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    margin-top: 16px;
+    font-family: inherit;
+}
+
+    .apply-btn:hover {
+        background: #1d4ed8;
+        color: #fff;
+        text-decoration: none;
+    }
+
+.no-openings {
+    text-align: center;
+    padding: 64px 24px;
+    color: #94a3b8;
+    font-size: 16px;
+}
+.cv-flex-row {
+    display: flex;
+    gap: 15px;
+}
+
+.cv-flex-item {
+    flex: 1;
+}

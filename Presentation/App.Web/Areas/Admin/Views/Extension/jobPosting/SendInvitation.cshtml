@@ -1,0 +1,305 @@
+﻿@using App.Web.Areas.Admin.Models.JobPostings
+@model JobPostingModel
+@{
+    Layout = "_AdminPopupLayout";
+    const string hideSearchBlockAttributeName = "CandidateListPage.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+
+<input type="hidden" asp-for="Id" />
+@Html.AntiForgeryToken()
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.CandidateModel.Candidate")
+    </h1>
+    <div class="float-right">
+        <div class="btn-group">
+            <button type="button" id="btnSendInvitation" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i>
+                Send Invitation
+            </button>
+        </div>
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-5">
+                                            <nop-label asp-for="InvitationCandidateSearchModel.SearchName" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <nop-editor asp-for="InvitationCandidateSearchModel.SearchName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-5">
+                                            <nop-label asp-for="InvitationCandidateSearchModel.SearchEmail" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <nop-editor asp-for="InvitationCandidateSearchModel.SearchEmail" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-5">
+                                            <nop-label asp-for="InvitationCandidateSearchModel.SearchCandidateTypeId" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <nop-select asp-for="InvitationCandidateSearchModel.SearchCandidateTypeId" asp-items="Model.InvitationCandidateSearchModel.AvailableCandidateTypeName" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-5">
+                                            <nop-label asp-for="InvitationCandidateSearchModel.SearchStatusId" />
+                                        </div>
+                                        <div class="col-md-7">
+                                            <nop-select asp-for="InvitationCandidateSearchModel.SearchStatusId" asp-items="Model.InvitationCandidateSearchModel.AvailableStatus" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-Candidate" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-default">
+                    <div class="card-body">
+                        @if (Model.Id > 0)
+                        {
+                            @await Html.PartialAsync("Table", new DataTablesModel
+                            {
+                                Name = "invitation-candidates-grid",
+
+                                                UrlRead = new DataUrl(
+                                                "InvitationCandidates",
+                                                "JobPostings",
+                                                new RouteValueDictionary
+                                                {
+                                                    [nameof(Model.InvitationCandidateSearchModel.JobPostingId)] = Model.Id
+                                                }),
+                                                SearchButtonId = "search-Candidate",
+                                                Length = Model.InvitationCandidateSearchModel.PageSize,
+                                                LengthMenu = Model.InvitationCandidateSearchModel.AvailablePageSizes,
+
+                                                ColumnCollection = new List<ColumnProperty>
+                                                {
+                                                new ColumnProperty(nameof(InvitationCandidateModel.Id))
+                                                {
+                                                IsMasterCheckBox = true,
+                                                Render = new RenderCheckBox("selectedIds"),
+                                                ClassName = NopColumnClassDefaults.CenterAll,
+                                                Width = "50"
+                                                },
+
+                                                new ColumnProperty(nameof(InvitationCandidateModel.Name))
+                                                {
+                                                Title = T("Admin.JobPosting.Candidates.Name").Text
+                                                },
+
+                                                new ColumnProperty(nameof(InvitationCandidateModel.Email))
+                                                {
+                                                Title = T("Admin.JobPosting.Candidates.Email").Text
+                                                },
+
+                                                new ColumnProperty(nameof(InvitationCandidateModel.CandidateTypeName))
+                                                {
+                                                Title = T("Admin.JobPosting.Candidates.CandidateTypeName").Text
+                                                },
+
+                                                new ColumnProperty(nameof(InvitationCandidateModel.Status))
+                                                {
+                                                Title = T("Admin.JobPosting.Candidates.Status").Text,
+                                                Width = "150",
+                                                ClassName = NopColumnClassDefaults.CenterAll,
+                                                Render = new RenderCustom("renderInvitationStatusBadge")
+
+                                                },
+
+                                                new ColumnProperty(nameof(InvitationCandidateModel.CreatedOnUtc))
+                                                {
+                                                Title = T("Admin.JobPosting.Candidates.CreatedOn").Text,
+                                                Render = new RenderDate()
+                                                }
+                                                }
+                                                })
+                                                }
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    $(document).ready(function () {
+
+        // Search parameters injection
+        $('#invitation-candidates-grid').on('preXhr.dt', function (e, settings, data) {
+
+            data.SearchName = $('#InvitationCandidateSearchModel_SearchName').val();
+            data.SearchEmail = $('#InvitationCandidateSearchModel_SearchEmail').val();
+            data.SearchCandidateTypeId = $('#InvitationCandidateSearchModel_SearchCandidateTypeId').val();
+            data.SearchStatusId = $('#InvitationCandidateSearchModel_SearchStatusId').val();
+
+            data.JobPostingId = @Model.Id;
+        });
+
+        // Send Invitation button
+        $('#btnSendInvitation').click(function () {
+
+            var selectedIds = [];
+
+            $('input[name="selectedIds"]:checked').each(function () {
+                selectedIds.push($(this).val());
+            });
+
+            if (selectedIds.length === 0) {
+                alert('Please select at least one candidate.', 'error');
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("SendInvitationToSelected", "JobPostings")",
+                data: {
+                    selectedIds: selectedIds,
+                    jobPostingId: @Model.Id,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                traditional: true,
+                beforeSend: function () {
+                    $('#btnSendInvitation').prop('disabled', true);
+                },
+                success: function (result) {
+                    if (result.success) {
+                        alert(result.message, 'success');
+                        $('#invitation-candidates-grid').DataTable().ajax.reload();
+                    } else {
+                        alert(result.message, 'error');
+                    }
+                    $('#btnSendInvitation').prop('disabled', false);
+                },
+                error: function () {
+                    alert('Error while sending invitation.', 'error');
+                    $('#btnSendInvitation').prop('disabled', false);
+                }
+            });
+
+        });
+
+    });
+                         function renderInvitationStatusBadge(data, type, row, meta) {
+
+        if (!data) return "";
+
+        var colorClass = "";
+
+        switch (data.toLowerCase()) {
+            case "applied":
+                colorClass = "badge badge-primary";
+                break;
+            case "shortlisted":
+                colorClass = "badge badge-warning";
+                break;
+            case "interview":
+                colorClass = "badge badge-info";
+                break;
+            case "hired":
+                colorClass = "badge badge-success";
+                break;
+            case "rejected":
+                colorClass = "badge badge-danger";
+                break;
+            default:
+                colorClass = "badge badge-secondary";
+        }
+
+        return `
+            <span class="${colorClass}"
+                  style="padding:6px 12px;border-radius:20px;font-size:12px;">
+                ${data}
+            </span>
+
+            <i class="fas fa-info-circle text-primary ml-2 history-icon"
+               data-candidate-id="${row.Id}"
+               style="cursor:pointer;"></i>
+        `;
+    }
+                   $(document).ready(function () {
+
+        $('body').tooltip({
+            selector: '[data-toggle="tooltip"]',
+            html: true,
+            container: 'body'
+        });
+
+        $('#invitation-candidates-grid').on('mouseenter', '.history-icon', function () {
+
+            var icon = $(this);
+
+            if (icon.data('loaded'))
+                return;
+
+            var candidateId = icon.data('candidate-id');
+
+            if (!candidateId)
+                return;
+
+            $.ajax({
+                url: '@Url.Action("GetCandidateHistoryTooltip", "JobPostings", new { area = "Admin" })',
+                type: 'GET',
+                data: { candidateId: candidateId },
+                success: function (result) {
+
+                    if (!result || result.trim() === "")
+                        return;
+
+                    icon.attr('title', result)
+                        .attr('data-toggle', 'tooltip')
+                        .attr('data-html', 'true');
+
+                    icon.tooltip({
+                        placement: 'right',
+                        container: 'body'
+                    });
+
+                    icon.tooltip('show');
+
+                    icon.data('loaded', true);
+                },
+                error: function (xhr) {
+                    console.log(xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+

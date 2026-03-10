@@ -55,23 +55,23 @@
                                             <nop-editor asp-for="Title" />
                                         </div>
                                     </div>
-                                    </div>
+                                </div>
                                 <div class="col-md-6">
                                     <div class="form-group row">
                                         <div class="col-sm-3">
                                             <nop-label asp-for="PositionId" />
                                         </div>
                                         <div class="col-sm-4">
-                                            <nop-select asp-for="PositionId" asp-items="Model.AvailablePosition"  />
+                                            <nop-select asp-for="PositionId" asp-items="Model.AvailablePosition" />
                                             <span asp-validation-for="PositionId"></span>
                                         </div>
                                     </div>
-                                    </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="text-center col-12">
-                                    <button type="button" id="search-posting" class="btn btn-primary
+                        </div>
+                        <div class="row">
+                            <div class="text-center col-12">
+                                <button type="button" id="search-posting" class="btn btn-primary
                                          btn-search">
                                         <i class="fas fa-search"></i>
                                         @T("Admin.Common.Search")
@@ -144,6 +144,80 @@
             </div>
         </div>
    
+                                    <i class="fas fa-search"></i>
+                                    @T("Admin.Common.Search")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-default">
+                <div class="card-body">
+
+                    @await Html.PartialAsync("Table", new DataTablesModel
+                    {
+                        Name = "jobPostings-grid",
+                                        UrlRead = new DataUrl("List", "JobPostings", null),
+                                        SearchButtonId = "search-posting",
+                                        Length = Model.PageSize,
+                                        LengthMenu = Model.AvailablePageSizes,
+                                        Filters = new List<FilterParameter>
+                                        {
+                                        new FilterParameter(nameof(Model.Title)),
+                                        new FilterParameter(nameof(Model.PositionId))
+                                        },
+                                        ColumnCollection = new List<ColumnProperty>
+                                        {
+                                        new ColumnProperty(nameof(JobPostingModel.Id))
+                                        {
+                                        IsMasterCheckBox = true,
+                                        Render = new RenderCheckBox("checkbox_categories"),
+                                        ClassName =  NopColumnClassDefaults.CenterAll,
+                                        Width = "30"
+                                        },
+                                        new ColumnProperty(nameof(JobPostingModel.Title))
+                                        {
+                                        Title = T("Admin.JobPosting.Fields.Title").Text
+                                        },
+                                        new ColumnProperty(nameof(JobPostingModel.Description))
+                                        {
+                                        Title = T("Admin.JobPosting.Fields.Description").Text
+                                        },
+                                        new ColumnProperty(nameof(JobPostingModel.Position))
+                                        {
+                                        Title = T("Admin.JobPosting.Fields.Position").Text
+                                        },
+                                        //new ColumnProperty(nameof(JobPostingModel.Publish))
+                                        //{
+                                        //Title = T("Admin.JobPosting.Fields.Publish").Text
+                                        //},
+
+                                        new ColumnProperty(nameof(JobPostingModel.CreateOn))
+                                        {
+                                        Title = T("Admin.JobPosting.Fields.CreateOn").Text,
+                                        Render = new RenderDate()
+                                        },
+                                        new ColumnProperty(nameof(JobPostingModel.UpdateOn))
+                                        {
+                                        Title = T("Admin.JobPosting.Fields.UpdateOn").Text,
+                                        Render = new RenderDate()
+                                        },
+                                        new ColumnProperty(nameof(JobPostingModel.Id))
+                                        {
+                                        Title = T("Admin.Common.Edit").Text,
+                                        Width ="80",
+                                        ClassName =  NopColumnClassDefaults.Button,
+                                        Render = new RenderButtonEdit(new DataUrl("Edit"))
+                                        }
+                                        }
+                                        })
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
             var postData = {
@@ -153,7 +227,7 @@
             $.ajax({
                 cache: false,
                 type: "POST",
-                url: "@(Url.Action("DeleteSelected", "jobPostings"))",
+                url: "@(Url.Action("DeleteSelected", "JobPostings"))",
                 data: postData,
                 error: function (jqXHR, textStatus, errorThrown) {
                     showAlert('deleteSelectedFailed', errorThrown);

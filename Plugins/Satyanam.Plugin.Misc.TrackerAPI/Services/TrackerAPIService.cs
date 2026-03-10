@@ -275,22 +275,12 @@ public partial class TrackerAPIService : ITrackerAPIService
         return await projectTask.FirstOrDefaultAsync();
     }
 
-    public virtual async Task<IList<ProjectTask>> GetActiveProjectTasksForStartAsync(int projectId = 0, int taskId = 0, int assignedTo = 0, int statusId = 0)
+    public virtual async Task<IList<ProjectTask>> GetActiveProjectTasksToHoldAsync(int taskId = 0, int assignedTo = 0, int statusId = 0)
     {
-        var currentTask = await _projectTaskRepository.GetByIdAsync(taskId);
-
-        if (currentTask == null)
-            return new List<ProjectTask>();
-
-        var query = _projectTaskRepository.Table.Where(pt => pt.ProjectId == projectId && !pt.IsDeleted && pt.Id != taskId && pt.StatusId == statusId && pt.Tasktypeid != (int)TaskTypeEnum.UserStory);
+        var query = _projectTaskRepository.Table.Where(pt => !pt.IsDeleted && pt.Id != taskId && pt.StatusId == statusId && pt.Tasktypeid != (int)TaskTypeEnum.UserStory);
 
         if (assignedTo > 0)
             query = query.Where(pt => pt.AssignedTo == assignedTo);
-
-        if (currentTask.ParentTaskId > 0)
-            query = query.Where(pt => pt.ParentTaskId == currentTask.ParentTaskId);
-        else
-            query = query.Where(pt => pt.ParentTaskId == 0);
 
         return await query.ToListAsync();
     }

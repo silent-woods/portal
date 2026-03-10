@@ -100,6 +100,9 @@ namespace App.Web.Infrastructure
             services.AddScoped<IWorkflowStatusModelFactory, WorkflowStatusModelFactory>();
             services.AddScoped<IProcessRulesModelFactory, ProcessRulesModelFactory>();
             services.AddScoped<IAnnouncementModelFactory, AnnouncementModelFactory>();
+            services.AddScoped<ICandidateModelFactory, CandidateModelFactory>();
+            services.AddScoped<ITechnologyModelFactory, TechnologyModelFactory>();
+            services.AddScoped<ISkillSetModelFactory, SkillSetModelFactory>();
 
 
 
