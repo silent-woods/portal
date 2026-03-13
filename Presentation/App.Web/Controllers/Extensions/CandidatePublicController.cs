@@ -10,10 +10,15 @@ using App.Services.Security;
 using App.Web.Controllers;
 using App.Web.Models.Extensions.Candidate;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Satyanam.Nop.Core.Domains;
 using Satyanam.Nop.Core.Services;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Nop.Web.Controllers
@@ -55,7 +60,33 @@ namespace Nop.Web.Controllers
         #endregion
 
         #region Utilities
+        private string GetEnumDescription(Enum value)
+        {
+            FieldInfo field = value.GetType().GetField(value.ToString());
 
+            if (field == null)
+                return value.ToString();
+
+            DescriptionAttribute attribute =
+                Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute))
+                as DescriptionAttribute;
+
+            return attribute == null ? value.ToString() : attribute.Description;
+        }
+
+        private SelectList GetNoticePeriodSelectList()
+        {
+            var items = Enum.GetValues(typeof(NoticePeriodDaysEnum))
+                .Cast<NoticePeriodDaysEnum>()
+                .Select(x => new SelectListItem
+                {
+                    Value = ((int)x).ToString(),
+                    Text = GetEnumDescription(x)
+                })
+                .ToList();
+
+            return new SelectList(items, "Value", "Text");
+        }
 
 
         #endregion
@@ -92,7 +123,7 @@ namespace Nop.Web.Controllers
 
             // dropdowns
             model.AvailableRateTypes = await RateTypeEnum.Select.ToSelectListAsync();
-            model.AvailableNoticePeriods = await NoticePeriodDaysEnum.Select.ToSelectListAsync();
+            model.AvailableNoticePeriods = GetNoticePeriodSelectList();
 
             return View("~/Themes/DefaultClean/Views/Extension/Candidates/Apply.cshtml", model);
         }
@@ -111,7 +142,7 @@ namespace Nop.Web.Controllers
             if (!ModelState.IsValid)
             {
                 model.AvailableRateTypes = await RateTypeEnum.Select.ToSelectListAsync();
-                model.AvailableNoticePeriods = await NoticePeriodDaysEnum.Select.ToSelectListAsync();
+                model.AvailableNoticePeriods = GetNoticePeriodSelectList();
 
                 return View("~/Themes/DefaultClean/Views/Extension/Candidates/Apply.cshtml", model);
             }

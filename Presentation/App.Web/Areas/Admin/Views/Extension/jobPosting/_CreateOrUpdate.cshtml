@@ -1,16 +1,14 @@
 ﻿@using App.Web.Areas.Admin.Models.JobPostings;
 @model JobPostingModel
-
 @{
-    var customer = await workContext.GetCurrentCustomerAsync();
     const string hideInfoBlockAttributeName = "JobPostingDetails.HideInfoBlock";
+    var customer = await workContext.GetCurrentCustomerAsync();
     var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
 
     // NEW (Candidates tab collapse setting)
     const string hideCandidatesBlockAttributeName = "JobPostingCandidates.HideInfoBlock";
     var hideCandidatesBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideCandidatesBlockAttributeName);
 }
-
 <input asp-for="Id" type="hidden" />
 <section class="content">
     <div class="container-fluid">

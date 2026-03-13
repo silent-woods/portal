@@ -10,7 +10,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Satyanam.Nop.Core.Domains;
 using Satyanam.Nop.Core.Services;
 using System;
+using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace App.Web.Areas.Admin.Factories
@@ -47,7 +49,16 @@ namespace App.Web.Areas.Admin.Factories
         #endregion
 
         #region Methods
+        private string GetEnumDescription(Enum value)
+        {
+            FieldInfo field = value.GetType().GetField(value.ToString());
 
+            DescriptionAttribute attribute =
+                Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute))
+                as DescriptionAttribute;
+
+            return attribute == null ? value.ToString() : attribute.Description;
+        }
         public Task<CandidateSearchModel> PrepareCandidateSearchModelAsync(CandidateSearchModel searchModel)
         {
             if (searchModel == null)
@@ -167,7 +178,13 @@ namespace App.Web.Areas.Admin.Factories
             var candidatesLinkType = await LinkTypeEnum.Select.ToSelectListAsync();
             var candidatesRateType = await RateTypeEnum.Select.ToSelectListAsync();
             var candidatesTypeName = await CandidateTypeEnum.Select.ToSelectListAsync();
-            var candidateNoticePeriod = await NoticePeriodDaysEnum.Select.ToSelectListAsync();
+            var candidateNoticePeriod = Enum.GetValues(typeof(NoticePeriodDaysEnum))
+    .Cast<NoticePeriodDaysEnum>()
+    .Select(x => new SelectListItem
+    {
+        Value = ((int)x).ToString(),
+        Text = GetEnumDescription(x)
+    }).ToList();
             var candidatePosition = await JobPositionEnum.Select.ToSelectListAsync();
             if (candidate != null)
             {

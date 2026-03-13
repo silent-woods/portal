@@ -40,24 +40,6 @@
                 <i class="far fa-trash-alt"></i>
                 @T("Admin.Common.Delete")
             </span>
-            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageJobPosting, PermissionAction.Edit))
-            {
-                <button type="submit" name="save" class="btn btn-primary">
-                    <i class="far fa-save"></i>
-                    @T("Admin.Common.Save")
-                </button>
-                <button type="submit" name="save-continue" class="btn btn-primary">
-                    <i class="far fa-save"></i>
-                    @T("Admin.Common.SaveContinue")
-                </button>
-            }
-            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageJobPosting, PermissionAction.Delete))
-            {
-                <span id="JobPosting-delete" class="btn btn-danger">
-                    <i class="far fa-trash-alt"></i>
-                    @T("Admin.Common.Delete")
-                </span>
-            }
         </div>
     </div>
     @await Html.PartialAsync("/Areas/Admin/Views/Extension/JobPosting/_CreateOrUpdate.cshtml", Model)

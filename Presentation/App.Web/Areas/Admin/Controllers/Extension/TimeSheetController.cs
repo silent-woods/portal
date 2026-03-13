@@ -191,7 +191,7 @@ namespace App.Web.Areas.Admin.Controllers
                 timeSheet.EmployeeId = model.EmployeeId;
                 (timeSheet.SpentHours, timeSheet.SpentMinutes) = await _timeSheetsService.ConvertSpentTimeAsync(model.SpentTime);
                 
-                    var prevProjectTask = await _projectTaskService.GetProjectTasksByIdAsync(prevTaskId);
+                    var prevProjectTask = await _projectTaskService.GetProjectTasksWithoutCacheByIdAsync(prevTaskId);
                     if (prevProjectTask != null)
                     {
 
@@ -219,12 +219,12 @@ namespace App.Web.Areas.Admin.Controllers
                 await _timeSheetsService.UpdateTimeSheetAsync(timeSheet);
 
                 // Update spent time for new task
-                var projectTask = await _projectTaskService.GetProjectTasksByIdAsync(model.TaskId);
+                var projectTask = await _projectTaskService.GetProjectTasksWithoutCacheByIdAsync(model.TaskId);
                 if (projectTask != null)
                 {
                     projectTask.DeliveryOnTime = await _timeSheetsService.IsTaskDeliveredOnTimeAsync(projectTask);
 
-                 
+
                     (projectTask.SpentHours, projectTask.SpentMinutes) = await _timeSheetsService.AddSpentTimeAsync(projectTask.SpentHours, projectTask.SpentMinutes, model.SpentHours, model.SpentMinutes);
                     await _projectTaskService.UpdateProjectTaskAsync(projectTask);
 
@@ -525,7 +525,7 @@ namespace App.Web.Areas.Admin.Controllers
 
                     foreach (var existingRow in existingTimeSheetRows)
                     {
-                        var projectTask = await _projectTaskService.GetProjectTasksByIdAsync(existingRow.TaskId);
+                        var projectTask = await _projectTaskService.GetProjectTasksWithoutCacheByIdAsync(existingRow.TaskId);
                         if (projectTask != null)
                         {
                             projectTask.SpentHours -= existingRow.SpentHours;
@@ -551,7 +551,7 @@ namespace App.Web.Areas.Admin.Controllers
                 // Add new rows or update existing rows
                 foreach (var row in model.TimeSheetRows)
                 {
-                    var projectTask = await _projectTaskService.GetProjectTasksByIdAsync(row.TaskId);
+                    var projectTask = await _projectTaskService.GetProjectTasksWithoutCacheByIdAsync(row.TaskId);
                     if (projectTask != null)
                     {
                         projectTask.SpentHours += row.SpentHours;

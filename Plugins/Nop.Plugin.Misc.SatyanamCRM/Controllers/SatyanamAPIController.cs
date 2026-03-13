@@ -1,6 +1,7 @@
 ﻿using App.Core.Domain.Extension.ProjectTasks;
 using App.Core.Domain.ProjectTasks;
 using App.Services.Configuration;
+using App.Services.JobPostings;
 using App.Services.Localization;
 using App.Services.Logging;
 using App.Services.Messages;
@@ -19,6 +20,7 @@ using Satyanam.Nop.Plugin.Misc.SatyanamCRM;
 using Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services;
 using Satyanam.Nop.Plugin.SatyanamCRM.Models;
 using Satyanam.Nop.Plugin.SatyanamCRM.Models.Inquiries;
+using Satyanam.Nop.Plugin.SatyanamCRM.Models.JobPostingApiModels;
 using Satyanam.Nop.Plugin.SatyanamCRM.Models.SatyanamAPIResponses;
 using System;
 using System.Collections.Generic;
@@ -37,18 +39,20 @@ namespace Nop.Plugin.Misc.SatyanamCRM.Controllers
         private readonly SatyanamAPISettings _satyanamAPISettings;
         private readonly IInquiryService _inquiryService;
         private readonly IWorkflowMessageCRMService _workflowMessageCRMService;
+        private readonly IJobPostingService _jobPostingService;
 
         #endregion
 
         #region Ctor 
 
-        public SatyanamAPIController(ILocalizationService localizationService, ILogger logger, SatyanamAPISettings satyanamAPISettings, IInquiryService inquiryService, IWorkflowMessageCRMService workflowMessageCRMService)
+        public SatyanamAPIController(ILocalizationService localizationService, ILogger logger, SatyanamAPISettings satyanamAPISettings, IInquiryService inquiryService, IWorkflowMessageCRMService workflowMessageCRMService, IJobPostingService jobPostingService)
         {
             _localizationService = localizationService;
             _logger = logger;
             _satyanamAPISettings = satyanamAPISettings;
             _inquiryService = inquiryService;
             _workflowMessageCRMService = workflowMessageCRMService;
+            _jobPostingService = jobPostingService;
         }
 
         #endregion
@@ -195,6 +199,95 @@ namespace Nop.Plugin.Misc.SatyanamCRM.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("api/careers/jobs", Name = "GetCareersJobs")]
+        public virtual async Task<IActionResult> GetCareersJobs()
+        {
+            var satyanamAPIResponseModel = new SatyanamAPIResponseModel();
+
+            try
+            {
+                // Allowed domain validation
+                var allowedDomainsSetting = _satyanamAPISettings.AllowedDomains;
+                var allowedDomains = allowedDomainsSetting?
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(d => d.Trim())
+                    .ToList() ?? new List<string>();
+
+                var origin = Request.Headers["Origin"].ToString();
+
+                if (allowedDomains.Any())
+                {
+                    if (!string.IsNullOrEmpty(origin))
+                    {
+                        var isAllowed = allowedDomains.Any(domain =>
+                            domain.Equals(origin, StringComparison.OrdinalIgnoreCase));
+
+                        if (!isAllowed)
+                        {
+                            return StatusCode(StatusCodes.Status403Forbidden, new
+                            {
+                                result = false,
+                                message = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.SatyanamCRM.API.AccessDenied")
+                            });
+                        }
+                    }
+                    else
+                    {
+                        return BadRequest(new
+                        {
+                            result = false,
+                            message = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.SatyanamCRM.API.MissingHeader")
+                        });
+                    }
+                }
+
+                // API authentication
+                satyanamAPIResponseModel = await CheckIfAuthenticated(satyanamAPIResponseModel);
+
+                if (!satyanamAPIResponseModel.Success)
+                {
+                    return Unauthorized(new
+                    {
+                        result = false,
+                        message = satyanamAPIResponseModel.ResponseMessage
+                    });
+                }
+
+                // Get job postings
+                var jobs = await _jobPostingService.GetAllJobPostingAsync("", 0, 0, int.MaxValue, false, null);
+
+                var publishedJobs = jobs
+                    .Where(x => x.Publish)
+                    .Select(x => new JobPostingApiModel
+                    {
+                        Id = x.Id,
+                        Title = x.Title,
+                        Description = x.Description
+                    })
+                    .ToList();
+
+                return Ok(new
+                {
+                    result = true,
+                    data = publishedJobs
+                });
+            }
+            catch (Exception ex)
+            {
+                await _logger.ErrorAsync("Error in Get Careers Jobs API: " + ex.Message, ex);
+
+                satyanamAPIResponseModel.Success = false;
+                satyanamAPIResponseModel.ResponseMessage =
+                    await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.SatyanamCRM.API.Error");
+
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    result = false,
+                    message = satyanamAPIResponseModel.ResponseMessage
+                });
+            }
+        }
         #endregion
     }
 }

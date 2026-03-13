@@ -14,21 +14,15 @@
         @T("Admin.Configuration.JobPosting")
     </h1>
     <div class="float-right">
-        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageJobPosting, PermissionAction.Add))
-        {
-            <a asp-action="Create" class="btn btn-primary">
-                <i class="fas fa-plus-square"></i>
-                @T("Admin.Common.AddNew")
-            </a>
-        }
-        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageJobPosting, PermissionAction.Delete))
-        {
-            <button type="button" id="delete-selected" class="btn btn-danger">
-                <i class="far fa-trash-alt"></i>
-                @T("Admin.Common.Delete.Selected")
-            </button>
-            <nop-action-confirmation asp-button-id="delete-selected" />
-        }
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus-square"></i>
+            @T("Admin.Common.AddNew")
+        </a>
+        <button type="button" id="delete-selected" class="btn btn-danger">
+            <i class="far fa-trash-alt"></i>
+            @T("Admin.Common.Delete.Selected")
+        </button>
+        <nop-action-confirmation asp-button-id="delete-selected" />
     </div>
 
 </div>
@@ -73,77 +67,6 @@
                             <div class="text-center col-12">
                                 <button type="button" id="search-posting" class="btn btn-primary
                                          btn-search">
-                                        <i class="fas fa-search"></i>
-                                        @T("Admin.Common.Search")
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card card-default">
-                    <div class="card-body">
-                        @{
-                            var gridModel = new DataTablesModel
-                            {
-                                Name = "jobPostings-grid",
-                                UrlRead = new DataUrl("List", "jobPostings", null),
-                                SearchButtonId = "search-posting",
-                                Length = Model.PageSize,
-                                LengthMenu = Model.AvailablePageSizes,
-                                Filters = new List<FilterParameter>
-                                {
-                                new FilterParameter(nameof(Model.Title)),
-                                new FilterParameter(nameof(Model.PositionId))
-                                },
-                            };
-
-                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.Id))
-                            {
-                                IsMasterCheckBox = true,
-                                Render = new RenderCheckBox("checkbox_jobpostings"),
-                                ClassName = NopColumnClassDefaults.CenterAll,
-                                Width = "30"
-                            });
-                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.Title))
-                            {
-                                Title = T("Admin.JobPosting.Fields.Title").Text
-                            });
-                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.Description))
-                            {
-                                Title = T("Admin.JobPosting.Fields.Description").Text
-                            });
-                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.Position))
-                            {
-                                Title = T("Admin.JobPosting.Fields.Position").Text
-                            });
-                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.CreateOn))
-                            {
-                                Title = T("Admin.JobPosting.Fields.CreateOn").Text,
-                                Render = new RenderDate()
-                            });
-                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.UpdateOn))
-                            {
-                                Title = T("Admin.JobPosting.Fields.UpdateOn").Text,
-                                Render = new RenderDate()
-                            });
-                            @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageJobPosting, PermissionAction.Edit))
-                            {
-                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(JobPostingModel.Id))
-                                {
-                                    Title = T("Admin.Common.Edit").Text,
-                                    Width = "80",
-                                    ClassName = NopColumnClassDefaults.Button,
-                                    Render = new RenderButtonEdit(new DataUrl("Edit"))
-                                });
-                            }
-                        }
-                        @await Html.PartialAsync("Table", gridModel)
-                    </div>
-                </div>
-            </div>
-        </div>
-   
                                     <i class="fas fa-search"></i>
                                     @T("Admin.Common.Search")
                                 </button>

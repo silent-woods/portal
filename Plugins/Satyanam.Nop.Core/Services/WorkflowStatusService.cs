@@ -48,18 +48,18 @@ namespace Satyanam.Nop.Core.Services
             if (processWorkflowId !=0)
                 query = query.Where(c => c.ProcessWorkflowId == processWorkflowId);
 
-            //if (statusNames != null && statusNames.Any())
-            //{
-            //    var normalizedStatuses = statusNames
-            //        .Where(s => !string.IsNullOrWhiteSpace(s))
-            //        .Select(s => s.Trim().ToLower())
-            //        .ToList();
+            if (statusNames != null && statusNames.Any())
+            {
+                var normalizedStatuses = statusNames
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Select(s => s.Trim().ToLower())
+                    .ToList();
 
-            //    query = query.Where(c =>
-            //        c.StatusName != null &&
-            //        normalizedStatuses.Any(ns =>
-            //            c.StatusName.Trim().ToLower() == ns));
-            //}
+                query = query.Where(c =>
+                    c.StatusName != null &&
+                    normalizedStatuses.Any(ns =>
+                        c.StatusName.Trim().ToLower() == ns));
+            }
 
             query = query.OrderBy(c => c.DisplayOrder);
 
