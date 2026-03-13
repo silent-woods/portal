@@ -127,8 +127,8 @@ namespace App.Data
                 Singleton<DataConfig>.Instance = Singleton<AppSettings>.Instance.Get<DataConfig>();
             }
 
-            if (!string.IsNullOrEmpty(Singleton<DataConfig>.Instance.ConnectionString))
-                Singleton<DataConfig>.Instance.ConnectionString = Core.Security.ConnectionSecurity.Decrypt(Singleton<DataConfig>.Instance.ConnectionString);
+            //if (!string.IsNullOrEmpty(Singleton<DataConfig>.Instance.ConnectionString))
+            //    Singleton<DataConfig>.Instance.ConnectionString = Core.Security.ConnectionSecurity.Decrypt(Singleton<DataConfig>.Instance.ConnectionString);
 
             return Singleton<DataConfig>.Instance;
         }

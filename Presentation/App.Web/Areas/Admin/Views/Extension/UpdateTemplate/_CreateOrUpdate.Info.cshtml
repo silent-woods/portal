@@ -352,16 +352,20 @@
 
         // Weekday buttons toggle and update hidden field
         $('.weekday-btn').on('click', function () {
-            $(this).toggleClass('active');
 
-            const selectedDays = $('.weekday-btn.active')
-                .map(function () { return $(this).data('day'); })
-                .get()
-                .join(',');
-            $('#SelectedWeekDays').val(selectedDays);
+    // Remove active from all buttons
+    $('.weekday-btn').removeClass('active');
 
-            updateSummaryAndToggleFields();
-        });
+    // Activate only clicked one
+    $(this).addClass('active');
+
+    // Store selected day
+    const selectedDay = $(this).data('day');
+
+    $('#SelectedWeekDays').val(selectedDay);
+
+    updateSummaryAndToggleFields();
+});
 
         // ✅ NEW: Activate weekday buttons on page load based on SelectedWeekDays
         var selectedDaysString = '@(Model.SelectedWeekdays ?? "")';

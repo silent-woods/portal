@@ -1786,7 +1786,18 @@ public partial class TrackerAPIController : BaseController
                 model.AvailableProjects.Add(projectsRootObject);
             }
 
-            var activeProjectTasks = await _trackerAPIService.GetActiveProjectTasksToHoldAsync(taskId: parameters.TaskId, assignedTo: assignedTo, statusId: existingTask.StatusId);
+            var statusIds = new List<int>();
+            var processWorkflows = await _trackerAPIService.GetAllProcessWorkflowsAsync();
+            foreach (var processWorkflow in processWorkflows)
+            {
+                var activeWorkflowStatus = (await _trackerAPIService.GetWorkflowStatusesByProcessWorkflowIdAsync(processWorkflowId: processWorkflow.Id)).
+                    Where(ws => ws.StatusName == TrackerAPIDefaults.Active && ws.IsDefaultDeveloperStatus).FirstOrDefault();
+                if (activeWorkflowStatus != null)
+                    statusIds.Add(activeWorkflowStatus.Id);
+            }
+
+            var activeProjectTasks = await _trackerAPIService.GetActiveProjectTasksToHoldAsync(taskId: parameters.TaskId, 
+                assignedTo: trackerAPIResponseModel.EmployeeId, statusIds: statusIds);
             foreach (var activeProjectTask in activeProjectTasks)
             {
                 var workflowStatus = (await _trackerAPIService.GetWorkflowStatusesByProcessWorkflowIdAsync(activeProjectTask.ProcessWorkflowId)).Where(ws => ws.StatusName == TrackerAPIDefaults.Hold).FirstOrDefault();
@@ -1860,48 +1871,25 @@ public partial class TrackerAPIController : BaseController
             DateTime? nextFollowupDateTime = null;
             if (existingTask != null)
             {
-                var existingTaskAlertLog =
-                    await _taskAlertService.GetTaskAlertLogByEmployeeAndTaskIdAsync(
-                        employeeId: parameters.EmployeeId,
-                        taskId: existingTask.Id);
-
-                TimeZoneInfo officeTimeZone =
-                    TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
-
-                DateTime officeNow =
-                    TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, officeTimeZone);
-
-                int estimatedMinutes =
-                    await _trackerAPIService.ConvertHoursToMinutes(existingTask.EstimatedTime);
-
-                int totalSpentMinutes =
-                    (existingTask.SpentHours * 60) + existingTask.SpentMinutes;
+                var existingTaskAlertLog = await _taskAlertService.GetTaskAlertLogByEmployeeAndTaskIdAsync(employeeId: parameters.EmployeeId, taskId: existingTask.Id);
+                TimeZoneInfo officeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+                DateTime officeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, officeTimeZone);
+                int estimatedMinutes = await _trackerAPIService.ConvertHoursToMinutes(existingTask.EstimatedTime);
+                int totalSpentMinutes = (existingTask.SpentHours * 60) + existingTask.SpentMinutes;
 
                 if (existingTaskAlertLog == null)
                 {
-                    var firstConfiguration =
-                        (await _taskAlertService.GetAllTaskAlertConfigurationsAsync())
-                        .OrderBy(x => x.Percentage)
-                        .FirstOrDefault();
-
+                    var firstConfiguration = (await _taskAlertService.GetAllTaskAlertConfigurationsAsync()).OrderBy(x => x.Percentage).FirstOrDefault();
                     if (firstConfiguration != null)
                     {
-                        int targetMinutes =
-                            (int)Math.Round(estimatedMinutes * (firstConfiguration.Percentage / 100m));
-
+                        int targetMinutes = (int)Math.Round(estimatedMinutes * (firstConfiguration.Percentage / 100m));
                         int remainingMinutes = targetMinutes - totalSpentMinutes;
 
                         if (remainingMinutes > 0)
                         {
-                            DateTime adjustedOfficeTime =
-                                AdjustToOfficeHours(officeNow, remainingMinutes, officeTimeZone);
-
-                            nextFollowupDateTime =
-                                TimeZoneInfo.ConvertTimeToUtc(adjustedOfficeTime, officeTimeZone);
-
-                            var existingFollowupTask =
-                                await _followUpTaskService.GetFollowUpTaskByTaskIdAsync(parameters.TaskId);
-
+                            DateTime adjustedOfficeTime = AdjustToOfficeHours(officeNow, remainingMinutes, officeTimeZone);
+                            nextFollowupDateTime = TimeZoneInfo.ConvertTimeToUtc(adjustedOfficeTime, officeTimeZone);
+                            var existingFollowupTask = await _followUpTaskService.GetFollowUpTaskByTaskIdAsync(parameters.TaskId);
                             if (existingFollowupTask != null)
                             {
                                 existingFollowupTask.NextFollowupDateTime = nextFollowupDateTime;
@@ -1912,33 +1900,20 @@ public partial class TrackerAPIController : BaseController
                 }
                 else
                 {
-                    var currentConfiguration =
-                        await _taskAlertService.GetTaskAlertConfigurationByIdAsync(existingTaskAlertLog.AlertId);
-
+                    var currentConfiguration = await _taskAlertService.GetTaskAlertConfigurationByIdAsync(existingTaskAlertLog.AlertId);
                     if (currentConfiguration != null)
                     {
-                        var nextConfiguration =
-                            await _taskAlertService.GetNextTaskAlertConfigurationAsync(
-                                currentConfiguration.Percentage);
-
+                        var nextConfiguration = await _taskAlertService.GetNextTaskAlertConfigurationAsync(currentConfiguration.Percentage);
                         if (nextConfiguration != null)
                         {
-                            int targetMinutes =
-                                (int)Math.Round(estimatedMinutes * (nextConfiguration.Percentage / 100m));
-
+                            int targetMinutes = (int)Math.Round(estimatedMinutes * (nextConfiguration.Percentage / 100m));
                             int remainingMinutes = targetMinutes - totalSpentMinutes;
 
                             if (remainingMinutes > 0)
                             {
-                                DateTime adjustedOfficeTime =
-                                    AdjustToOfficeHours(officeNow, remainingMinutes, officeTimeZone);
-
-                                nextFollowupDateTime =
-                                    TimeZoneInfo.ConvertTimeToUtc(adjustedOfficeTime, officeTimeZone);
-
-                                var existingFollowupTask =
-                                    await _followUpTaskService.GetFollowUpTaskByTaskIdAsync(parameters.TaskId);
-
+                                DateTime adjustedOfficeTime = AdjustToOfficeHours(officeNow, remainingMinutes, officeTimeZone);
+                                nextFollowupDateTime = TimeZoneInfo.ConvertTimeToUtc(adjustedOfficeTime, officeTimeZone);
+                                var existingFollowupTask = await _followUpTaskService.GetFollowUpTaskByTaskIdAsync(parameters.TaskId);
                                 if (existingFollowupTask != null)
                                 {
                                     existingFollowupTask.NextFollowupDateTime = nextFollowupDateTime;

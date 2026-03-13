@@ -34,6 +34,7 @@ namespace Satyanam.Nop.Core.Services
         private readonly IRepository<UpdateSubmission> _submissionRepo;
         private readonly INotificationService _notificationService;
         private readonly IEmployeeService _employeeService;
+        private readonly IRepository<QueuedEmail> _queuedEmailRepo;
         #endregion
 
         #region Ctor
@@ -49,7 +50,8 @@ namespace Satyanam.Nop.Core.Services
             IActionContextAccessor actionContextAccessor,
             IRepository<UpdateSubmission> submissionRepo,
             INotificationService notificationService,
-            IEmployeeService employeeService)
+            IEmployeeService employeeService,
+            IRepository<QueuedEmail> queuedEmailRepo)
         {
             _templateRepo = templateRepo;
             _employeeRepo = employeeRepo;
@@ -63,6 +65,7 @@ namespace Satyanam.Nop.Core.Services
             _submissionRepo = submissionRepo;
             _notificationService = notificationService;
             _employeeService = employeeService;
+            _queuedEmailRepo = queuedEmailRepo;
         }
 
         #endregion
@@ -91,7 +94,7 @@ namespace Satyanam.Nop.Core.Services
 
             foreach (var template in templates)
             {
-                // --- Always calculate scheduledUtc first ---
+                //Always calculate scheduledUtc first
                 var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
                 if (!TimeSpan.TryParse(template.DueTime, out var dueTime))
                     dueTime = new TimeSpan(10, 0, 0);
@@ -126,6 +129,10 @@ namespace Satyanam.Nop.Core.Services
                 }
 
                 // DAILY or fallback
+                else if (template.FrequencyId == 2)
+                {
+                    lastScheduledIndia = indiaNow.Date.AddDays(-1);
+                }
                 else
                 {
                     lastScheduledIndia = indiaNow.Date;
@@ -136,36 +143,50 @@ namespace Satyanam.Nop.Core.Services
                 var scheduledUtc = TimeZoneInfo.ConvertTimeToUtc(scheduledIst, indiaTimeZone);
 
                 var overdueDays = (indiaNow.Date - lastScheduledIndia.Date).Days;
-                // --- Decide overdue/due/future ---
+                // Decide overdue/due/future 
                 bool shouldSend = false;
 
-                if (nowUtc.Date > scheduledUtc.Date) // overdue
+                if (indiaNow.Date > lastScheduledIndia.Date) // overdue
                 {
                     if (template.LastReminderSentUtc == null)
                     {
-                            shouldSend = true;
+                        shouldSend = true;
                     }
                     else
                     {
-                        var daysSinceLast = (nowUtc.Date - template.LastReminderSentUtc.Value.Date).Days;
-                        if (daysSinceLast >= template.RepeatEvery)
+                        var lastSentIndia = TimeZoneInfo.ConvertTimeFromUtc(template.LastReminderSentUtc.Value, indiaTimeZone);
+
+                        var daysSinceLast = (indiaNow.Date - lastSentIndia.Date).Days;
+
+                        if (daysSinceLast >= template.RepeatEvery || template.LastReminderSentUtc == null)
                             shouldSend = true;
                     }
                 }
-                else if (nowUtc.Date == scheduledUtc.Date) // due today
+                else if (indiaNow.Date == lastScheduledIndia.Date) // due today
                 {
-                    if (template.LastReminderSentUtc == null ||template.LastReminderSentUtc.Value.Date < nowUtc.Date)
+                    // Send main mail exactly when scheduled time hits
+                    if (indiaNow >= scheduledIst &&
+                        (template.LastReminderSentUtc == null ||
+         TimeZoneInfo.ConvertTimeFromUtc(template.LastReminderSentUtc.Value, indiaTimeZone) < scheduledIst))
                     {
-                        shouldSend = IsReminderDueToday(template, nowUtc);
+                        shouldSend = true;
+                    }
+                    else
+                    {
+                        if (template.ReminderBeforeMinutes > 0)
+                        {
+                            shouldSend = IsReminderDueToday(template, nowUtc);
+                        }
+                        else
+                        {
+                            shouldSend = false;
+                        }
                     }
                 }
                 else // future
                 {
                     shouldSend = IsReminderDueToday(template, nowUtc);
                 }
-
-                if (!shouldSend)
-                    continue;
 
                 var viewerEmails = new List<string>();
 
@@ -186,6 +207,13 @@ namespace Satyanam.Nop.Core.Services
 
                 var submitterIds = template.SubmitterUserIds.Split(',').Select(int.Parse).ToList();
                 var anyEmailQueued = false;
+                // Check existing submission
+                var currentPeriod = await _periodRepo.Table
+.Where(p =>
+    p.UpdateTemplateId == template.Id &&
+    p.PeriodStart <= indiaNow &&
+    p.PeriodEnd >= indiaNow)
+.FirstOrDefaultAsync();
 
                 foreach (var employeeId in submitterIds)
                 {
@@ -193,19 +221,8 @@ namespace Satyanam.Nop.Core.Services
                     if (employee == null || string.IsNullOrWhiteSpace(employee.OfficialEmail))
                         continue;
                     var customerId = employee.Customer_Id;
-
-                    // Check existing submission
-                    var currentPeriod = await _periodRepo.Table
-                    .Where(p =>
-                        p.UpdateTemplateId == template.Id &&
-                        p.PeriodStart <= nowUtc &&
-                        p.PeriodEnd >= nowUtc)
-                    .OrderByDescending(p => p.Id)
-                    .FirstOrDefaultAsync();
-
                     if (currentPeriod == null)
                         continue;
-
                     // Check submission using PeriodId
                     var existingSubmission = await _submissionRepo.Table
                         .Where(s =>
@@ -219,49 +236,90 @@ namespace Satyanam.Nop.Core.Services
                     if (alreadySubmitted)
                         continue;
 
-                    // --- Subject & body messages ---
+                    //Subject & body messages
                     string subject;
                     string bodyMessage;
                     bool addViewerInCc = false;
 
-                    if (nowUtc.Date == scheduledUtc.Date)
+                    if (indiaNow >= scheduledIst && indiaNow.Date == scheduledIst.Date)
                     {
-                        subject = $"Reminder: '{template.Title}' form is due today";
-                        bodyMessage = $"<p>This is a reminder that your form <strong>{template.Title}</strong> is due today. Please fill it up.</p>";
+                        // MAIN MAIL (exact time reached)
+
+                        subject = $"Action Required ({lastScheduledIndia:MMM dd}): Please submit '{template.Title}' form";
+
+                        bodyMessage = $@"
+    <p>The form <strong>{template.Title}</strong> is now available for submission.</p>
+
+    <p>
+        Please complete and submit the form as soon as possible.
+    </p>
+
+    <p>
+        <strong>Submission time:</strong> {scheduledUtc.ToLocalTime():hh:mm tt}
+    </p>";
                     }
-                    else if (nowUtc.Date > scheduledUtc.Date)
+                    else if (indiaNow.Date == scheduledIst.Date && template.ReminderBeforeMinutes > 0)
+                    {
+                        // REMINDER BEFORE DUE TIME
+
+                        subject = $"Reminder: '{template.Title}' form is due today";
+
+                        bodyMessage = $@"
+    <p>This is a reminder that your form <strong>{template.Title}</strong> 
+    will be due today.</p>
+
+    <p>Please ensure it is completed before the deadline.</p>";
+                    }
+                    else if (indiaNow.Date > scheduledIst.Date)
                     {
                         if (overdueDays >= 3)
                         {
                             addViewerInCc = true;
 
-                            subject = $"⚠️ Escalation: '{template.Title}' overdue for {overdueDays} days";
+                            subject = $"⚠️ Escalation ({lastScheduledIndia:MMM dd}): '{template.Title}' overdue for {overdueDays} days";
 
                             bodyMessage = $@"
-                        <p>
-                            The form <strong>{template.Title}</strong> has been
-                            <strong style='color:red;'>overdue for {overdueDays} days</strong>.
-                        </p>
-                        <p>
-                            The assigned submitter has not completed the form.
-                        </p>
-                        <p>
-                            <strong>Viewers have been copied for awareness and follow-up.</strong>
-                        </p>";
+<p>
+The form <strong>{template.Title}</strong> for 
+<strong>{lastScheduledIndia:MMM dd, yyyy}</strong> has been 
+<strong style='color:red;'>overdue for {overdueDays} days</strong>.
+</p>
+
+<p>The assigned submitter has not completed the form.</p>
+
+<p><strong>Viewers have been copied for awareness and follow-up.</strong></p>";
                         }
                         else
                         {
-                            subject = $"Overdue: '{template.Title}' form still pending";
-                            bodyMessage = $"<p>This is a reminder that you are <strong>overdue</strong> on the form <strong>{template.Title}</strong>. Please submit it as soon as possible.</p>";
+                            subject = $"Overdue ({lastScheduledIndia:MMM dd}): '{template.Title}' form still pending";
+
+                            bodyMessage = $@"
+<p>
+You did not submit the <strong>{template.Title}</strong> form for 
+<strong>{lastScheduledIndia:MMM dd, yyyy}</strong>.
+</p>
+
+<p>Please submit it as soon as possible.</p>";
                         }
                     }
                     else
                     {
+                        if (template.ReminderBeforeMinutes <= 0)
+                            continue;
                         subject = $"Reminder: Please fill the '{template.Title}' form";
-                        bodyMessage = $"<p>This is a reminder to complete the <strong>{template.Title}</strong> form before the deadline.</p>";
-                    }
 
-                    // --- Build form link ---
+                        bodyMessage = $@"
+    <p>This is a reminder to complete the 
+    <strong>{template.Title}</strong> form before the deadline.</p>";
+                    }
+                    var emailAlreadySent = await _queuedEmailRepo.Table.AnyAsync(e =>
+    e.To == employee.OfficialEmail &&
+    e.Subject == subject &&
+    e.CreatedOnUtc.Date == nowUtc.Date);
+
+                    if (emailAlreadySent)
+                        continue;
+                    // Build form link
                     var formLink = $"{store.Url.TrimEnd('/')}/UpdateSubmission/Submit/{template.Id}";
                     var periodId = existingSubmission?.PeriodId ?? 0;
                     if (periodId > 0)
@@ -299,7 +357,7 @@ namespace Satyanam.Nop.Core.Services
                         From = emailAccount.Email,
                         FromName = emailAccount.DisplayName,
                         To = employee.OfficialEmail,
-                        CC = addViewerInCc && viewerEmails.Any()? string.Join(",", viewerEmails): null,
+                        CC = addViewerInCc && viewerEmails.Any() ? string.Join(",", viewerEmails) : null,
                         Subject = subject,
                         Body = body,
                         Priority = QueuedEmailPriority.High,
@@ -339,13 +397,14 @@ namespace Satyanam.Nop.Core.Services
             var scheduledUtc = TimeZoneInfo.ConvertTimeToUtc(scheduledIst, indiaTimeZone);
 
             // Calculate reminder offset
-            var reminderMinutes = template.ReminderBeforeMinutes > 0
-                ? template.ReminderBeforeMinutes
-                : 60;
+            var reminderMinutes = template.ReminderBeforeMinutes;
+
+            if (reminderMinutes <= 0)
+                return false;
 
             var reminderTimeUtc = scheduledUtc.AddMinutes(-reminderMinutes);
 
-            // ✅ Skip if current time is earlier than reminder time
+            //  Skip if current time is earlier than reminder time
             if (nowUtc < reminderTimeUtc)
                 return false;
 
@@ -360,7 +419,7 @@ namespace Satyanam.Nop.Core.Services
 
                     if (template.RepeatType?.ToLower() == "week")
                     {
-                        // ✅ Weekly-style logic inside Daily
+                        //  Weekly-style logic inside Daily
                         if (string.IsNullOrWhiteSpace(template.SelectedWeekDays))
                             return false;
 
@@ -547,8 +606,8 @@ namespace Satyanam.Nop.Core.Services
             }
         }
 
-       #endregion
-        
-       #endregion
+        #endregion
+
+        #endregion
     }
 }

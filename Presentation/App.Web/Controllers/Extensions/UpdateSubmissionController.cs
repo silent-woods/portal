@@ -292,19 +292,13 @@ namespace Nop.Web.Controllers
                     .Where(x => x.UpdateTemplateId == selectedTemplateId.Value);
             }
 
-            // ✅ Filter by submitter
             if (filterSubmitterId.HasValue)
-            {
                 submissionsQuery = submissionsQuery
                     .Where(x => x.SubmittedByCustomerId == filterSubmitterId.Value);
-            }
 
-            // ✅ Filter by PeriodId (VERY IMPORTANT)
-            if (selectedPeriodId.HasValue && selectedPeriodId != -1)
-            {
+            if (selectedPeriodId.HasValue)
                 submissionsQuery = submissionsQuery
                     .Where(x => x.PeriodId == selectedPeriodId.Value);
-            }
 
             // ✅ CRITICAL FIX — Filter by submission date range
             if (from.HasValue)
@@ -315,8 +309,10 @@ namespace Nop.Web.Controllers
 
             if (to.HasValue)
             {
+                var endDate = to.Value.Date.AddDays(1).AddTicks(-1);
+
                 submissionsQuery = submissionsQuery
-                    .Where(x => x.SubmittedOnUtc <= to.Value);
+                    .Where(x => x.SubmittedOnUtc <= endDate);
             }
 
             var submissions = await submissionsQuery
@@ -843,10 +839,28 @@ namespace Nop.Web.Controllers
 
             return File(download.DownloadBinary, contentType, finalFileName);
         }
+        private string GetDisplaysPeriodsText(UpdateTemplate template, UpdateTemplatePeriod period)
+        {
+            if (template == null || period == null)
+                return "";
+
+            // DAILY → show only single date
+            if (template.FrequencyId == 2) // 2 = Daily
+            {
+                return period.PeriodStart.ToString("MMM dd, yyyy");
+            }
+
+            // WEEKLY / MONTHLY / OTHER → show range
+            return $"{period.PeriodStart:MMM dd} - {period.PeriodEnd:MMM dd, yyyy}";
+        }
         private string GetDisplayPeriodText(UpdateTemplate template, UpdateTemplatePeriod dbPeriod)
         {
             var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
             var indiaNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indiaTimeZone);
+            if (template.FrequencyId == 2) // Daily
+            {
+                return $"{dbPeriod.PeriodStart:MMM dd, yyyy}";
+            }
 
             // ----------------------------
             // MONTHLY DISPLAY
@@ -1069,6 +1083,11 @@ namespace Nop.Web.Controllers
                 .Where(p => p.UpdateTemplateId == id)
                 .OrderByDescending(p => p.PeriodStart)
                 .ToListAsync();
+            if (allPeriods == null || !allPeriods.Any())
+            {
+                _notificationService.WarningNotification("No submission period available yet. Please try again later.");
+                return RedirectToAction("SubmissionList");
+            }
             // Fetch user's previous    
             var userSubmissions = await _submissionRepository.Table
                 .Where(x => x.UpdateTemplateId == id.Value && x.SubmittedByCustomerId == customer.Id)
@@ -1488,7 +1507,7 @@ namespace Nop.Web.Controllers
             reloadModel.PeriodId = submission.PeriodId;
             reloadModel.Id = submission.Id;
             reloadModel.HasAlreadySubmitted = true;
-            reloadModel.AllowEditingAfterSubmit = true;
+            reloadModel.AllowEditingAfterSubmit = false;
             // Load answers
             var answersToShow = await _answerRepository.Table
                 .Where(x => x.UpdateSubmissionId == submission.Id)
@@ -1555,8 +1574,11 @@ namespace Nop.Web.Controllers
                                         .OrderByDescending(x => x.CreatedOnUtc)
                                         .ToListAsync();
             reloadModel.Comments = await PrepareCommentModels(commentsToShow);
-            // Return same view so user stays on form
-            return View("~/Themes/DefaultClean/Views/Extension/UpdateForm/Submit.cshtml", reloadModel);
+            return RedirectToAction("Submit", new
+            {
+                id = templateId,
+                periodId = submission.PeriodId
+            });
         }
 
         [HttpGet("UpdateSubmission/GetPeriodsByTemplate")]
@@ -1582,7 +1604,7 @@ namespace Nop.Web.Controllers
 
         [Authorize]
         [HttpGet("UpdateSubmission/List")]
-        public async Task<IActionResult> List(int? selectedSubmitterId, int? selectedTemplateId, int? selectedPeriodId)
+        public async Task<IActionResult> List(int? selectedSubmitterId, int? selectedTemplateId, int? selectedPeriodId, DateTime? fromDate,DateTime? toDate)
         {
             var customer = await _workContext.GetCurrentCustomerAsync();
             var customerId = customer.Id;
@@ -1703,7 +1725,7 @@ namespace Nop.Web.Controllers
                     .Select(p => new SelectListItem
                     {
                         Value = p.Id.ToString(),
-                        Text = GetDisplayPeriodText(template, p),
+                        Text = GetDisplaysPeriodsText(template, p),
                         Selected = p.Id == selectedPeriodId
                     }).ToList();
 
@@ -1714,31 +1736,62 @@ namespace Nop.Web.Controllers
                     Selected = selectedPeriodId == -1
                 });
 
-                if (selectedPeriodId.HasValue && selectedPeriodId != -1)
+                // PERIOD OR CUSTOM RANGE LOGIC
+                if (selectedPeriodId == -1)
                 {
-                    var selectedPeriod = periods
-                        .FirstOrDefault(p => p.Id == selectedPeriodId.Value);
+                    model.FromDate = fromDate;
+                    model.ToDate = toDate;
+                }
+                else if (selectedPeriodId.HasValue)
+                {
+                    var selectedPeriod = periods.FirstOrDefault(p => p.Id == selectedPeriodId.Value);
 
                     if (selectedPeriod != null)
                     {
                         model.FromDate = selectedPeriod.PeriodStart;
-                        model.ToDate = selectedPeriod.PeriodEnd
-                            .AddDays(1)
-                            .AddTicks(-1);
+                        model.ToDate = selectedPeriod.PeriodEnd;
                     }
                 }
             }
-            if (selectedTemplateId.HasValue &&
-       model.SelectedPeriodId.HasValue &&
-       model.SelectedPeriodId != -1 &&
-       model.AvailableSubmitters?.Any() == true)
+            int? filterSubmitterId = null;
+            if (selectedTemplateId.HasValue && model.AvailableSubmitters?.Any() == true)
             {
-                var submittedCustomerIds = await _submissionRepository.Table
-    .Where(s => s.UpdateTemplateId == selectedTemplateId.Value
-             && s.PeriodId == model.SelectedPeriodId.Value)
-    .Select(s => (int?)s.SubmittedByCustomerId)
-    .Distinct()
-    .ToListAsync();
+                IQueryable<UpdateSubmission> submissionsQuery = _submissionRepository.Table
+                    .Where(s => s.UpdateTemplateId == selectedTemplateId.Value);
+
+                // Period filter
+                // If specific period selected  always filter by PeriodId
+                if (model.SelectedPeriodId.HasValue && model.SelectedPeriodId != -1)
+                {
+                    submissionsQuery = submissionsQuery
+                        .Where(s => s.PeriodId == model.SelectedPeriodId.Value);
+                }
+
+                // If Custom Range selected  filter by PeriodStart instead of submission date
+                if (model.SelectedPeriodId == -1)
+                {
+                    if (model.FromDate.HasValue || model.ToDate.HasValue)
+                    {
+                        var periods = await _updateTemplatePeriodRepository.Table
+                            .Where(p => p.UpdateTemplateId == selectedTemplateId.Value)
+                            .ToListAsync();
+
+                        var validPeriodIds = periods
+                            .Where(p =>
+                                (!model.FromDate.HasValue || p.PeriodStart >= model.FromDate.Value) &&
+                                (!model.ToDate.HasValue || p.PeriodEnd <= model.ToDate.Value))
+                            .Select(p => p.Id)
+                            .ToList();
+
+                        submissionsQuery = submissionsQuery
+                            .Where(s => validPeriodIds.Contains(s.PeriodId));
+                    }
+                }
+
+                var submittedCustomerIds = await submissionsQuery
+                    .Select(s => (int?)s.SubmittedByCustomerId)
+                    .Distinct()
+                    .ToListAsync();
 
                 var submittedIds = submittedCustomerIds
                     .Where(x => x.HasValue)
@@ -1754,30 +1807,26 @@ namespace Nop.Web.Controllers
                     .Except(submittedIds)
                     .ToList();
 
-                var notSubmittedNames = await _employeeRepository.Table
+                model.NotSubmittedNames = await _employeeRepository.Table
                     .Where(e => notSubmittedCustomerIds.Contains(e.Customer_Id))
                     .Select(e => e.FirstName + " " + e.LastName)
                     .ToListAsync();
-
-                model.NotSubmittedNames = notSubmittedNames;
             }
             else
             {
                 model.NotSubmittedNames = new List<string>();
             }
-            // LOAD SUBMISSIONS
-            int? filterSubmitterId = null;
 
             if (model.CanSeeSubmitterDropdown && model.SelectedSubmitterId.HasValue)
                 filterSubmitterId = model.SelectedSubmitterId;
             model.Submissions = await GetSubmissionCardsAsync(
-                currentUserId: customer.Id,
-                filterSubmitterId: filterSubmitterId,
-                from: model.FromDate,
-                to: model.ToDate,
-                selectedTemplateId: model.SelectedTemplateId,
-                selectedPeriodId:model.SelectedPeriodId
-            );
+    currentUserId: customer.Id,
+    filterSubmitterId: filterSubmitterId,
+    from: model.FromDate,
+    to: model.ToDate,
+    selectedTemplateId: model.SelectedTemplateId,
+    selectedPeriodId: model.SelectedPeriodId == -1 ? null : model.SelectedPeriodId
+);
             return View("~/Themes/DefaultClean/Views/Extension/UpdateForm/List.cshtml", model);
         }
 

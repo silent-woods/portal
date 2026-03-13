@@ -216,3 +216,24 @@
         }
     });
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // detect page refresh
+        const navEntries = performance.getEntriesByType("navigation");
+        if (navEntries.length > 0 && navEntries[0].type === "reload") {
+
+            const url = new URL(window.location.href);
+
+            // if filters exist → redirect to clean page
+            if (url.search.includes("SelectedSubmitterId") ||
+                url.search.includes("SelectedPeriodId") ||
+                url.search.includes("FromDate") ||
+                url.search.includes("ToDate")) {
+
+                window.location.href = '@Url.Action("List", "UpdateSubmission", new { selectedTemplateId = Model.SelectedTemplateId })';
+            }
+        }
+
+    });
+</script>
