@@ -8,9 +8,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace App.Web.Areas.Admin.Models.Employees
 
 {
-    /// <summary>
-    /// Represents a employee model
-    /// </summary>
     public partial record EmployeeModel : BaseNopEntityModel
     {
 
@@ -61,9 +58,7 @@ namespace App.Web.Areas.Admin.Models.Employees
         public string PersonalEmail { get; set; }
 
         [NopResourceDisplayName("Admin.Customers.Customers.Fields.Password")]
-        
         public string Password { get; set; }
-
 
         [NopResourceDisplayName("Admin.Employees.Fields.Gender")]
         public string Gender { get; set; }
@@ -71,7 +66,6 @@ namespace App.Web.Areas.Admin.Models.Employees
         [Required(ErrorMessage = "Please enter a Mobile No")]
         [NopResourceDisplayName("Admin.Employees.Fields.MobileNo")]
         public string MobileNo { get; set; }
-
   
         [NopResourceDisplayName("Admin.Employees.Fields.PictureId")]
         [UIHint("Picture")]
@@ -83,7 +77,6 @@ namespace App.Web.Areas.Admin.Models.Employees
         [NopResourceDisplayName("Admin.Employees.Fields.UpdateOnUtc")]
         public DateTime UpdateOnUtc { get; set; }
 
-        // Work information
         [DataType(DataType.EmailAddress)]
         [Required(ErrorMessage = "Please enter a Official Email")]
         [NopResourceDisplayName("Admin.Employees.Fields.OfficialEmail")]
@@ -116,15 +109,6 @@ namespace App.Web.Areas.Admin.Models.Employees
         [NopResourceDisplayName("Admin.Employees.Fields.DateOfBirth")]
         [UIHint("DateNullable")]
         public DateTime? DateOfBirth { get; set; }
-
-       
-
-        [NopResourceDisplayName("Admin.Employees.Fields.CTC")]
-        public string CTC { get; set; }
-
-        // Personal Information
-        //[Required(ErrorMessage = "Please select Marital Status.")]
-        //[Range(1, int.MaxValue, ErrorMessage = "Please select Marital Status.")]
         [NopResourceDisplayName("Admin.Employees.Fields.MaritalStatusId")]
         public int MaritalStatusId { get; set; }
         [NopResourceDisplayName("Admin.Employees.Fields.MaritalStatus")]
@@ -137,8 +121,6 @@ namespace App.Web.Areas.Admin.Models.Employees
         [NopResourceDisplayName("Admin.Employees.Fields.Hobbies")]
         public string Hobbies { get; set; }
 
-        //[Required(ErrorMessage = "Please select BloodGroup.")]
-        //[Range(1, int.MaxValue, ErrorMessage = "Please select BloodGroup.")]
         [NopResourceDisplayName("Admin.Employees.Fields.BloodGroupId")]
         public int BloodGroupId { get; set; }
         [NopResourceDisplayName("Admin.Employees.Fields.BloodGroup")]
@@ -161,25 +143,19 @@ namespace App.Web.Areas.Admin.Models.Employees
         public IList<SelectListItem> EmployeesStatus { get; set; }
         public int PresentAddressId { get; set; }
         public int PermanentAddressID { get; set; }
-
         public EmployeeSearchModel EmployeeSearchModel { get; set; }
-
         public int ManagerId { get; set; }
-
         public string ManagerName { get; set; }
         public IList<SelectListItem> AvailableManager { get; set; }
 
+        [NopResourceDisplayName("Admin.Employees.Fields.IsVendor")]
+        public bool IsVendor { get; set; }
 
         [NopResourceDisplayName("Admin.Common.Fields.SelectedManagerId")]
-
         public IList<int> SelectedManagerId { get; set; }
-
         public int Customer_Id { get; set; }
         [NopResourceDisplayName("Admin.Common.Fields.OnBordingEmail")]
-
         public string OnBordingEmail { get; set; }
-
-
         #endregion
     }
 }

@@ -3057,5 +3057,39 @@ namespace App.Services.Messages
         }
 
         #endregion
+
+        #region Salary Paid Email
+
+        public virtual async Task<IList<int>> SendSalaryPaidEmailAsync(int languageId, string employeeFullName,
+            string employeeEmail, string monthYear, decimal grossSalary, decimal netSalary, int salaryRecordId)
+        {
+            var store = await _storeContext.GetCurrentStoreAsync();
+            languageId = await EnsureLanguageIsActiveAsync(languageId, store.Id);
+
+            var messageTemplates = await GetActiveMessageTemplatesAsync(MessageTemplateSystemNames.SendSalaryPaidMail, store.Id);
+            if (!messageTemplates.Any())
+                return new List<int>();
+            var request = _httpContextAccessor.HttpContext.Request;
+            string domain = $"{request.Scheme}://{request.Host}";
+            var downloadUrl = $"{domain}/SalarySlip/Download/{salaryRecordId}";
+
+            return await messageTemplates.SelectAwait(async messageTemplate =>
+            {
+                var emailAccount = await GetEmailAccountOfMessageTemplateAsync(messageTemplate, languageId);
+
+                var tokens = new List<Token>();
+                await _messageTokenProvider.AddStoreTokensAsync(tokens, store, emailAccount);
+                tokens.Add(new Token("Employee.FullName", employeeFullName));
+                tokens.Add(new Token("Salary.MonthYear", monthYear));
+                tokens.Add(new Token("Salary.DownloadUrl", downloadUrl, true));
+
+                await _eventPublisher.MessageTokensAddedAsync(messageTemplate, tokens);
+
+                return await SendNotificationAsync(messageTemplate, emailAccount, languageId, tokens,
+                    employeeEmail, employeeFullName);
+            }).ToListAsync();
+        }
+
+        #endregion
     }
 }

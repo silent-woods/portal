@@ -134,5 +134,11 @@ namespace App.Core.Domain.Messages
         public const string SendTaskProgressEmail = "Employee.SendTaskProgressEmail";
 
         #endregion
+
+        #region Salary Paid Email
+
+        public const string SendSalaryPaidMail = "Employee.SalaryPaid";
+
+        #endregion
     }
 }

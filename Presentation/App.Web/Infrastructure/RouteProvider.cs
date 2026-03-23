@@ -493,7 +493,16 @@ namespace App.Web.Infrastructure
              pattern: $"{lang}/Performance/ProjectLeaderReview",
              defaults: new { controller = "Performance", action = "ProjectLeaderReview" });
 
-            
+            // Salary Slips (employee self-service)
+            endpointRouteBuilder.MapControllerRoute(name: "MySalarySlips",
+                pattern: $"{lang}/SalarySlip/MySalarySlips",
+                defaults: new { controller = "EmployeeSalaryPublic", action = "MySalarySlips" });
+
+            endpointRouteBuilder.MapControllerRoute(name: "DownloadMySalarySlip",
+                pattern: $"{lang}/SalarySlip/Download/{{id:int}}",
+                defaults: new { controller = "EmployeeSalaryPublic", action = "DownloadMySalarySlip" });
+
+
         }
 
         #endregion

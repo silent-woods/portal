@@ -13,7 +13,10 @@ using App.Services.ScheduleTasks;
 using App.Services.Security;
 using App.Web.Framework.Menu;
 using Microsoft.AspNetCore.Routing;
+using Satyanam.Plugin.Misc.AccountManagement.Domain;
+using Satyanam.Plugin.Misc.AccountManagement.Domain.Enums;
 using Satyanam.Plugin.Misc.AccountManagement.Services;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,6 +35,7 @@ public partial class AccountManagementPlugin : BasePlugin,  IAdminMenuPlugin , I
     protected readonly IRepository<Language> _languageRepository;
     protected readonly IScheduleTaskService _scheduleTaskService;
     protected readonly ISettingService _settingService;
+    protected readonly ISalaryComponentConfigService _salaryComponentConfigService;
     protected readonly IWebHelper _webHelper;
 
     #endregion
@@ -45,9 +49,11 @@ public partial class AccountManagementPlugin : BasePlugin,  IAdminMenuPlugin , I
         IRepository<Language> languageRepository,
         IScheduleTaskService scheduleTaskService,
         ISettingService settingService,
+        ISalaryComponentConfigService salaryComponentConfigService,
         IWebHelper webHelper)
     {
         _permissionService = permissionService;
+        _salaryComponentConfigService = salaryComponentConfigService;
         _localizationService = localizationService;
         _messageTemplateService = messageTemplateService;
         _nopFileProvider = nopFileProvider;
@@ -137,7 +143,37 @@ public partial class AccountManagementPlugin : BasePlugin,  IAdminMenuPlugin , I
         };
         await _settingService.SaveSettingAsync(accountManagementSettings);
 
+        var expenseManagementSettings = new ExpenseManagementSettings
+        {
+            SalaryProcessingDay = 1,
+            SalaryExpenseCategoryId = 0,
+            SendEmailAfterSalaryProcessing = false,
+            SalaryProcessingNotifyEmails = string.Empty
+        };
+        await _settingService.SaveSettingAsync(expenseManagementSettings);
+
         await base.InstallAsync();
+
+        // Seed default salary components if not already seeded
+        var existingComponents = await _salaryComponentConfigService.GetAllActiveComponentsAsync();
+        if (existingComponents.Count == 0)
+        {
+            var now = DateTime.UtcNow;
+            // Structure: Basic 45%, DA = 30% of Basic = 13.5% of Gross,
+            // HRA = 40% of (Basic+DA) = 23.4% of Gross, Conveyance fixed ₹1600,
+            // Medical = Remainder (Gross - Tax - other earnings), Professional Tax ₹200 fixed.
+            var defaults = new[]
+            {
+                new SalaryComponentConfig { Name = "Basic Pay",            ComponentTypeId = (int)SalaryComponentTypeEnum.Earning,   IsPercentage = true,  Value = 45.00m,  IsRemainder = false, IsActive = true, DisplayOrder = 1, CreatedOnUtc = now, UpdatedOnUtc = now },
+                new SalaryComponentConfig { Name = "Dearness Allowance",   ComponentTypeId = (int)SalaryComponentTypeEnum.Earning,   IsPercentage = true,  Value = 13.50m,  IsRemainder = false, IsActive = true, DisplayOrder = 2, CreatedOnUtc = now, UpdatedOnUtc = now },
+                new SalaryComponentConfig { Name = "House Rent Allowance", ComponentTypeId = (int)SalaryComponentTypeEnum.Earning,   IsPercentage = true,  Value = 23.40m,  IsRemainder = false, IsActive = true, DisplayOrder = 3, CreatedOnUtc = now, UpdatedOnUtc = now },
+                new SalaryComponentConfig { Name = "Conveyance Allowance", ComponentTypeId = (int)SalaryComponentTypeEnum.Earning,   IsPercentage = false, Value = 1600.00m,IsRemainder = false, IsActive = true, DisplayOrder = 4, CreatedOnUtc = now, UpdatedOnUtc = now },
+                new SalaryComponentConfig { Name = "Medical Allowance",    ComponentTypeId = (int)SalaryComponentTypeEnum.Earning,   IsPercentage = false, Value = 0m,       IsRemainder = true,  IsActive = true, DisplayOrder = 5, CreatedOnUtc = now, UpdatedOnUtc = now },
+                new SalaryComponentConfig { Name = "Professional Tax",     ComponentTypeId = (int)SalaryComponentTypeEnum.Deduction, IsPercentage = false, Value = 200.00m, IsRemainder = false, IsActive = true, DisplayOrder = 1, CreatedOnUtc = now, UpdatedOnUtc = now },
+            };
+            foreach (var component in defaults)
+                await _salaryComponentConfigService.InsertComponentAsync(component);
+        }
     }
 
     public override async Task UninstallAsync()
@@ -147,6 +183,7 @@ public partial class AccountManagementPlugin : BasePlugin,  IAdminMenuPlugin , I
         await DeleteMessageTemplatesAsync();
 
         await _settingService.DeleteSettingAsync<AccountManagementSettings>();
+        await _settingService.DeleteSettingAsync<ExpenseManagementSettings>();
 
         await base.UninstallAsync();
     }
@@ -247,6 +284,66 @@ public partial class AccountManagementPlugin : BasePlugin,  IAdminMenuPlugin , I
             RouteValues = new RouteValueDictionary() { { "Satyanam.Plugin.Misc.AccountManagement", null } }
         };
         pluginMenuItem.ChildNodes.Add(accountTransactions);
+
+        var expenseCategories = new SiteMapNode()
+        {
+            SystemName = "Satyanam.Plugin.Misc.AccountManagement.Admin.ExpenseCategories",
+            Title = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.ExpenseCategories"),
+            ControllerName = "ExpenseCategory",
+            ActionName = "ExpenseCategories",
+            Visible = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExpenseCategories, PermissionAction.View),
+            IconClass = "far fa-dot-circle",
+            RouteValues = new RouteValueDictionary() { { "Satyanam.Plugin.Misc.AccountManagement", null } }
+        };
+        pluginMenuItem.ChildNodes.Add(expenseCategories);
+
+        var expenses = new SiteMapNode()
+        {
+            SystemName = "Satyanam.Plugin.Misc.AccountManagement.Admin.Expenses",
+            Title = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Expenses"),
+            ControllerName = "Expense",
+            ActionName = "Expenses",
+            Visible = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExpenses, PermissionAction.View),
+            IconClass = "far fa-dot-circle",
+            RouteValues = new RouteValueDictionary() { { "Satyanam.Plugin.Misc.AccountManagement", null } }
+        };
+        pluginMenuItem.ChildNodes.Add(expenses);
+
+        var recurringExpenses = new SiteMapNode()
+        {
+            SystemName = "Satyanam.Plugin.Misc.AccountManagement.Admin.RecurringExpenses",
+            Title = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.RecurringExpenses"),
+            ControllerName = "RecurringExpense",
+            ActionName = "RecurringExpenses",
+            Visible = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageRecurringExpenses, PermissionAction.View),
+            IconClass = "far fa-dot-circle",
+            RouteValues = new RouteValueDictionary() { { "Satyanam.Plugin.Misc.AccountManagement", null } }
+        };
+        pluginMenuItem.ChildNodes.Add(recurringExpenses);
+
+        var employeeSalaries = new SiteMapNode()
+        {
+            SystemName = "Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalaries",
+            Title = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalaries"),
+            ControllerName = "EmployeeSalary",
+            ActionName = "EmployeeSalaries",
+            Visible = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.View),
+            IconClass = "far fa-dot-circle",
+            RouteValues = new RouteValueDictionary() { { "Satyanam.Plugin.Misc.AccountManagement", null } }
+        };
+        pluginMenuItem.ChildNodes.Add(employeeSalaries);
+
+        var salaryComponentConfigs = new SiteMapNode()
+        {
+            SystemName = "Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfigs",
+            Title = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfigs"),
+            ControllerName = "SalaryComponentConfig",
+            ActionName = "SalaryComponentConfigs",
+            Visible = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.View),
+            IconClass = "far fa-dot-circle",
+            RouteValues = new RouteValueDictionary() { { "Satyanam.Plugin.Misc.AccountManagement", null } }
+        };
+        pluginMenuItem.ChildNodes.Add(salaryComponentConfigs);
 
         var title = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.MainMenu.Title");
         var targetMenu = siteMapNode.ChildNodes.FirstOrDefault(x => x.Title == title);

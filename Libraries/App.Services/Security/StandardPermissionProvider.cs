@@ -139,6 +139,7 @@ namespace App.Services.Security
         public static readonly PermissionRecord PublicStoreProjectLeaderReview = new() { Name = "Public store. Project Leader Review", SystemName = "ProjectLeaderReview", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreYearlyReview = new() { Name = "Public store. Yearly Review", SystemName = "YearlyReview", Category = "PublicStore" };
         public static readonly PermissionRecord PublicStoreDashboard = new() { Name = "Public store. Dashboard", SystemName = "Dashboard", Category = "PublicStore" };
+        public static readonly PermissionRecord PublicStoreSalarySlips = new() { Name = "Public store. Salary Slips", SystemName = "SalarySlips", Category = "PublicStore" };
 
         /// <summary>
         /// Get permissions
@@ -198,6 +199,7 @@ namespace App.Services.Security
                 PublicStoreMonthlyReview,
                 PublicStoreProjectLeaderReview,
                 PublicStoreYearlyReview,
+                PublicStoreSalarySlips,
                 EnableMultiFactorAuthentication,
                 ManageDesignation,
                 ManageLeaveType,
@@ -320,6 +322,7 @@ namespace App.Services.Security
                         PublicStoreMonthlyReview,
                         PublicStoreProjectLeaderReview,
                         PublicStoreYearlyReview,
+                        PublicStoreSalarySlips,
                         AccessClosedStore,
                         AccessProfiling,
                         EnableMultiFactorAuthentication,

@@ -1,0 +1,399 @@
+@model EmployeeSalarySearchModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.List").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalaries");
+
+    const string hideSearchBlockAttributeName = "EmployeeSalaryListPage.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.List")
+    </h1>
+    <div class="float-right">
+        @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.View))
+        {
+            <button type="button" class="btn btn-info mr-2" onclick="openHdfcPreview()">
+                <i class="fas fa-file-csv"></i>
+                HDFC CSV
+            </button>
+        }
+        @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.Edit))
+        {
+            <button type="button" id="btn-bulk-status" class="btn btn-success mr-2">
+                <i class="fas fa-arrow-circle-right"></i>
+                @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.BulkMoveToNextStatus")
+            </button>
+        }
+        @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.Add))
+        {
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#processSalariesModal">
+                <i class="fas fa-cogs"></i>
+                @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.ProcessNow")
+            </button>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="processSalariesModal" tabindex="-1" role="dialog" aria-labelledby="processSalariesModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="processSalariesModalLabel">
+                    <i class="fas fa-cogs"></i>
+                    @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.ProcessNow")
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.ProcessNow.Info")</p>
+                <div class="form-group row">
+                    <label class="col-md-4 col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.ProcessNow.Month")</label>
+                    <div class="col-md-8">
+                        <select id="process-month" class="form-control">
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-md-4 col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.ProcessNow.Year")</label>
+                    <div class="col-md-8">
+                        <select id="process-year" class="form-control">
+                            @{
+                                var currentYear = DateTime.Now.Year;
+                                for (var y = currentYear - 2; y <= currentYear + 1; y++)
+                                {
+                                    if (y == currentYear)
+                                    {
+                                        <option value="@y" selected="selected">@y</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@y">@y</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">@T("Admin.Common.Cancel")</button>
+                <button type="button" id="btn-process-salaries" class="btn btn-primary">
+                    <i class="fas fa-play"></i>
+                    @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.ProcessNow.Run")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchMonthId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchMonthId" asp-items="Model.AvailableMonths" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchYearId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchYearId" asp-items="Model.AvailableYears" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchStatusId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchStatusId" asp-items="Model.AvailableStatuses" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchEmployeeIds" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <input type="hidden" asp-for="SearchEmployeeIds" id="SearchEmployeeIds" />
+                                            <select id="employee-multiselect" multiple="multiple" style="width:100%;"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-salaries" class="btn btn-primary btn-search">
+                                        <i class="fas fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "salaries-grid",
+                                UrlRead = new DataUrl("EmployeeSalaries", "EmployeeSalary", null),
+                                UrlDelete = new DataUrl("EmployeeSalaryDelete", "EmployeeSalary", null),
+                                SearchButtonId = "search-salaries",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                Filters = new List<FilterParameter>
+                                {
+                                    new FilterParameter(nameof(Model.SearchMonthId)),
+                                    new FilterParameter(nameof(Model.SearchYearId)),
+                                    new FilterParameter(nameof(Model.SearchStatusId)),
+                                    new FilterParameter(nameof(Model.SearchEmployeeIds))
+                                }
+                            };
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeSalaryModel.Id))
+                            {
+                                Title = "<input type='checkbox' id='select-all-salaries' title='Select All' />",
+                                Width = "30",
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderCustom("renderSalaryCheckbox")
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeSalaryModel.EmployeeName))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Fields.EmployeeName").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeSalaryModel.MonthName))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Fields.Month").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "100"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeSalaryModel.YearId))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Fields.Year").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "80"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeSalaryModel.GrossSalary))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Fields.GrossSalary").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderCustom("renderSalaryCurrency")
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeSalaryModel.NetSalary))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Fields.NetSalary").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderCustom("renderSalaryCurrency")
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeSalaryModel.StatusId))
+                            {
+                                Visible = false
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeSalaryModel.StatusName))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Fields.Status").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "120",
+                                Render = new RenderCustom("renderSalaryStatus")
+                            });
+                            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeSalaryModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "100",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonEdit(new DataUrl("~/Admin/EmployeeSalary/EmployeeSalaryEdit/"))
+                                });
+                            }
+                            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.Delete))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmployeeSalaryModel.Id))
+                                {
+                                    Title = T("Admin.Common.Delete").Text,
+                                    Width = "100",
+                                    Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                                    ClassName = NopColumnClassDefaults.Button
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    function openHdfcPreview() {
+        var monthId = $('#SearchMonthId').val();
+        var yearId = $('#SearchYearId').val();
+        window.location.href = '@Url.Action("PreviewHdfcCsv", "EmployeeSalary", new { area = "Admin" })?monthId=' + monthId + '&yearId=' + yearId;
+    }
+
+    var employeeData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.AvailableEmployees.Select(e => new { text = e.Text, value = e.Value })));
+
+    function renderSalaryCurrency(data, type, row) {
+        if (type !== 'display') return data;
+        return '\u20B9 ' + Math.round(parseFloat(data) || 0).toLocaleString('en-IN');
+    }
+
+    function renderSalaryCheckbox(data, type, row) {
+        if (type === 'display') {
+            return '<input type="checkbox" class="salary-checkbox" data-id="' + data + '" />';
+        }
+        return data;
+    }
+
+    function renderSalaryStatus(data, type, row) {
+        if (type !== 'display') return data;
+        var statusId = row.StatusId;
+        var badge, icon;
+        if (statusId === 3) {
+            badge = 'badge-success'; icon = 'fa-check-circle';
+        } else if (statusId === 2) {
+            badge = 'badge-primary'; icon = 'fa-lock';
+        } else {
+            badge = 'badge-secondary'; icon = 'fa-pencil-alt';
+        }
+        return '<span class="badge ' + badge + ' px-2 py-1"><i class="fas ' + icon + ' mr-1"></i>' + data + '</span>';
+    }
+
+    $(document).ready(function () {
+        $("#employee-multiselect").kendoMultiSelect({
+            dataTextField: "text",
+            dataValueField: "value",
+            dataSource: employeeData,
+            placeholder: "All employees...",
+            filter: "contains",
+            change: function () {
+                var selected = this.value();
+                $('#SearchEmployeeIds').val(selected.join(','));
+            }
+        });
+        var now = new Date();
+        var prevMonth = now.getMonth(); 
+        var prevYear = now.getFullYear();
+        if (prevMonth === 0) { prevMonth = 12; prevYear--; }
+        $('#process-month').val(prevMonth);
+        $('#process-year').val(prevYear);
+        $(document).on('change', '#select-all-salaries', function () {
+            var checked = $(this).prop('checked');
+            $('.salary-checkbox').prop('checked', checked);
+        });
+        $(document).on('change', '.salary-checkbox', function () {
+            var total = $('.salary-checkbox').length;
+            var checked = $('.salary-checkbox:checked').length;
+            $('#select-all-salaries')
+                .prop('indeterminate', checked > 0 && checked < total)
+                .prop('checked', checked === total && total > 0);
+        });
+        $('#salaries-grid').on('draw.dt', function () {
+            $('#select-all-salaries').prop('checked', false).prop('indeterminate', false);
+        });
+        $('#btn-bulk-status').on('click', function () {
+            var ids = $('.salary-checkbox:checked').map(function () {
+                return $(this).data('id');
+            }).get();
+
+            if (ids.length === 0) {
+                alert('No records selected. Please select at least one salary record.');
+                return;
+            }
+            if (!confirm('Move ' + ids.length + ' selected record(s) to the next status?')) return;
+            var btn = $(this);
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+
+            var formData = { __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() };
+            ids.forEach(function (id, i) { formData['ids[' + i + ']'] = id; });
+
+            $.ajax({
+                url: '@Url.Action("BulkUpdateStatus", "EmployeeSalary", new { area = "Admin" })',
+                type: 'POST',
+                data: formData,
+                success: function (result) {
+                    if (result.success) {
+                        var msg = result.updated + ' record(s) updated.';
+                        if (result.skipped > 0) msg += ' ' + result.skipped + ' already Paid (skipped).';
+                        alert(msg);
+                        $('#salaries-grid').DataTable().ajax.reload();
+                    } else {
+                        alert(result.message);
+                    }
+                },
+                error: function () {
+                    alert('An error occurred while updating status.');
+                },
+                complete: function () {
+                    btn.prop('disabled', false).html('<i class="fas fa-arrow-circle-right"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.BulkMoveToNextStatus").Text');
+                }
+            });
+        });
+
+        $('#btn-process-salaries').on('click', function () {
+            var month = parseInt($('#process-month').val());
+            var year = parseInt($('#process-year').val());
+            var btn = $(this);
+
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+
+            $.ajax({
+                url: '@Url.Action("ProcessSalariesNow", "EmployeeSalary", new { area = "Admin" })',
+                type: 'POST',
+                data: { month: month, year: year, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                success: function (result) {
+                    if (result.success) {
+                        $('#processSalariesModal').modal('hide');
+                        $('#salaries-grid').DataTable().ajax.reload();
+                    } else {
+                        alert(result.message);
+                    }
+                },
+                error: function () {
+                    alert('An error occurred while processing salaries.');
+                },
+                complete: function () {
+                    btn.prop('disabled', false).html('<i class="fas fa-play"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.ProcessNow.Run").Text');
+                }
+            });
+        });
+    });
+</script>

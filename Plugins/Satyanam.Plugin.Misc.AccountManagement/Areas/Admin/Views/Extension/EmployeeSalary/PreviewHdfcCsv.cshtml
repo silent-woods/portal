@@ -1,0 +1,223 @@
+@using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.EmployeeSalaries
+@model IList<HdfcCsvRowModel>
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.PageTitle").Text;
+    int selMonth = (int)ViewBag.MonthId;
+    int selYear  = (int)ViewBag.YearId;
+    var currentYear = DateTime.Now.Year;
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Title") — @ViewBag.MonthName @ViewBag.Year
+    </h1>
+    <div class="float-right">
+        <a href="@Url.Action("EmployeeSalaries", "EmployeeSalary", new { area = "Admin" })" class="btn btn-secondary mr-2">
+            <i class="fas fa-arrow-left"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Back")
+        </a>
+        <button type="button" class="btn btn-success" onclick="exportCsv()">
+            <i class="fas fa-download"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.ExportCsv")
+        </button>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="card card-default mb-3">
+            <div class="card-body py-2">
+                <div class="form-inline">
+                    <label class="mr-2 mb-0">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Month"):</label>
+                    <select id="selMonth" class="form-control form-control-sm mr-3">
+                        @{
+                            string[] monthNames = { "January","February","March","April","May","June",
+                                                    "July","August","September","October","November","December" };
+                            for (int m = 1; m <= 12; m++)
+                            {
+                                if (m == selMonth)
+                                {
+                                    <option value="@m" selected="selected">@monthNames[m-1]</option>
+                                }
+                                else
+                                {
+                                    <option value="@m">@monthNames[m-1]</option>
+                                }
+                            }
+                        }
+                    </select>
+
+                    <label class="mr-2 mb-0">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Year"):</label>
+                    <select id="selYear" class="form-control form-control-sm mr-3">
+                        @for (int y = currentYear - 3; y <= currentYear + 1; y++)
+                        {
+                            if (y == selYear)
+                            {
+                                <option value="@y" selected="selected">@y</option>
+                            }
+                            else
+                            {
+                                <option value="@y">@y</option>
+                            }
+                        }
+                    </select>
+
+                    <button type="button" class="btn btn-primary btn-sm mr-4" onclick="loadData()">
+                        <i class="fas fa-sync-alt"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Load")
+                    </button>
+
+                    <label class="mr-2 mb-0">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.PaymentDate"):</label>
+                    <input type="date" id="paymentDate" class="form-control form-control-sm" onchange="applyPaymentDate()" />
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="mb-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addRow()">
+                        <i class="fas fa-plus"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.AddRow")
+                    </button>
+                    <small class="text-muted ml-2">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.EditHint")</small>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm table-hover" id="csvTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th style="width:36px">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Col.Seq")</th>
+                                <th style="width:80px">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Col.TransType")</th>
+                                <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Col.AccountNo")</th>
+                                <th style="width:110px">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Col.Amount")</th>
+                                <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Col.BenName")</th>
+                                <th style="width:80px">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Col.Narration")</th>
+                                <th style="width:120px">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Col.PaymentDate")</th>
+                                <th style="width:140px">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Col.IFSCCode")</th>
+                                <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.Col.Email")</th>
+                                <th style="width:44px"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="csvTbody">
+                            @for (var i = 0; i < Model.Count; i++)
+                            {
+                                <tr>
+                                    <td class="seq-cell text-center align-middle">@(i + 1)</td>
+                                    <td><input class="form-control form-control-sm" value="@Model[i].TransactionType" /></td>
+                                    <td><input class="form-control form-control-sm" value="@Model[i].AccountNumber" /></td>
+                                    <td><input class="form-control form-control-sm" value="@Model[i].Amount" /></td>
+                                    <td><input class="form-control form-control-sm" value="@Model[i].BeneficiaryName" /></td>
+                                    <td><input class="form-control form-control-sm" value="@Model[i].Narration" /></td>
+                                    <td><input class="form-control form-control-sm pay-date-cell" value="@Model[i].PaymentDate" placeholder="DD/MM/YYYY" /></td>
+                                    <td><input class="form-control form-control-sm" value="@Model[i].IFSCCode" /></td>
+                                    <td><input class="form-control form-control-sm" value="@Model[i].Email" /></td>
+                                    <td class="text-center align-middle">
+                                        <button type="button" class="btn btn-danger btn-sm px-1 py-0" onclick="deleteRow(this)"
+                                                title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.DeleteRow")">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (!Model.Any())
+                {
+                    <p class="text-center text-muted" id="noDataMsg">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.NoData")</p>
+                }
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script>
+    (function () {
+        var utc = new Date();
+        var ist = new Date(utc.getTime() + (5 * 60 + 30) * 60000);
+        var dd = String(ist.getUTCDate()).padStart(2, '0');
+        var mm = String(ist.getUTCMonth() + 1).padStart(2, '0');
+        var yyyy = ist.getUTCFullYear();
+        document.getElementById('paymentDate').value = yyyy + '-' + mm + '-' + dd;
+        applyPaymentDate();
+    })();
+
+    function loadData() {
+        var m = document.getElementById('selMonth').value;
+        var y = document.getElementById('selYear').value;
+        window.location.href = '@Url.Action("PreviewHdfcCsv", "EmployeeSalary", new { area = "Admin" })?monthId=' + m + '&yearId=' + y;
+    }
+
+    function applyPaymentDate() {
+        var raw = document.getElementById('paymentDate').value; 
+        if (!raw) return;
+        var parts = raw.split('-');
+        var formatted = parts[2] + '/' + parts[1] + '/' + parts[0]; 
+        document.querySelectorAll('.pay-date-cell').forEach(function (inp) { inp.value = formatted; });
+    }
+
+    function deleteRow(btn) {
+        var row = btn.closest('tr');
+        row.parentNode.removeChild(row);
+        renumber();
+    }
+
+    function addRow() {
+        var tbody = document.getElementById('csvTbody');
+        var seq = tbody.rows.length + 1;
+        var raw = document.getElementById('paymentDate').value;
+        var payDate = '';
+        if (raw) {
+            var p = raw.split('-');
+            payDate = p[2] + '/' + p[1] + '/' + p[0];
+        }
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td class="seq-cell text-center align-middle">' + seq + '</td>' +
+            '<td><input class="form-control form-control-sm" value="N" /></td>' +
+            '<td><input class="form-control form-control-sm" value="" /></td>' +
+            '<td><input class="form-control form-control-sm" value="" /></td>' +
+            '<td><input class="form-control form-control-sm" value="" /></td>' +
+            '<td><input class="form-control form-control-sm" value="VENDOR" /></td>' +
+            '<td><input class="form-control form-control-sm pay-date-cell" value="' + payDate + '" placeholder="DD/MM/YYYY" /></td>' +
+            '<td><input class="form-control form-control-sm" value="" /></td>' +
+            '<td><input class="form-control form-control-sm" value="" /></td>' +
+            '<td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm px-1 py-0" onclick="deleteRow(this)" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.HdfcCsv.DeleteRow")"><i class="fas fa-times"></i></button></td>';
+        tbody.appendChild(tr);
+    }
+
+    function renumber() {
+        var cells = document.querySelectorAll('#csvTbody .seq-cell');
+        cells.forEach(function (td, i) { td.textContent = i + 1; });
+    }
+
+    function exportCsv() {
+        var rows = [];
+        var tbody = document.getElementById('csvTbody');
+        for (var r = 0; r < tbody.rows.length; r++) {
+            var inputs = tbody.rows[r].querySelectorAll('input');
+            var seq = r + 1;
+            var transType = inputs[0].value.trim();
+            var accNo     = inputs[1].value.trim();
+            var amt       = inputs[2].value.trim();
+            var benName   = inputs[3].value.trim();
+            var narration = inputs[4].value.trim();
+            var payDate   = inputs[5].value.trim();
+            var ifsc      = inputs[6].value.trim();
+            var email     = inputs[7].value.trim();
+
+            // 28-field HDFC format:
+            // 1-5 explicit | 6-13 empty (9 commas) | 14=narration | 15-22 empty (9 commas) |
+            // 23=payDate | 24 empty (2 commas) | 25=IFSC | 26-27 empty (3 commas) | 28=email
+            rows.push(transType + ',' + seq + ',' + accNo + ',' + amt + ',' + benName +
+                      ',,,,,,,,,' + narration + ',,,,,,,,,' + payDate + ',,' + ifsc + ',,,' + email);
+        }
+        var csv = rows.join('\r\n');
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = '@ViewBag.FileName';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+</script>

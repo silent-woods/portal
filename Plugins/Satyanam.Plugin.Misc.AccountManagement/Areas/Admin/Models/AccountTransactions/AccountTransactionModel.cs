@@ -25,6 +25,18 @@ public partial record AccountTransactionModel : BaseNopEntityModel
 
     public string TransactionType { get; set; }
 
+    public string AccountGroup { get; set; }
+
+    public string CreatedOnIst { get; set; }
+
+    public string MonthYear { get; set; }
+
+    public string SourceName { get; set; }
+
+    public string LinkedEntityLabel { get; set; }
+
+    public string LinkedEntityUrl { get; set; }
+
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.TransactionTypeId")]
 	public int TransactionTypeId { get; set; }
 

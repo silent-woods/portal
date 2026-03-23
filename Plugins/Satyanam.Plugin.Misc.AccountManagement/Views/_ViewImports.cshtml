@@ -1,0 +1,18 @@
+@inherits App.Web.Framework.Mvc.Razor.NopRazorPage<TModel>
+
+@inject INopHtmlHelper NopHtml
+@inject IPermissionService permissionService
+@inject IWorkContext workContext
+
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, App.Web.Framework
+
+@using System.Globalization
+@using App.Core
+@using App.Services.Security
+@using App.Web.Components
+@using App.Web.Framework
+@using App.Web.Framework.UI
+@using App.Web.Models.Customer
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using Satyanam.Plugin.Misc.AccountManagement.Models.SalarySlip

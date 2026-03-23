@@ -231,6 +231,11 @@ namespace App.Services.Messages
         Task<IList<int>> SendTeamMemberAddedMessageAsync(int languageId, int employeeId, int designationId, int projectId);
 
         Task<IList<int>> SendWeeklyReportMessageAsync(int languageId);
+
+        Task<IList<int>> SendSalaryPaidEmailAsync(int languageId, string employeeFullName,
+            string employeeEmail, string monthYear, decimal grossSalary, decimal netSalary,
+            int salaryRecordId);
+
         #endregion
 
         #region Common

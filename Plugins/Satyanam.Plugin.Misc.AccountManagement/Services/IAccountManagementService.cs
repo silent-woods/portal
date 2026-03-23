@@ -126,8 +126,15 @@ public partial interface IAccountManagementService
 
     Task<AccountTransaction> GetAccountTransactionByInvoicePaymentHistoryIdAsync(int invoicePaymentHistoryId = 0);
 
-    Task<IPagedList<AccountTransaction>> GetAllAccountTransactionsAsync(int transactionTypeId = 0, int paymentMethodId = 0, int pageIndex = 0,
-        int pageSize = int.MaxValue);
+    Task<IPagedList<AccountTransaction>> GetAllAccountTransactionsAsync(int transactionTypeId = 0, int paymentMethodId = 0,
+        int accountGroupId = 0, DateTime? dateFrom = null, DateTime? dateTo = null,
+        int monthId = 0, int yearId = 0, int[] employeeIds = null, int[] invoiceIds = null,
+        int pageIndex = 0, int pageSize = int.MaxValue);
+
+    Task<(decimal TotalIncome, decimal TotalExpense, int TotalCount)> GetAccountTransactionSummaryAsync(
+        int transactionTypeId = 0, int paymentMethodId = 0,
+        int accountGroupId = 0, DateTime? dateFrom = null, DateTime? dateTo = null,
+        int monthId = 0, int yearId = 0, int[] employeeIds = null, int[] invoiceIds = null);
 
     #endregion
 

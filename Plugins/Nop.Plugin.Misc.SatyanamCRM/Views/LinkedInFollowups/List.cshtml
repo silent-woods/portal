@@ -482,8 +482,8 @@
         }
     </script>
     <script>
-        $('#btnRefreshLinkedInFollowups').on('click', function () {
-            updateTable('#linkedInFollowups-grid');
+               $('#btnRefreshLinkedInFollowups').on('click', function () {
+            refreshLinkedInFollowupsGrid();
         });
     </script>
 
@@ -932,6 +932,16 @@
                 loadStatusSummary();
             }, 400);
         });
+                function refreshLinkedInFollowupsGrid() {
+
+            // Refresh grid
+            updateTable('#linkedInFollowups-grid');
+
+            // Reload summary AFTER grid refresh delay
+            setTimeout(function () {
+                loadStatusSummary();
+            }, 500);
+        }
     </script>
 
 

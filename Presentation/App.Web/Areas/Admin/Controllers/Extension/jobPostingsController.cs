@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Services.Helpers;
 
 namespace App.Web.Areas.Admin.Controllers
 {
@@ -52,6 +53,7 @@ namespace App.Web.Areas.Admin.Controllers
         private readonly IRepository<JobApplication> _jobApplicationRepository;
         private readonly IDownloadService _downloadService;
         private readonly IRepository<JobPosting> _jobPostingRepository;
+        private readonly IDateTimeHelper _dateTimeHelper;
 
         #endregion
 
@@ -79,7 +81,8 @@ namespace App.Web.Areas.Admin.Controllers
             IStoreContext storeContext,
             IRepository<JobApplication> jobApplicationRepository,
             IDownloadService downloadService,
-            IRepository<JobPosting> jobPostingRepository)
+            IRepository<JobPosting> jobPostingRepository,
+            IDateTimeHelper dateTimeHelper)
         {
             _permissionService = permissionService;
             _jobPostingsModelFactory = jobPostingsModelFactory;
@@ -103,6 +106,7 @@ namespace App.Web.Areas.Admin.Controllers
             _jobApplicationRepository = jobApplicationRepository;
             _downloadService = downloadService;
             _jobPostingRepository = jobPostingRepository;
+            _dateTimeHelper = dateTimeHelper;
         }
 
         #endregion
@@ -776,7 +780,7 @@ namespace App.Web.Areas.Admin.Controllers
 
             var model = new InvitationCandidateListModel
             {
-                Data = candidates.Select(c =>
+                Data = await candidates.SelectAwait(async c =>
                 {
                     var latestApp = latestApplications
                         .FirstOrDefault(a => a.CandidateId == c.Id);
@@ -786,6 +790,7 @@ namespace App.Web.Areas.Admin.Controllers
                         Id = c.Id,
                         Name = c.FirstName + " " + c.LastName,
                         Email = c.Email,
+
                         CandidateTypeName = Enum.GetName(
                             typeof(CandidateTypeEnum),
                             c.CandidateTypeId),
@@ -794,9 +799,11 @@ namespace App.Web.Areas.Admin.Controllers
                             ? ((CandidateStatusEnum)latestApp.StatusId).ToString()
                             : "",
 
-                        CreatedOnUtc = c.CreatedOnUtc
+                        CreatedOnUtc = latestApp != null
+                            ? await _dateTimeHelper.ConvertToUserTimeAsync(latestApp.AppliedOnUtc, DateTimeKind.Utc)
+                            : await _dateTimeHelper.ConvertToUserTimeAsync(c.CreatedOnUtc, DateTimeKind.Utc)
                     };
-                }),
+                }).ToListAsync(),
 
                 Draw = searchModel.Draw,
                 RecordsTotal = totalCount,
@@ -888,34 +895,39 @@ namespace App.Web.Areas.Admin.Controllers
             return Content(html);
         }
         [HttpGet]
-        public async Task<IActionResult> GetCandidateHistoryTooltip(int candidateId)
+        public async Task<IActionResult> GetCandidateHistoryTooltip(int candidateId, int currentJobPostingId)
         {
-            var applications = await (
-    from app in _jobApplicationRepository.Table
-    join job in _jobPostingRepository.Table
-        on app.JobPostingId equals job.Id into jobGroup
-    from job in jobGroup.DefaultIfEmpty()
-    where app.CandidateId == candidateId
-    orderby app.AppliedOnUtc descending
-    select new
-    {
-        Title = job != null ? job.Title : app.PositionApplied,
-        app.StatusId,
-        app.AppliedOnUtc
-    }).ToListAsync();
+            // Step 1: Get all applications for candidate
+            var applications = await _jobApplicationRepository.Table
+                .Where(x => x.CandidateId == candidateId)
+                .OrderByDescending(x => x.AppliedOnUtc)
+                .ToListAsync();
 
             if (!applications.Any())
                 return Content("");
 
+            // Step 2: Get latest application per JobPosting (in memory - SAFE)
+            var latestApplications = applications
+                .GroupBy(x => x.JobPostingId)
+                .Select(g => g.First())   // already ordered desc
+                .Where(x => x.JobPostingId != currentJobPostingId)
+                .ToList();
+
+            if (!latestApplications.Any())
+                return Content("");
+
             var html = "";
 
-            foreach (var app in applications)
+            foreach (var app in latestApplications)
             {
-                var status = Enum.GetName(typeof(CandidateStatusEnum), app.StatusId);
+                var job = await _jobPostingRepository.GetByIdAsync(app.JobPostingId);
+                if (job == null) continue;
+
+                var status = ((CandidateStatusEnum)app.StatusId).ToString();
 
                 html += $@"
         <div style='margin-bottom:6px'>
-            <b>Applied on {app.Title}</b><br/>
+            <b>Already applied on {job.Title}</b><br/>
             Status: {status}<br/>
             Applied: {app.AppliedOnUtc.ToLocalTime():dd MMM yyyy hh:mm tt}
         </div>

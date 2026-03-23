@@ -7,6 +7,9 @@
 
     const string hidePluginConfigurationBlockAttributeName = "AccountManagementPluginConfigurationPage.HideAccountManagementPluginConfigurationBlock";
     var hidePluginConfigurationBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hidePluginConfigurationBlockAttributeName);
+
+    const string hideExpenseSalaryBlockAttributeName = "AccountManagementPluginConfigurationPage.HideExpenseSalaryBlock";
+    var hideExpenseSalaryBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideExpenseSalaryBlockAttributeName);
 }
 
 <form asp-controller="AccountManagement" asp-action="Configure" method="post">
@@ -59,6 +62,101 @@
                                 <div class="col-md-9">
                                     <nop-editor asp-for="InvoiceLogoId" />
                                     <span asp-validation-for="InvoiceLogoId"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </nop-card>
+                    <nop-card asp-name="expense-salary-card" asp-icon="fas fa-money-bill-wave" asp-title="Expense & Salary Settings" asp-hide-block-attribute-name="@hideExpenseSalaryBlockAttributeName" asp-hide="@hideExpenseSalaryBlock" asp-advanced="false">
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="SalaryProcessingDay" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="SalaryProcessingDay" />
+                                    <span class="text-muted">Day of month (1–28) to auto-run salary processing</span>
+                                    <span asp-validation-for="SalaryProcessingDay"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="SalaryExpenseCategoryId" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-select asp-for="SalaryExpenseCategoryId" asp-items="Model.AvailableExpenseCategories" />
+                                    <span asp-validation-for="SalaryExpenseCategoryId"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="SalaryAccountGroupId" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-select asp-for="SalaryAccountGroupId" asp-items="Model.AvailableAccountGroups" />
+                                    <small class="text-muted">Account group assigned to salary account transactions when salary is marked as paid</small>
+                                    <span asp-validation-for="SalaryAccountGroupId"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="RecurringExpenseAccountGroupId" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-select asp-for="RecurringExpenseAccountGroupId" asp-items="Model.AvailableAccountGroups" />
+                                    <small class="text-muted">Account group assigned to account transactions created when a recurring expense is auto-generated</small>
+                                    <span asp-validation-for="RecurringExpenseAccountGroupId"></span>
+                                </div>
+                            </div>
+                            <hr />
+                            <h5 class="mt-2 mb-3"><i class="fas fa-file-pdf"></i> Salary Slip Company Details</h5>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="CompanyName" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="CompanyName" />
+                                    <span asp-validation-for="CompanyName"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="CompanyAddress" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="CompanyAddress" />
+                                    <small class="text-muted">Appears on salary slip header (right side)</small>
+                                    <span asp-validation-for="CompanyAddress"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="CompanyCIN" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="CompanyCIN" />
+                                    <span asp-validation-for="CompanyCIN"></span>
+                                </div>
+                            </div>
+                            <hr />
+                            <h5 class="mt-2 mb-3"><i class="fas fa-user-tie"></i> HR Signatory (Salary Slip)</h5>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="HrPersonName" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-select asp-for="HrPersonName" asp-items="Model.AvailableHrEmployees" />
+                                    <small class="text-muted">Name printed at the bottom of the salary slip</small>
+                                    <span asp-validation-for="HrPersonName"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="HrSignaturePictureId" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="HrSignaturePictureId" />
+                                    <small class="text-muted">Signature image shown above the HR name on the salary slip</small>
+                                    <span asp-validation-for="HrSignaturePictureId"></span>
                                 </div>
                             </div>
                         </div>

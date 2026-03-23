@@ -1,0 +1,24 @@
+@model ExpenseModel
+
+@{
+    var customer = await workContext.GetCurrentCustomerAsync();
+
+    const string hideInfoBlockAttributeName = "ExpensePage.HideInfoBlock";
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+
+<input asp-for="Id" type="hidden" />
+<input asp-for="EmployeeSalaryRecordId" type="hidden" />
+<input asp-for="RecurringExpenseId" type="hidden" />
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <nop-cards id="expense-cards">
+                <nop-card asp-name="expense-info" asp-icon="fas fa-info" asp-title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Expense.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock" asp-advanced="false">
+                    @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/Extension/Expense/_CreateOrUpdateExpense.Info.cshtml", Model)
+                </nop-card>
+            </nop-cards>
+        </div>
+    </div>
+</section>

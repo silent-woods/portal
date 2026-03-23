@@ -54,6 +54,7 @@ public partial class AccountManagementController : BaseAdminController
     protected readonly IAccountManagementModelFactory _accountManagementModelFactory;
     protected readonly IAccountManagementService _accountManagementService;
     protected readonly IAddressService _addressService;
+    protected readonly IExpenseCategoryService _expenseCategoryService;
     protected readonly ICompanyService _companyService;
     protected readonly IContactsService _contactsService;
     protected readonly ICountryService _countryService;
@@ -82,6 +83,7 @@ public partial class AccountManagementController : BaseAdminController
     public AccountManagementController(IAccountManagementModelFactory accountManagementModelFactory,
         IAccountManagementService accountManagementService,
         IAddressService addressService,
+        IExpenseCategoryService expenseCategoryService,
         ICompanyService companyService,
         IContactsService contactsService,
         ICountryService countryService,
@@ -106,6 +108,7 @@ public partial class AccountManagementController : BaseAdminController
         _accountManagementModelFactory = accountManagementModelFactory;
         _accountManagementService = accountManagementService;
         _addressService = addressService;
+        _expenseCategoryService = expenseCategoryService;
         _companyService = companyService;
         _contactsService = contactsService;
         _countryService = countryService;
@@ -203,13 +206,45 @@ public partial class AccountManagementController : BaseAdminController
             return AccessDeniedView();
 
         var settings = await _settingService.LoadSettingAsync<AccountManagementSettings>();
+        var expenseSettings = await _settingService.LoadSettingAsync<ExpenseManagementSettings>();
 
         var model = new ConfigurationModel()
         {
             EnablePlugin = settings.EnablePlugin,
             InvoiceNumber = settings.InvoiceNumber,
-            InvoiceLogoId = settings.InvoiceLogoId
+            InvoiceLogoId = settings.InvoiceLogoId,
+            SalaryProcessingDay = expenseSettings.SalaryProcessingDay,
+            SalaryExpenseCategoryId = expenseSettings.SalaryExpenseCategoryId,
+            SalaryAccountGroupId = expenseSettings.SalaryAccountGroupId,
+            RecurringExpenseAccountGroupId = expenseSettings.RecurringExpenseAccountGroupId,
+            CompanyName = expenseSettings.CompanyName,
+            CompanyAddress = expenseSettings.CompanyAddress,
+            CompanyCIN = expenseSettings.CompanyCIN,
+            HrPersonName = expenseSettings.HrPersonName,
+            HrSignaturePictureId = expenseSettings.HrSignaturePictureId
         };
+
+        var categories = await _expenseCategoryService.GetAllExpenseCategoriesAsync();
+        model.AvailableExpenseCategories = categories
+            .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = c.Name, Value = c.Id.ToString() })
+            .ToList();
+        model.AvailableExpenseCategories.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = "--- Select Category ---", Value = "0" });
+
+        var accountGroups = await _accountManagementService.GetAllAccountGroupsAsync();
+        model.AvailableAccountGroups = accountGroups
+            .Select(g => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = g.Name, Value = g.Id.ToString() })
+            .ToList();
+        model.AvailableAccountGroups.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = "--- Select Account Group ---", Value = "0" });
+
+        var employees = await _employeeService.GetAllEmployeesAsync();
+        model.AvailableHrEmployees = employees
+            .Select(e => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+            {
+                Text = $"{e.FirstName} {e.LastName}".Trim(),
+                Value = $"{e.FirstName} {e.LastName}".Trim()
+            })
+            .ToList();
+        model.AvailableHrEmployees.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = "--- Select HR Person ---", Value = "" });
 
         return View(model);
     }
@@ -227,6 +262,20 @@ public partial class AccountManagementController : BaseAdminController
             InvoiceLogoId = model.InvoiceLogoId
         };
         await _settingService.SaveSettingAsync(settings);
+
+        var expenseSettings = new ExpenseManagementSettings
+        {
+            SalaryProcessingDay = model.SalaryProcessingDay,
+            SalaryExpenseCategoryId = model.SalaryExpenseCategoryId,
+            SalaryAccountGroupId = model.SalaryAccountGroupId,
+            RecurringExpenseAccountGroupId = model.RecurringExpenseAccountGroupId,
+            CompanyName = model.CompanyName,
+            CompanyAddress = model.CompanyAddress,
+            CompanyCIN = model.CompanyCIN,
+            HrPersonName = model.HrPersonName,
+            HrSignaturePictureId = model.HrSignaturePictureId
+        };
+        await _settingService.SaveSettingAsync(expenseSettings);
 
         _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.Plugins.Saved"));
 
@@ -1784,7 +1833,11 @@ public partial class AccountManagementController : BaseAdminController
         if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageTransactions, PermissionAction.View))
             return AccessDeniedView();
 
-        var model = await _accountManagementModelFactory.PrepareAccountTransactionSearchModelAsync(new AccountTransactionSearchModel());
+        var searchModel = new AccountTransactionSearchModel
+        {
+            SearchPeriodId = (int)AccountManagement.Areas.Admin.Models.Enums.SearchPeriodEnum.ThisMonth
+        };
+        var model = await _accountManagementModelFactory.PrepareAccountTransactionSearchModelAsync(searchModel);
 
         return View(model);
     }
@@ -1798,6 +1851,54 @@ public partial class AccountManagementController : BaseAdminController
         var model = await _accountManagementModelFactory.PrepareAccountTransactionListModelAsync(searchModel);
 
         return Json(model);
+    }
+
+    [HttpPost]
+    public virtual async Task<IActionResult> AccountTransactionSummary(AccountTransactionSearchModel searchModel)
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageTransactions, PermissionAction.View))
+            return AccessDeniedView();
+
+        var (totalIncome, totalExpense, totalCount) = await _accountManagementModelFactory.GetAccountTransactionSummaryAsync(searchModel);
+        var netBalance = totalIncome - totalExpense;
+
+        return Json(new
+        {
+            totalIncome = totalIncome.ToString("N2"),
+            totalExpense = totalExpense.ToString("N2"),
+            netBalance = netBalance.ToString("N2"),
+            netBalancePositive = netBalance >= 0,
+            totalCount
+        });
+    }
+
+    [HttpGet]
+    public virtual async Task<IActionResult> GetEntityFilterData()
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageTransactions, PermissionAction.View))
+            return AccessDeniedView();
+
+        var employees = await _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue);
+        var companies = await _companyService.GetAllCompanyAsync(string.Empty, string.Empty, pageSize: int.MaxValue);
+        var employeeGroupText = await _localizationService
+    .GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Common.Group.Employees");
+        var clientGroupText = await _localizationService
+            .GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Common.Group.Clients");
+        var items = employees.Select(e => new
+        {
+            value = $"e_{e.Id}",
+            text = $"{e.FirstName} {e.LastName}".Trim(),
+            group = employeeGroupText
+        }).Cast<object>().ToList();
+
+        items.AddRange(companies.Select(c => new
+        {
+            value = $"c_{c.Id}",
+            text = c.CompanyName,
+            group = clientGroupText
+        }));
+
+        return Json(items);
     }
 
     public virtual async Task<IActionResult> AccountTransactionCreate()
@@ -1845,6 +1946,63 @@ public partial class AccountManagementController : BaseAdminController
         model = await _accountManagementModelFactory.PrepareAccountTransactionModelAsync(model, null);
 
         return View(model);
+    }
+
+    [HttpGet]
+    public virtual async Task<IActionResult> AccountTransactionDetail(int id)
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageTransactions))
+            return AccessDeniedView();
+
+        var transaction = await _accountManagementService.GetAccountTransactionByIdAsync(id);
+        if (transaction == null)
+            return Json(new { success = false });
+
+        var accountGroup = await _accountManagementService.GetAccountGroupByIdAsync(transaction.AccountGroupId);
+        var istZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+        var createdOnIst = TimeZoneInfo.ConvertTimeFromUtc(transaction.CreatedOnUtc, istZone);
+        var monthYear = transaction.MonthId > 0
+            ? System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.GetAbbreviatedMonthName(transaction.MonthId) + " " + transaction.YearId
+            : string.Empty;
+
+        // Resolve source name: employee for salary, company for invoice income
+        var sourceName = string.Empty;
+        if (transaction.EmployeeId > 0)
+        {
+            var employee = await _employeeService.GetEmployeeByIdAsync(transaction.EmployeeId);
+            if (employee != null)
+                sourceName = $"{employee.FirstName} {employee.LastName}".Trim();
+        }
+        else if (transaction.InvoiceId > 0)
+        {
+            var invoice = await _accountManagementService.GetInvoiceByIdAsync(transaction.InvoiceId);
+            if (invoice != null && invoice.ProjectBillingId > 0)
+            {
+                var projectBilling = await _accountManagementService.GetProjectBillingByIdAsync(invoice.ProjectBillingId);
+                if (projectBilling != null && projectBilling.CompanyId > 0)
+                {
+                    var company = await _companyService.GetCompanyByIdAsync(projectBilling.CompanyId);
+                    if (company != null)
+                        sourceName = company.CompanyName;
+                }
+            }
+        }
+
+        return Json(new
+        {
+            success = true,
+            id = transaction.Id,
+            transactionType = Enum.GetName(typeof(TransactionTypeEnum), transaction.TransactionTypeId),
+            accountGroup = accountGroup?.Name ?? string.Empty,
+            sourceName = sourceName,
+            amount = transaction.Amount.ToString("N2"),
+            currency = transaction.Currency,
+            paymentMethod = Enum.GetName(typeof(PaymentTypeEnum), transaction.PaymentMethodId),
+            referenceNo = transaction.ReferenceNo,
+            notes = transaction.Notes,
+            monthYear = monthYear,
+            createdOnIst = createdOnIst.ToString("dd MMM yyyy HH:mm")
+        });
     }
 
     public async Task<IActionResult> GetAccountGroupsByTransactionType(int transactionTypeId)

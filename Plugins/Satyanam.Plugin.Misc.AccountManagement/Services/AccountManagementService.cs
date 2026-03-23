@@ -1,6 +1,7 @@
 ﻿using App.Core;
 using App.Core.Domain.Extension.TimeSheets;
 using App.Core.Domain.Messages;
+using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.Enums;
 using App.Core.Domain.Projects;
 using App.Core.Domain.ProjectTasks;
 using App.Core.Domain.TimeSheets;
@@ -630,6 +631,8 @@ public partial class AccountManagementService : IAccountManagementService
     }
 
     public virtual async Task<IPagedList<AccountTransaction>> GetAllAccountTransactionsAsync(int transactionTypeId = 0, int paymentMethodId = 0,
+        int accountGroupId = 0, DateTime? dateFrom = null, DateTime? dateTo = null,
+        int monthId = 0, int yearId = 0, int[] employeeIds = null, int[] invoiceIds = null,
         int pageIndex = 0, int pageSize = int.MaxValue)
     {
         var accountTransactions = from at in _accountTransactionRepository.Table
@@ -642,9 +645,72 @@ public partial class AccountManagementService : IAccountManagementService
         if (paymentMethodId > 0)
             accountTransactions = accountTransactions.Where(at => at.PaymentMethodId == paymentMethodId);
 
+        if (accountGroupId > 0)
+            accountTransactions = accountTransactions.Where(at => at.AccountGroupId == accountGroupId);
+
+        if (dateFrom.HasValue)
+            accountTransactions = accountTransactions.Where(at => at.CreatedOnUtc >= dateFrom.Value);
+
+        if (dateTo.HasValue)
+            accountTransactions = accountTransactions.Where(at => at.CreatedOnUtc <= dateTo.Value);
+
+        if (monthId > 0)
+            accountTransactions = accountTransactions.Where(at => at.MonthId == monthId);
+
+        if (yearId > 0)
+            accountTransactions = accountTransactions.Where(at => at.YearId == yearId);
+
+        var hasEmployeeFilter = employeeIds != null && employeeIds.Length > 0;
+        var hasInvoiceFilter = invoiceIds != null && invoiceIds.Length > 0;
+        if (hasEmployeeFilter || hasInvoiceFilter)
+            accountTransactions = accountTransactions.Where(at =>
+                (hasEmployeeFilter && employeeIds.Contains(at.EmployeeId)) ||
+                (hasInvoiceFilter && invoiceIds.Contains(at.InvoiceId)));
+
         accountTransactions = accountTransactions.OrderByDescending(ac => ac.CreatedOnUtc);
 
         return await accountTransactions.ToPagedListAsync(pageIndex, pageSize);
+    }
+
+    public virtual async Task<(decimal TotalIncome, decimal TotalExpense, int TotalCount)> GetAccountTransactionSummaryAsync(
+        int transactionTypeId = 0, int paymentMethodId = 0,
+        int accountGroupId = 0, DateTime? dateFrom = null, DateTime? dateTo = null,
+        int monthId = 0, int yearId = 0, int[] employeeIds = null, int[] invoiceIds = null)
+    {
+        var query = from at in _accountTransactionRepository.Table
+                    where !at.Deleted
+                    select at;
+
+        if (transactionTypeId > 0)
+            query = query.Where(at => at.TransactionTypeId == transactionTypeId);
+        if (paymentMethodId > 0)
+            query = query.Where(at => at.PaymentMethodId == paymentMethodId);
+        if (accountGroupId > 0)
+            query = query.Where(at => at.AccountGroupId == accountGroupId);
+        if (dateFrom.HasValue)
+            query = query.Where(at => at.CreatedOnUtc >= dateFrom.Value);
+        if (dateTo.HasValue)
+            query = query.Where(at => at.CreatedOnUtc <= dateTo.Value);
+        if (monthId > 0)
+            query = query.Where(at => at.MonthId == monthId);
+        if (yearId > 0)
+            query = query.Where(at => at.YearId == yearId);
+
+        var hasEmployeeFilter = employeeIds != null && employeeIds.Length > 0;
+        var hasInvoiceFilter = invoiceIds != null && invoiceIds.Length > 0;
+        if (hasEmployeeFilter || hasInvoiceFilter)
+            query = query.Where(at =>
+                (hasEmployeeFilter && employeeIds.Contains(at.EmployeeId)) ||
+                (hasInvoiceFilter && invoiceIds.Contains(at.InvoiceId)));
+
+        var all = await query.ToListAsync();
+        var incomeTypeId = (int)TransactionTypeEnum.Income;
+        var expenseTypeId = (int)TransactionTypeEnum.Expense;
+
+        var totalIncome = all.Where(at => at.TransactionTypeId == incomeTypeId).Sum(at => at.Amount);
+        var totalExpense = all.Where(at => at.TransactionTypeId == expenseTypeId).Sum(at => at.Amount);
+
+        return (totalIncome, totalExpense, all.Count);
     }
 
     #endregion

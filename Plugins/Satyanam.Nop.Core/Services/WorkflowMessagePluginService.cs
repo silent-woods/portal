@@ -364,7 +364,7 @@ namespace Satyanam.Nop.Core.Services
                         foreach (var employeeId in allEmployee)
                         {
                             var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
-                            if (employee == null) continue;
+                            if (employee == null || employee.IsVendor) continue;
                             var qaId = await _designationService.GetQARoleId();
                             if (employee.DesignationId == qaId) continue;
                             var empTracking = await _activityTrackingService.GetSummaryByEmployeeAndDateRangeAsync(employeeId, from, to);
@@ -1041,7 +1041,7 @@ namespace Satyanam.Nop.Core.Services
                         foreach (var employeeId in allEmployee)
                         {
                             var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
-                            if (employee == null) continue;
+                            if (employee == null || employee.IsVendor) continue;
                             if (employee.DesignationId != managerRole && employee.DesignationId != hrRole)
                             {
                                 var tasks = await _commonPluginService.GetOverdueTasksByEmployeeIdAsync(employeeId);

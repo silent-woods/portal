@@ -1,0 +1,372 @@
+@model RecurringExpenseModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ExpenseCategoryId" asp-postfix="*" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="ExpenseCategoryId" asp-items="Model.AvailableCategories" />
+            <span asp-validation-for="ExpenseCategoryId" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Title" asp-postfix="*" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Title" asp-required="true" />
+            <span asp-validation-for="Title" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Description" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Description" />
+            <span asp-validation-for="Description"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Amount" asp-postfix="*" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Amount" asp-required="true" />
+            <span asp-validation-for="Amount" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CurrencyCode" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="CurrencyCode" asp-items="Model.AvailableCurrencies" />
+            <span asp-validation-for="CurrencyCode"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="AccountGroupId" />
+        </div>
+        <div class="col-md-9">
+            <div class="d-flex align-items-center">
+                <div style="flex:1;">
+                    <nop-select asp-for="AccountGroupId" asp-items="Model.AvailableAccountGroups" />
+                </div>
+                <span class="required ml-1">*</span>
+            </div>
+            <span asp-validation-for="AccountGroupId" class="field-validation-error"></span>
+            <small class="text-muted d-block">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.RecurringExpense.Fields.AccountGroupId.Hint")</small>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="PaymentMethodId" />
+        </div>
+        <div class="col-md-9">
+            <div class="d-flex align-items-center">
+                <div style="flex:1;">
+                    <nop-select asp-for="PaymentMethodId" asp-items="Model.AvailablePaymentMethods" />
+                </div>
+                <span class="required ml-1">*</span>
+            </div>
+            <span asp-validation-for="PaymentMethodId" class="field-validation-error"></span>
+            <small class="text-muted d-block">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.RecurringExpense.Fields.PaymentMethodId.Hint")</small>
+        </div>
+    </div>
+
+    <hr class="my-3" />
+    <h5 class="mb-3 text-muted"><i class="fas fa-redo-alt mr-1"></i> Recurrence Schedule</h5>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="FrequencyId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="FrequencyId" asp-items="Model.AvailableFrequencies" />
+            <span asp-validation-for="FrequencyId"></span>
+        </div>
+    </div>
+    <input type="hidden" asp-for="RecurrenceDay" id="RecurrenceDay" />
+    <input type="hidden" asp-for="RecurrenceMonth" id="RecurrenceMonth" />
+    <div class="form-group row" id="row-weekly" style="display:none">
+        <div class="col-md-3">
+            <div class="label-wrapper">
+                <label class="col-form-label">Runs every</label>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="weekday-picker d-flex flex-wrap" style="gap:8px">
+                @{
+                    var weekDays = new[] { (1, "Mon"), (2, "Tue"), (3, "Wed"), (4, "Thu"), (5, "Fri"), (6, "Sat"), (7, "Sun") };
+                }
+                @foreach (var (dayVal, dayLabel) in weekDays)
+                {
+                    var isWeekdayActive = Model.FrequencyId == 1 && Model.RecurrenceDay == dayVal;
+                    var weekdayBtnClass = "weekday-btn btn " + (isWeekdayActive ? "btn-primary active" : "btn-outline-secondary");
+                    <label class="@weekdayBtnClass" data-day="@dayVal" style="min-width:54px;cursor:pointer">
+                        @if (isWeekdayActive)
+                        {
+                            <input type="radio" name="weekday-pick" value="@dayVal" style="display:none" checked="checked" />
+                        }
+                        else
+                        {
+                            <input type="radio" name="weekday-pick" value="@dayVal" style="display:none" />
+                        }
+                        @dayLabel
+                    </label>
+                }
+            </div>
+            <small class="form-text text-muted mt-1">An expense record will be created on this weekday every week.</small>
+        </div>
+    </div>
+
+    <div class="form-group row" id="row-monthly" style="display:none">
+        <div class="col-md-3">
+            <div class="label-wrapper">
+                <label class="col-form-label">Runs on the</label>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="input-group" style="max-width:220px">
+                <select id="monthly-day-select" class="form-control">
+                    @for (int d = 1; d <= 28; d++)
+                    {
+                        var sfx = d switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" };
+                        if (Model.FrequencyId == 2 && Model.RecurrenceDay == d)
+                        {
+                            <option value="@d" selected="selected">@d@sfx</option>
+                        }
+                        else
+                        {
+                            <option value="@d">@d@sfx</option>
+                        }
+                    }
+                </select>
+                <div class="input-group-append">
+                    <span class="input-group-text">of every month</span>
+                </div>
+            </div>
+            <small class="form-text text-muted mt-1">An expense record will be created on this date each month. Max 28 to safely handle all months.</small>
+        </div>
+    </div>
+    <div class="form-group row" id="row-quarterly" style="display:none">
+        <div class="col-md-3">
+            <div class="label-wrapper">
+                <label class="col-form-label">Runs on the</label>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="input-group" style="max-width:220px">
+                <select id="quarterly-day-select" class="form-control">
+                    @for (int d = 1; d <= 28; d++)
+                    {
+                        var sfx = d switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" };
+                        if (Model.FrequencyId == 3 && Model.RecurrenceDay == d)
+                        {
+                            <option value="@d" selected="selected">@d@sfx</option>
+                        }
+                        else
+                        {
+                            <option value="@d">@d@sfx</option>
+                        }
+                    }
+                </select>
+                <div class="input-group-append">
+                    <span class="input-group-text">of every quarter</span>
+                </div>
+            </div>
+            <small class="form-text text-muted mt-1">
+                Generates on this date in <strong>January, April, July, and October</strong> each year.
+            </small>
+        </div>
+    </div>
+    <div class="form-group row" id="row-yearly" style="display:none">
+        <div class="col-md-3">
+            <div class="label-wrapper">
+                <label class="col-form-label">Runs every year on</label>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="d-flex align-items-center flex-wrap" style="gap:8px">
+                <select id="yearly-day-select" class="form-control" style="width:100px">
+                    @for (int d = 1; d <= 28; d++)
+                    {
+                        var sfx = d switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" };
+                        if (Model.FrequencyId == 4 && Model.RecurrenceDay == d)
+                        {
+                            <option value="@d" selected="selected">@d@sfx</option>
+                        }
+                        else
+                        {
+                            <option value="@d">@d@sfx</option>
+                        }
+                    }
+                </select>
+                <span class="text-muted">of</span>
+                <select id="yearly-month-select" class="form-control" style="width:140px">
+                    @{
+                        var monthNames = new[] { "January","February","March","April","May","June","July","August","September","October","November","December" };
+                    }
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        if (Model.FrequencyId == 4 && Model.RecurrenceMonth == m)
+                        {
+                            <option value="@m" selected="selected">@monthNames[m - 1]</option>
+                        }
+                        else
+                        {
+                            <option value="@m">@monthNames[m - 1]</option>
+                        }
+                    }
+                </select>
+            </div>
+            <small class="form-text text-muted mt-1">An expense record will be created once a year on this date.</small>
+        </div>
+    </div>
+    <div class="form-group row" id="schedule-preview-row" style="display:none">
+        <div class="col-md-3"></div>
+        <div class="col-md-9">
+            <div class="alert alert-info mb-0 py-2 px-3">
+                <i class="fas fa-calendar-check mr-1"></i>
+                <span id="schedule-preview-text"></span>
+            </div>
+        </div>
+    </div>
+    <hr class="my-3" />
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="StartDate" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="StartDate" asp-required="true" />
+            <small class="form-text text-muted">The date from which this recurring expense becomes active.</small>
+            <span asp-validation-for="StartDate"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="EndDate" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="EndDate" />
+            <small class="form-text text-muted">Leave blank to run indefinitely.</small>
+            <span asp-validation-for="EndDate"></span>
+        </div>
+    </div>
+    @if (Model.LastGeneratedOnUtc.HasValue)
+    {
+        <div class="form-group row">
+            <div class="col-md-3">
+                <div class="label-wrapper">
+                    <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.RecurringExpense.Fields.LastGenerated")</label>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="form-text-row">@Model.LastGeneratedOnUtc.Value.ToString("dd MMM yyyy HH:mm")</div>
+            </div>
+        </div>
+    }
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="NextGenerateOnUtc" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="NextGenerateOnUtc" />
+            <small class="form-text text-muted">Leave blank to let the system calculate automatically.</small>
+            <span asp-validation-for="NextGenerateOnUtc"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsActive" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="IsActive" />
+            <span asp-validation-for="IsActive"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function () {
+    var weekdayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    var monthLabels  = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                            'July', 'August', 'September', 'October', 'November', 'December'];
+
+    function ordinal(n) {
+        var s = ['th', 'st', 'nd', 'rd'], v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    }
+
+    function syncHiddenFields() {
+        var freq = parseInt($('#FrequencyId').val()) || 0;
+        if (freq === 1) {
+            $('#RecurrenceDay').val($('input[name="weekday-pick"]:checked').val() || 0);
+            $('#RecurrenceMonth').val('');
+        } else if (freq === 2) {
+            $('#RecurrenceDay').val($('#monthly-day-select').val());
+            $('#RecurrenceMonth').val('');
+        } else if (freq === 3) {
+            $('#RecurrenceDay').val($('#quarterly-day-select').val());
+            $('#RecurrenceMonth').val('');
+        } else if (freq === 4) {
+            $('#RecurrenceDay').val($('#yearly-day-select').val());
+            $('#RecurrenceMonth').val($('#yearly-month-select').val());
+        }
+    }
+
+    function updatePreview() {
+        var freq = parseInt($('#FrequencyId').val()) || 0;
+        var text = '';
+        if (freq === 1) {
+            var day = parseInt($('input[name="weekday-pick"]:checked').val()) || 0;
+            text = day
+                ? 'An expense record will be created every <strong>' + weekdayNames[day] + '</strong>.'
+                : 'Select a weekday above.';
+        } else if (freq === 2) {
+            var d = parseInt($('#monthly-day-select').val());
+            text = 'An expense record will be created on the <strong>' + ordinal(d) + '</strong> of every month.';
+        } else if (freq === 3) {
+            var d = parseInt($('#quarterly-day-select').val());
+            text = 'An expense record will be created on the <strong>' + ordinal(d) + '</strong> of <strong>January, April, July, and October</strong>.';
+        } else if (freq === 4) {
+            var d = parseInt($('#yearly-day-select').val());
+            var m = parseInt($('#yearly-month-select').val());
+            text = 'An expense record will be created every year on <strong>' + ordinal(d) + ' ' + monthLabels[m] + '</strong>.';
+        }
+        if (text) {
+            $('#schedule-preview-text').html(text);
+            $('#schedule-preview-row').show();
+        } else {
+            $('#schedule-preview-row').hide();
+        }
+    }
+
+    function applyFrequency() {
+        var freq = parseInt($('#FrequencyId').val()) || 0;
+        $('#row-weekly').toggle(freq === 1);
+        $('#row-monthly').toggle(freq === 2);
+        $('#row-quarterly').toggle(freq === 3);
+        $('#row-yearly').toggle(freq === 4);
+        syncHiddenFields();
+        updatePreview();
+    }
+    $(document).on('click', '.weekday-btn', function () {
+        $('.weekday-btn').removeClass('active btn-primary').addClass('btn-outline-secondary');
+        $(this).removeClass('btn-outline-secondary').addClass('active btn-primary');
+        $(this).find('input[type=radio]').prop('checked', true);
+        syncHiddenFields();
+        updatePreview();
+    });
+    $('#monthly-day-select, #quarterly-day-select, #yearly-day-select, #yearly-month-select').on('change', function () {
+        syncHiddenFields();
+        updatePreview();
+    });
+    $('#FrequencyId').on('change', applyFrequency);
+    applyFrequency();
+});
+</script>

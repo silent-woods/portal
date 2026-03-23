@@ -236,7 +236,7 @@
         </span>
 
         <span class="history-container"
-              data-email="${row.Email}"
+              data-candidateid="${row.Id}"
               style="margin-left:5px;">
         </span>
     `;
@@ -314,28 +314,25 @@
         });
 
     });
-                      $('#jobposting-candidates-grid').on('draw.dt', function () {
+           $('#jobposting-candidates-grid').on('draw.dt', function () {
 
         $('.history-container').each(function () {
 
             var container = $(this);
 
-            // prevent duplicate loading
             if (container.data('loaded'))
                 return;
 
-            var email = container.data('email');
+            var candidateId = container.data('candidateid');
 
             $.ajax({
                 url: '/Admin/JobPostings/GetCandidateHistoryTooltip',
                 type: 'GET',
-                data: {
-                    email: email,
-                    currentJobPostingId: @Model.Id
-                },
-                success: function (result)
-                {
-                    // no history → do nothing
+                data: { candidateId: candidateId,
+        currentJobPostingId: @Model.Id},
+
+                success: function (result) {
+
                     if (!result || result.trim() === "") {
                         container.data('loaded', true);
                         return;
@@ -352,10 +349,6 @@
 
                     container.append(icon);
 
-                    container.data('loaded', true);
-                },
-                error: function ()
-                {
                     container.data('loaded', true);
                 }
             });

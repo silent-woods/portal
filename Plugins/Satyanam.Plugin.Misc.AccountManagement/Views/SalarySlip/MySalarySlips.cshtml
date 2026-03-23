@@ -1,0 +1,56 @@
+@using App.Web.Models.Customer
+@model List<Satyanam.Plugin.Misc.AccountManagement.Models.SalarySlip.MySalarySlipItemModel>
+@{
+    Layout = "_ColumnsTwo";
+    NopHtml.AddTitleParts("My Salary Slips");
+    NopHtml.AppendPageCssClassParts("html-account-page");
+    NopHtml.AppendPageCssClassParts("html-salary-slips-page");
+}
+
+@section left
+{
+    @await Component.InvokeAsync(typeof(CustomerNavigationViewComponent), new { selectedTabId = CustomerNavigationEnum.SalarySlips })
+}
+
+<div class="page account-page salary-slips-page">
+    <div class="page-title">
+        <h1>My Salary Slips</h1>
+    </div>
+    <div class="page-body">
+        @if (!Model.Any())
+        {
+            <div class="no-data">
+                No salary slips are available yet.
+            </div>
+        }
+        else
+        {
+            <div class="order-list">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="order-number">Month</th>
+                            <th class="order-actions">Download</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var slip in Model)
+                        {
+                            <tr>
+                                <td class="order-number">
+                                    <strong>@slip.MonthYear</strong>
+                                </td>
+                                <td class="order-actions">
+                                    <a class="button-1 order-details-button"
+                                       href="@Url.RouteUrl("DownloadMySalarySlip", new { id = slip.Id })">
+                                        Download PDF
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

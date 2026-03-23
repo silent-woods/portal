@@ -59,7 +59,8 @@ namespace App.Web.Models.Customer
         ProjectLeaderReview=167,
         TaskList= 168,
         ViewUpdateList =169,
-        ProjectManagement =170
+        ProjectManagement = 170,
+        SalarySlips = 171
 
     }
 }

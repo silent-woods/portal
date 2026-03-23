@@ -1,0 +1,84 @@
+@using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.SalaryComponentConfigs
+@model SalaryComponentConfigModel
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Name" asp-postfix="*" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Name" asp-required="true" />
+            <span asp-validation-for="Name" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ComponentTypeId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="ComponentTypeId" asp-items="Model.AvailableComponentTypes" />
+            <span asp-validation-for="ComponentTypeId"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsRemainder" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="IsRemainder" />
+            <span asp-validation-for="IsRemainder"></span>
+            <small class="text-muted d-block">If checked, amount = Gross − Deductions − Other Earnings (used for Medical Allowance). Value field is ignored.</small>
+        </div>
+    </div>
+    <div class="form-group row" id="row-IsPercentage">
+        <div class="col-md-3">
+            <nop-label asp-for="IsPercentage" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="IsPercentage" />
+            <span asp-validation-for="IsPercentage"></span>
+            <small class="text-muted d-block">If checked, value is a % of Gross Salary. If unchecked, value is a flat fixed amount (₹).</small>
+        </div>
+    </div>
+    <div class="form-group row" id="row-Value">
+        <div class="col-md-3">
+            <nop-label asp-for="Value" asp-postfix="*" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Value" />
+            <span asp-validation-for="Value" class="field-validation-error"></span>
+        </div>
+    </div>
+
+    <script>
+        $(function () {
+            function toggleValueFields() {
+                var isRemainder = $('#IsRemainder').is(':checked');
+                $('#row-IsPercentage, #row-Value').toggle(!isRemainder);
+                if (isRemainder && parseFloat($('#Value').val()) === 0) {
+                    $('#Value').val('1');
+                }
+            }
+            toggleValueFields();
+            $('#IsRemainder').on('change', toggleValueFields);
+        });
+    </script>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="IsActive" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="IsActive" />
+            <span asp-validation-for="IsActive"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="DisplayOrder" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="DisplayOrder" />
+            <span asp-validation-for="DisplayOrder"></span>
+        </div>
+    </div>
+</div>

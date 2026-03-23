@@ -20,6 +20,11 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
     public static readonly PermissionRecord ManageTransactions = new() { Name = "Admin area. Account Management - Manage Transactions", SystemName = "ManageTransactions", Category = "Account" };
     public static readonly PermissionRecord ManageReports = new() { Name = "Admin area. Account Management - Manage Reports", SystemName = "ManageReports", Category = "Account" };
 
+    public static readonly PermissionRecord ManageExpenseCategories = new() { Name = "Admin area. Account Management - Manage Expense Categories", SystemName = "ManageExpenseCategories", Category = "Account" };
+    public static readonly PermissionRecord ManageExpenses = new() { Name = "Admin area. Account Management - Manage Expenses", SystemName = "ManageExpenses", Category = "Account" };
+    public static readonly PermissionRecord ManageRecurringExpenses = new() { Name = "Admin area. Account Management - Manage Recurring Expenses", SystemName = "ManageRecurringExpenses", Category = "Account" };
+    public static readonly PermissionRecord ManageSalaryProcessing = new() { Name = "Admin area. Account Management - Manage Salary Processing", SystemName = "ManageSalaryProcessing", Category = "Account" };
+
     #endregion
 
     #region Get Permission Methods
@@ -37,7 +42,11 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
             ManageInvoiceItems,
             ManageInvoicePaymentHistories,
             ManageTransactions,
-            ManageReports
+            ManageReports,
+            ManageExpenseCategories,
+            ManageExpenses,
+            ManageRecurringExpenses,
+            ManageSalaryProcessing
         };
     }
 
@@ -58,7 +67,11 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
                     ManageInvoiceItems,
                     ManageInvoicePaymentHistories,
                     ManageTransactions,
-                    ManageReports
+                    ManageReports,
+                    ManageExpenseCategories,
+                    ManageExpenses,
+                    ManageRecurringExpenses,
+                    ManageSalaryProcessing
                 }
             ),
 

@@ -2,6 +2,7 @@
 using App.Data.Extensions;
 using App.Services;
 using App.Services.Directory;
+using App.Services.Employees;
 using App.Services.Helpers;
 using App.Services.Localization;
 using App.Services.Projects;
@@ -38,6 +39,8 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
     protected readonly IContactsService _contactsService;
     protected readonly ICurrencyService _currencyService;
     protected readonly IDateTimeHelper _dateTimeHelper;
+    protected readonly IEmployeeService _employeeService;
+    protected readonly IEmployeeSalaryService _employeeSalaryService;
     protected readonly ILocalizationService _localizationService;
     protected readonly IProjectsService _projectsService;
 
@@ -50,6 +53,8 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
         IContactsService contactsService,
         ICurrencyService currencyService,
         IDateTimeHelper dateTimeHelper,
+        IEmployeeService employeeService,
+        IEmployeeSalaryService employeeSalaryService,
         ILocalizationService localizationService,
         IProjectsService projectsService)
 	{
@@ -58,6 +63,8 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
         _contactsService = contactsService;
         _currencyService = currencyService;
         _dateTimeHelper = dateTimeHelper;
+        _employeeService = employeeService;
+        _employeeSalaryService = employeeSalaryService;
         _localizationService = localizationService;
         _projectsService = projectsService;
 	}
@@ -235,9 +242,9 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
         return await AddCommonOptionsAsync(statuses, includeAll, includeSelect);
     }
 
-    protected virtual async Task<IList<SelectListItem>> PrepareAvailableAccountGroupsAsync(bool includeAll = false, bool includeSelect = false)
+    protected virtual async Task<IList<SelectListItem>> PrepareAvailableAccountGroupsAsync(bool includeAll = false, bool includeSelect = false, int accountCategoryId = (int)AccountCategoryEnum.Income)
     {
-        var availableAccountGroups = await _accountManagementService.GetAllAccountGroupsAsync(accountCategoryId: (int)AccountCategoryEnum.Income, showHidden: true);
+        var availableAccountGroups = await _accountManagementService.GetAllAccountGroupsAsync(accountCategoryId: accountCategoryId, showHidden: true);
         var accountGroups = availableAccountGroups.Select(availableAccountGroup => new SelectListItem
         {
             Text = availableAccountGroup.Name,
@@ -850,6 +857,36 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
 
     #endregion
 
+    #region Account Transaction Utilities
+
+    protected virtual async Task<string> ResolveTransactionSourceNameAsync(AccountTransaction transaction)
+    {
+        if (transaction.EmployeeId > 0)
+        {
+            var employee = await _employeeService.GetEmployeeByIdAsync(transaction.EmployeeId);
+            if (employee != null)
+                return $"{employee.FirstName} {employee.LastName}".Trim();
+        }
+        if (transaction.InvoiceId > 0)
+        {
+            var invoice = await _accountManagementService.GetInvoiceByIdAsync(transaction.InvoiceId);
+            if (invoice != null && invoice.ProjectBillingId > 0)
+            {
+                var projectBilling = await _accountManagementService.GetProjectBillingByIdAsync(invoice.ProjectBillingId);
+                if (projectBilling != null && projectBilling.CompanyId > 0)
+                {
+                    var company = await _companyService.GetCompanyByIdAsync(projectBilling.CompanyId);
+                    if (company != null)
+                        return company.CompanyName;
+                }
+            }
+        }
+
+        return string.Empty;
+    }
+
+    #endregion
+
     #region Account Transaction Methods
 
     public virtual async Task<AccountTransactionSearchModel> PrepareAccountTransactionSearchModelAsync(AccountTransactionSearchModel searchModel)
@@ -858,31 +895,168 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
 
         searchModel.AvailableTransactionTypes = await PrepareAvailableTransactionTypesAsync(true, false);
         searchModel.AvailablePaymentMethods = await PrepareAvailablePaymentTypesAsync(true, false);
+        searchModel.AvailableAccountGroups = await PrepareAvailableAccountGroupsAsync(true, false, accountCategoryId: 0);
+
+        var allMonths = new List<SelectListItem>
+        {
+            new SelectListItem { Value = "0", Text = await _localizationService.GetResourceAsync("Admin.Common.All") }
+        };
+        for (var m = 1; m <= 12; m++)
+        {
+            allMonths.Add(new SelectListItem
+            {
+                Value = m.ToString(),
+                Text = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(m)
+            });
+        }
+        searchModel.AvailableMonths = allMonths;
+        var currentYear = DateTime.UtcNow.Year;
+        var allYears = new List<SelectListItem>
+        {
+            new SelectListItem { Value = "0", Text = await _localizationService.GetResourceAsync("Admin.Common.All") }
+        };
+        for (var y = currentYear - 3; y <= currentYear; y++)
+        {
+            allYears.Add(new SelectListItem { Value = y.ToString(), Text = y.ToString() });
+        }
+        searchModel.AvailableYears = allYears;
+
+        searchModel.AvailablePeriods = new List<SelectListItem>
+        {
+            new SelectListItem { Value = ((int)SearchPeriodEnum.All).ToString(),       Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Period.All") },
+            new SelectListItem { Value = ((int)SearchPeriodEnum.Today).ToString(),     Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Period.Today") },
+            new SelectListItem { Value = ((int)SearchPeriodEnum.Yesterday).ToString(), Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Period.Yesterday") },
+            new SelectListItem { Value = ((int)SearchPeriodEnum.ThisWeek).ToString(),  Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Period.ThisWeek") },
+            new SelectListItem { Value = ((int)SearchPeriodEnum.ThisMonth).ToString(), Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Period.ThisMonth") },
+            new SelectListItem { Value = ((int)SearchPeriodEnum.LastMonth).ToString(), Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Period.LastMonth") },
+            new SelectListItem { Value = ((int)SearchPeriodEnum.ThisYear).ToString(),  Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Period.ThisYear") },
+            new SelectListItem { Value = ((int)SearchPeriodEnum.LastYear).ToString(),  Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Period.LastYear") },
+            new SelectListItem { Value = ((int)SearchPeriodEnum.Custom).ToString(),    Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Period.Custom") },
+        };
 
         searchModel.SetGridPageSize();
 
-        return searchModel; 
+        return searchModel;
     }
 
     public virtual async Task<AccountTransactionListModel> PrepareAccountTransactionListModelAsync(AccountTransactionSearchModel searchModel)
     {
         ArgumentNullException.ThrowIfNull(nameof(searchModel));
 
-        var accountTransactions = await _accountManagementService.GetAllAccountTransactionsAsync(transactionTypeId: searchModel.SearchTransactionTypeId,
-            paymentMethodId: searchModel.SearchPaymentMethodId, pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize);
+        DateTime? dateFrom = null;
+        DateTime? dateTo = null;
+
+        var istZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+        var nowIst = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, istZone);
+
+        switch ((SearchPeriodEnum)searchModel.SearchPeriodId)
+        {
+            case SearchPeriodEnum.Today:
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date, istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddDays(1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.Yesterday:
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddDays(-1), istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.ThisWeek:
+                var daysToMonday = nowIst.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)nowIst.DayOfWeek - 1;
+                var weekStart = nowIst.Date.AddDays(-daysToMonday);
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(weekStart, istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddDays(1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.ThisMonth:
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(new DateTime(nowIst.Year, nowIst.Month, 1), istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddDays(1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.LastMonth:
+                var lastMonth = nowIst.AddMonths(-1);
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(new DateTime(lastMonth.Year, lastMonth.Month, 1), istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(new DateTime(nowIst.Year, nowIst.Month, 1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.ThisYear:
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(new DateTime(nowIst.Year, 1, 1), istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddDays(1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.LastYear:
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(new DateTime(nowIst.Year - 1, 1, 1), istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(new DateTime(nowIst.Year, 1, 1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.Custom:
+                if (DateTime.TryParse(searchModel.SearchDateFrom, out var parsedFrom))
+                    dateFrom = TimeZoneInfo.ConvertTimeToUtc(parsedFrom.Date, istZone);
+                if (DateTime.TryParse(searchModel.SearchDateTo, out var parsedTo))
+                    dateTo = TimeZoneInfo.ConvertTimeToUtc(parsedTo.Date.AddDays(1).AddTicks(-1), istZone);
+                break;
+        }
+
+        var (resolvedEmployeeIds, resolvedInvoiceIds) = await ResolveEntityFilterAsync(searchModel.SearchEntityValues);
+
+        var accountTransactions = await _accountManagementService.GetAllAccountTransactionsAsync(
+            transactionTypeId: searchModel.SearchTransactionTypeId,
+            paymentMethodId: searchModel.SearchPaymentMethodId,
+            accountGroupId: searchModel.SearchAccountGroupId,
+            dateFrom: dateFrom,
+            dateTo: dateTo,
+            monthId: searchModel.SearchMonthId,
+            yearId: searchModel.SearchYearId,
+            employeeIds: resolvedEmployeeIds,
+            invoiceIds: resolvedInvoiceIds,
+            pageIndex: searchModel.Page - 1,
+            pageSize: searchModel.PageSize);
 
         var model = await new AccountTransactionListModel().PrepareToGridAsync(searchModel, accountTransactions, () =>
         {
             return accountTransactions.SelectAwait(async accountTransaction =>
             {
-                var accountTransactionModel = new AccountTransactionModel()
+                var accountGroup = await _accountManagementService.GetAccountGroupByIdAsync(accountTransaction.AccountGroupId);
+                var createdOnIst = TimeZoneInfo.ConvertTimeFromUtc(accountTransaction.CreatedOnUtc, istZone);
+                var monthYear = accountTransaction.MonthId > 0
+                    ? System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.GetAbbreviatedMonthName(accountTransaction.MonthId) + " " + accountTransaction.YearId
+                    : string.Empty;
+                var sourceName = await ResolveTransactionSourceNameAsync(accountTransaction);
+                string linkedEntityLabel = string.Empty;
+                string linkedEntityUrl = string.Empty;
+
+                if (accountTransaction.InvoiceId > 0)
+                {
+                    var invoice = await _accountManagementService.GetInvoiceByIdAsync(accountTransaction.InvoiceId);
+                    if (invoice != null)
+                    {
+                        linkedEntityLabel = $"#{invoice.InvoiceNumber} - {invoice.Title}";
+                        linkedEntityUrl = $"/Admin/AccountManagement/InvoiceEdit/{accountTransaction.InvoiceId}";
+                    }
+                }
+                else if (accountTransaction.EmployeeId > 0)
+                {
+                    var salaryRecord = await _employeeSalaryService.GetSalaryRecordByAccountTransactionIdAsync(accountTransaction.Id);
+                    if (salaryRecord != null)
+                    {
+                        var monthName = salaryRecord.MonthId > 0
+                            ? System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.GetAbbreviatedMonthName(salaryRecord.MonthId)
+                            : string.Empty;
+                        linkedEntityLabel = $"Salary ({monthName} {salaryRecord.YearId})";
+                        linkedEntityUrl = $"/Admin/EmployeeSalary/EmployeeSalaryEdit/{salaryRecord.Id}";
+                    }
+                }
+
+                var accountTransactionModel = new AccountTransactionModel
                 {
                     Id = accountTransaction.Id,
                     TransactionType = Enum.GetName(typeof(TransactionTypeEnum), accountTransaction.TransactionTypeId),
+                    AccountGroup = accountGroup?.Name ?? string.Empty,
                     PaymentMethod = Enum.GetName(typeof(PaymentTypeEnum), accountTransaction.PaymentMethodId),
                     Amount = accountTransaction.Amount,
+                    Currency = accountTransaction.Currency,
+                    ReferenceNo = accountTransaction.ReferenceNo,
+                    Notes = accountTransaction.Notes,
                     MonthId = accountTransaction.MonthId,
                     YearId = accountTransaction.YearId,
+                    MonthYear = monthYear,
+                    SourceName = sourceName,
+                    LinkedEntityLabel = linkedEntityLabel,
+                    LinkedEntityUrl = linkedEntityUrl,
+                    CreatedOnIst = createdOnIst.ToString("dd MMM yyyy HH:mm"),
                 };
 
                 return accountTransactionModel;
@@ -926,6 +1100,101 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
         }
 
         return model;
+    }
+
+    public virtual async Task<(decimal TotalIncome, decimal TotalExpense, int TotalCount)> GetAccountTransactionSummaryAsync(AccountTransactionSearchModel searchModel)
+    {
+        ArgumentNullException.ThrowIfNull(searchModel);
+
+        var (dateFrom, dateTo) = ResolvePeriodDates(searchModel);
+        var (employeeIds, invoiceIds) = await ResolveEntityFilterAsync(searchModel.SearchEntityValues);
+
+        return await _accountManagementService.GetAccountTransactionSummaryAsync(
+            transactionTypeId: searchModel.SearchTransactionTypeId,
+            paymentMethodId: searchModel.SearchPaymentMethodId,
+            accountGroupId: searchModel.SearchAccountGroupId,
+            dateFrom: dateFrom,
+            dateTo: dateTo,
+            monthId: searchModel.SearchMonthId,
+            yearId: searchModel.SearchYearId,
+            employeeIds: employeeIds,
+            invoiceIds: invoiceIds);
+    }
+
+    protected virtual (DateTime? dateFrom, DateTime? dateTo) ResolvePeriodDates(AccountTransactionSearchModel searchModel)
+    {
+        DateTime? dateFrom = null;
+        DateTime? dateTo = null;
+        var istZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+        var nowIst = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, istZone);
+
+        switch ((SearchPeriodEnum)searchModel.SearchPeriodId)
+        {
+            case SearchPeriodEnum.Today:
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date, istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddDays(1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.Yesterday:
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddDays(-1), istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.ThisWeek:
+                var daysToMonday = nowIst.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)nowIst.DayOfWeek - 1;
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddDays(-daysToMonday), istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddDays(1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.ThisMonth:
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(new DateTime(nowIst.Year, nowIst.Month, 1), istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddDays(1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.LastMonth:
+                var lastMonth = nowIst.AddMonths(-1);
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(new DateTime(lastMonth.Year, lastMonth.Month, 1), istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(new DateTime(nowIst.Year, nowIst.Month, 1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.ThisYear:
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(new DateTime(nowIst.Year, 1, 1), istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(nowIst.Date.AddDays(1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.LastYear:
+                dateFrom = TimeZoneInfo.ConvertTimeToUtc(new DateTime(nowIst.Year - 1, 1, 1), istZone);
+                dateTo = TimeZoneInfo.ConvertTimeToUtc(new DateTime(nowIst.Year, 1, 1).AddTicks(-1), istZone);
+                break;
+            case SearchPeriodEnum.Custom:
+                if (DateTime.TryParse(searchModel.SearchDateFrom, out var parsedFrom))
+                    dateFrom = TimeZoneInfo.ConvertTimeToUtc(parsedFrom.Date, istZone);
+                if (DateTime.TryParse(searchModel.SearchDateTo, out var parsedTo))
+                    dateTo = TimeZoneInfo.ConvertTimeToUtc(parsedTo.Date.AddDays(1).AddTicks(-1), istZone);
+                break;
+        }
+        return (dateFrom, dateTo);
+    }
+
+    protected virtual async Task<(int[] employeeIds, int[] invoiceIds)> ResolveEntityFilterAsync(string entityValues)
+    {
+        if (string.IsNullOrWhiteSpace(entityValues))
+            return (Array.Empty<int>(), Array.Empty<int>());
+
+        var empIds = new List<int>();
+        var companyIds = new List<int>();
+
+        foreach (var part in entityValues.Split(',', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var trimmed = part.Trim();
+            if (trimmed.StartsWith("e_") && int.TryParse(trimmed[2..], out var empId))
+                empIds.Add(empId);
+            else if (trimmed.StartsWith("c_") && int.TryParse(trimmed[2..], out var compId))
+                companyIds.Add(compId);
+        }
+
+        var invoiceIds = new List<int>();
+        foreach (var companyId in companyIds)
+        {
+            var invoices = await _accountManagementService.GetAllInvoicesAsync(companyId: companyId, pageSize: int.MaxValue);
+            invoiceIds.AddRange(invoices.Select(i => i.Id));
+        }
+
+        return (empIds.ToArray(), invoiceIds.ToArray());
     }
 
     #endregion

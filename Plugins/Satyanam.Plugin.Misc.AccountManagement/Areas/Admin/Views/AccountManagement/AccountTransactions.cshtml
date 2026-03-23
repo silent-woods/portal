@@ -1,4 +1,4 @@
-﻿@model AccountTransactionSearchModel
+@model AccountTransactionSearchModel
 
 @{
     Layout = "_AdminLayout";
@@ -7,6 +7,8 @@
 
     const string hideSearchBlockAttributeName = "AccountTransactionsPage.HideSearchBlock";
     var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+
+    var customPeriodValue = ((int)Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.Enums.SearchPeriodEnum.Custom).ToString();
 }
 
 <div class="content-header clearfix">
@@ -23,10 +25,12 @@
         </div>
     }
 </div>
+
 <section class="content">
     <div class="container-fluid">
         <div class="form-horizontal">
             <div class="cards-group">
+
                 <div class="card card-default card-search">
                     <div class="card-body">
                         <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
@@ -35,8 +39,19 @@
                             <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
                         </div>
                         <div class="search-body @(hideSearchBlock ? "closed" : "")">
+
                             <div class="row">
-                                <div class="col-md-5">
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchPeriodId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchPeriodId" asp-items="Model.AvailablePeriods" onchange="onPeriodChange(this.value)" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
                                     <div class="form-group row">
                                         <div class="col-md-4">
                                             <nop-label asp-for="SearchTransactionTypeId" />
@@ -46,7 +61,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-7">
+                                <div class="col-md-4">
                                     <div class="form-group row">
                                         <div class="col-md-4">
                                             <nop-label asp-for="SearchPaymentMethodId" />
@@ -57,6 +72,77 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="row" id="custom-date-range" style="display:none;">
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchDateFrom" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <input asp-for="SearchDateFrom" type="date" class="form-control" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchDateTo" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <input asp-for="SearchDateTo" type="date" class="form-control" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchAccountGroupId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchAccountGroupId" asp-items="Model.AvailableAccountGroups" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchEntityValues" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <input id="entity-multiselect-widget" class="form-control w-100" style="width:100%" />
+                                            <input type="hidden" id="SearchEntityValues" name="SearchEntityValues" value="@Model.SearchEntityValues" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchMonthId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchMonthId" asp-items="Model.AvailableMonths" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchYearId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchYearId" asp-items="Model.AvailableYears" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="row">
                                 <div class="text-center col-12">
                                     <button type="button" id="search-account-transactions" class="btn btn-primary btn-search">
@@ -68,6 +154,55 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Summary Cards -->
+                <div id="transaction-summary-section" class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="info-box shadow-sm">
+                            <span class="info-box-icon bg-success elevation-1">
+                                <i class="fas fa-arrow-circle-up"></i>
+                            </span>
+                            <div class="info-box-content">
+                                <span class="info-box-text text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Summary.TotalIncome")</span>
+                                <span class="info-box-number text-success font-weight-bold" id="summary-income">&#x20B9; --</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-box shadow-sm">
+                            <span class="info-box-icon bg-danger elevation-1">
+                                <i class="fas fa-arrow-circle-down"></i>
+                            </span>
+                            <div class="info-box-content">
+                                <span class="info-box-text text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Summary.TotalExpense")</span>
+                                <span class="info-box-number text-danger font-weight-bold" id="summary-expense">&#x20B9; --</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-box shadow-sm">
+                            <span class="info-box-icon elevation-1" id="summary-balance-icon" style="background-color:#17a2b8">
+                                <i class="fas fa-balance-scale"></i>
+                            </span>
+                            <div class="info-box-content">
+                                <span class="info-box-text text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Summary.NetBalance")</span>
+                                <span class="info-box-number font-weight-bold" id="summary-balance">&#x20B9; --</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-box shadow-sm">
+                            <span class="info-box-icon bg-primary elevation-1">
+                                <i class="fas fa-list-ol"></i>
+                            </span>
+                            <div class="info-box-content">
+                                <span class="info-box-text text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Summary.TotalTransactions")</span>
+                                <span class="info-box-number text-primary font-weight-bold" id="summary-count">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card card-default">
                     <div class="card-body">
                         @{
@@ -80,38 +215,238 @@
                                 LengthMenu = Model.AvailablePageSizes,
                                 Filters = new List<FilterParameter>
                                 {
+                                    new FilterParameter(nameof(Model.SearchPeriodId)),
                                     new FilterParameter(nameof(Model.SearchTransactionTypeId)),
-                                    new FilterParameter(nameof(Model.SearchPaymentMethodId))
+                                    new FilterParameter(nameof(Model.SearchPaymentMethodId)),
+                                    new FilterParameter(nameof(Model.SearchAccountGroupId)),
+                                    new FilterParameter(nameof(Model.SearchDateFrom)),
+                                    new FilterParameter(nameof(Model.SearchDateTo)),
+                                    new FilterParameter(nameof(Model.SearchMonthId)),
+                                    new FilterParameter(nameof(Model.SearchYearId)),
+                                    new FilterParameter(nameof(Model.SearchEntityValues)),
                                 },
                             };
 
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.CreatedOnIst))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.CreatedOn").Text,
+                                Width = "130"
+                            });
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.TransactionType))
                             {
-                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.TransactionTypeId").Text
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.TransactionTypeId").Text,
+                                Width = "100"
                             });
-                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.PaymentMethod))
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.AccountGroup))
                             {
-                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.PaymentMethodId").Text
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.AccountGroupId").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.SourceName))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.SourceName").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.LinkedEntityUrl))
+                            {
+                                Title = string.Empty,
+                                Visible = false
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.LinkedEntityLabel))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.LinkedEntity").Text,
+                                Render = new RenderCustom("renderLinkedEntity")
                             });
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.Amount))
                             {
-                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.Amount").Text
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.Amount").Text,
+                                Width = "120",
+                                Render = new RenderCustom("renderTransactionAmount")
                             });
-                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.MonthId))
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.PaymentMethod))
                             {
-                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.MonthId").Text,
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.PaymentMethodId").Text,
+                                Width = "100"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.MonthYear))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.MonthYear").Text,
+                                Width = "90",
                                 ClassName = NopColumnClassDefaults.CenterAll
                             });
-                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.YearId))
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(AccountTransactionModel.Id))
                             {
-                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.YearId").Text,
-                                ClassName = NopColumnClassDefaults.CenterAll
+                                Title = T("Admin.Common.View").Text,
+                                Width = "55",
+                                ClassName = NopColumnClassDefaults.Button,
+                                Render = new RenderCustom("renderDetailButton")
                             });
                         }
                         @await Html.PartialAsync("Table", gridModel)
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 </section>
+
+<div class="modal fade" id="transactionDetailModal" tabindex="-1" role="dialog" aria-labelledby="transactionDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="transactionDetailModalLabel">
+                    <i class="fas fa-receipt mr-2"></i>
+                    @T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Info")
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm mb-0">
+                        <tbody>
+                            <tr>
+                                <th class="bg-light" style="width:25%">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.SourceName")</th>
+                                <td id="detail-sourceName" style="width:25%;font-weight:600"></td>
+                                <th class="bg-light" style="width:25%">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.CreatedOn")</th>
+                                <td id="detail-createdOnIst" style="width:25%"></td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.TransactionTypeId")</th>
+                                <td id="detail-transactionType"></td>
+                                <th class="bg-light">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.AccountGroupId")</th>
+                                <td id="detail-accountGroup"></td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.MonthYear")</th>
+                                <td id="detail-monthYear"></td>
+                                <th class="bg-light">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.PaymentMethodId")</th>
+                                <td id="detail-paymentMethod"></td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.Amount")</th>
+                                <td id="detail-amount"></td>
+                                <th class="bg-light">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.ReferenceNo")</th>
+                                <td id="detail-referenceNo"></td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Fields.Notes")</th>
+                                <td colspan="3" id="detail-notes"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">@T("Admin.Common.Close")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var customPeriodVal = '@customPeriodValue';
+
+    function onPeriodChange(val) {
+        document.getElementById('custom-date-range').style.display = (val === customPeriodVal) ? '' : 'none';
+    }
+
+    function loadTransactionSummary() {
+        var data = {
+            SearchPeriodId: $('#SearchPeriodId').val() || '0',
+            SearchTransactionTypeId: $('#SearchTransactionTypeId').val() || '0',
+            SearchPaymentMethodId: $('#SearchPaymentMethodId').val() || '0',
+            SearchAccountGroupId: $('#SearchAccountGroupId').val() || '0',
+            SearchDateFrom: $('#SearchDateFrom').val() || '',
+            SearchDateTo: $('#SearchDateTo').val() || '',
+            SearchMonthId: $('#SearchMonthId').val() || '0',
+            SearchYearId: $('#SearchYearId').val() || '0',
+            SearchEntityValues: $('#SearchEntityValues').val() || ''
+        };
+        addAntiForgeryToken(data);
+        $.post('@Url.Action("AccountTransactionSummary", "AccountManagement")', data, function (result) {
+            var rs = '\u20B9\u00A0';
+            $('#summary-income').text(rs + result.totalIncome);
+            $('#summary-expense').text(rs + result.totalExpense);
+            var balEl = $('#summary-balance');
+            balEl.text(rs + result.netBalance);
+            balEl.removeClass('text-success text-danger text-info');
+            balEl.addClass(result.netBalancePositive ? 'text-success' : 'text-danger');
+            var iconEl = $('#summary-balance-icon');
+            iconEl.css('background-color', result.netBalancePositive ? '#28a745' : '#dc3545');
+            $('#summary-count').text(result.totalCount);
+        });
+    }
+
+    $(document).ready(function () {
+        $('#entity-multiselect-widget').kendoMultiSelect({
+            dataSource: {
+                transport: {
+                    read: {
+                        url: '@Url.Action("GetEntityFilterData", "AccountManagement")',
+                        dataType: 'json'
+                    }
+                },
+                group: { field: 'group' }
+            },
+            dataTextField: 'text',
+            dataValueField: 'value',
+            filter: 'contains',
+            placeholder: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.AccountTransaction.Search.EntityPlaceholder").Text',
+            autoClose: false,
+            tagTemplate: '#= text #',
+            itemTemplate: '<span class="badge badge-sm mr-1" style="background:rgb(108,117,125);color:rgb(255,255,255);font-size:10px">#= group #</span> #= text #',
+            change: function () {
+                $('#SearchEntityValues').val(this.value().join(','));
+            }
+        });
+        var existingVals = $('#SearchEntityValues').val();
+        if (existingVals) {
+            var widget = $('#entity-multiselect-widget').data('kendoMultiSelect');
+            if (widget) {
+                widget.dataSource.fetch(function () {
+                    widget.value(existingVals.split(','));
+                });
+            }
+        }
+        loadTransactionSummary();
+        $('#search-account-transactions').on('click', function () {
+            loadTransactionSummary();
+        });
+    });
+
+    function renderTransactionAmount(data, type, row) {
+        if (type !== 'display') return data;
+        var num = parseFloat(data) || 0;
+        return '\u20B9\u00A0' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function renderLinkedEntity(data, type, row) {
+        if (type !== 'display') return data || '';
+        if (!data || data === '') return '<span class="text-muted">-</span>';
+        var url = row.LinkedEntityUrl || '';
+        if (!url) return data;
+        return '<a href="' + url + '" title="' + data + '" class="text-primary font-weight-bold">' + data + '</a>';
+    }
+
+    function renderDetailButton(data, type, row) {
+        if (type !== 'display') return data;
+        return '<button type="button" class="btn btn-info btn-sm" onclick="showTransactionDetail(' + data + ')"><i class="fas fa-eye"></i></button>';
+    }
+
+    function showTransactionDetail(id) {
+        $.getJSON('@Url.Action("AccountTransactionDetail", "AccountManagement")', { id: id }, function (d) {
+            if (!d.success) return;
+            $('#detail-sourceName').text(d.sourceName || '-');
+            $('#detail-createdOnIst').text(d.createdOnIst || '-');
+            $('#detail-transactionType').text(d.transactionType || '-');
+            $('#detail-accountGroup').text(d.accountGroup || '-');
+            $('#detail-monthYear').text(d.monthYear || '-');
+            $('#detail-paymentMethod').text(d.paymentMethod || '-');
+            $('#detail-amount').text('\u20B9 ' + d.amount);
+            $('#detail-referenceNo').text(d.referenceNo || '-');
+            $('#detail-notes').text(d.notes || '-');
+            $('#transactionDetailModal').modal('show');
+        });
+    }
+</script>

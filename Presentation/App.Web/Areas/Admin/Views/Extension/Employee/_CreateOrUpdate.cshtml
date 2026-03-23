@@ -25,6 +25,9 @@
     const string hideAssetsBlockAttributeName = "EmployeePage.HideAssetsBlock";
     var hideAssetsBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideAssetsBlockAttributeName);
 
+    const string hidePayrollBlockAttributeName = "EmployeePage.HidePayrollBlock";
+    var hidePayrollBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hidePayrollBlockAttributeName);
+
 }
 
 @* <div asp-validation-summary="All"></div> *@
@@ -76,6 +79,9 @@
                         @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Assets.cshtml", Model)
                     </nop-card>
                 }
+                <nop-card asp-name="employee-payroll" asp-icon="fas fa-university" asp-title="Payroll Info" asp-hide-block-attribute-name="@hidePayrollBlockAttributeName" asp-hide="@hidePayrollBlock" asp-advanced="false">
+                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Payroll.cshtml", Model)
+                </nop-card>
             </nop-cards>
         </div>
     </div>

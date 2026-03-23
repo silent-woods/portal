@@ -1,0 +1,676 @@
+@model EmployeeSalaryModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Edit").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalaries");
+}
+
+<form asp-controller="EmployeeSalary" asp-action="EmployeeSalaryEdit" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Edit") — @Model.EmployeeName (@Model.MonthName @Model.YearId)
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="EmployeeSalaries" asp-controller="EmployeeSalary">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.View))
+        {
+            <div class="float-right">
+                <a asp-action="DownloadSalarySlip" asp-controller="EmployeeSalary" asp-route-id="@Model.Id"
+                   class="btn btn-outline-secondary" target="_blank">
+                    <i class="fas fa-file-pdf"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.DownloadSlip")
+                </a>
+            </div>
+        }
+        @if (!Model.IsPaid && await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.Edit))
+        {
+            <div class="float-right mr-2">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                @if (Model.IsDraft)
+                {
+                    <button type="button" id="btn-finalize" class="btn btn-success ml-2">
+                        <i class="fas fa-check-circle"></i>
+                        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Finalize")
+                    </button>
+                }
+                @if (Model.IsFinalized)
+                {
+                    <button type="button" id="btn-mark-paid" class="btn btn-info ml-2">
+                        <i class="fas fa-money-bill-wave"></i>
+                        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.MarkAsPaid")
+                    </button>
+                }
+            </div>
+        }
+    </div>
+
+    @if (Model.IsPaid)
+    {
+        <div class="alert alert-warning">
+            <i class="fas fa-lock"></i>
+            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.PaidReadOnly")
+        </div>
+    }
+
+    <input asp-for="Id" type="hidden" />
+    <input asp-for="EmployeeId" type="hidden" />
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-pie mr-1"></i>
+                                @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.SalaryBreakdown")
+                            </h3>
+                            <div class="card-tools">
+                                @if (Model.IsPaid)
+                                {
+                                    <span class="badge badge-success px-3 py-2" style="font-size:0.85rem;">
+                                        <i class="fas fa-check-circle mr-1"></i>@Model.StatusName
+                                    </span>
+                                }
+                                else if (Model.IsFinalized)
+                                {
+                                    <span class="badge badge-primary px-3 py-2" style="font-size:0.85rem;">
+                                        <i class="fas fa-lock mr-1"></i>@Model.StatusName
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-secondary px-3 py-2" style="font-size:0.85rem;">
+                                        <i class="fas fa-pencil-alt mr-1"></i>@Model.StatusName
+                                    </span>
+                                }
+                                @if (Model.IsManuallyModified)
+                                {
+                                    <span class="badge badge-warning px-2 py-2 ml-1" style="font-size:0.8rem;">
+                                        <i class="fas fa-edit mr-1"></i>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.ManuallyModified")
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-body pb-2">
+
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <div class="info-box shadow-none border">
+                                        <span class="info-box-icon bg-primary"><i class="fas fa-rupee-sign"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.GrossSalary")</span>
+                                            <span class="info-box-number">₹ @Model.GrossSalary.ToString("N0")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="info-box shadow-none border">
+                                        <span class="info-box-icon bg-success"><i class="fas fa-wallet"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.NetSalary")</span>
+                                            <span class="info-box-number net-salary-display">₹ @Model.NetSalary.ToString("N0")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="info-box shadow-none border">
+                                        <span class="info-box-icon bg-info"><i class="fas fa-calendar-day"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.WorkingDays")</span>
+                                            <span class="info-box-number">@Model.WorkingDaysInMonth.ToString("0.##")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="info-box shadow-none border">
+                                        <span class="info-box-icon bg-warning"><i class="fas fa-user-minus"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.LeaveDays")</span>
+                                            <span class="info-box-number">@Model.LeaveDeductionDays.ToString("0.##")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (Model.LeaveEncashmentAmount > 0)
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <div class="callout callout-success py-2 mb-0">
+                                            <i class="fas fa-gift mr-1 text-success"></i>
+                                            <strong>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.LeaveEncashmentIncentive")</strong>
+                                            @if (Model.LeaveEncashmentDays > 0)
+                                            {
+                                                <span class="badge badge-success ml-1">@Model.LeaveEncashmentDays.ToString("0.##") days</span>
+                                            }
+                                            <span class="text-success font-weight-bold ml-2">+ ₹ @Model.LeaveEncashmentAmount.ToString("N0")</span>
+                                            <small class="text-muted ml-2">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.LeaveEncashmentHint")</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <table class="table table-sm table-borderless mb-0" style="background:#f8f9fa;border-radius:6px;">
+                                        <tbody>
+                                            <tr>
+                                                <td class="text-muted pl-3" style="width:55%">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.DailyRate")</td>
+                                                <td class="text-right pr-3 font-weight-bold">₹ @Model.DailySalary.ToString("N0")</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted pl-3">
+                                                    @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.LeaveDeduction")
+                                                    @if (Model.LeaveDeductionDays > 0)
+                                                    {
+                                                        <small class="text-danger ml-1">(@Model.LeaveDeductionDays.ToString("0.##") days)</small>
+                                                    }
+                                                </td>
+                                                <td class="text-right pr-3 text-danger font-weight-bold">− ₹ @Model.LeaveDeductionAmount.ToString("N0")</td>
+                                            </tr>
+                                            @if (Model.ConfigDeductionsTotal > 0)
+                                            {
+                                                <tr>
+                                                    <td class="text-muted pl-3">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.ComponentDeductions")</td>
+                                                    <td class="text-right pr-3 text-danger font-weight-bold">− ₹ @Model.ConfigDeductionsTotal.ToString("N0")</td>
+                                                </tr>
+                                            }
+                                            @if (Model.OtherDeductions > 0)
+                                            {
+                                                <tr>
+                                                    <td class="text-muted pl-3">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.OtherDeductions")</td>
+                                                    <td class="text-right pr-3 text-danger font-weight-bold">− ₹ @Model.OtherDeductions.ToString("N0")</td>
+                                                </tr>
+                                            }
+                                            @if (Model.LeaveEncashmentAmount > 0)
+                                            {
+                                                <tr>
+                                                    <td class="text-muted pl-3">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.Incentive")</td>
+                                                    <td class="text-right pr-3 text-success font-weight-bold">+ ₹ @Model.LeaveEncashmentAmount.ToString("N0")</td>
+                                                </tr>
+                                            }
+                                            @if (Model.OtherAdditions > 0)
+                                            {
+                                                <tr>
+                                                    <td class="text-muted pl-3">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.OtherAdditions")</td>
+                                                    <td class="text-right pr-3 text-success font-weight-bold">+ ₹ @Model.OtherAdditions.ToString("N0")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                        <tfoot>
+                                            <tr style="border-top:2px solid #dee2e6;">
+                                                <td class="pl-3 font-weight-bold">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.NetPay")</td>
+                                                <td class="text-right pr-3 font-weight-bold text-primary" style="font-size:1.05rem;">₹ @Model.NetSalary.ToString("N0")</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    @if (Model.EarningLines != null && Model.EarningLines.Count > 0)
+                    {
+                        var hasAdjustments = Model.LeaveEncashmentAmount > 0
+                            || (Model.CustomComponents != null && Model.CustomComponents.Count > 0);
+                        var adjAdditions = new System.Collections.Generic.List<(string Name, decimal Amount)>();
+                        if (Model.LeaveEncashmentAmount > 0)
+                            adjAdditions.Add(("Leave Encashment (Incentive)", Model.LeaveEncashmentAmount));
+                        if (Model.CustomComponents != null)
+                            foreach (var ca in Model.CustomComponents.Where(c => c.TypeId == 1))
+                                adjAdditions.Add((ca.Name, ca.Amount));
+                        var adjDeductions = Model.CustomComponents?.Where(c => c.TypeId == 2).ToList()
+                            ?? new System.Collections.Generic.List<EmployeeSalaryCustomComponentModel>();
+                        var totalFixedDeductions = Model.DeductionLines.Sum(d => d.Amount);
+                        var totalAdjAdditions = adjAdditions.Sum(a => a.Amount);
+                        var totalAdjDeductions = adjDeductions.Sum(d => d.Amount);
+
+                        <div class="card card-info card-outline">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="fas fa-list-ul"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.SalaryComponentBreakdown")</h3>
+                            </div>
+                            <div class="card-body p-0">
+
+                                <table class="table table-bordered table-sm mb-0">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.FixedEarnings")</th>
+                                            <th class="text-right">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.AmountColumn")</th>
+                                            <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.FixedDeductions")</th>
+                                            <th class="text-right">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.AmountColumn")</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{ var maxRows = Math.Max(Model.EarningLines.Count, Model.DeductionLines.Count); }
+                                        @for (int i = 0; i < maxRows; i++)
+                                        {
+                                            var earn = i < Model.EarningLines.Count ? Model.EarningLines[i] : null;
+                                            var ded  = i < Model.DeductionLines.Count ? Model.DeductionLines[i] : null;
+                                            <tr>
+                                                <td>@(earn?.Name ?? "")</td>
+                                                <td class="text-right">@(earn != null ? earn.Amount.ToString("N0") : "")</td>
+                                                <td>@(ded?.Name ?? "")</td>
+                                                <td class="text-right text-danger">@(ded != null ? ded.Amount.ToString("N0") : "")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-secondary font-weight-bold">
+                                            <td>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.GrossSalary")</td>
+                                            <td class="text-right">@Model.GrossSalary.ToString("N0")</td>
+                                            <td>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.TotalFixedDeductions")</td>
+                                            <td class="text-right text-danger">@totalFixedDeductions.ToString("N0")</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+
+                                @if (hasAdjustments)
+                                {
+                                    <table class="table table-bordered table-sm mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.OtherAdditions")</th>
+                                                <th class="text-right">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.AmountColumn")</th>
+                                                <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.OtherDeductions")</th>
+                                                <th class="text-right">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.AmountColumn")</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @{ var adjMax = Math.Max(adjAdditions.Count, adjDeductions.Count); }
+                                            @for (int i = 0; i < adjMax; i++)
+                                            {
+                                                var addRow = i < adjAdditions.Count ? adjAdditions[i] : ((string Name, decimal Amount)?)null;
+                                                var dedRow = i < adjDeductions.Count ? adjDeductions[i] : null;
+                                                <tr>
+                                                    <td>@(addRow?.Name ?? "")</td>
+                                                    <td class="text-right">@(addRow != null ? addRow.Value.Amount.ToString("N0") : "")</td>
+                                                    <td>@(dedRow?.Name ?? "")</td>
+                                                    <td class="text-right">@(dedRow != null ? dedRow.Amount.ToString("N0") : "")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="font-weight-bold table-secondary">
+                                                <td>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.TotalOtherAdditions")</td>
+                                                <td class="text-right">@totalAdjAdditions.ToString("N0")</td>
+                                                <td>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.TotalOtherDeductions")</td>
+                                                <td class="text-right">@totalAdjDeductions.ToString("N0")</td>
+                                            </tr>
+                                            <tr class="font-weight-bold table-secondary">
+                                                <td>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.TotalEarnings")</td>
+                                                <td class="text-right">@((Model.GrossSalary + totalAdjAdditions).ToString("N0"))</td>
+                                                <td>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.TotalDeductions")</td>
+                                                <td class="text-right">@((totalFixedDeductions + totalAdjDeductions).ToString("N0"))</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                }
+
+                                <table class="table table-bordered table-sm mb-0">
+                                    <tfoot>
+                                        <tr class="table-primary font-weight-bold">
+                                            <td colspan="3">
+                                                @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.NetPay")
+                                                <small class="text-muted font-weight-normal ml-2">
+                                                    = @Model.GrossSalary.ToString("N0")
+                                                    − @totalFixedDeductions.ToString("N0")
+                                                    @if (totalAdjAdditions > 0) { <text>+ @totalAdjAdditions.ToString("N0")</text> }
+                                                    @if (totalAdjDeductions > 0) { <text>− @totalAdjDeductions.ToString("N0")</text> }
+                                                </small>
+                                            </td>
+                                            <td class="text-right" style="font-size:1.05rem;">₹ @Model.NetSalary.ToString("N0")</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+
+                            </div>
+                        </div>
+                    }
+
+                    @if (!Model.IsPaid)
+                    {
+                        <div class="card card-default">
+                            <div class="card-header">
+                                <h3 class="card-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.HRAdjustments")</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info py-2 mb-3">
+                                    <i class="fas fa-info-circle"></i>
+                                    @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.ManualAdjustmentNote")
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="GrossSalary" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <nop-editor asp-for="GrossSalary" />
+                                        <small class="text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Fields.GrossSalary.AdjustHint")</small>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="WorkingDaysInMonth" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <nop-editor asp-for="WorkingDaysInMonth" />
+                                        <small class="text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Fields.WorkingDays.AdjustHint")</small>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="LeaveDeductionDays" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <nop-editor asp-for="LeaveDeductionDays" />
+                                        <small class="text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Fields.LeaveDeductionDays.AdjustHint")</small>
+                                    </div>
+                                </div>
+
+                                @if (Model.MonthId == 12)
+                                {
+                                    <hr />
+
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <nop-label asp-for="LeaveEncashmentDays" />
+                                        </div>
+                                        <div class="col-md-9">
+                                            <nop-editor asp-for="LeaveEncashmentDays" />
+                                            <small class="text-muted">Number of casual leave days to encash as incentive. Auto-calculated from leave balance.</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <nop-label asp-for="LeaveEncashmentAmount" />
+                                        </div>
+                                        <div class="col-md-9">
+                                            <nop-editor asp-for="LeaveEncashmentAmount" />
+                                            <small class="text-muted">Incentive amount. Auto-calculated from days × daily rate, or override manually.</small>
+                                        </div>
+                                    </div>
+                                }
+
+                                <hr />
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.CustomComponent.AdditionalComponents")</strong>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="showAddComponentForm">
+                                        <i class="fas fa-plus"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.CustomComponent.AddComponent")
+                                    </button>
+                                </div>
+
+                                <div id="addComponentForm" class="card card-outline card-primary mb-3" style="display:none;">
+                                    <div class="card-body py-2">
+                                        <div class="form-row align-items-end">
+                                            <div class="col-md-3">
+                                                <label class="font-weight-bold">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.CustomComponent.Type")</label>
+                                                <select id="newComponentType" class="form-control form-control-sm">
+                                                    <option value="1">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.CustomComponent.Addition")</option>
+                                                    <option value="2">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.CustomComponent.Deduction")</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="font-weight-bold">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.CustomComponent.ComponentName")</label>
+                                                <input type="text" id="newComponentName" class="form-control form-control-sm" placeholder="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.CustomComponent.ComponentNamePlaceholder")" />
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="font-weight-bold">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.AmountColumn")</label>
+                                                <input type="number" id="newComponentAmount" class="form-control form-control-sm" min="0" step="0.01" placeholder="0.00" />
+                                            </div>
+                                            <div class="col-md-2 d-flex">
+                                                <button type="button" class="btn btn-sm btn-success mr-1" id="saveComponentBtn">Save</button>
+                                                <button type="button" class="btn btn-sm btn-secondary" id="cancelComponentBtn">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="customComponentsList">
+                                    @if (Model.CustomComponents != null && Model.CustomComponents.Count > 0)
+                                    {
+                                        <table class="table table-sm table-bordered mb-2" id="customComponentsTable">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.CustomComponent.Type")</th>
+                                                    <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.CustomComponent.ComponentName")</th>
+                                                    <th class="text-right">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.Breakdown.AmountColumn")</th>
+                                                    <th class="text-center" style="width:60px;"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="customComponentsBody">
+                                                @foreach (var cc in Model.CustomComponents)
+                                                {
+                                                    <tr id="cc-row-@cc.Id">
+                                                        <td><span class="badge @(cc.TypeId == 1 ? "badge-success" : "badge-danger")">@cc.TypeName</span></td>
+                                                        <td>@cc.Name</td>
+                                                        <td class="text-right">₹ @cc.Amount.ToString("N0")</td>
+                                                        <td class="text-center">
+                                                            <button type="button" class="btn btn-xs btn-danger delete-component-btn" data-id="@cc.Id" title="Remove">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted mb-2" id="noComponentsMsg"><small>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.CustomComponent.NoComponents")</small></p>
+                                    }
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-md-3">
+                                        <nop-label asp-for="Remarks" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <nop-editor asp-for="Remarks" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.AuditLogs != null && Model.AuditLogs.Count > 0)
+                    {
+                        <div class="card card-default">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-history"></i>
+                                    @T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.AuditLog")
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-bordered table-striped table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.AuditLog.Field")</th>
+                                            <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.AuditLog.OldValue")</th>
+                                            <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.AuditLog.NewValue")</th>
+                                            <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.AuditLog.ChangedBy")</th>
+                                            <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.AuditLog.ChangedOn")</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var log in Model.AuditLogs)
+                                        {
+                                            <tr>
+                                                <td><strong>@log.FieldName</strong></td>
+                                                <td class="text-danger">@(string.IsNullOrEmpty(log.OldValue) ? "—" : log.OldValue)</td>
+                                                <td class="text-success">@(string.IsNullOrEmpty(log.NewValue) ? "—" : log.NewValue)</td>
+                                                <td>@log.ChangedByName</td>
+                                                <td>@log.ChangedOnDisplay</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+
+@if (!Model.IsPaid && await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.Edit))
+{
+    <script>
+        $(document).ready(function () {
+            @if (Model.IsDraft)
+            {
+                <text>
+            $('#btn-finalize').click(function () {
+                if (!confirm('@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.FinalizeConfirm")')) return;
+                var postData = { id: @Model.Id };
+                addAntiForgeryToken(postData);
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("FinalizeSalary", "EmployeeSalary")',
+                    data: postData,
+                    success: function (data) {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                });
+            });
+                </text>
+            }
+            @if (Model.IsFinalized)
+            {
+                <text>
+            $('#btn-mark-paid').click(function () {
+                if (!confirm('@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.MarkAsPaidConfirm")')) return;
+                var postData = { id: @Model.Id };
+                addAntiForgeryToken(postData);
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("MarkAsPaid", "EmployeeSalary")',
+                    data: postData,
+                    success: function (data) {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                });
+            });
+                </text>
+            }
+        });
+    </script>
+}
+
+@if (!Model.IsPaid)
+{
+    <script>
+        $(document).ready(function () {
+            var salaryRecordId = @Model.Id;
+            var msgEnterName = '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.JS.EnterName")';
+            var msgEnterAmount = '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.JS.EnterAmount")';
+            var msgConfirmRemove = '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.JS.ConfirmRemove")';
+
+            $('#showAddComponentForm').click(function () {
+                $('#addComponentForm').slideToggle(150);
+                $('#newComponentName').focus();
+            });
+            $('#cancelComponentBtn').click(function () {
+                $('#addComponentForm').slideUp(150);
+                $('#newComponentName').val('');
+                $('#newComponentAmount').val('');
+            });
+
+            $('#saveComponentBtn').click(function () {
+                var typeId = parseInt($('#newComponentType').val());
+                var name = $('#newComponentName').val().trim();
+                var amount = parseFloat($('#newComponentAmount').val());
+
+                if (!name) { alert(msgEnterName); return; }
+                if (!amount || amount <= 0) { alert(msgEnterAmount); return; }
+
+                var postData = { salaryRecordId: salaryRecordId, typeId: typeId, name: name, amount: amount };
+                addAntiForgeryToken(postData);
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("AddCustomComponent", "EmployeeSalary")',
+                    data: postData,
+                    success: function (data) {
+                        if (data.success) {
+                            renderComponents(data.components);
+                            updateNetSalaryDisplay(data.netSalary);
+                            $('#newComponentName').val('');
+                            $('#newComponentAmount').val('');
+                            $('#addComponentForm').slideUp(150);
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                });
+            });
+
+            $(document).on('click', '.delete-component-btn', function () {
+                if (!confirm(msgConfirmRemove)) return;
+                var id = $(this).data('id');
+                var postData = { id: id };
+                addAntiForgeryToken(postData);
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("DeleteCustomComponent", "EmployeeSalary")',
+                    data: postData,
+                    success: function (data) {
+                        if (data.success) {
+                            renderComponents(data.components);
+                            updateNetSalaryDisplay(data.netSalary);
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                });
+            });
+
+            function renderComponents(components) {
+                var $body = $('#customComponentsBody');
+                if (!$body.length) {
+                    location.reload();
+                    return;
+                }
+                $body.empty();
+                $('#noComponentsMsg').remove();
+                if (components.length === 0) {
+                    $('#customComponentsList').prepend('<p class="text-muted mb-2" id="noComponentsMsg"><small>' + '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.EmployeeSalary.CustomComponent.NoComponents")' + '</small></p>');
+                    return;
+                }
+                $.each(components, function (i, cc) {
+                    var badgeClass = cc.typeId === 1 ? 'badge-success' : 'badge-danger';
+                    var row = '<tr id="cc-row-' + cc.id + '">'
+                        + '<td><span class="badge ' + badgeClass + '">' + cc.typeName + '</span></td>'
+                        + '<td>' + cc.name + '</td>'
+                        + '<td class="text-right">₹ ' + Math.round(parseFloat(cc.amount) || 0).toLocaleString('en-IN') + '</td>'
+                        + '<td class="text-center"><button type="button" class="btn btn-xs btn-danger delete-component-btn" data-id="' + cc.id + '" title="Remove"><i class="fas fa-trash"></i></button></td>'
+                        + '</tr>';
+                    $body.append(row);
+                });
+            }
+
+            function updateNetSalaryDisplay(netSalary) {
+                var formatted = '₹ ' + Math.round(parseFloat(netSalary) || 0).toLocaleString('en-IN');
+                $('.net-salary-display').text(formatted);
+            }
+        });
+    </script>
+}

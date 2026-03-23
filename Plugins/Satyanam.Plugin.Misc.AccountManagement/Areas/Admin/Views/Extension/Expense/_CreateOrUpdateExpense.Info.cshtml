@@ -1,0 +1,163 @@
+@model ExpenseModel
+
+<div class="card-body">
+    @if (Model.IsLinkedToSalary)
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Expense.LinkedToSalary")
+        </div>
+    }
+    @if (Model.IsGeneratedFromRecurring)
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-sync-alt"></i>
+            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Expense.GeneratedFromRecurring")
+        </div>
+    }
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ExpenseCategoryId" asp-postfix="*" />
+        </div>
+        <div class="col-md-9">
+            @if (Model.IsLinkedToSalary)
+            {
+                <select asp-for="ExpenseCategoryId" asp-items="Model.AvailableCategories" class="form-control" disabled="disabled"></select>
+                <input type="hidden" asp-for="ExpenseCategoryId" />
+            }
+            else
+            {
+                <nop-select asp-for="ExpenseCategoryId" asp-items="Model.AvailableCategories" />
+            }
+            <span asp-validation-for="ExpenseCategoryId" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Title" asp-postfix="*" />
+        </div>
+        <div class="col-md-9">
+            @if (Model.IsLinkedToSalary)
+            {
+                <input asp-for="Title" class="form-control" readonly="readonly" />
+            }
+            else
+            {
+                <nop-editor asp-for="Title" asp-required="true" />
+            }
+            <span asp-validation-for="Title" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Description" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="Description" />
+            <span asp-validation-for="Description"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="Amount" asp-postfix="*" />
+        </div>
+        <div class="col-md-9">
+            @if (Model.IsLinkedToSalary)
+            {
+                <input asp-for="Amount" class="form-control" readonly="readonly" />
+            }
+            else
+            {
+                <nop-editor asp-for="Amount" asp-required="true" />
+            }
+            <span asp-validation-for="Amount" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CurrencyCode" />
+        </div>
+        <div class="col-md-9">
+            @if (Model.IsLinkedToSalary)
+            {
+                <select asp-for="CurrencyCode" asp-items="Model.AvailableCurrencies" class="form-control" disabled="disabled"></select>
+                <input type="hidden" asp-for="CurrencyCode" />
+            }
+            else
+            {
+                <nop-select asp-for="CurrencyCode" asp-items="Model.AvailableCurrencies" />
+            }
+            <span asp-validation-for="CurrencyCode"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ExpenseDate" asp-postfix="*" />
+        </div>
+        <div class="col-md-9">
+            <nop-editor asp-for="ExpenseDate" asp-required="true" />
+            <span asp-validation-for="ExpenseDate" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="ReceiptDownloadId" />
+        </div>
+        <div class="col-md-9">
+            <input type="file" name="receiptFile" class="form-control" accept=".pdf,.jpg,.jpeg,.png" />
+            @if (Model.ReceiptDownloadId > 0 && !string.IsNullOrEmpty(Model.ReceiptFileName))
+            {
+                <div class="mt-1">
+                    <a href="/download/getfileupload?downloadId=@Model.ReceiptDownloadGuid" target="_blank" class="text-primary">
+                        <i class="fas fa-paperclip"></i> @Model.ReceiptFileName
+                    </a>
+                    <small class="text-muted ml-2">(@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Expense.ReceiptUploaded"))</small>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="AccountGroupId" />
+        </div>
+        <div class="col-md-9">
+            <div class="d-flex align-items-center">
+                <div style="flex:1;">
+                    <nop-select asp-for="AccountGroupId" asp-items="Model.AvailableAccountGroups" />
+                </div>
+                <span class="required ml-1">*</span>
+            </div>
+            <span asp-validation-for="AccountGroupId" class="field-validation-error"></span>
+            <small class="text-muted d-block">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Expense.Fields.AccountGroupId.Hint")</small>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="PaymentMethodId" />
+        </div>
+        <div class="col-md-9">
+            <div class="d-flex align-items-center">
+                <div style="flex:1;">
+                    <nop-select asp-for="PaymentMethodId" asp-items="Model.AvailablePaymentMethods" />
+                </div>
+                <span class="required ml-1">*</span>
+            </div>
+            <span asp-validation-for="PaymentMethodId" class="field-validation-error"></span>
+            <small class="text-muted d-block">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Expense.Fields.PaymentMethodId.Hint")</small>
+        </div>
+    </div>
+    @if (!string.IsNullOrEmpty(Model.SubmittedByEmployeeName))
+    {
+        <div class="form-group row">
+            <div class="col-md-3">
+                <div class="label-wrapper">
+                    <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Expense.Fields.SubmittedBy")</label>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="form-text-row">@Model.SubmittedByEmployeeName</div>
+            </div>
+        </div>
+    }
+</div>

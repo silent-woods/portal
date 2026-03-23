@@ -12,9 +12,6 @@ using System.Threading.Tasks;
 
 namespace App.Web.Factories
 {
-    /// <summary>
-    /// Represents the employee model factory
-    /// </summary>
     public partial class EmployeeModelFactory : IEmployeeModelFactory
     {
         #region Fields
@@ -48,16 +45,6 @@ namespace App.Web.Factories
         #endregion
 
         #region Methods
-
-        /// <summary>
-        /// Prepare the employee info model
-        /// </summary>
-        /// <param name="model">Customer info model</param>
-        /// <param name="employee">Employee</param>
-        /// <returns>
-        /// A task that represents the asynchronous operation
-        /// The task result contains the customer info model
-        /// </returns>
         public virtual async Task<EmployeeInfoModel> PrepareEmployeeInfoModelAsync(EmployeeInfoModel model)
         {
             if (model == null)
@@ -93,8 +80,6 @@ namespace App.Web.Factories
                 model.Designation = (await _designationService.GetDesignationByIdAsync(employee.DesignationId)).Name;
                 model.DateofJoining = employee.DateofJoining.ToString("d-MMM-yyyy");
                 model.DateOfBirth = employee.DateOfBirth.ToString("d-MMM-yyyy");
-
-                model.CTC = employee.CTC;
                 model.MaritalStatus = ((MaritalStatusEnum)selectedAvailableMaritalsStatusOption).ToString() == "Select" ? string.Empty : ((MaritalStatusEnum)selectedAvailableMaritalsStatusOption).ToString();
 
 
@@ -118,14 +103,11 @@ namespace App.Web.Factories
                 model.Relationship = employee.Relationship;
                 model.ContactNumber = employee.ContactNumber;
                 model.EmployeeStatus = ((EmployeeStatusEnum)selectedAvailableEmployeeStatusOption).ToString();
-                //model. = employee.OfficialEmail;
-                //model.OfficialEmail = employee.OfficialEmail;
                 model.IsSeniorStatus = employee.IsSeniorStatus;
             }
 
             return model;
         }
-
         #endregion
     }
 }

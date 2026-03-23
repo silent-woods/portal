@@ -1,0 +1,102 @@
+@model SalaryComponentConfigSearchModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfig.List").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfigs");
+}
+
+@using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.SalaryComponentConfigs
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfig.List")
+    </h1>
+    @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.Add))
+    {
+        <div class="float-right">
+            <a asp-action="SalaryComponentConfigCreate" asp-controller="SalaryComponentConfig" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>
+                @T("Admin.Common.AddNew")
+            </a>
+        </div>
+    }
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default">
+                    <div class="card-body">
+                        @{
+                            var gridModel = new DataTablesModel
+                            {
+                                Name = "salary-component-configs-grid",
+                                UrlRead = new DataUrl("SalaryComponentConfigs", "SalaryComponentConfig", null),
+                                UrlDelete = new DataUrl("SalaryComponentConfigDelete", "SalaryComponentConfig", null),
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes
+                            };
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(SalaryComponentConfigModel.Name))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfig.Fields.Name").Text
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(SalaryComponentConfigModel.ComponentTypeName))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfig.Fields.ComponentType").Text,
+                                Width = "120"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(SalaryComponentConfigModel.IsPercentage))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfig.Fields.IsPercentage").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean(),
+                                Width = "100"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(SalaryComponentConfigModel.Value))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfig.Fields.Value").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "100"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(SalaryComponentConfigModel.IsActive))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfig.Fields.IsActive").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Render = new RenderBoolean(),
+                                Width = "80"
+                            });
+                            gridModel.ColumnCollection.Add(new ColumnProperty(nameof(SalaryComponentConfigModel.DisplayOrder))
+                            {
+                                Title = T("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfig.Fields.DisplayOrder").Text,
+                                ClassName = NopColumnClassDefaults.CenterAll,
+                                Width = "80"
+                            });
+                            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.Edit))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(SalaryComponentConfigModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "100",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonEdit(new DataUrl("~/Admin/SalaryComponentConfig/SalaryComponentConfigEdit/"))
+                                });
+                            }
+                            @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.Delete))
+                            {
+                                gridModel.ColumnCollection.Add(new ColumnProperty(nameof(SalaryComponentConfigModel.Id))
+                                {
+                                    Title = T("Admin.Common.Delete").Text,
+                                    Width = "100",
+                                    Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+                                    ClassName = NopColumnClassDefaults.Button
+                                });
+                            }
+                        }
+                        @await Html.PartialAsync("Table", gridModel)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

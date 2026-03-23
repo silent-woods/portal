@@ -9,24 +9,17 @@ using App.Data.Extensions;
 using App.Services.Customers;
 using App.Services.Employees;
 using App.Services.Helpers;
-using App.Services.Leaves;
 using App.Services.ProjectEmployeeMappings;
 using App.Services.Projects;
 using App.Services.ProjectTasks;
 using App.Services.TaskAlerts;
 using App.Services.TimeSheets;
-using App.Web.Areas.Admin.Models.Extension.TaskComments;
-using App.Web.Areas.Admin.Models.TaskAlerts;
 using App.Web.Models.Dashboard;
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Satyanam.Nop.Core.Domains;
 using Satyanam.Nop.Core.Services;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -189,7 +182,7 @@ namespace App.Web.Factories.Extensions
             var percentages = await _taskAlertConfigurationRepository.Table
                 .Where(x => x.IsActive && !x.Deleted)
                 .OrderBy(x => x.DisplayOrder)
-                .Select(x => (int)x.Percentage)   
+                .Select(x => (int)x.Percentage)
                 .Distinct()
                 .ToListAsync();
 
@@ -239,10 +232,10 @@ namespace App.Web.Factories.Extensions
         #endregion
         #region Methods
 
-        public async Task<PendingDashboardModel> PrepareFollowUpDashboardModelAsync(string taskName = null, int statusType = 0, int currEmployeeId = 0, IList<int> projectIds = null, IList<int> employeeIds = null, int page = 1, int pageSize = int.MaxValue, IList<int> managedProjectIds = null, IList<int> visibleProjectIds = null, bool showOnlyNotOnTrack = false, string sourceType = null, DateTime? from = null, DateTime? to = null, int percentageFilter =0,int processWorkflow=0 ,int statusId =0)
+        public async Task<PendingDashboardModel> PrepareFollowUpDashboardModelAsync(string taskName = null, int statusType = 0, int currEmployeeId = 0, IList<int> projectIds = null, IList<int> employeeIds = null, int page = 1, int pageSize = int.MaxValue, IList<int> managedProjectIds = null, IList<int> visibleProjectIds = null, bool showOnlyNotOnTrack = false, string sourceType = null, DateTime? from = null, DateTime? to = null, int percentageFilter = 0, int processWorkflow = 0, int statusId = 0)
         {
             var today = DateTime.UtcNow.Date;
-            var allFollowUps = await _followUpTaskService.GetAllFollowUpTasksAsync(taskName: taskName, statusType: statusType, projectIds: projectIds, employeeIds: employeeIds, currEmployeeId: currEmployeeId, visibleProjectIds: visibleProjectIds, managedProjectIds: managedProjectIds, showOnlyNotOnTrack: showOnlyNotOnTrack, sourceType: sourceType, from: from, to: to, processWorkflow: processWorkflow, statusId: statusId,isAvoidNewStatus:true, pageIndex: page - 1, pageSize: pageSize);
+            var allFollowUps = await _followUpTaskService.GetAllFollowUpTasksAsync(taskName: taskName, statusType: statusType, projectIds: projectIds, employeeIds: employeeIds, currEmployeeId: currEmployeeId, visibleProjectIds: visibleProjectIds, managedProjectIds: managedProjectIds, showOnlyNotOnTrack: showOnlyNotOnTrack, sourceType: sourceType, from: from, to: to, processWorkflow: processWorkflow, statusId: statusId, isAvoidNewStatus: true, pageIndex: page - 1, pageSize: pageSize);
             var model = new PendingDashboardModel();
 
             var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
@@ -349,7 +342,7 @@ namespace App.Web.Factories.Extensions
                     ProjectName = project?.ProjectTitle,
                     LastFollowupDateTime = f.LastFollowupDateTime != null ? TimeZoneInfo.ConvertTimeFromUtc(f.LastFollowupDateTime.Value, istTimeZone) : null,
                     NextFollowupDateTime = f.NextFollowupDateTime != null ? TimeZoneInfo.ConvertTimeFromUtc(f.NextFollowupDateTime.Value, istTimeZone) : null,
-                    LastTrackedOn = lastTrackedUtc !=null ? TimeZoneInfo.ConvertTimeFromUtc(lastTrackedUtc.Value, istTimeZone) : null,
+                    LastTrackedOn = lastTrackedUtc != null ? TimeZoneInfo.ConvertTimeFromUtc(lastTrackedUtc.Value, istTimeZone) : null,
                     LastComment = f.LastComment,
                     AlertId = f.AlertId,
                     AlertType = alertType,
@@ -418,7 +411,7 @@ namespace App.Web.Factories.Extensions
             return model;
         }
 
-        public async Task<PendingDashboardModel> PrepareCodeReviewDashboardModelAsync(int currEmployeeId = 0,int projectId = 0,int employeeId = 0,string taskName = null,int statusId =0)
+        public async Task<PendingDashboardModel> PrepareCodeReviewDashboardModelAsync(int currEmployeeId = 0, int projectId = 0, int employeeId = 0, string taskName = null, int statusId = 0)
         {
             var currEmployee = await _employeeService.GetEmployeeByIdAsync(currEmployeeId);
             var model = new PendingDashboardModel
@@ -499,9 +492,9 @@ namespace App.Web.Factories.Extensions
 .Select(t => t.StatusId)
 .Distinct()
 .ToList();
-     var statuses = statusIds.Any()
-   ? await _workflowStatusService.GetWorkflowStatusByIdsAsync(statusIds.ToArray())
-   : new List<WorkflowStatus>();
+            var statuses = statusIds.Any()
+          ? await _workflowStatusService.GetWorkflowStatusByIdsAsync(statusIds.ToArray())
+          : new List<WorkflowStatus>();
             var statusDict = statuses.ToDictionary(
                 s => s.Id,
                 s => new
@@ -530,7 +523,7 @@ namespace App.Web.Factories.Extensions
 
         Count = tasks.Count(t => t.StatusId == s.Id)
     })
-    .Where(x => x.Count > 0)  
+    .Where(x => x.Count > 0)
     .OrderBy(x => x.ProcessWorkflowName)
     .ThenBy(x => x.StatusName)
     .ToList();
@@ -541,7 +534,7 @@ namespace App.Web.Factories.Extensions
                         await _taskChangeLogService.GetCurrentStatusStartDateAsync(
                             t.Id,
                             t.StatusId);
-                    DateTime? statusStartIst = statusStartDate.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(statusStartDate.Value, istTimeZone): (DateTime?)null;
+                    DateTime? statusStartIst = statusStartDate.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(statusStartDate.Value, istTimeZone) : (DateTime?)null;
 
                     int pendingSinceDays = statusStartIst.HasValue
                         ? (todayIstDate - statusStartIst.Value.Date).Days
@@ -580,7 +573,7 @@ namespace App.Web.Factories.Extensions
             return model;
         }
 
-        public async Task<PendingDashboardModel> PrepareReadyToTestDashboardModelAsync(int currEmployeeId = 0,int projectId = 0,int employeeId = 0,string taskName = null,int statusId =0)
+        public async Task<PendingDashboardModel> PrepareReadyToTestDashboardModelAsync(int currEmployeeId = 0, int projectId = 0, int employeeId = 0, string taskName = null, int statusId = 0)
         {
             var model = new PendingDashboardModel
             {
@@ -678,7 +671,7 @@ namespace App.Web.Factories.Extensions
     : new List<WorkflowStatus>();
             var statusDict = statuses.ToDictionary(
                 s => s.Id,
-                s => new   
+                s => new
                 {
                     s.StatusName,
                     s.ColorCode
@@ -700,7 +693,7 @@ namespace App.Web.Factories.Extensions
 
         Count = tasks.Count(t => t.StatusId == s.Id)
     })
-    .Where(x => x.Count > 0)  
+    .Where(x => x.Count > 0)
     .OrderBy(x => x.ProcessWorkflowName)
     .ThenBy(x => x.StatusName)
     .ToList();
@@ -728,7 +721,7 @@ namespace App.Web.Factories.Extensions
                         AssignedTo = employeeDict.GetValueOrDefault(t.AssignedTo, "—"),
                         DeveloperName = employeeDict.GetValueOrDefault(t.DeveloperId, "—"),
                         StatusId = t.StatusId,
-                        ReadyToTestStartDate = statusStartDate != null ? TimeZoneInfo.ConvertTimeFromUtc(statusStartDate.Value, istTimeZone): null,
+                        ReadyToTestStartDate = statusStartDate != null ? TimeZoneInfo.ConvertTimeFromUtc(statusStartDate.Value, istTimeZone) : null,
                         PendingSinceDays = pendingSinceDays,
                         DueDate = t.DueDate?.ToString("d-MMM-yyyy") ?? "—",
                         StatusName = statusDict.TryGetValue(t.StatusId, out var st)
@@ -743,7 +736,7 @@ namespace App.Web.Factories.Extensions
             return model;
         }
 
-        public async Task<PendingDashboardModel> PrepareOverdueDashboardModelAsync(int currEmployeeId = 0,int projectId = 0,int employeeId = 0,string taskName = null,int statusId =0)
+        public async Task<PendingDashboardModel> PrepareOverdueDashboardModelAsync(int currEmployeeId = 0, int projectId = 0, int employeeId = 0, string taskName = null, int statusId = 0)
         {
             var currEmployee = await _employeeService.GetEmployeeByIdAsync(currEmployeeId);
 
@@ -762,7 +755,7 @@ namespace App.Web.Factories.Extensions
             await PrepareEmployeeListAsync(model);
 
             var overdueTasks = new List<ProjectTask>();
-            overdueTasks = (List<ProjectTask>)await _commonPluginService.GetOverdueTasksByCurrentEmployeeForDashboardAsync(currEmployeeId:currEmployeeId,projectId:projectId,employeeId:employeeId,taskName:taskName,statusId:statusId);
+            overdueTasks = (List<ProjectTask>)await _commonPluginService.GetOverdueTasksByCurrentEmployeeForDashboardAsync(currEmployeeId: currEmployeeId, projectId: projectId, employeeId: employeeId, taskName: taskName, statusId: statusId);
             var today = DateTime.UtcNow.Date;
             var statusIds = overdueTasks
     .Select(t => t.StatusId)
@@ -833,7 +826,7 @@ namespace App.Web.Factories.Extensions
                        DeveloperName = developerDict.GetValueOrDefault(t.DeveloperId, "—"),
                        EstimationTime = await _timeSheetsService
                            .ConvertToHHMMFormat(t.EstimatedTime),
-                       DeveloperTime = await _timeSheetsService.ConvertSpentTimeAsync(deveTime.SpentHours,deveTime.SpentMinutes),
+                       DeveloperTime = await _timeSheetsService.ConvertSpentTimeAsync(deveTime.SpentHours, deveTime.SpentMinutes),
                        DueDate = t.DueDate.HasValue
                            ? TimeZoneInfo.ConvertTimeFromUtc(t.DueDate.Value, ist)
                                .ToString("d-MMM-yyyy")

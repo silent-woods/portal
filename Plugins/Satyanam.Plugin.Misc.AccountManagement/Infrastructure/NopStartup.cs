@@ -1,4 +1,5 @@
 ﻿using App.Core.Infrastructure;
+using App.Services.ScheduleTasks;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -15,6 +16,7 @@ using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.PaymentTerms;
 using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.ProjectBillings;
 using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Validators;
 using Satyanam.Plugin.Misc.AccountManagement.Services;
+using Satyanam.Plugin.Misc.AccountManagement.Services.ScheduleTasks;
 using Satyanam.Plugin.Misc.AccountManagement.ViewEngine;
 
 namespace Satyanam.Plugin.Misc.AccountManagement.Infrastructure;
@@ -26,9 +28,15 @@ public partial class NopStartup : INopStartup
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IAccountManagementModelFactory, AccountManagementModelFactory>();
-
         services.AddScoped<IAccountManagementService, AccountManagementService>();
-
+        services.AddScoped<IExpenseCategoryService, ExpenseCategoryService>();
+        services.AddScoped<IExpenseService, ExpenseService>();
+        services.AddScoped<IEmployeeSalaryService, EmployeeSalaryService>();
+        services.AddScoped<IExpenseModelFactory, ExpenseModelFactory>();
+        services.AddScoped<ISalaryComponentConfigService, SalaryComponentConfigService>();
+        services.AddScoped<IEmployeeSalaryCustomComponentService, EmployeeSalaryCustomComponentService>();
+        services.AddScoped<IScheduleTask, ProcessMonthlySalaryTask>();
+        services.AddScoped<IScheduleTask, GenerateRecurringExpensesTask>();
         services.Configure<RazorViewEngineOptions>(options =>
         {
             options.ViewLocationExpanders.Add(new AccountManagementViewEngine());

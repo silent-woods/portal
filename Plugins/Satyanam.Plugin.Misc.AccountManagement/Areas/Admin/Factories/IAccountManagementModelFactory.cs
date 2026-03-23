@@ -89,5 +89,7 @@ public partial interface IAccountManagementModelFactory
 
     Task<AccountTransactionModel> PrepareAccountTransactionModelAsync(AccountTransactionModel model, AccountTransaction accountTransaction);
 
+    Task<(decimal TotalIncome, decimal TotalExpense, int TotalCount)> GetAccountTransactionSummaryAsync(AccountTransactionSearchModel searchModel);
+
     #endregion
 }

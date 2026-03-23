@@ -1,0 +1,50 @@
+@model SalaryComponentConfigModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfig.Add").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfigs");
+
+    var customer = await workContext.GetCurrentCustomerAsync();
+    const string hideInfoBlockAttributeName = "SalaryComponentConfigCreatePage.HideInfoBlock";
+    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+}
+
+@using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.SalaryComponentConfigs
+
+<form asp-controller="SalaryComponentConfig" asp-action="SalaryComponentConfigCreate" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfig.Add")
+            <small>
+                <i class="fas fa-arrow-circle-left"></i>
+                <a asp-action="SalaryComponentConfigs" asp-controller="SalaryComponentConfig">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.SalaryComponentConfig.BackToList")</a>
+            </small>
+        </h1>
+        @if (await permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageSalaryProcessing, PermissionAction.Add))
+        {
+            <div class="float-right">
+                <button type="submit" name="save" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
+                </button>
+                <button type="submit" name="save-continue" class="btn btn-primary">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>
+            </div>
+        }
+    </div>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <nop-cards id="salary-component-config-cards">
+                    <nop-card asp-name="salary-component-config-info" asp-icon="fas fa-info" asp-title="@T("Admin.Common.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock" asp-advanced="false">
+                        <input asp-for="Id" type="hidden" />
+                        @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/Extension/SalaryComponentConfig/_SalaryComponentConfigFields.cshtml", Model)
+                    </nop-card>
+                </nop-cards>
+            </div>
+        </div>
+    </section>
+</form>

@@ -802,6 +802,17 @@ namespace App.Web.Factories
                 });
             }
 
+            if (await _permissionService.AuthorizeAsync(StandardPermissionProvider.PublicStoreSalarySlips, PermissionAction.View))
+            {
+                model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+                {
+                    RouteName = "MySalarySlips",
+                    Title = "My Salary Slips",
+                    Tab = (int)CustomerNavigationEnum.SalarySlips,
+                    ItemClass = "salary-slips"
+                });
+            }
+
             if (_gdprSettings.GdprEnabled)
             {
                 model.CustomerNavigationItems.Add(new CustomerNavigationItemModel

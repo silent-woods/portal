@@ -27,9 +27,6 @@ using System.Text.RegularExpressions;
 
 namespace App.Services.Employees
 {
-    /// <summary>
-    /// Employee service
-    /// </summary>
     public partial class EmployeeService : IEmployeeService
     {
         #region Fields
@@ -96,12 +93,6 @@ namespace App.Services.Employees
         #region Methods
 
         #region Employee
-
-        /// <summary>
-        /// Deletes a Employee
-        /// </summary>
-        /// <param name="employee">Employee</param>
-        /// <returns>A task that represents the asynchronous operation</returns>
         public virtual async Task DeleteEmployeeAsync(Employee employee)
         {
             await _employeeRepository.DeleteAsync(employee);
@@ -110,107 +101,55 @@ namespace App.Services.Employees
                 await DeleteCustomerAsync(customer);
         }
 
-        /// <summary>
-        /// Gets a Employee
-        /// </summary>
-        /// <param name="employeeId">employee identifier</param>
-        /// <returns>
-        /// A task that represents the asynchronous operation
-        /// The task result contains the employee
-        /// </returns>
         public virtual async Task<Employee> GetEmployeeByIdAsync(int employeeId)
         {
             return await _employeeRepository.GetByIdAsync(employeeId);
         }
-
         public virtual async Task<IList<Employee>> GetEmployeeByIdsAsync(int[] employeeIds)
         {
             return await _employeeRepository.GetByIdsAsync(employeeIds, cache => default, false);
         }
-
-        /// <summary>
-        /// Gets all Employees
-        /// </summary>
-        /// <param name="storeId">The store identifier; pass 0 to load all records</param>
-        /// <param name="languageId">Language identifier; 0 if you want to get all records</param>
-        /// <param name="dateFrom">Filter by created date; null if you want to get all records</param>
-        /// <param name="dateTo">Filter by created date; null if you want to get all records</param>
-        /// <param name="pageIndex">Page index</param>
-        /// <param name="pageSize">Page size</param>
-        /// <param name="showHidden">A value indicating whether to show hidden records</param>
-        /// <param name="employee">Filter by employee name</param>
-        /// <returns>
-        /// A task that represents the asynchronous operation
-        /// The task result contains the employee
-        /// </returns>
-
         public virtual async Task<IPagedList<Employee>> GetAllEmployeesAsync(int storeId = 0, int languageId = 0,
             DateTime? dateFrom = null, DateTime? dateTo = null,
-            int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, string employee = null, bool showInActive = false)
+            int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, string employee = null, bool showInActive = false, bool showVendors = false)
         {
             return await _employeeRepository.GetAllPagedAsync(async query =>
             {
-
                 if (!string.IsNullOrEmpty(employee))
                     query = query.Where(b => b.FirstName.Contains(employee.Trim()) || b.LastName.Contains(employee.Trim()) || ($"{b.FirstName} {b.LastName}").Contains(employee.Trim()) || ($"{b.LastName} {b.FirstName}").Contains(employee.Trim()));
-                if(showInActive == false)
-                {
+                if (showInActive == false)
                     query = query.Where(p => p.EmployeeStatusId == 1);
-                }
+                if (!showVendors)
+                    query = query.Where(e => !e.IsVendor);
                 return query;
             }, pageIndex, pageSize);
         }
-
-
-        public virtual async Task<IEnumerable<int>> GetAllEmployeeIdsAsync()
+        public virtual async Task<IEnumerable<int>> GetAllEmployeeIdsAsync(bool showVendors = false)
         {
-            var projects = await GetAllEmployeesAsync();
-            return projects.Where(p => p.EmployeeStatusId == 1).OrderBy(e=>e.FirstName).Select(p => p.Id);
+            var projects = await GetAllEmployeesAsync(showVendors: showVendors);
+            return projects.Where(p => p.EmployeeStatusId == 1).OrderBy(e => e.FirstName).Select(p => p.Id);
         }
-
-
         public virtual async Task<IPagedList<Employee>> GetAllEmployeeNameAsync(string employeeName=null, int languageId = 0,
             DateTime? dateFrom = null, DateTime? dateTo = null,
-            int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, string employee = null, bool showInActive = false)
+            int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, string employee = null, bool showInActive = false, bool showVendors = false)
         {
             return await _employeeRepository.GetAllPagedAsync(async query =>
             {
                 if (showInActive == false)
-                {
                     query = query.Where(p => p.EmployeeStatusId == 1);
-                }
+                if (!showVendors)
+                    query = query.Where(e => !e.IsVendor);
                 return query.OrderBy(c => c.Id);
             }, pageIndex, pageSize);
         }
-
-        /// <summary>
-        /// Inserts a Employee
-        /// </summary>
-        /// <param name="employee">Employee</param>
-        /// <returns>A task that represents the asynchronous operation</returns>
         public virtual async Task InsertEmployeeAsync(Employee employee)
         {
             await _employeeRepository.InsertAsync(employee);
         }
-
-        /// <summary>
-        /// Updates the Employee
-        /// </summary>
-        /// <param name="employee">Employee</param>
-        /// <returns>A task that represents the asynchronous operation</returns>
         public virtual async Task UpdateEmployeeAsync(Employee employee)
         {
             await _employeeRepository.UpdateAsync(employee);
         }
-
-        /// <summary>
-        /// Get employee by email
-        /// </summary>
-        /// <param name="email">Email</param>
-        /// <returns>
-        /// A task that represents the asynchronous operation
-        /// The task result contains the employee
-        /// </returns>
         public virtual async Task<Employee> GetEmployeeByEmailAsync(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -224,8 +163,6 @@ namespace App.Services.Employees
 
             return employee;
         }
-
-        //get customer id
         public virtual async Task<Employee> GetEmployeeByCustomerIdAsync(int customerId)
         {
             if (customerId <= 0)
@@ -236,7 +173,6 @@ namespace App.Services.Employees
                         select e;
             return await query.FirstOrDefaultAsync();
         }
-
         public virtual async Task<IList<Employee>> GetEmployeesForTimesheetReminder()
         {
             var allEmployees = await GetAllEmployeesAsync();
@@ -268,14 +204,11 @@ namespace App.Services.Employees
             return employeeList;
 
         }
-
         public virtual async Task<IList<Employee>> GetEmployeesForTimesheetReminder2()
         {
             var allEmployees = await GetAllEmployeesAsync();
             var currentDate = await _dateTimeHelper.GetIndianTimeAsync();
-
             var date = currentDate.Date;
-
             int managerId = await _designationService.GetRoleIdProjectManager();
             var employeeList = new List<Employee>();
             string excludeDepartment = _timeSheetSetting.DepartmentIds;
@@ -288,8 +221,7 @@ namespace App.Services.Employees
                     {
                         continue; 
                     }                   
-                        employeeList.Add(employee);
-                    
+                        employeeList.Add(employee);                    
                 }
             return employeeList;
 
@@ -336,7 +268,6 @@ namespace App.Services.Employees
                     result.Add(employee);
                 }
             }
-
             return result;
         }
 
@@ -350,7 +281,6 @@ namespace App.Services.Employees
 
             return query;
         }
-
         public virtual async Task<IList<Employee>> GetAllHREmployees()
         {
             var hrDesignationId = await _designationService.GetHrRoleId();
@@ -361,7 +291,6 @@ namespace App.Services.Employees
 
             return query;
         }
-
         public async Task<IList<Employee>> GetEmployeesByIdsAsync(int[] ids)
         {
             if (ids == null || ids.Length == 0)
@@ -370,9 +299,6 @@ namespace App.Services.Employees
             var query = _employeeRepository.Table.Where(e => ids.Contains(e.Id));
             return await query.ToListAsync();
         }
-
-
-
         public async Task<IList<Employee>> GetEmployeesByDesignationIdsAsync(int[] designationIds)
         {
             if (designationIds == null || designationIds.Length == 0)
@@ -382,8 +308,6 @@ namespace App.Services.Employees
                 .Where(e => designationIds.Contains(e.DesignationId))
                 .ToListAsync();
         }
-
-
         #endregion
         #endregion
     }
