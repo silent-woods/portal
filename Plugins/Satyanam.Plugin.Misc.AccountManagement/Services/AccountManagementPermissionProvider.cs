@@ -24,6 +24,7 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
     public static readonly PermissionRecord ManageExpenses = new() { Name = "Admin area. Account Management - Manage Expenses", SystemName = "ManageExpenses", Category = "Account" };
     public static readonly PermissionRecord ManageRecurringExpenses = new() { Name = "Admin area. Account Management - Manage Recurring Expenses", SystemName = "ManageRecurringExpenses", Category = "Account" };
     public static readonly PermissionRecord ManageSalaryProcessing = new() { Name = "Admin area. Account Management - Manage Salary Processing", SystemName = "ManageSalaryProcessing", Category = "Account" };
+    public static readonly PermissionRecord ManageExecutiveDashboard = new() { Name = "Admin area. Account Management - Manage Executive Dashboard", SystemName = "ManageExecutiveDashboard", Category = "Account" };
 
     #endregion
 
@@ -46,7 +47,8 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
             ManageExpenseCategories,
             ManageExpenses,
             ManageRecurringExpenses,
-            ManageSalaryProcessing
+            ManageSalaryProcessing,
+            ManageExecutiveDashboard
         };
     }
 
@@ -71,7 +73,8 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
                     ManageExpenseCategories,
                     ManageExpenses,
                     ManageRecurringExpenses,
-                    ManageSalaryProcessing
+                    ManageSalaryProcessing,
+                    ManageExecutiveDashboard
                 }
             ),
 

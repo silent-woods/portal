@@ -1,0 +1,1099 @@
+<div class="card card-default ops-section-card">
+    <div class="card-body">
+
+        <div class="section-header ops-section-header">
+            <span class="section-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Section.Title")</span>
+            <div class="ops-filters-row">
+                <select id="ops-employee-filter" class="ops-filter-select">
+                    <option value="0">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.AllEmployees")</option>
+                </select>
+                <select id="ops-project-filter" class="ops-filter-select">
+                    <option value="0">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.AllProjects")</option>
+                </select>
+                <div class="btn-group ops-granularity-toggle" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-ops-granularity="week">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Granularity.Week")</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm active" data-ops-granularity="month">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Granularity.Month")</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-ops-granularity="year">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Granularity.Year")</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="ops-preset-bar-week" class="preset-bar" style="display:none;">
+            <button class="btn-preset active" data-ops-preset="thisweek">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.CurrentWeek")</button>
+            <button class="btn-preset" data-ops-preset="lastweek">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.PastWeek")</button>
+        </div>
+
+        <div id="ops-preset-bar-month" class="preset-bar">
+            <button class="btn-preset" data-ops-preset="currentmonth">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.CurrentMonth")</button>
+            <button class="btn-preset active" data-ops-preset="lastmonth">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.LastMonth")</button>
+            <button class="btn-preset" data-ops-preset="last3months">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.Last3Months")</button>
+            <button class="btn-preset" data-ops-preset="last6months">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.Last6Months")</button>
+            <div class="period-inputs ms-2">
+                <select id="ops-month-from">
+                    @for (var m = 1; m <= 12; m++) { <option value="@m">@(new DateTime(2000, m, 1).ToString("MMM"))</option> }
+                </select>
+                <select id="ops-year-from-month">
+                    @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                </select>
+                <span class="ops-period-separator">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Period.To")</span>
+                <select id="ops-month-to">
+                    @for (var m = 1; m <= 12; m++) { <option value="@m">@(new DateTime(2000, m, 1).ToString("MMM"))</option> }
+                </select>
+                <select id="ops-year-to-month">
+                    @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                </select>
+            </div>
+        </div>
+
+        <div id="ops-preset-bar-year" class="preset-bar" style="display:none;">
+            <button class="btn-preset active" data-ops-preset="thisyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.ThisYear")</button>
+            <button class="btn-preset" data-ops-preset="lastyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.LastYear")</button>
+            <div class="period-inputs ms-2">
+                <select id="ops-year-from">
+                    @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                </select>
+                <span class="ops-period-separator">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Period.To")</span>
+                <select id="ops-year-to">
+                    @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                </select>
+            </div>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card ops-billable" data-ops-card="billable">
+                <div class="kpi-card-top">
+                    <span class="kpi-label kpi-label-wrap">
+                        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Card.BillableUtil")
+                        <i class="fas fa-info-circle kpi-info-icon" data-toggle="tooltip" data-placement="top" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Card.BillableUtil.Tooltip")"></i>
+                    </span>
+                    <div class="kpi-icon ops-billable-icon"><i class="fas fa-clock"></i></div>
+                </div>
+                <div class="kpi-value" id="ops-val-billable">—</div>
+                <div><span class="kpi-trend neutral" id="ops-trend-billable">—</span></div>
+                <div class="kpi-subtitle" id="ops-sub-billable"></div>
+                <div class="kpi-sparkline-wrap"><canvas id="ops-spark-billable"></canvas></div>
+                <div class="kpi-loading" id="ops-load-billable"><div class="spinner-sm"></div></div>
+            </div>
+
+            <div class="kpi-card ops-dot" data-ops-card="dot">
+                <div class="kpi-card-top">
+                    <span class="kpi-label kpi-label-wrap">
+                        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Card.DOT")
+                        <i class="fas fa-info-circle kpi-info-icon" data-toggle="tooltip" data-placement="top" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Card.DOT.Tooltip")"></i>
+                    </span>
+                    <div class="kpi-icon ops-dot-icon"><i class="fas fa-check-circle"></i></div>
+                </div>
+                <div class="kpi-value" id="ops-val-dot">—</div>
+                <div><span class="kpi-trend neutral" id="ops-trend-dot">—</span></div>
+                <div class="kpi-subtitle" id="ops-sub-dot"></div>
+                <div class="kpi-sparkline-wrap"><canvas id="ops-spark-dot"></canvas></div>
+                <div class="kpi-loading" id="ops-load-dot"><div class="spinner-sm"></div></div>
+            </div>
+
+            <div class="kpi-card ops-quality" data-ops-card="quality">
+                <div class="kpi-card-top">
+                    <span class="kpi-label kpi-label-wrap">
+                        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Card.WorkQuality")
+                        <i class="fas fa-info-circle kpi-info-icon" data-toggle="tooltip" data-placement="top" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Card.WorkQuality.Tooltip")"></i>
+                    </span>
+                    <div class="kpi-icon ops-quality-icon"><i class="fas fa-star"></i></div>
+                </div>
+                <div class="kpi-value" id="ops-val-quality">—</div>
+                <div><span class="kpi-trend neutral" id="ops-trend-quality">—</span></div>
+                <div class="kpi-subtitle" id="ops-sub-quality"></div>
+                <div class="kpi-sparkline-wrap"><canvas id="ops-spark-quality"></canvas></div>
+                <div class="kpi-loading" id="ops-load-quality"><div class="spinner-sm"></div></div>
+            </div>
+
+        </div>
+
+        <div class="cashflow-chart-section ops-chart-section">
+            <div class="cashflow-chart-header">
+                <span class="cashflow-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.BillableHours")</span>
+            </div>
+            <div class="cashflow-chart-wrap">
+                <canvas id="ops-billable-hours-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="cashflow-chart-section ops-chart-section">
+            <div class="cashflow-chart-header">
+                <span class="cashflow-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.ProjectHealth")</span>
+                <span class="ops-radar-top-label" id="ops-radar-top-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.ProjectHealth.TopLabel")</span>
+            </div>
+            <div class="ops-radar-wrap">
+                <canvas id="ops-project-radar-chart"></canvas>
+            </div>
+            <div id="ops-radar-legend" class="ops-radar-legend"></div>
+        </div>
+
+        <div class="inv-status-section ops-chart-section">
+            <div class="cashflow-chart-header ops-task-health-header">
+                <span class="cashflow-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.TaskHealth")</span>
+                <div class="ops-task-health-controls">
+                    <span class="ops-click-hint">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.ClickHint")</span>
+                    <select id="task-health-period-select" class="ops-filter-select ops-th-period-select">
+                        <option value="last3months" selected>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.Last3Months")</option>
+                        <option value="last6months">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.Last6Months")</option>
+                        <option value="thisyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.ThisYear")</option>
+                        <option value="lastyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.LastYear")</option>
+                        <option value="last2years">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.Last2Years")</option>
+                        <option value="alltime">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.AllTime")</option>
+                    </select>
+                </div>
+            </div>
+            <div class="inv-status-layout">
+                <div class="inv-donut-wrap">
+                    <canvas id="ops-task-donut-chart"></canvas>
+                    <div class="inv-donut-center">
+                        <div class="inv-donut-total-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.TaskHealth.TotalLabel")</div>
+                        <div class="inv-donut-total-value" id="ops-donut-total">—</div>
+                    </div>
+                </div>
+                <div class="inv-status-grid">
+                    <div class="inv-stat-card ops-stat-completed" data-task-status="completed">
+                        <div class="inv-stat-label ops-stat-label-completed">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Status.Completed")</div>
+                        <div class="inv-stat-count" id="ops-count-completed">—</div>
+                        <div class="inv-stat-sub" id="ops-pct-completed"></div>
+                    </div>
+                    <div class="inv-stat-card ops-stat-inprogress" data-task-status="inprogress">
+                        <div class="inv-stat-label ops-stat-label-inprogress">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Status.InProgress")</div>
+                        <div class="inv-stat-count" id="ops-count-inprogress">—</div>
+                        <div class="inv-stat-sub" id="ops-pct-inprogress"></div>
+                    </div>
+                    <div class="inv-stat-card ops-stat-notstarted" data-task-status="notstarted">
+                        <div class="inv-stat-label ops-stat-label-notstarted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Status.NotStarted")</div>
+                        <div class="inv-stat-count" id="ops-count-notstarted">—</div>
+                        <div class="inv-stat-sub" id="ops-pct-notstarted"></div>
+                    </div>
+                    <div class="inv-stat-card ops-stat-overdue" data-task-status="overdue">
+                        <div class="inv-stat-label ops-stat-label-overdue">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Status.Overdue")</div>
+                        <div class="inv-stat-count" id="ops-count-overdue">—</div>
+                        <div class="inv-stat-sub" id="ops-pct-overdue"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="opsTaskListModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="opsTaskListModalTitle">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.TaskList.TaskTitle")</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="opsTaskListModalBody"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="opsKpiDetailModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="opsKpiDetailModalTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="opsKpiDetailModalBody">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* KPI card accents */
+    .kpi-card.ops-billable  { border-left: 5px solid #7c3aed; }
+    .kpi-card.ops-dot       { border-left: 5px solid #0284c7; }
+    .kpi-card.ops-quality   { border-left: 5px solid #d97706; }
+    .kpi-icon.ops-billable-icon { background: rgba(124,58,237,0.10); color: #7c3aed; }
+    .kpi-icon.ops-dot-icon      { background: rgba(2,132,199,0.10); color: #0284c7; }
+    .kpi-icon.ops-quality-icon  { background: rgba(217,119,6,0.10); color: #d97706; }
+
+    /* Task health stat card accents */
+    .inv-stat-card.ops-stat-completed  { border-left: 4px solid #16a34a; }
+    .inv-stat-card.ops-stat-inprogress { border-left: 4px solid #2563eb; }
+    .inv-stat-card.ops-stat-notstarted { border-left: 4px solid #9ca3af; }
+    .inv-stat-card.ops-stat-overdue    { border-left: 4px solid #dc2626; }
+    .inv-stat-label.ops-stat-label-completed  { color: #16a34a; }
+    .inv-stat-label.ops-stat-label-inprogress { color: #2563eb; }
+    .inv-stat-label.ops-stat-label-notstarted { color: #9ca3af; }
+    .inv-stat-label.ops-stat-label-overdue    { color: #dc2626; }
+
+    /* Section layout */
+    .ops-section-card { margin-top: 0; }
+    .ops-section-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .ops-filters-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ops-filter-select { font-size: 12px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; color: #374151; }
+    .ops-th-period-select { min-width: 130px; }
+    .ops-period-separator { font-size: 12px; color: #6b7280; padding: 0 4px; }
+    .ops-chart-section { margin-top: 20px; }
+    .ops-task-health-header { display: flex; justify-content: space-between; align-items: center; }
+    .ops-task-health-controls { display: flex; align-items: center; gap: 10px; }
+    .ops-click-hint { font-size: 11px; color: #9ca3af; font-style: italic; }
+
+    /* Detail modal tables */
+    .ops-detail-table { font-size: 13px; }
+    .ops-thead-row { background: #f9fafb; }
+    .ops-thead-row th { font-weight: 600; }
+    .ops-th-bar { min-width: 140px; }
+    .ops-detail-section-title { font-size: 13px; font-weight: 600; color: #374151; margin: 16px 0 8px; }
+    .ops-detail-trend-label { font-size: 11px; color: #6b7280; margin: 8px 0 4px; }
+    .ops-detail-chart-canvas { max-height: 200px; margin-bottom: 16px; display: block; }
+
+    /* Billable hours chart canvas */
+    #ops-billable-hours-chart { height: 240px; }
+
+    /* Table cell helpers */
+    .ops-td-name    { vertical-align: middle; font-weight: 500; }
+    .ops-td-billable { vertical-align: middle; font-weight: 600; color: #10b981; }
+    .ops-td-muted   { vertical-align: middle; color: #6b7280; }
+    .ops-td-neutral { vertical-align: middle; color: #374151; }
+    .ops-td-bold    { vertical-align: middle; font-weight: 600; }
+    .ops-td-success { vertical-align: middle; color: #16a34a; font-weight: 600; }
+    .ops-td-danger  { vertical-align: middle; color: #dc2626; font-weight: 600; }
+
+    /* Task link */
+    .ops-task-link { color: #2563eb; text-decoration: none; font-weight: 500; }
+    .ops-task-link:hover { text-decoration: underline; }
+
+    /* Radar chart */
+    .ops-radar-top-label { font-size: 11px; color: #9ca3af; font-style: italic; }
+    .ops-radar-wrap { max-width: 520px; margin: 0 auto; height: 460px; position: relative; }
+    .ops-radar-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: center; margin-top: 12px; }
+    .ops-radar-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #374151; font-weight: 500; }
+    .ops-radar-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .ops-radar-nodata { font-size: 13px; color: #9ca3af; margin: 16px 0; text-align: center; }
+
+    /* Progress bar */
+    .ops-bar-wrap  { display: flex; align-items: center; gap: 6px; }
+    .ops-bar-track { flex: 1; background: #f3f4f6; border-radius: 4px; height: 8px; overflow: hidden; }
+    .ops-bar-fill  { height: 8px; border-radius: 4px; transition: width .4s; }
+    .ops-bar-label { font-size: 12px; font-weight: 600; min-width: 38px; text-align: right; }
+
+    /* Pagination */
+    .ops-pagination-footer { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px; margin-top: 4px; }
+    .ops-pagination-info   { font-size: 12px; color: #6b7280; }
+    .ops-pagination-btns   { display: flex; gap: 4px; }
+
+    /* Mini KPI cards inside detail modals */
+    .mini-kpi-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .mini-kpi-card {
+        flex: 1;
+        min-width: 120px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 14px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .mini-kpi-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6b7280;
+    }
+    .mini-kpi-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.2;
+    }
+</style>
+
+<script>
+(function () {
+    var opsSparkCharts = {};
+    var opsBillableHoursChart = null;
+    var opsTaskDonutChart = null;
+    var opsRadarChart = null;
+    var opsDetailChart = null;
+    var PROJECT_COLORS = ['#7c3aed','#0284c7','#16a34a','#d97706','#dc2626','#0891b2'];
+    var opsState = { granularity: 'month', preset: 'lastmonth', projectId: 0, employeeId: 0 };
+    var taskHealthPeriod = 'last3months';
+
+    function debounce(fn, ms) {
+        var timer;
+        return function () { clearTimeout(timer); timer = setTimeout(fn, ms); };
+    }
+    var debouncedLoadMetrics   = debounce(loadOperationalMetrics, 350);
+    var debouncedLoadBreakdown = debounce(loadTaskBreakdown, 350);
+
+    function buildOpsPeriodPayload() {
+        var p = { period: opsState.preset };
+        if (opsState.granularity === 'month' && !opsState.preset) {
+            p.period = null;
+            p.monthFrom = parseInt($('#ops-month-from').val());
+            p.yearFrom  = parseInt($('#ops-year-from-month').val());
+            p.monthTo   = parseInt($('#ops-month-to').val());
+            p.yearTo    = parseInt($('#ops-year-to-month').val());
+        } else if (opsState.granularity === 'year' && !opsState.preset) {
+            p.period = null;
+            p.yearFrom = parseInt($('#ops-year-from').val());
+            p.yearTo   = parseInt($('#ops-year-to').val());
+        }
+        if (opsState.projectId > 0)  p.projectId  = opsState.projectId;
+        if (opsState.employeeId > 0) p.employeeId = opsState.employeeId;
+        p.taskPeriod = taskHealthPeriod;
+        return p;
+    }
+
+    var currentOpsPeriod = 'last3months';
+    var currentOpsProjectId = 0;
+    var currentOpsEmployeeId = 0;
+
+    var _ot = {
+        trendNA:       '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Trend.NA")',
+        trendNewUp:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Trend.NewUp")',
+        trendNewDown:  '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Trend.NewDown")',
+        noData:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.NoData")',
+        billableHours: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.BillableHoursLabel")',
+        nonBillable:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.NonBillableHoursLabel")',
+        completed:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Status.Completed")',
+        inProgress:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Status.InProgress")',
+        notStarted:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Status.NotStarted")',
+        overdueStatus: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Status.Overdue")',
+        noTasks:       '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.TaskList.NoTasks")',
+        colTask:       '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.TaskList.TaskTitle")',
+        colProject:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.TaskList.Project")',
+        colAssignee:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.TaskList.Assignee")',
+        colDueDate:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.TaskList.DueDate")',
+        colStatus:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.TaskList.Status")',
+        wqTitle:       '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.WorkQuality.Title")',
+        wqAvgScore:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.WorkQuality.AvgScore")',
+        wqTotalBugs:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.WorkQuality.TotalBugs")',
+        wqEvaluated:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.WorkQuality.TasksEvaluated")',
+        wqQuality:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.WorkQuality.Columns.QualityScore")',
+        wqBugCount:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.WorkQuality.Columns.BugCount")',
+        wqBelow:       '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.WorkQuality.BelowAverage")',
+        colDaysOverdue:'@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.DaysOverdue")',
+        dotTitle:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.DOT.Title")',
+        dotOnTime:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.DOT.OnTimeTasks")',
+        dotLate:       '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.DOT.LateTasks")',
+        dotPct:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.DOT.DotPct")',
+        billTitle:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.BillableUtil.Title")',
+        billTotal:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.TotalHours")',
+        billBillable:  '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.BillableHoursLabel")',
+        billNonBill:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.NonBillableHoursLabel")',
+        billEmployee:  '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.Employee")',
+        billUtil:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.UtilPct")',
+        colEmployee:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.Employee")',
+        colProjectHdr: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.Project")',
+        colOnTime:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.OnTime")',
+        colLate:       '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.Late")',
+        colTotal:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.Total")',
+        colTotalHrs:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.TotalHrs")',
+        colUtilPct:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.UtilPct")',
+        colQualityPct: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.QualityPct")',
+        colTasks:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.Tasks")',
+        colAvgScore:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Columns.AvgScore")',
+        billTrendLbl:  '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.BillableUtil.TrendLabel")',
+        billProjectWise: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.BillableUtil.ProjectWise")',
+        billEmpWise:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.BillableUtil.EmployeeWise")',
+        dotEmpWise:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.DOT.EmployeeWise")',
+        dotProjWise:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.DOT.ProjectWise")',
+        wqEmpWise:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.WorkQuality.EmployeeWise")',
+        wqProjWise:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.WorkQuality.ProjectWise")',
+        paginationShowing: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Modal.Pagination.Showing")',
+        radarBillable:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.ProjectHealth.Axis.BillablePct")',
+        radarDot:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.ProjectHealth.Axis.DotPct")',
+        radarQuality:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.ProjectHealth.Axis.WorkQuality")',
+        radarCompletion: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.ProjectHealth.Axis.OverdueHealth")',
+        radarNoData:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.ProjectHealth.NoData")',
+        radarAvgLabel:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.ProjectHealth.AvgLabel")',
+        radarEmpLabel:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Chart.ProjectHealth.EmpLabel")'
+    };
+
+    function opsTrendHtml(current, previous) {
+        if (previous == null) return '<span class="kpi-trend neutral">' + _ot.trendNA + '</span>';
+        if (previous === 0) {
+            if (current > 0) return '<span class="kpi-trend up">' + _ot.trendNewUp + '</span>';
+            if (current < 0) return '<span class="kpi-trend down">' + _ot.trendNewDown + '</span>';
+            return '<span class="kpi-trend neutral">' + _ot.trendNA + '</span>';
+        }
+        var diff = ((current - previous) / Math.abs(previous)) * 100;
+        var up = diff >= 0;
+        return '<span class="kpi-trend ' + (up ? 'up' : 'down') + '">' + (up ? '↑' : '↓') + ' ' + Math.abs(diff).toFixed(1) + '%</span>';
+    }
+
+    function setOpsLoading(show) {
+        ['billable', 'dot', 'quality', 'overdue'].forEach(function (k) {
+            var el = document.getElementById('ops-load-' + k);
+            if (el) el.style.display = show ? 'flex' : 'none';
+        });
+    }
+
+    function drawOpsSparkline(id, points, color) {
+        if (opsSparkCharts[id]) { opsSparkCharts[id].destroy(); delete opsSparkCharts[id]; }
+        var canvas = document.getElementById(id);
+        if (!canvas || !points || !points.length) return;
+        var validPoints = points.map(function (p) { return p; });
+        opsSparkCharts[id] = new Chart(canvas, {
+            type: 'line',
+            data: { labels: validPoints.map(function (_, i) { return i; }), datasets: [{ data: validPoints, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.3, spanGaps: false }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, animation: false }
+        });
+    }
+
+    function loadEmployeesList() {
+        $.post('@Url.Action("GetEmployeesList", "ExecutiveDashboard")', addAntiForgeryToken({}), function (employees) {
+            var $sel = $('#ops-employee-filter');
+            $sel.find('option:not(:first)').remove();
+            employees.forEach(function (e) {
+                $sel.append($('<option>').val(e.id).text(e.name));
+            });
+        });
+    }
+
+    function loadProjectsList() {
+        $.post('@Url.Action("GetProjectsList", "ExecutiveDashboard")', addAntiForgeryToken({}), function (projects) {
+            var $sel = $('#ops-project-filter');
+            $sel.find('option:not(:first)').remove();
+            projects.forEach(function (p) {
+                $sel.append($('<option>').val(p.id).text(p.title));
+            });
+        });
+    }
+
+    function loadOperationalMetrics() {
+        opsState.projectId  = parseInt($('#ops-project-filter').val()) || 0;
+        opsState.employeeId = parseInt($('#ops-employee-filter').val()) || 0;
+        currentOpsPeriod    = opsState.preset || '';
+        currentOpsProjectId  = opsState.projectId;
+        currentOpsEmployeeId = opsState.employeeId;
+        setOpsLoading(true);
+        var payload = buildOpsPeriodPayload();
+        $.post('@Url.Action("GetOperationalMetricsData", "ExecutiveDashboard")', addAntiForgeryToken(payload), function (d) {
+            setOpsLoading(false);
+            $('#ops-val-billable').text(d.billableUtilPct != null ? d.billableUtilPct.toFixed(1) + '%' : '—');
+            $('#ops-trend-billable').replaceWith($(opsTrendHtml(d.billableUtilPct, d.prevBillableUtilPct)).attr('id', 'ops-trend-billable'));
+            $('#ops-sub-billable').text(d.prevPeriodLabel || '');
+            drawOpsSparkline('ops-spark-billable', d.billableUtilPoints, '#7c3aed');
+
+            $('#ops-val-dot').text(d.dotPct != null ? d.dotPct.toFixed(1) + '%' : '—');
+            $('#ops-trend-dot').replaceWith($(opsTrendHtml(d.dotPct, d.prevDotPct)).attr('id', 'ops-trend-dot'));
+            $('#ops-sub-dot').text(d.prevPeriodLabel || '');
+            drawOpsSparkline('ops-spark-dot', d.dotPoints, '#0284c7');
+
+            $('#ops-val-quality').text(d.workQualityScore != null ? d.workQualityScore.toFixed(1) : '—');
+            $('#ops-trend-quality').replaceWith($(opsTrendHtml(d.workQualityScore, d.prevWorkQualityScore)).attr('id', 'ops-trend-quality'));
+            $('#ops-sub-quality').text(d.workQualityTaskCount + ' tasks · ' + d.workQualityBugCount + ' bugs');
+            drawOpsSparkline('ops-spark-quality', d.workQualityPoints, '#d97706');
+
+            drawBillableHoursChart(d.sparklineLabels, d.billableHoursPoints, d.nonBillableHoursPoints);
+            drawProjectRadarChart(d.projectRadar);
+            if (d.taskHealth) renderTaskHealth(d.taskHealth);
+        }).fail(function () { setOpsLoading(false); });
+    }
+
+    function drawBillableHoursChart(labels, billable, nonBillable) {
+        if (opsBillableHoursChart) { opsBillableHoursChart.destroy(); opsBillableHoursChart = null; }
+        var canvas = document.getElementById('ops-billable-hours-chart');
+        if (!canvas || !labels || !labels.length) return;
+        opsBillableHoursChart = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: _ot.billableHours, data: billable, backgroundColor: '#10b981', borderRadius: 4 },
+                    { label: _ot.nonBillable,   data: nonBillable, backgroundColor: '#9ca3af', borderRadius: 4 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: true, position: 'top' } },
+                scales: { x: { stacked: false }, y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    function hexToRgba(hex, alpha) {
+        var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    }
+
+    function drawProjectRadarChart(projects) {
+        if (opsRadarChart) { opsRadarChart.destroy(); opsRadarChart = null; }
+        var canvas = document.getElementById('ops-project-radar-chart');
+        var legend = document.getElementById('ops-radar-legend');
+        var topLabel = document.getElementById('ops-radar-top-label');
+        if (legend) legend.innerHTML = '';
+        if (!canvas) return;
+        if (!projects || !projects.length) {
+            if (legend) legend.innerHTML = '<p class="text-muted ops-radar-nodata">' + _ot.radarNoData + '</p>';
+            return;
+        }
+
+        var datasets;
+        if (projects.length > 1) {
+            // Employee view — per-project polygons + server-supplied global average line
+            if (topLabel) topLabel.textContent = _ot.radarEmpLabel;
+            var avgEntry      = projects.filter(function (p) { return !!p.isAverage; })[0];
+            var projectsOnly  = projects.filter(function (p) { return !p.isAverage; });
+            var avgColor      = '#f59e0b';
+            datasets = projectsOnly.map(function (p, i) {
+                var color = PROJECT_COLORS[i % PROJECT_COLORS.length];
+                if (legend) {
+                    legend.innerHTML += '<span class="ops-radar-legend-item">'
+                        + '<span class="ops-radar-legend-dot" style="background:' + color + ';"></span>'
+                        + p.project + ' <small>(' + p.totalHrs + 'h)</small></span>';
+                }
+                return {
+                    label: p.project,
+                    data: [p.billablePct, p.dotPct, p.workQuality, p.overdueHealth],
+                    backgroundColor: hexToRgba(color, 0.10),
+                    borderColor: color,
+                    borderWidth: 2,
+                    pointBackgroundColor: color,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                };
+            });
+            if (avgEntry) {
+                if (legend) {
+                    legend.innerHTML += '<span class="ops-radar-legend-item">'
+                        + '<span class="ops-radar-legend-dot" style="background:' + avgColor + '; border: 2px dashed ' + avgColor + ';"></span>'
+                        + _ot.radarAvgLabel + '</span>';
+                }
+                datasets.push({
+                    label: _ot.radarAvgLabel,
+                    data: [avgEntry.billablePct, avgEntry.dotPct, avgEntry.workQuality, avgEntry.overdueHealth],
+                    backgroundColor: hexToRgba(avgColor, 0.08),
+                    borderColor: avgColor,
+                    borderWidth: 2.5,
+                    borderDash: [6, 4],
+                    pointBackgroundColor: avgColor,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                });
+            }
+        } else {
+            // Single polygon — team avg or specific project
+            var p = projects[0];
+            var isAvg = !!p.isAverage;
+            var color = isAvg ? '#0d9488' : PROJECT_COLORS[0];
+            if (topLabel) topLabel.textContent = isAvg ? _ot.radarAvgLabel : p.project;
+            if (legend) {
+                legend.innerHTML = '<span class="ops-radar-legend-item">'
+                    + '<span class="ops-radar-legend-dot" style="background:' + color + ';"></span>'
+                    + p.project + ' &nbsp;·&nbsp; ' + p.totalHrs + ' hrs</span>';
+            }
+            datasets = [{
+                label: p.project,
+                data: [p.billablePct, p.dotPct, p.workQuality, p.overdueHealth],
+                backgroundColor: hexToRgba(color, isAvg ? 0.18 : 0.12),
+                borderColor: color,
+                borderWidth: 2,
+                pointBackgroundColor: color,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }];
+        }
+
+        opsRadarChart = new Chart(canvas, {
+            type: 'radar',
+            data: {
+                labels: [_ot.radarBillable, _ot.radarDot, _ot.radarQuality, _ot.radarCompletion],
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    r: {
+                        min: 0, max: 100,
+                        ticks: { stepSize: 25, font: { size: 11 }, backdropColor: 'transparent' },
+                        pointLabels: { font: { size: 13, weight: '600' } },
+                        grid: { color: 'rgba(0,0,0,0.08)' },
+                        angleLines: { color: 'rgba(0,0,0,0.08)' }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderTaskHealth(d) {
+        var total = d.total || 1;
+        var segments = [
+            { key: 'completed',  count: d.completed,  color: '#16a34a' },
+            { key: 'inprogress', count: d.inProgress, color: '#2563eb' },
+            { key: 'notstarted', count: d.notStarted, color: '#9ca3af' },
+            { key: 'overdue',    count: d.overdue,    color: '#dc2626' }
+        ];
+        segments.forEach(function (s) {
+            $('#ops-count-' + s.key).text(s.count);
+            $('#ops-pct-' + s.key).text(total > 0 ? ((s.count / d.total) * 100).toFixed(1) + '%' : '0%');
+        });
+        $('#ops-donut-total').text(d.total);
+        drawTaskDonut(segments);
+    }
+
+    function loadTaskBreakdown() {
+        var payload = { taskPeriod: taskHealthPeriod };
+        if (currentOpsProjectId > 0) payload.projectId = currentOpsProjectId;
+        if (currentOpsEmployeeId > 0) payload.employeeId = currentOpsEmployeeId;
+        $.post('@Url.Action("GetTaskStatusBreakdown", "ExecutiveDashboard")', addAntiForgeryToken(payload), function (d) {
+            renderTaskHealth(d);
+        });
+    }
+
+    function drawTaskDonut(segments) {
+        if (opsTaskDonutChart) { opsTaskDonutChart.destroy(); opsTaskDonutChart = null; }
+        var canvas = document.getElementById('ops-task-donut-chart');
+        if (!canvas) return;
+        opsTaskDonutChart = new Chart(canvas, {
+            type: 'doughnut',
+            data: {
+                labels: [_ot.completed, _ot.inProgress, _ot.notStarted, _ot.overdueStatus],
+                datasets: [{ data: [segments[0].count, segments[1].count, segments[2].count, segments[3].count], backgroundColor: segments.map(function (s) { return s.color; }), borderWidth: 2 }]
+            },
+            options: { responsive: true, cutout: '68%', plugins: { legend: { display: false }, tooltip: { enabled: true } } }
+        });
+    }
+
+    function buildTaskTable(tasks) {
+        var headers = '<th>' + _ot.colTask + '</th><th>' + _ot.colProject + '</th><th>' + _ot.colAssignee + '</th>'
+            + '<th>' + _ot.colDueDate + '</th><th>' + _ot.colStatus + '</th>';
+        return buildPagedTable(tasks, headers, function (t) {
+            var rowClass = t.isOverdue ? ' class="table-danger"' : '';
+            return '<tr' + rowClass + '><td>' + taskLink(t.id, t.title) + '</td><td>' + (t.projectName || '—') + '</td>'
+                + '<td>' + (t.assignee || '—') + '</td><td>' + (t.dueDate || '—') + '</td><td>' + (t.statusName || '—') + '</td></tr>';
+        });
+    }
+
+    function loadTaskStatusPage(status, page) {
+        var payload = { status: status, page: page, pageSize: 15, taskPeriod: taskHealthPeriod };
+        if (currentOpsProjectId > 0) payload.projectId = currentOpsProjectId;
+        if (currentOpsEmployeeId > 0) payload.employeeId = currentOpsEmployeeId;
+        $('#opsTaskListModalBody').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
+        $.post('@Url.Action("GetTaskStatusList", "ExecutiveDashboard")', addAntiForgeryToken(payload), function (d) {
+            var headers = '<th>' + _ot.colTask + '</th><th>' + _ot.colProject + '</th><th>' + _ot.colAssignee + '</th><th>' + _ot.colDueDate + '</th><th>' + _ot.colStatus + '</th>';
+            var rows = '';
+            if (d.tasks && d.tasks.length) {
+                d.tasks.forEach(function (t) {
+                    var rowClass = t.isOverdue ? ' class="table-danger"' : '';
+                    rows += '<tr' + rowClass + '><td>' + taskLink(t.id, t.title) + '</td><td>' + (t.projectName || '—') + '</td><td>' + (t.assignee || '—') + '</td><td>' + (t.dueDate || '—') + '</td><td>' + (t.statusName || '—') + '</td></tr>';
+                });
+            }
+            var tableHtml = d.tasks && d.tasks.length
+                ? '<div class="table-responsive"><table class="table table-sm table-hover ops-detail-table"><thead><tr class="ops-thead-row">' + headers + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+                : '<p class="text-muted p-3">' + _ot.noTasks + '</p>';
+
+            var s = d.page * d.pageSize + 1, e = Math.min((d.page + 1) * d.pageSize, d.total);
+            var info = '<span class="ops-pagination-info">' + _ot.paginationShowing.replace('{0}', s).replace('{1}', e).replace('{2}', d.total) + '</span>';
+            var pagination = '';
+            if (d.totalPages > 1) {
+                pagination = '<div class="ops-pagination-btns">'
+                    + '<button class="btn btn-sm btn-outline-secondary" onclick="loadTaskStatusPage(\'' + status + '\',' + (d.page - 1) + ')"' + (d.page === 0 ? ' disabled' : '') + '>‹ Prev</button>'
+                    + '<button class="btn btn-sm btn-outline-secondary" onclick="loadTaskStatusPage(\'' + status + '\',' + (d.page + 1) + ')"' + (d.page >= d.totalPages - 1 ? ' disabled' : '') + '>Next ›</button>'
+                    + '</div>';
+            }
+            var footer = '<div class="ops-pagination-footer">' + info + pagination + '</div>';
+            $('#opsTaskListModalBody').html(tableHtml + (d.total > 0 ? footer : ''));
+        });
+    }
+
+    $(document).on('click', '[data-task-status]', function () {
+        var status = $(this).data('task-status');
+        var titles = { completed: _ot.completed, inprogress: _ot.inProgress, notstarted: _ot.notStarted, overdue: _ot.overdueStatus };
+        $('#opsTaskListModalTitle').text(titles[status] || status);
+        $('#opsTaskListModal').modal('show');
+        loadTaskStatusPage(status, 0);
+    });
+
+    $(document).on('click', '[data-ops-card]', function () {
+        var card = $(this).data('ops-card');
+        var actions = {
+            billable: '@Url.Action("GetBillableUtilDetail", "ExecutiveDashboard")',
+            dot:      '@Url.Action("GetDotDetail", "ExecutiveDashboard")',
+            quality:  '@Url.Action("GetWorkQualityDetail", "ExecutiveDashboard")',
+            overdue:  null
+        };
+        if (card === 'overdue') {
+            $('#opsTaskListModalTitle').text(_ot.overdueStatus);
+            $('#opsTaskListModal').modal('show');
+            loadTaskStatusPage('overdue', 0);
+            return;
+        }
+        var url = actions[card];
+        if (!url) return;
+        $('#opsKpiDetailModalBody').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
+        if (opsDetailChart) { opsDetailChart.destroy(); opsDetailChart = null; }
+        $('#opsKpiDetailModal').modal('show');
+        var detailPayload = buildOpsPeriodPayload();
+        $.post(url, addAntiForgeryToken(detailPayload), function (d) {
+            if (card === 'billable') renderBillableDetail(d);
+            else if (card === 'dot') renderDotDetail(d);
+            else if (card === 'quality') renderQualityDetail(d);
+        });
+    });
+
+    var _pagedTables = {};
+
+    function buildPagedTable(tasks, headerHtml, rowFn, pageSize) {
+        pageSize = pageSize || 15;
+        if (!tasks || !tasks.length) return '<p class="text-muted p-3">' + _ot.noTasks + '</p>';
+        var tid = 'pt-' + Math.random().toString(36).substr(2, 8);
+        _pagedTables[tid] = { tasks: tasks, rowFn: rowFn, pageSize: pageSize, page: 0 };
+        var totalPages = Math.ceil(tasks.length / pageSize);
+        var html = '<div id="' + tid + '">'
+            + '<div class="table-responsive"><table class="table table-sm table-hover ops-detail-table">'
+            + '<thead><tr class="ops-thead-row">' + headerHtml + '</tr></thead>'
+            + '<tbody id="' + tid + '-body">' + _ptRows(tid, 0) + '</tbody>'
+            + '</table></div>'
+            + '<div class="ops-pagination-footer">'
+            + '<span class="ops-pagination-info" id="' + tid + '-info">' + _ptInfo(tid) + '</span>';
+        if (totalPages > 1) {
+            html += '<div class="ops-pagination-btns">'
+                + '<button class="btn btn-sm btn-outline-secondary pt-prev" data-tid="' + tid + '" disabled>‹ Prev</button>'
+                + '<button class="btn btn-sm btn-outline-secondary pt-next" data-tid="' + tid + '"' + (totalPages <= 1 ? ' disabled' : '') + '>Next ›</button>'
+                + '</div>';
+        }
+        html += '</div></div>';
+        return html;
+    }
+
+    function _ptRows(tid, page) {
+        var d = _pagedTables[tid]; if (!d) return '';
+        var s = page * d.pageSize, e = Math.min(s + d.pageSize, d.tasks.length), rows = '';
+        for (var i = s; i < e; i++) rows += d.rowFn(d.tasks[i]);
+        return rows;
+    }
+
+    function _ptInfo(tid) {
+        var d = _pagedTables[tid]; if (!d) return '';
+        var s = d.page * d.pageSize + 1, e = Math.min(s + d.pageSize - 1, d.tasks.length);
+        return _ot.paginationShowing.replace('{0}', s).replace('{1}', e).replace('{2}', d.tasks.length);
+    }
+
+    $(document).on('click', '.pt-prev, .pt-next', function () {
+        var tid = $(this).data('tid'), d = _pagedTables[tid]; if (!d) return;
+        var total = Math.ceil(d.tasks.length / d.pageSize);
+        d.page = $(this).hasClass('pt-next') ? d.page + 1 : d.page - 1;
+        d.page = Math.max(0, Math.min(d.page, total - 1));
+        $('#' + tid + '-body').html(_ptRows(tid, d.page));
+        $('#' + tid + '-info').text(_ptInfo(tid));
+        $('#' + tid).find('.pt-prev').prop('disabled', d.page === 0);
+        $('#' + tid).find('.pt-next').prop('disabled', d.page >= total - 1);
+    });
+
+    function taskLink(id, title) {
+        if (!id) return title || '—';
+        return '<a href="/ProjectTask/Edit?id=' + id + '" target="_blank" class="ops-task-link">' + (title || '—') + '</a>';
+    }
+
+    function miniKpi(label, value, color) {
+        var style = color ? ' style="border-top:3px solid ' + color + ';"' : '';
+        return '<div class="mini-kpi-card"' + style + '>'
+            + '<div class="mini-kpi-label">' + label + '</div>'
+            + '<div class="mini-kpi-value">' + value + '</div>'
+            + '</div>';
+    }
+
+    function renderBillableDetail(d) {
+        $('#opsKpiDetailModalTitle').text(_ot.billTitle);
+        var overallUtil = d.totalHrs > 0 ? ((d.billableHrs / d.totalHrs) * 100).toFixed(1) + '%' : '—';
+        var html = '<div class="mini-kpi-row">'
+            + miniKpi(_ot.billTotal, d.totalHrs + ' hrs', '#6b7280')
+            + miniKpi(_ot.billBillable, d.billableHrs + ' hrs', '#10b981')
+            + miniKpi(_ot.billUtil, overallUtil, '#7c3aed')
+            + '</div>'
+            + '<p class="ops-detail-trend-label">' + _ot.billTrendLbl + '</p>'
+            + '<canvas id="ops-detail-chart" class="ops-detail-chart-canvas"></canvas>';
+        if (d.projectUtil && d.projectUtil.length) {
+            html += '<h6 class="ops-detail-section-title">' + _ot.billProjectWise + '</h6>'
+                + '<div class="table-responsive"><table class="table table-sm table-hover ops-detail-table">'
+                + '<thead><tr class="ops-thead-row">'
+                + '<th>' + _ot.colProjectHdr + '</th>'
+                + '<th class="text-right">' + _ot.billBillable + '</th>'
+                + '<th class="text-right">' + _ot.billNonBill + '</th>'
+                + '<th class="text-right">' + _ot.colTotalHrs + '</th>'
+                + '<th class="ops-th-bar">' + _ot.colUtilPct + '</th>'
+                + '</tr></thead><tbody>';
+            d.projectUtil.forEach(function (p) {
+                html += '<tr>'
+                    + '<td class="ops-td-name">' + p.project + '</td>'
+                    + '<td class="text-right ops-td-billable">' + p.billableHrs + '</td>'
+                    + '<td class="text-right ops-td-muted">' + p.nonBillableHrs + '</td>'
+                    + '<td class="text-right ops-td-neutral">' + p.totalHrs + '</td>'
+                    + '<td>' + dotBar(p.utilPct) + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+
+        if (d.topEmployees && d.topEmployees.length) {
+            html += '<h6 class="ops-detail-section-title">' + _ot.billEmpWise + '</h6>'
+                + '<div class="table-responsive"><table class="table table-sm table-hover ops-detail-table">'
+                + '<thead><tr class="ops-thead-row">'
+                + '<th>' + _ot.colEmployee + '</th>'
+                + '<th class="text-right">' + _ot.billBillable + '</th>'
+                + '<th class="text-right">' + _ot.billNonBill + '</th>'
+                + '<th class="ops-th-bar">' + _ot.colUtilPct + '</th>'
+                + '</tr></thead><tbody>';
+            d.topEmployees.forEach(function (e) {
+                html += '<tr>'
+                    + '<td>' + e.employee + '</td>'
+                    + '<td class="text-right ops-td-billable">' + e.billableHrs + '</td>'
+                    + '<td class="text-right ops-td-muted">' + e.nonBillableHrs + '</td>'
+                    + '<td>' + dotBar(e.utilPct) + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+        $('#opsKpiDetailModalBody').html(html);
+        if (d.chartData && d.chartData.length) {
+            var utilPoints = d.chartData.map(function (x) {
+                var tot = x.billable + x.nonBillable;
+                return tot > 0 ? parseFloat(((x.billable / tot) * 100).toFixed(1)) : 0;
+            });
+            opsDetailChart = new Chart(document.getElementById('ops-detail-chart'), {
+                type: 'line',
+                data: {
+                    labels: d.chartData.map(function (x) { return x.label; }),
+                    datasets: [{
+                        label: _ot.billUtil,
+                        data: utilPoints,
+                        borderColor: '#7c3aed',
+                        backgroundColor: 'rgba(124,58,237,0.08)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#7c3aed'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function (v) { return v + '%'; } } } }
+                }
+            });
+        }
+    }
+
+    function dotBar(pct) {
+        var color = pct >= 80 ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
+        return '<div class="ops-bar-wrap">'
+            + '<div class="ops-bar-track">'
+            + '<div class="ops-bar-fill" style="width:' + pct + '%;background:' + color + ';"></div></div>'
+            + '<span class="ops-bar-label" style="color:' + color + ';">' + pct.toFixed(1) + '%</span>'
+            + '</div>';
+    }
+
+    function renderDotDetail(d) {
+        $('#opsKpiDetailModalTitle').text(_ot.dotTitle);
+        var html = '<div class="mini-kpi-row">'
+            + miniKpi(_ot.dotOnTime, d.onTime, '#16a34a')
+            + miniKpi(_ot.dotLate, d.late, '#dc2626')
+            + miniKpi(_ot.dotPct, (d.dotPct || 0).toFixed(1) + '%', '#0284c7')
+            + '</div><canvas id="ops-detail-chart" class="ops-detail-chart-canvas"></canvas>';
+        if (d.employeeDot && d.employeeDot.length) {
+            html += '<h6 class="ops-detail-section-title mt-3">' + _ot.dotEmpWise + '</h6>'
+                + '<div class="table-responsive"><table class="table table-sm table-hover ops-detail-table">'
+                + '<thead><tr class="ops-thead-row">'
+                + '<th>' + _ot.colEmployee + '</th>'
+                + '<th class="text-center">' + _ot.colOnTime + '</th>'
+                + '<th class="text-center">' + _ot.colLate + '</th>'
+                + '<th class="text-center">' + _ot.colTotal + '</th>'
+                + '<th class="ops-th-bar">' + _ot.dotPct + '</th>'
+                + '</tr></thead><tbody>';
+            d.employeeDot.forEach(function (e) {
+                html += '<tr>'
+                    + '<td>' + e.employee + '</td>'
+                    + '<td class="text-center ops-td-success">' + e.onTime + '</td>'
+                    + '<td class="text-center ops-td-danger">' + e.late + '</td>'
+                    + '<td class="text-center ops-td-muted">' + e.total + '</td>'
+                    + '<td>' + dotBar(e.dotPct) + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+        if (d.projectDot && d.projectDot.length) {
+            html += '<h6 class="ops-detail-section-title mt-3">' + _ot.dotProjWise + '</h6>'
+                + '<div class="table-responsive"><table class="table table-sm table-hover ops-detail-table">'
+                + '<thead><tr class="ops-thead-row">'
+                + '<th>' + _ot.colProjectHdr + '</th>'
+                + '<th class="text-center">' + _ot.colOnTime + '</th>'
+                + '<th class="text-center">' + _ot.colLate + '</th>'
+                + '<th class="text-center">' + _ot.colTotal + '</th>'
+                + '<th class="ops-th-bar">' + _ot.dotPct + '</th>'
+                + '</tr></thead><tbody>';
+            d.projectDot.forEach(function (p) {
+                html += '<tr>'
+                    + '<td>' + (p.project || '—') + '</td>'
+                    + '<td class="text-center ops-td-success">' + p.onTime + '</td>'
+                    + '<td class="text-center ops-td-danger">' + p.late + '</td>'
+                    + '<td class="text-center ops-td-muted">' + p.total + '</td>'
+                    + '<td>' + dotBar(p.dotPct) + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+        $('#opsKpiDetailModalBody').html(html);
+        if (d.chartData && d.chartData.length) {
+            opsDetailChart = new Chart(document.getElementById('ops-detail-chart'), {
+                type: 'line',
+                data: { labels: d.chartData.map(function (x) { return x.label; }), datasets: [{ label: _ot.dotPct, data: d.chartData.map(function (x) { return x.dotPct; }), borderColor: '#0284c7', backgroundColor: 'rgba(2,132,199,0.1)', fill: true, tension: 0.3, pointRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+            });
+        }
+    }
+
+    function renderQualityDetail(d) {
+        $('#opsKpiDetailModalTitle').text(_ot.wqTitle);
+        var html = '<div class="mini-kpi-row">'
+            + miniKpi(_ot.wqAvgScore, d.avgScore != null ? d.avgScore.toFixed(1) : '—', '#d97706')
+            + miniKpi(_ot.wqTotalBugs, d.totalBugs, '#dc2626')
+            + miniKpi(_ot.wqEvaluated, d.tasksEvaluated, '#6b7280')
+            + '</div><canvas id="ops-detail-chart" class="ops-detail-chart-canvas"></canvas>';
+        if (d.employeeQuality && d.employeeQuality.length) {
+            html += '<h6 class="ops-detail-section-title mt-3">' + _ot.wqEmpWise + '</h6>'
+                + '<div class="table-responsive"><table class="table table-sm table-hover ops-detail-table">'
+                + '<thead><tr class="ops-thead-row">'
+                + '<th>' + _ot.colEmployee + '</th>'
+                + '<th class="text-center">' + _ot.colAvgScore + '</th>'
+                + '<th class="text-center">' + _ot.wqBugCount + '</th>'
+                + '<th class="text-center">' + _ot.colTasks + '</th>'
+                + '<th class="ops-th-bar">' + _ot.colQualityPct + '</th>'
+                + '</tr></thead><tbody>';
+            d.employeeQuality.forEach(function (e) {
+                html += '<tr>'
+                    + '<td>' + e.employee + '</td>'
+                    + '<td class="text-center ops-td-bold">' + (e.avgScore != null ? e.avgScore.toFixed(1) : '—') + '</td>'
+                    + '<td class="text-center ops-td-danger">' + e.bugCount + '</td>'
+                    + '<td class="text-center ops-td-muted">' + e.taskCount + '</td>'
+                    + '<td>' + dotBar(e.avgScore || 0) + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+        if (d.projectQuality && d.projectQuality.length) {
+            html += '<h6 class="ops-detail-section-title mt-3">' + _ot.wqProjWise + '</h6>'
+                + '<div class="table-responsive"><table class="table table-sm table-hover ops-detail-table">'
+                + '<thead><tr class="ops-thead-row">'
+                + '<th>' + _ot.colProjectHdr + '</th>'
+                + '<th class="text-center">' + _ot.colAvgScore + '</th>'
+                + '<th class="text-center">' + _ot.wqBugCount + '</th>'
+                + '<th class="text-center">' + _ot.colTasks + '</th>'
+                + '<th class="ops-th-bar">' + _ot.colQualityPct + '</th>'
+                + '</tr></thead><tbody>';
+            d.projectQuality.forEach(function (p) {
+                html += '<tr>'
+                    + '<td>' + (p.project || '—') + '</td>'
+                    + '<td class="text-center ops-td-bold">' + (p.avgScore != null ? p.avgScore.toFixed(1) : '—') + '</td>'
+                    + '<td class="text-center ops-td-danger">' + p.bugCount + '</td>'
+                    + '<td class="text-center ops-td-muted">' + p.taskCount + '</td>'
+                    + '<td>' + dotBar(p.avgScore || 0) + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+
+        if (d.belowAvgTasks && d.belowAvgTasks.length) {
+            html += '<h6 class="ops-detail-section-title mt-3">' + _ot.wqBelow + ' (' + d.belowAvgTasks.length + ')</h6>';
+            html += buildPagedTable(d.belowAvgTasks,
+                '<th>' + _ot.colTask + '</th><th>' + _ot.colProject + '</th><th>' + _ot.colAssignee + '</th><th>' + _ot.wqQuality + '</th><th>' + _ot.wqBugCount + '</th>',
+                function (t) {
+                    var rowClass = t.qualityScore < 50 ? ' class="table-danger"' : '';
+                    return '<tr' + rowClass + '><td>' + taskLink(t.id, t.title) + '</td><td>' + (t.projectName || '—') + '</td><td>' + (t.assignee || '—') + '</td><td>' + t.qualityScore + '</td><td>' + t.bugCount + '</td></tr>';
+                });
+        }
+        $('#opsKpiDetailModalBody').html(html);
+        if (d.chartData && d.chartData.length) {
+            opsDetailChart = new Chart(document.getElementById('ops-detail-chart'), {
+                type: 'line',
+                data: { labels: d.chartData.map(function (x) { return x.label; }), datasets: [{ label: _ot.wqAvgScore, data: d.chartData.map(function (x) { return x.avgQuality; }), borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.1)', fill: true, tension: 0.3, pointRadius: 4, spanGaps: false }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, min: 0, max: 100 } } }
+            });
+        }
+    }
+
+    $('#opsKpiDetailModal').on('hidden.bs.modal', function () {
+        if (opsDetailChart) { opsDetailChart.destroy(); opsDetailChart = null; }
+    });
+
+    $('.ops-granularity-toggle .btn').on('click', function () {
+        $('.ops-granularity-toggle .btn').removeClass('active');
+        $(this).addClass('active');
+        opsState.granularity = $(this).data('ops-granularity');
+        $('#ops-preset-bar-week').toggle(opsState.granularity === 'week');
+        $('#ops-preset-bar-month').toggle(opsState.granularity === 'month');
+        $('#ops-preset-bar-year').toggle(opsState.granularity === 'year');
+        var barId = { week: '#ops-preset-bar-week', month: '#ops-preset-bar-month', year: '#ops-preset-bar-year' }[opsState.granularity];
+        var $firstPreset = $(barId).find('.btn-preset').first();
+        $('.btn-preset').removeClass('active');
+        $firstPreset.addClass('active');
+        opsState.preset = $firstPreset.data('ops-preset') || null;
+        loadOperationalMetrics();
+    });
+
+    $(document).on('click', '.btn-preset[data-ops-preset]', function () {
+        var $bar = $(this).closest('.preset-bar');
+        $bar.find('.btn-preset').removeClass('active');
+        $(this).addClass('active');
+        opsState.preset = $(this).data('ops-preset') || null;
+        debouncedLoadMetrics();
+    });
+
+    $('#ops-month-from, #ops-year-from-month, #ops-month-to, #ops-year-to-month').on('change', function () {
+        $('#ops-preset-bar-month .btn-preset').removeClass('active');
+        opsState.preset = null;
+        debouncedLoadMetrics();
+    });
+    $('#ops-year-from, #ops-year-to').on('change', function () {
+        $('#ops-preset-bar-year .btn-preset').removeClass('active');
+        opsState.preset = null;
+        debouncedLoadMetrics();
+    });
+
+    $('#task-health-period-select').on('change', function () {
+        taskHealthPeriod = $(this).val();
+        debouncedLoadBreakdown();
+    });
+
+    $('#ops-employee-filter, #ops-project-filter').on('change', debouncedLoadMetrics);
+
+    window.loadTaskStatusPage = loadTaskStatusPage;
+
+    function _opsInitLoad() {
+        loadEmployeesList();
+        loadProjectsList();
+        var now = new Date();
+        var fromM = now.getMonth() - 2;
+        var fromY = now.getFullYear();
+        if (fromM < 0) { fromM += 12; fromY--; }
+        $('#ops-month-from').val(fromM + 1);
+        $('#ops-year-from-month').val(fromY);
+        $('#ops-month-to').val(now.getMonth() + 1);
+        $('#ops-year-to-month').val(now.getFullYear());
+        $('#ops-year-from').val(now.getFullYear());
+        $('#ops-year-to').val(now.getFullYear());
+        // Re-assert default preset after dropdown init (select .val() can fire change handlers)
+        opsState.preset = 'lastmonth';
+        $('.btn-preset').removeClass('active');
+        $('[data-ops-preset="lastmonth"]').addClass('active');
+        loadOperationalMetrics();
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+
+    $(document).ready(function () {
+        if ($('#exec-tab-operational').is(':visible')) {
+            _opsInitLoad();
+        } else {
+            $(document).one('exec:load:operational', _opsInitLoad);
+        }
+    });
+}());
+</script>

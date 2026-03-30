@@ -166,8 +166,7 @@
                         Title = T("Admin.Common.Edit").Text,
                         Width = "100",
                         ClassName = NopColumnClassDefaults.Button,
-                        Render = new RenderButtonEdit(
-                        new DataUrl("~/Admin/Candidate/Edit"))
+                        Render = new RenderCustom("renderEditWithJob")
                         }
 
                         }
@@ -199,6 +198,13 @@
         });
 
     });
+        function renderEditWithJob(data, type, row, meta) {
+        var candidateId = row.Id;
+        var jobPostingId = @Model.Id; //  current job id
+
+        return '<a class="btn btn-default" href="/Admin/Candidate/Edit?id='
+            + candidateId + '&jobPostingId=' + jobPostingId + '">Edit</a>';
+    }
     function renderStatusBadge(data, type, row, meta) {
 
         if (!data) return "";

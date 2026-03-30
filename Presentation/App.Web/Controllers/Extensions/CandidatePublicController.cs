@@ -1,6 +1,7 @@
 ﻿using App.Core;
 using App.Core.Domain.Media;
 using App.Data;
+using App.Data.Extensions;
 using App.Services;
 using App.Services.JobPostings;
 using App.Services.Localization;
@@ -34,6 +35,7 @@ namespace Nop.Web.Controllers
         private readonly IRepository<Download> _downloadRepository;
         private readonly ICandidatesService _candidateService;
         private readonly IJobPostingService _jobPostingService;
+        private readonly IRepository<JobApplication> _jobApplicationRepository;
         #endregion
 
         #region Ctor
@@ -45,7 +47,8 @@ namespace Nop.Web.Controllers
             IDownloadService downloadService,
             IRepository<Download> downloadRepository,
             ICandidatesService candidateService,
-            IJobPostingService jobPostingService)
+            IJobPostingService jobPostingService,
+            IRepository<JobApplication> jobApplicationRepository)
         {
             _permissionService = permissionService;
             _notificationService = notificationService;
@@ -55,6 +58,7 @@ namespace Nop.Web.Controllers
             _downloadRepository = downloadRepository;
             _candidateService = candidateService;
             _jobPostingService = jobPostingService;
+            _jobApplicationRepository = jobApplicationRepository;
         }
 
         #endregion
@@ -180,7 +184,7 @@ namespace Nop.Web.Controllers
             #endregion
 
 
-            #region STEP 1: Create or Get Candidate (PERSON ONLY)
+            #region STEP 1: Create or Get Candidate (ONLY BASIC INFO)
 
             var candidate = await _candidateService.GetCandidateByEmailAsync(model.Email);
 
@@ -202,7 +206,7 @@ namespace Nop.Web.Controllers
             }
             else
             {
-                // update only basic info (NOT job specific)
+                //  ONLY BASIC INFO UPDATE (NO JOB DATA HERE)
                 candidate.FirstName = model.FirstName;
                 candidate.LastName = model.LastName;
                 candidate.Phone = model.Phone;
@@ -214,40 +218,48 @@ namespace Nop.Web.Controllers
             #endregion
 
 
-            #region STEP 2: Insert JobApplication (JOB SPECIFIC DATA)
+            #region STEP 2: CHECK IF ALREADY APPLIED
+
+            var existingApplication = await _jobApplicationRepository.Table
+                .FirstOrDefaultAsync(x => x.CandidateId == candidate.Id
+                                      && x.JobPostingId == model.JobPostingId);
+
+            if (existingApplication != null)
+            {
+                _notificationService.WarningNotification("You have already applied for this job.");
+                return RedirectToAction("Apply", new { jobId = model.JobPostingId });
+            }
+
+            #endregion
+
+
+            #region STEP 3: Insert JobApplication (ALL JOB-SPECIFIC DATA)
 
             var jobApplication = new JobApplication
             {
                 CandidateId = candidate.Id,
-
                 JobPostingId = model.JobPostingId,
-
                 StatusId = (int)CandidateStatusEnum.Applied,
-
                 AppliedOnUtc = DateTime.UtcNow,
-
                 UpdatedOnUtc = DateTime.UtcNow,
-
                 ResumeDownloadId = downloadId,
-
                 PositionApplied = job.Title,
-
                 PositionId = job.PositionId,
-
                 AdditionalInformation = model.AdditionalInformation,
                 City = model.City,
                 HrNotes = null
             };
 
-
             if (job.CandidateTypeId == (int)CandidateTypeEnum.Freelancer)
             {
+                //  Freelancer fields
                 jobApplication.RateTypeId = model.RateTypeId;
                 jobApplication.Amount = model.Amount;
                 jobApplication.CoverLetter = model.CoverLetter;
             }
             else
             {
+                //  Inhouse fields
                 jobApplication.ExperienceYears = model.ExperienceYears;
                 jobApplication.CurrentCompany = model.CurrentCompany;
                 jobApplication.CurrentCTC = model.CurrentCTC;
@@ -261,10 +273,14 @@ namespace Nop.Web.Controllers
             #endregion
 
 
+            #region SUCCESS
+
             _notificationService.SuccessNotification(
                 await _localizationService.GetResourceAsync("Public.Candidate.Submitted"));
 
             return RedirectToAction("Apply", new { jobId = model.JobPostingId });
+
+            #endregion
         }
 
 

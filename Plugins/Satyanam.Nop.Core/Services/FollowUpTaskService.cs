@@ -139,6 +139,11 @@ namespace Satyanam.Nop.Core.Services
             if (showOnlyNotOnTrack)
                 query = query.Where(x =>
                     !x.f.OnTrack && x.f.AlertId > 0);
+            query = query.Where(x =>
+                !_workflowStatusRepository.Table
+                    .Where(s => s.Id == x.t.StatusId)
+                    .Select(s => s.StatusName.Trim().ToLower())
+                    .Contains("closed"));
             if (isAvoidNewStatus)
             {
                 query = query.Where(x =>

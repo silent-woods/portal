@@ -15,6 +15,7 @@ public partial record ConfigurationModel : BaseNopEntityModel
         AvailableExpenseCategories = new List<SelectListItem>();
         AvailableAccountGroups = new List<SelectListItem>();
         AvailableHrEmployees = new List<SelectListItem>();
+        AvailableFinancialYearStartMonths = new List<SelectListItem>();
     }
 
     #endregion
@@ -63,6 +64,10 @@ public partial record ConfigurationModel : BaseNopEntityModel
     public int HrSignaturePictureId { get; set; }
 
     public IList<SelectListItem> AvailableHrEmployees { get; set; }
+
+    [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Fields.FinancialYearStartMonth")]
+    public int FinancialYearStartMonth { get; set; }
+    public IList<SelectListItem> AvailableFinancialYearStartMonths { get; set; }
 
     #endregion
 }

@@ -16,6 +16,9 @@
     justify-content: flex-end;
     margin-bottom: 16px;
 }
+.top-actions {
+    gap: 10px;
+}
 /* Cards */
 .update-card {
     background: #fff;
@@ -673,4 +676,39 @@ body {
 
 .cv-flex-item {
     flex: 1;
+}
+.period-item.active {
+    background-color: #e6f0ff;
+    border-left: 4px solid #007bff;
+}
+
+.period-item:hover {
+    background-color: #f5f5f5;
+    cursor: pointer;
+}
+.btn-current-period {
+    background-color: #0388ff;
+    border-color: #0388ff;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+}
+
+    .btn-current-period:hover {
+        background-color: #0274d9;
+        border-color: #0274d9;
+        color: #fff;
+    }
+.pending-item {
+    background-color: #ffe5e5;
+    border-left: 4px solid red;
+}
+
+.submitted-item {
+    background-color: #e6ffe6;
+    border-left: 4px solid green;
+}
+.strongtext {
+    font-size: 16px;
+    color: green
 }

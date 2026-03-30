@@ -64,6 +64,7 @@
         </button>
     </div>
     <input type="hidden" id="selectedStatusId" value="0" />
+    <input type="hidden" id="showHold" value="false" />
     <div class="status-filter-bar">
         @foreach (var wfGroup in Model.StatusFilters
                 .Where(s => s.Count > 0)
@@ -85,6 +86,19 @@
                 </div>
             </div>
         }
+        @if (Model.HoldOverdueCount > 0)
+        {
+            <div class="workflow-row">
+                <span class="workflow-title">Hold</span>
+                <div class="status-list">
+                    <span class="status-pill hold-pill" data-showhold="true">
+                        <span class="dot" style="background:#9e9e9e"></span>
+                        Hold
+                        <span class="count">@Model.HoldOverdueCount</span>
+                    </span>
+                </div>
+            </div>
+        }
     </div>
     <div id="overdueTaskContainer">
         @await Html.PartialAsync("/Themes/DefaultClean/Views/Extension/Dashboard/_OverdueTaskList.cshtml",Model)
@@ -93,29 +107,35 @@
 
 <script>
     $("#btnSearch").on("click", function () {
-          $("#selectedStatusId").val(0);
-    $(".status-pill").removeClass("active");
+        $("#selectedStatusId").val(0);
+        $("#showHold").val("false");
+        $(".status-pill").removeClass("active");
+        $(".hold-pill").removeClass("active");
         loadOverdueTasks();
     });
+
     function loadOverdueTasks() {
-         var statusId = $("#selectedStatusId").val()
+        var statusId = $("#selectedStatusId").val();
+        var showHold = $("#showHold").val();
         $.get("/Dashboard/SearchOverdueTasks", {
             projectId: $("#projectId").val(),
             employeeId: $("#employeeId").val(),
             taskName: $("#taskName").val(),
-            statusId: statusId
+            statusId: statusId,
+            showHold: showHold
         })
         .done(function (html) {
             $("#overdueTaskContainer").html(html);
-            if(statusId ==0)
-             updateStatusCountsFromTasks();
+            if (statusId == 0 && showHold === "false")
+                updateStatusCountsFromTasks();
+                updateHoldCount();
         })
         .fail(function () {
             alert("Failed to load overdue tasks");
         });
     }
 
-      $(document).on("click", ".status-pill", function () {
+    $(document).on("click", ".status-pill:not(.hold-pill)", function () {
         var $this = $(this);
         if ($this.hasClass("disabled"))
             return;
@@ -124,9 +144,11 @@
         var $hidden = $("#selectedStatusId");
         if ($this.hasClass("active")) {
             $this.removeClass("active");
-            $hidden.val(0); 
+            $hidden.val(0);
         } else {
             $(".status-pill").removeClass("active");
+            $(".hold-pill").removeClass("active");
+            $("#showHold").val("false");
             $this.addClass("active");
             $hidden.val(statusId);
         }
@@ -134,15 +156,28 @@
         loadOverdueTasks();
     });
 
-       function updateStatusCountsFromTasks() {
+    $(document).on("click", ".hold-pill", function () {
+        var $this = $(this);
+        if ($this.hasClass("active")) {
+            $this.removeClass("active");
+            $("#showHold").val("false");
+        } else {
+            $(".status-pill").removeClass("active");
+            $this.addClass("active");
+            $("#selectedStatusId").val(0);
+            $("#showHold").val("true");
+        }
+        loadOverdueTasks();
+    });
+
+    function updateStatusCountsFromTasks() {
         var counts = {};
         var selectedStatusId = $("#selectedStatusId").val();
         $("#overdueTaskContainer tr[data-statusid]").each(function () {
             var sid = $(this).data("statusid");
             counts[sid] = (counts[sid] || 0) + 1;
         });
-        $(".status-pill").each(function () {
-
+        $(".status-pill:not(.hold-pill)").each(function () {
             var $pill = $(this);
             var sid = $pill.data("statusid");
             var count = counts[sid] || 0;
@@ -155,6 +190,26 @@
                 }
             } else {
                 $pill.show();
+            }
+        });
+    }
+        function updateHoldCount() {
+
+        $.get("/Dashboard/GetHoldOverdueCount", {
+            projectId: $("#projectId").val(),
+            employeeId: $("#employeeId").val(),
+            taskName: $("#taskName").val()
+        })
+        .done(function (count) {
+
+            var $hold = $(".hold-pill");
+
+            $hold.find(".count").text(count);
+
+            if ($("#selectedStatusId").val() == 0) {
+                $hold.toggle(count > 0);
+            } else {
+                $hold.show();
             }
         });
     }

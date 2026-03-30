@@ -159,6 +159,18 @@
                                     <span asp-validation-for="HrSignaturePictureId"></span>
                                 </div>
                             </div>
+                            <hr />
+                            <h5 class="mt-2 mb-3"><i class="fas fa-chart-line"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Section.Reporting")</h5>
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="FinancialYearStartMonth" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-select asp-for="FinancialYearStartMonth" asp-items="Model.AvailableFinancialYearStartMonths" />
+                                    <small class="text-muted">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Fields.FinancialYearStartMonth.Hint")</small>
+                                    <span asp-validation-for="FinancialYearStartMonth"></span>
+                                </div>
+                            </div>
                         </div>
                     </nop-card>
                 </nop-cards>

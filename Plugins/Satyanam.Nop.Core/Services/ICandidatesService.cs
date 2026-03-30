@@ -44,7 +44,7 @@ namespace Satyanam.Nop.Core.Services
         Task<IList<JobApplication>> GetJobApplicationsByCandidateIdAsync(int candidateId);
         Task<Candidate> GetCandidateByEmailAsync(string email);
         Task UpdateJobApplicationAsync(JobApplication application);
-        Task<JobApplication> GetJobApplicationByCandidateIdAsync(int candidateId);
+        Task<JobApplication> GetJobApplicationByCandidateIdAsync(int candidateId, int jobPostingId);
         #endregion
     }
 }

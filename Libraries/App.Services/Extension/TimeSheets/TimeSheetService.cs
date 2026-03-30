@@ -310,14 +310,14 @@ namespace App.Services.TimeSheets
                 var task = await _projectTaskService.GetProjectTasksByIdAsync(entry.TaskId);
                 if (task == null) continue;
                 if (!showHidden && task.IsDeleted) continue;
-                if (task.Tasktypeid != 3)
+                if (task.Tasktypeid != 3 && task.Tasktypeid != (int)TaskTypeEnum.UserStory)
                 {
                     finalTimeSheetList.Add(entry);
                 }
                 else if (task.Tasktypeid == 3 && task.ParentTaskId != 0)
                 {
                     var parentTask = await _projectTaskService.GetProjectTasksByIdAsync(task.ParentTaskId);
-                    if (parentTask != null && parentTask.Tasktypeid != 3)
+                    if (parentTask != null && parentTask.Tasktypeid != 3 && parentTask.Tasktypeid != (int)TaskTypeEnum.UserStory)
                     {
                         finalTimeSheetList.Add(new TimeSheet
                         {

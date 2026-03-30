@@ -48,7 +48,17 @@ builder.Services.Configure<FormOptions>(options =>
     options.ValueCountLimit = 50000;
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ChromeExtensionPolicy", policy =>
+    {
+        policy.AllowAnyMethod().AllowAnyHeader().SetIsOriginAllowed(origin => origin.StartsWith("chrome-extension://"));
+    });
+});
+
 var app = builder.Build();
+
+app.UseCors("ChromeExtensionPolicy");
 
 //configure the application HTTP request pipeline
 app.ConfigureRequestPipeline();

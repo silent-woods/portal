@@ -1,9 +1,11 @@
 ﻿using App.Core;
 using App.Core.Domain.JobPostings;
-using App.Core.Domain.Security;
 using App.Core.Domain.Messages;
+using App.Core.Domain.Security;
+using App.Core.Domain.TimeSheets;
 using App.Data;
 using App.Data.Extensions;
+using App.Services.Helpers;
 using App.Services.JobPostings;
 using App.Services.Localization;
 using App.Services.Media;
@@ -24,7 +26,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using App.Services.Helpers;
 
 namespace App.Web.Areas.Admin.Controllers
 {
@@ -164,12 +165,12 @@ namespace App.Web.Areas.Admin.Controllers
                 .ToPagedListAsync(searchModel.Page - 1, searchModel.PageSize);
 
             // Grid mapping
-            var model = new JobPostingCandidateListModel().PrepareToGrid(
+            var model = await new JobPostingCandidateListModel().PrepareToGridAsync(
                 searchModel,
                 pagedList,
                 () =>
                 {
-                    return pagedList.Select(x => new JobPostingCandidateModel
+                    return pagedList.SelectAwait(async x => new JobPostingCandidateModel
                     {
                         Id = x.Candidate.Id,
 
@@ -191,7 +192,7 @@ namespace App.Web.Areas.Admin.Controllers
                         ResumeDownloadId = x.JobApplication.ResumeDownloadId,
 
                         // FIXED: Date from JobApplication
-                        CreatedOnUtc = x.JobApplication.AppliedOnUtc
+                        CreatedOnUtc = await _dateTimeHelper.ConvertToUserTimeAsync(x.JobApplication.AppliedOnUtc, DateTimeKind.Utc) 
                     });
                 });
 
@@ -725,14 +726,20 @@ namespace App.Web.Areas.Admin.Controllers
 
             var candidateQuery = _candidateRepository.Table
                 .Where(c =>
-                    c.CandidateTypeId == jobPosting.CandidateTypeId &&
                     !appliedCandidateIds.Contains(c.Id)
                 );
 
             // Skill matching
+            // ✅ Skill matching (FIXED)
             if (jobSkillNames.Any())
             {
                 candidateQuery = candidateQuery.Where(c =>
+                    // Candidate has NO applications → include (important for invitation)
+                    !_jobApplicationRepository.Table.Any(app => app.CandidateId == c.Id)
+
+                    ||
+
+                    // OR candidate has matching skills in ANY application
                     _jobApplicationRepository.Table.Any(app =>
                         app.CandidateId == c.Id &&
                         app.Skills != null &&

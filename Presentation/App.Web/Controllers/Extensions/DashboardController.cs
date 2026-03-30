@@ -45,11 +45,12 @@ namespace App.Web.Controllers
         private readonly IWorkflowMessageService _workflowMessageService;
         private readonly IProcessWorkflowService _processWorkflowService;
         private readonly ILocalizationService _localizationService;
+        private readonly ICommonPluginService _commonPluginService;
 
         #endregion
 
         #region Ctor
-        public DashboardController(IFollowUpTaskService followUpTaskService, IDashboardModelFactory dashboardModelFactory, IWorkContext workContext, IEmployeeService employeeService, ICustomerService customerService, ITaskAlertService taskAlertService, IProjectTaskService projectTaskService, IProjectsService projectsService, IProjectEmployeeMappingService projectEmployeeMappingService, ITaskCommentsService taskCommentsService, IWorkflowStatusService workflowStatusService, IProcessRulesService processRulesService, IDateTimeHelper dateTimeHelper, IWorkflowMessageService workflowMessageService, IProcessWorkflowService processWorkflowService, ILocalizationService localizationService)
+        public DashboardController(IFollowUpTaskService followUpTaskService, IDashboardModelFactory dashboardModelFactory, IWorkContext workContext, IEmployeeService employeeService, ICustomerService customerService, ITaskAlertService taskAlertService, IProjectTaskService projectTaskService, IProjectsService projectsService, IProjectEmployeeMappingService projectEmployeeMappingService, ITaskCommentsService taskCommentsService, IWorkflowStatusService workflowStatusService, IProcessRulesService processRulesService, IDateTimeHelper dateTimeHelper, IWorkflowMessageService workflowMessageService, IProcessWorkflowService processWorkflowService, ILocalizationService localizationService, ICommonPluginService commonPluginService)
         {
             _followUpTaskService = followUpTaskService;
             _dashboardModelFactory = dashboardModelFactory;
@@ -67,6 +68,7 @@ namespace App.Web.Controllers
             _workflowMessageService = workflowMessageService;
             _processWorkflowService = processWorkflowService;
             _localizationService = localizationService;
+            _commonPluginService = commonPluginService;
         }
 
         #endregion
@@ -596,7 +598,7 @@ namespace App.Web.Controllers
             return PartialView("/Themes/DefaultClean/Views/Extension/Dashboard/_ReadyToTestTaskList.cshtml",model);
         }
         [HttpGet]
-        public async Task<IActionResult> SearchOverdueTasks(int projectId = 0,int employeeId = 0,string taskName = null,int statusId = 0)
+        public async Task<IActionResult> SearchOverdueTasks(int projectId = 0,int employeeId = 0,string taskName = null,int statusId = 0,bool showHold = false)
         {
             var customer = await _workContext.GetCurrentCustomerAsync();
             if (!await _customerService.IsRegisteredAsync(customer))
@@ -609,7 +611,8 @@ namespace App.Web.Controllers
                     projectId: projectId,
                     employeeId: employeeId,
                     taskName: taskName,
-                    statusId: statusId
+                    statusId: statusId,
+                    holdOnly: showHold
                 );
 
             return PartialView("/Themes/DefaultClean/Views/Extension/Dashboard/_OverdueTaskList.cshtml",model);
@@ -630,6 +633,24 @@ namespace App.Web.Controllers
                     taskName: taskName);
 
             return View("~/Themes/DefaultClean/Views/Extension/Dashboard/Overdue.cshtml", model);
+        }
+
+        public async Task<IActionResult> GetHoldOverdueCount(int projectId, int employeeId, string taskName)
+        {
+            var customer = await _workContext.GetCurrentCustomerAsync();
+            if (!await _customerService.IsRegisteredAsync(customer))
+                return Challenge();
+
+            var emp = await _employeeService.GetEmployeeByCustomerIdAsync(customer.Id);
+            var holdTasks = await _commonPluginService
+                .GetOverdueTasksByCurrentEmployeeForDashboardAsync(
+                    currEmployeeId: emp != null ? emp.Id :0,
+                    projectId: projectId,
+                    employeeId: employeeId,
+                    taskName: taskName,
+                    holdOnly: true);
+
+            return Json(holdTasks.Count);
         }
         #endregion
     }

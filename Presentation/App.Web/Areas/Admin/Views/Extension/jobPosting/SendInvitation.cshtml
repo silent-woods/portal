@@ -241,69 +241,74 @@
             default:
                 colorClass = "badge badge-secondary";
         }
-
         return `
-            <span class="${colorClass}"
-                  style="padding:6px 12px;border-radius:20px;font-size:12px;">
-                ${data}
-            </span>
+        <span class="${colorClass}"
+              style="padding:6px 12px;border-radius:20px;font-size:12px;">
+            ${data}
+        </span>
+    `;
+    //     return `
+    //         <span class="${colorClass}"
+    //               style="padding:6px 12px;border-radius:20px;font-size:12px;">
+    //             ${data}
+    //         </span>
 
-             <i class="fas fa-info-circle text-primary ml-2 history-icon"
-    data-candidate-id="${row.Id}"
-    data-toggle="tooltip"
-    style="cursor:pointer;"></i>
-        `;
+    //          <i class="fas fa-info-circle text-primary ml-2 history-icon"
+    // data-candidate-id="${row.Id}"
+    // data-toggle="tooltip"
+    // style="cursor:pointer;"></i>
+    //     `;
     }
                    $(document).ready(function () {
 
-        $('body').tooltip({
-            selector: '[data-toggle="tooltip"]',
-            html: true,
-            container: 'body'
-        });
+    //     $('body').tooltip({
+    //         selector: '[data-toggle="tooltip"]',
+    //         html: true,
+    //         container: 'body'
+    //     });
 
-            $('#invitation-candidates-grid').on('mouseenter', '.history-icon', function () {
+    //         $('#invitation-candidates-grid').on('mouseenter', '.history-icon', function () {
 
-        var icon = $(this);
+    //     var icon = $(this);
 
-        if (icon.data('loaded'))
-            return;
+    //     if (icon.data('loaded'))
+    //         return;
 
-        var candidateId = icon.data('candidate-id');
+    //     var candidateId = icon.data('candidate-id');
 
-        if (!candidateId)
-            return;
+    //     if (!candidateId)
+    //         return;
 
-        $.ajax({
-            url: '@Url.Action("GetCandidateHistoryTooltip", "JobPostings", new { area = "Admin" })',
-            type: 'GET',
-            data: {
-                candidateId: candidateId,
-                currentJobPostingId: @Model.Id
-            },
-            success: function (result) {
+    //     $.ajax({
+    //         url: '@Url.Action("GetCandidateHistoryTooltip", "JobPostings", new { area = "Admin" })',
+    //         type: 'GET',
+    //         data: {
+    //             candidateId: candidateId,
+    //             currentJobPostingId: @Model.Id
+    //         },
+    //         success: function (result) {
 
-                if (!result || result.trim() === "")
-                    return;
+    //             if (!result || result.trim() === "")
+    //                 return;
 
-                icon.attr('title', result)
-                    .attr('data-toggle', 'tooltip')
-                    .attr('data-html', 'true');
+    //             icon.attr('title', result)
+    //                 .attr('data-toggle', 'tooltip')
+    //                 .attr('data-html', 'true');
 
-                icon.tooltip({
-                    placement: 'right',
-                    container: 'body'
-                });
+    //             icon.tooltip({
+    //                 placement: 'right',
+    //                 container: 'body'
+    //             });
 
-                icon.tooltip('show');
+    //             icon.tooltip('show');
 
-                icon.data('loaded', true);
-            },
-            error: function (xhr) {
-                console.log(xhr.responseText);
-            }
-        });
-    });
+    //             icon.data('loaded', true);
+    //         },
+    //         error: function (xhr) {
+    //             console.log(xhr.responseText);
+    //         }
+    //     });
+    // });
     });
 </script>
 

@@ -137,6 +137,8 @@ public partial class AccountManagementPlugin : BasePlugin,  IAdminMenuPlugin , I
 
         await InsertMessageTemplatesAsync();
 
+        await _permissionService.InstallPermissionsAsync(new AccountManagementPermissionProvider());
+
         var accountManagementSettings = new AccountManagementSettings()
         {
             EnablePlugin = true
@@ -344,6 +346,18 @@ public partial class AccountManagementPlugin : BasePlugin,  IAdminMenuPlugin , I
             RouteValues = new RouteValueDictionary() { { "Satyanam.Plugin.Misc.AccountManagement", null } }
         };
         pluginMenuItem.ChildNodes.Add(salaryComponentConfigs);
+
+        var executiveDashboard = new SiteMapNode()
+        {
+            SystemName = "Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard",
+            Title = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Title"),
+            ControllerName = "ExecutiveDashboard",
+            ActionName = "Index",
+            Visible = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard, PermissionAction.View),
+            IconClass = "fas fa-chart-line",
+            RouteValues = new RouteValueDictionary() { { "Satyanam.Plugin.Misc.AccountManagement", null } }
+        };
+        pluginMenuItem.ChildNodes.Add(executiveDashboard);
 
         var title = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.MainMenu.Title");
         var targetMenu = siteMapNode.ChildNodes.FirstOrDefault(x => x.Title == title);

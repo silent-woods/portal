@@ -498,7 +498,7 @@ namespace Nop.Web.Controllers
                     CommentText = comment.CommentText,
                     CommentedByCustomerId = comment.CommentedByCustomerId,
                     CommentedByName = commenter != null ? $"{commenter.FirstName} {commenter.LastName}".Trim() : "Unknown",
-                    CreatedOnUtc = TimeZoneInfo.ConvertTimeFromUtc(comment.CreatedOnUtc,istTimeZone)
+                    CreatedOnUtc = TimeZoneInfo.ConvertTimeFromUtc(comment.CreatedOnUtc, istTimeZone)
                 };
 
                 // Now find replies for this root comment and recursively map them
@@ -674,7 +674,7 @@ namespace Nop.Web.Controllers
             });
         }
 
-        private async Task<string> GetCheckboxAnswerDisplayTextAsync(int questionId,string answerText)
+        private async Task<string> GetCheckboxAnswerDisplayTextAsync(int questionId, string answerText)
         {
             if (string.IsNullOrWhiteSpace(answerText))
                 return string.Empty;
@@ -711,7 +711,7 @@ namespace Nop.Web.Controllers
             return TimeZoneInfo.ConvertTimeFromUtc(utc, ist);
         }
 
-        private async Task NotifyReviewersOnSubmissionAsync(UpdateSubmission submission,Customer submitter,bool isEdit)
+        private async Task NotifyReviewersOnSubmissionAsync(UpdateSubmission submission, Customer submitter, bool isEdit)
         {
             var template = await _updateTemplateRepository.GetByIdAsync(submission.UpdateTemplateId);
             if (template == null || string.IsNullOrEmpty(template.ViewerUserIds))
@@ -1066,7 +1066,7 @@ namespace Nop.Web.Controllers
 
             return Json(result);
         }
-        
+
 
         [HttpGet("UpdateSubmission/Submit/{id}")]
         public async Task<IActionResult> Submit(int? id, int? periodId)
@@ -1102,10 +1102,18 @@ namespace Nop.Web.Controllers
             {
                 // Step 1: Try to get most recent submitted period
                 selectedPeriod = allPeriods
-                    .OrderByDescending(p => p.PeriodStart)
-                    .FirstOrDefault(p => userSubmissions.Any(s => s.PeriodId == p.Id));
+            .OrderByDescending(p => p.PeriodStart)
+            .FirstOrDefault(p => !userSubmissions.Any(s => s.PeriodId == p.Id));
 
-                // Step 2: If no submission found, fallback to latest available period
+                // PRIORITY 2: Latest submitted
+                if (selectedPeriod == null)
+                {
+                    selectedPeriod = allPeriods
+                        .OrderByDescending(p => p.PeriodStart)
+                        .FirstOrDefault(p => userSubmissions.Any(s => s.PeriodId == p.Id));
+                }
+
+                // PRIORITY 3: fallback latest
                 if (selectedPeriod == null)
                 {
                     selectedPeriod = allPeriods
@@ -1151,17 +1159,17 @@ namespace Nop.Web.Controllers
                             case "DropdownList":
                                 foreach (var opt in q.Options)
                                     opt.Selected = opt.Value == q.AnswerText;
-                            break;
+                                break;
 
                             case "RadioList":
                                 foreach (var opt in q.Options)
                                     opt.Selected = opt.Value == q.AnswerText;
-                            break;
+                                break;
 
                             case "Checkboxes":
                                 foreach (var opt in q.Options)
                                     opt.Selected = q.AnswerText?.Split(',').Contains(opt.Value) == true;
-                            break;
+                                break;
                         }
                     }
                 }
@@ -1198,34 +1206,64 @@ namespace Nop.Web.Controllers
                                 var selectedOption = q.Options.FirstOrDefault(o => o.Selected);
                                 if (selectedOption != null)
                                     q.AnswerText = selectedOption.Value;
-                            break;
+                                break;
 
                             case "Checkboxes":
                                 // Only mark checkboxes that are already selected
                                 var selectedValues = q.Options.Where(o => o.Selected).Select(o => o.Value).ToList();
                                 if (selectedValues.Any())
                                     q.AnswerText = string.Join(",", selectedValues);
-                            break;
+                                break;
                         }
                     }
                 }
             }
             // Populate sidebar only with submitted periods
             model.Periods = allPeriods
-                .Where(p => userSubmissions.Any(s => s.PeriodId == p.Id))
-                .Select(p =>
-                {
-                    var submission = userSubmissions.FirstOrDefault(s => s.PeriodId == p.Id);
-                    return new PeriodStatusModel
-                    {
-                        PeriodId = p.Id,
-                        PeriodLabel = $"{p.PeriodStart:dd MMM, yyyy}",
-                        PeriodStart = p.PeriodStart,
-                        PeriodEnd = p.PeriodEnd,
-                        Status = "Submitted",
-                        SubmittedOnUtc = submission?.SubmittedOnUtc
-                    };
-                }).ToList();
+        .Select(p =>
+        {
+            var submission = userSubmissions.FirstOrDefault(s => s.PeriodId == p.Id);
+
+            // Frequency-based label
+            string periodLabel = "";
+
+            switch (updateTemplate.FrequencyId)
+            {
+                case (int)UpdatedFrequency.Daily:
+                    periodLabel = $"{p.PeriodStart:dd MMM, yyyy}";
+                    break;
+
+                case (int)UpdatedFrequency.Weekly:
+                    periodLabel = $"{p.PeriodStart:dd MMM} - {p.PeriodEnd:dd MMM yyyy}";
+                    break;
+
+                case (int)UpdatedFrequency.Monthly:
+                    periodLabel = $"{p.PeriodStart:dd MMM yyyy} - {p.PeriodEnd:dd MMM yyyy}";
+                    break;
+
+                default:
+                    periodLabel = $"{p.PeriodStart:dd MMM, yyyy}";
+                    break;
+            }
+
+            return new PeriodStatusModel
+            {
+                PeriodId = p.Id,
+                PeriodLabel = periodLabel, // FIXED
+                PeriodStart = p.PeriodStart,
+                PeriodEnd = p.PeriodEnd,
+                Status = submission != null ? "Submitted" : "Pending",
+                SubmittedOnUtc = submission?.SubmittedOnUtc
+            };
+        })
+        .OrderByDescending(x => x.PeriodStart)
+        .ToList();
+            var currentPeriod = allPeriods
+    .OrderByDescending(p => p.PeriodStart)
+    .FirstOrDefault();
+
+            // Assign to model
+            model.CurrentPeriodId = currentPeriod?.Id;
             return View("~/Themes/DefaultClean/Views/Extension/UpdateForm/Submit.cshtml", model);
         }
 
@@ -1246,7 +1284,7 @@ namespace Nop.Web.Controllers
                         (question.MaxLength > 0 && question.AnswerText.Length > question.MaxLength))
                     {
                         ModelState.AddModelError($"Questions[{i}].AnswerText",
-                          string.Format(await _localizationService.GetResourceAsync("UpdateForm.Validation.AnswerLength"),question.MinLength,question.MaxLength)
+                          string.Format(await _localizationService.GetResourceAsync("UpdateForm.Validation.AnswerLength"), question.MinLength, question.MaxLength)
                         );
 
                     }
@@ -1275,7 +1313,7 @@ namespace Nop.Web.Controllers
                         // Case 1: nothing selected
                         if (!selectedValues.Any())
                         {
-                            ModelState.AddModelError($"Questions[{i}].AnswerText",await _localizationService.GetResourceAsync("UpdateForm.Validation.RequiredCheckbox"));
+                            ModelState.AddModelError($"Questions[{i}].AnswerText", await _localizationService.GetResourceAsync("UpdateForm.Validation.RequiredCheckbox"));
                         }
                         else
                         {
@@ -1286,7 +1324,7 @@ namespace Nop.Web.Controllers
 
                             if (missingRequiredOptions.Any())
                             {
-                                ModelState.AddModelError($"Questions[{i}].AnswerText",await _localizationService.GetResourceAsync("UpdateForm.Validation.MissingRequiredCheckbox"));
+                                ModelState.AddModelError($"Questions[{i}].AnswerText", await _localizationService.GetResourceAsync("UpdateForm.Validation.MissingRequiredCheckbox"));
                             }
                         }
                     }
@@ -1303,7 +1341,7 @@ namespace Nop.Web.Controllers
                         if (question.MaximumFileSizeKb > 0 &&
                             uploadedFile.Length > question.MaximumFileSizeKb * 1024)
                         {
-                            ModelState.AddModelError($"Questions[{i}].UploadedFile",string.Format(await _localizationService.GetResourceAsync("UpdateForm.Validation.FileSizeExceeded"),question.MaximumFileSizeKb));
+                            ModelState.AddModelError($"Questions[{i}].UploadedFile", string.Format(await _localizationService.GetResourceAsync("UpdateForm.Validation.FileSizeExceeded"), question.MaximumFileSizeKb));
                         }
 
                         // Check allowed extensions
@@ -1317,7 +1355,7 @@ namespace Nop.Web.Controllers
                             var fileExt = Path.GetExtension(uploadedFile.FileName).ToLower();
                             if (!allowedExt.Contains(fileExt))
                             {
-                                ModelState.AddModelError($"Questions[{i}].UploadedFile",string.Format(await _localizationService.GetResourceAsync("UpdateForm.Validation.InvalidFileType"),string.Join(", ", allowedExt)));
+                                ModelState.AddModelError($"Questions[{i}].UploadedFile", string.Format(await _localizationService.GetResourceAsync("UpdateForm.Validation.InvalidFileType"), string.Join(", ", allowedExt)));
                             }
                         }
                         if (ModelState.IsValid)
@@ -1350,7 +1388,7 @@ namespace Nop.Web.Controllers
                     else if (question.IsRequired)
                     {
                         // If required but no file uploaded
-                        ModelState.AddModelError($"Questions[{i}].UploadedFile",await _localizationService.GetResourceAsync("UpdateForm.Validation.FileRequired"));
+                        ModelState.AddModelError($"Questions[{i}].UploadedFile", await _localizationService.GetResourceAsync("UpdateForm.Validation.FileRequired"));
                     }
                 }
 
@@ -1438,33 +1476,24 @@ namespace Nop.Web.Controllers
                 }
                 submission = existingSubmission;
                 _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("UpdateForm.Notification.Updated"));
-                
+
                 await NotifyReviewersOnSubmissionAsync(submission, customer, true);
             }
             else
             {
                 // Step 1: Find Active Period
-                var currentPeriod = await _periodRepository.GetAllAsync(q =>q.Where(p => p.UpdateTemplateId == templateId && p.PeriodStart <= now && p.PeriodEnd >= now));
-                var activePeriod = currentPeriod.FirstOrDefault();
-                if (activePeriod == null)
-                {
-                    // Try fallback to latest period instead of redirecting
-                    activePeriod = await _periodRepository.Table
-                        .Where(p => p.UpdateTemplateId == templateId)
-                        .OrderByDescending(p => p.PeriodStart)
-                        .FirstOrDefaultAsync();
+                var selectedPeriod = await _periodRepository.GetByIdAsync(periodId);
 
-                    if (activePeriod == null)
-                    {
-                        _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("UpdateForm.Notification.NoPeriod"));
-                        return RedirectToRoute("HomePage");
-                    }
+                if (selectedPeriod == null)
+                {
+                    _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("UpdateForm.Notification.NoPeriod"));
+                    return RedirectToRoute("HomePage");
                 }
-                // Step 2: Create Submission
+
                 submission = new UpdateSubmission
                 {
                     UpdateTemplateId = templateId,
-                    PeriodId = activePeriod.Id,
+                    PeriodId = selectedPeriod.Id, // FIX
                     SubmittedByCustomerId = customer.Id,
                     SubmittedOnUtc = now
                 };
@@ -1486,7 +1515,7 @@ namespace Nop.Web.Controllers
                         .Where(x => x > 0)
                         .Distinct()
                         .ToList();
-                    
+
                     foreach (var reviewerId in reviewerIds)
                     {
                         var reviewer = new UpdateSubmissionReviewer
@@ -1496,7 +1525,7 @@ namespace Nop.Web.Controllers
                             //HasReviewed = false
                         };
                         await _reviewerRepository.InsertAsync(reviewer);
-                       
+
                     }
                 }
                 _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("UpdateForm.Notification.ThankYou"));
@@ -1553,7 +1582,7 @@ namespace Nop.Web.Controllers
                 .ToListAsync();
             // Load user's submissions
             var userSubmissions = await _submissionRepository.Table
-                .Where(x => x.UpdateTemplateId == templateId &&x.SubmittedByCustomerId == customer.Id) .ToListAsync();
+                .Where(x => x.UpdateTemplateId == templateId && x.SubmittedByCustomerId == customer.Id).ToListAsync();
             reloadModel.Periods = allPeriods
                 .Where(p => userSubmissions.Any(s => s.PeriodId == p.Id))
                 .Select(p =>
@@ -1604,7 +1633,7 @@ namespace Nop.Web.Controllers
 
         [Authorize]
         [HttpGet("UpdateSubmission/List")]
-        public async Task<IActionResult> List(int? selectedSubmitterId, int? selectedTemplateId, int? selectedPeriodId, DateTime? fromDate,DateTime? toDate)
+        public async Task<IActionResult> List(int? selectedSubmitterId, int? selectedTemplateId, int? selectedPeriodId, DateTime? fromDate, DateTime? toDate)
         {
             var customer = await _workContext.GetCurrentCustomerAsync();
             var customerId = customer.Id;

@@ -161,13 +161,13 @@ namespace Satyanam.Nop.Core.Services
                 .OrderByDescending(x => x.AppliedOnUtc)
                 .ToListAsync();
         }
-        public async Task<JobApplication> GetJobApplicationByCandidateIdAsync(int candidateId)
+        public async Task<JobApplication> GetJobApplicationByCandidateIdAsync(int candidateId, int jobPostingId)
         {
-            if (candidateId <= 0)
+            if (candidateId <= 0 || jobPostingId <= 0)
                 return null;
 
             return await _jobApplicationRepository.Table
-                .Where(x => x.CandidateId == candidateId)
+                .Where(x => x.CandidateId == candidateId && x.JobPostingId == jobPostingId)
                 .OrderByDescending(x => x.AppliedOnUtc)
                 .FirstOrDefaultAsync();
         }

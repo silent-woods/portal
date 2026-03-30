@@ -3,6 +3,8 @@
 <script src="~/lib/jquery/jquery.min.js"></script>
 <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
 <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/updatetemplatesheet.css")" />
 <script>
     $(function () {
         $.validator.unobtrusive.parse('form');
@@ -23,16 +25,35 @@
             <ul class="period-list">
                 @foreach (var period in Model.Periods)
                 {
-                    <li class="period-item">
-                        <div class="period-date">
-                            @if (period.SubmittedOnUtc.HasValue)
-                            {
-                                @period.SubmittedOnUtc.Value.ToString("dd MMM, yyyy")
-                            }
-                        </div>
-                        <span class="period-status">
-                            @T("Submit.Update.Submited")
-                        </span>
+                    <li class="period-item
+                @(Model.PeriodId == period.PeriodId ? "active" : "")
+                @(period.Status == "Pending" ? "pending-item" : "submitted-item")">
+
+                        <a href="@Url.Action("Submit", "UpdateSubmission", new { id = Model.UpdateTemplateId, periodId = period.PeriodId })"
+                           style="text-decoration:none; color:inherit; display:block;">
+
+                            <div class="period-date">
+                                @period.PeriodLabel
+                            </div>
+
+                            <span class="period-status">
+                                @if (period.Status == "Submitted")
+                                {
+                                    <span class="text-success">@T("Submit.Update.Periods.Submitted")</span>
+                                    @if (period.SubmittedOnUtc.HasValue)
+                                    {
+                                        <div class="small text-muted">
+                                            @period.SubmittedOnUtc.Value.ToLocalTime().ToString("dd MMM yyyy hh:mm tt")
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-danger">@T("Submit.Update.Periods.Pending")</span>
+                                }
+                            </span>
+
+                        </a>
                     </li>
                 }
             </ul>
@@ -40,12 +61,33 @@
     </div>
     <!-- Form main area -->
     <div class="form-main">
-        <div class="top-actions">
-            <a href="@Url.Action("SubmissionList", "UpdateSubmission")" class="btn btn-secondary back-to-list-btn">
-                @T("Submit.Update.Backtolist")
-            </a>
+        <div class="top-actions d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <a href="@Url.Action("SubmissionList", "UpdateSubmission")" class="btn btn-secondary back-to-list-btn">
+                    @T("Submit.Update.Backtolist")
+                </a>
+            </div>
+            <div>
+                @if (Model.CurrentPeriodId.HasValue && Model.PeriodId != Model.CurrentPeriodId)
+                {
+                    <a href="@Url.Action("Submit", "UpdateSubmission", new { id = Model.UpdateTemplateId, periodId = Model.CurrentPeriodId })" class="btn btn-current-period">
+                        <i class="fa fa-refresh me-1"></i>
+                        @T("Submit.Update.CurrentPeriod")
+                    </a>
+                }
+            </div>
         </div>
+        
         <div class="card-box">
+            @if (Model.CurrentPeriodId.HasValue && Model.PeriodId != Model.CurrentPeriodId)
+            {
+                <div class="alert alert-warning mb-3 d-flex align-items-center">
+                    <i class="fa fa-exclamation-triangle me-2"></i>
+                    <strong class="strongtext">
+                        @T("Submit.Update.ViewingOldSubmission")
+                    </strong>
+                </div>
+            }
             <div class="form-title">@Model.Title</div>
             <div class="text-muted form-description">
                 @Model.Description
@@ -53,36 +95,35 @@
             <form asp-controller="UpdateSubmission"
                   asp-action="Submit"
                   asp-route-id="@Model.UpdateTemplateId"
-                  
                   method="post"
                   enctype="multipart/form-data"
                   id="updateForm">
                 <input type="hidden" asp-for="Id" />
                 <input type="hidden" asp-for="UpdateTemplateId" />
-                <input type="hidden"  asp-for="PeriodId" />
+                <input type="hidden" asp-for="PeriodId" />
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div id="questions-section">
-                @for (int i = 0; i < Model.Questions.Count; i++)
-                {
-                    var question = Model.Questions[i];
-                    var hasMin = question.MinLength.HasValue && question.MinLength > 0;
-                    var hasMax = question.MaxLength.HasValue && question.MaxLength > 0;
-                    <div class="card-box">
-                        <input type="hidden" name="Questions[@i].QuestionId" value="@question.QuestionId" />
-                        <input type="hidden" name="Questions[@i].ControlType" value="@question.ControlType" />
-                        <label class="question-label">
-                            @question.QuestionText
-                        </label>
-                        <div class="mt-2">
-                            @switch (question.ControlType)
-                            {
-                                case "TextBox":
-                                        <input type="text"name="Questions[@i].AnswerText"class="form-control text-input-box"value="@question.AnswerText"data-val="true"
+                    @for (int i = 0; i < Model.Questions.Count; i++)
+                    {
+                        var question = Model.Questions[i];
+                        var hasMin = question.MinLength.HasValue && question.MinLength > 0;
+                        var hasMax = question.MaxLength.HasValue && question.MaxLength > 0;
+                        <div class="card-box">
+                            <input type="hidden" name="Questions[@i].QuestionId" value="@question.QuestionId" />
+                            <input type="hidden" name="Questions[@i].ControlType" value="@question.ControlType" />
+                            <label class="question-label">
+                                @question.QuestionText
+                            </label>
+                            <div class="mt-2">
+                                @switch (question.ControlType)
+                                {
+                                    case "TextBox":
+                                        <input type="text" name="Questions[@i].AnswerText" class="form-control text-input-box" value="@question.AnswerText" data-val="true"
                                                @if (question.IsRequired)
                                                {
-                                                 <text> data-val-required="This field is required" </text>
-                                               }
+                                            <text> data-val-required="This field is required" </text>
+                                        }
                                         @if (question.MinLength > 0 || question.MaxLength > 0)
                                         {
                                             <text>
@@ -112,13 +153,13 @@
                                                 }
                                             </span>
                                         }
-                                        <span class="text-danger"data-valmsg-for="Questions[@i].AnswerText"data-valmsg-replace="true"></span>
-                                break;
-                                case "MultilineTextbox":
-                                
-                                        <textarea name="Questions[@i].AnswerText"class="form-control text-input-box"rows="3"data-val="true"
-                                            @if (question.IsRequired)
-                                            {
+                                        <span class="text-danger" data-valmsg-for="Questions[@i].AnswerText" data-valmsg-replace="true"></span>
+                                        break;
+                                    case "MultilineTextbox":
+
+                                        <textarea name="Questions[@i].AnswerText" class="form-control text-input-box" rows="3" data-val="true"
+                                      @if (question.IsRequired)
+                                      {
                                               <text> data-val-required="This field is required" </text>
                                             }
                                             @if (question.MinLength > 0 || question.MaxLength > 0)
@@ -152,157 +193,158 @@
                                                 }
                                             </span>
                                         }
-                                        <span class="text-danger"data-valmsg-for="Questions[@i].AnswerText"data-valmsg-replace="true"></span>
-                                break;
-                                case "DropdownList":
-                                    {
-                                        var hasValue = !string.IsNullOrEmpty(question.AnswerText);
-                                        var canDisable = !Model.AllowEditingAfterSubmit
-                                        && !string.IsNullOrEmpty(question.AnswerText);
-
-
-                                        <select name="Questions[@i].AnswerText"
-                                                class="form-control"
-                                                data-val="true"
-                                                @if (question.IsRequired)
-                                                {
-                                    <text> data-val-required="Please select an option" </text>
-                            }
-                            @if (canDisable)
-                            {
-                                    <text> disabled="disabled" </text>
-                            }>
-                        <option value="">-- Select --</option>
-
-                        @foreach (var opt in question.Options)
-                        {
-                                if (opt.Value == question.AnswerText)
-                                {
-                                        <option value="@opt.Value" selected="selected">@opt.Text</option>
-                                }
-                                else
-                                {
-                                        <option value="@opt.Value">@opt.Text</option>
-                                }
-                        }
-                    </select>
-
-                                        @if (canDisable)
+                                        <span class="text-danger" data-valmsg-for="Questions[@i].AnswerText" data-valmsg-replace="true"></span>
+                                        break;
+                                    case "DropdownList":
                                         {
-                                            <input type="hidden"
-                                                   name="Questions[@i].AnswerText"
-                                                   value="@question.AnswerText" />
-                                        }
+                                            var hasValue = !string.IsNullOrEmpty(question.AnswerText);
+                                            var canDisable = !Model.AllowEditingAfterSubmit
+                                            && !string.IsNullOrEmpty(question.AnswerText);
 
-                                        <span class="text-danger"
-                                              data-valmsg-for="Questions[@i].AnswerText"
-                                              data-valmsg-replace="true"></span>
-                                    }
-                                    break;
-                                case "RadioList":
-                                    <div class="form-group">
+
+                                            <select name="Questions[@i].AnswerText"
+                                                    class="form-control"
+                                                    data-val="true"
+                                                    @if (question.IsRequired)
+                                                    {
+                                                        <text> data-val-required="Please select an option" </text>
+                                            }
+                                            @if (canDisable)
+                                            {
+                                                        <text> disabled="disabled" </text>
+                                            }
+                >
+                                        <option value="">-- Select --</option>
+
                                         @foreach (var opt in question.Options)
                                         {
+                                                    if (opt.Value == question.AnswerText)
+                                                    {
+                                                                <option value="@opt.Value" selected="selected">@opt.Text</option>
+                                                    }
+                                                    else
+                                                    {
+                                                                <option value="@opt.Value">@opt.Text</option>
+                                                    }
+                                        }
+                                    </select>
+
+                                            @if (canDisable)
+                                            {
+                                                <input type="hidden"
+                                                       name="Questions[@i].AnswerText"
+                                                       value="@question.AnswerText" />
+                                            }
+
+                                            <span class="text-danger"
+                                                  data-valmsg-for="Questions[@i].AnswerText"
+                                                  data-valmsg-replace="true"></span>
+                                        }
+                                        break;
+                                    case "RadioList":
+                                        <div class="form-group">
+                                            @foreach (var opt in question.Options)
+                                            {
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="Questions[@i].AnswerText" value="@opt.Value"
+                                                           @(opt.Value == question.AnswerText ? "checked" : "")
+                                                           @(question.IsRequired ? "data-val='true' data-val-required='Please select an option'" : "")
+                                                           @(Model.HasAlreadySubmitted && !Model.AllowEditingAfterSubmit ? "disabled" : "") />
+                                                    <label class="form-check-label">@opt.Text</label>
+                                                </div>
+                                            }
+                                            @if (question.IsRequired)
+                                            {
+                                                <input type="hidden" name="Questions[@i].AnswerText" data-val="true" data-val-required="Please select an option" />
+                                            }
+                                            <span class="text-danger" data-valmsg-for="Questions[@i].AnswerText" data-valmsg-replace="true"></span>
+                                        </div>
+                                        break;
+                                    case "Checkboxes":
+                                        {
+                                            <div class="form-group checkbox-question"
+                                                 data-question-index="@i">
+
+                                                @foreach (var opt in question.Options)
+                                                {
+                                                    var isRequired = question.RequiredOptionValues.Contains(opt.Value);
+
+                                                    <div class="form-check">
+                                                        <input class="form-check-input checkbox-option"
+                                                               type="checkbox"
+                                                               name="Questions[@i].AnswerText"
+                                                               value="@opt.Value"
+                                                               data-required="@isRequired.ToString().ToLower()"
+                                                               @(opt.Selected ? "checked" : "") />
+
+                                                        <label class="form-check-label checkbox-label">
+                                                            <span>@opt.Text</span>
+
+                                                            @if (isRequired)
+                                                            {
+                                                                <span class="required-star">*</span>
+                                                            }
+                                                        </label>
+                                                    </div>
+                                                }
+
+                                                <span class="text-danger validation-message"
+                                                      data-valmsg-for="Questions[@i].AnswerText"></span>
+                                            </div>
+                                            break;
+                                        }
+                                    case "Datepicker":
+                                        <div class="form-group">
+                                            <input type="date" name="Questions[@i].AnswerText" class="form-control" value="@question.AnswerText"
+                                                   @(question.IsRequired ? "data-val='true' data-val-required=\"Please select a date\" required" : "")
+                                                   @(Model.HasAlreadySubmitted && !Model.AllowEditingAfterSubmit ? "readonly disabled" : "") />
+                                            <span class="text-danger" data-valmsg-for="@( $"Questions[{i}].AnswerText")" data-valmsg-replace="true"></span>
+                                        </div>
+                                        break;
+                                    case "FileUpload":
+                                        <div class="form-group">
+                                            @* Show existing file *@
+                                            @if (!string.IsNullOrEmpty(question.FileName))
+                                            {
+                                                <div class="mb-2 p-2" style="background-color:#f5f5f5;border-radius:6px;">
+                                                    @question.FileName
+                                                </div>
+                                                <input type="hidden" name="Questions[@i].FileName" value="@question.FileName" />
+                                                <input type="hidden" name="Questions[@i].FilePath" value="@question.ExistingFilePath" />
+                                            }
+                                            @if (!Model.HasAlreadySubmitted || Model.AllowEditingAfterSubmit)
+                                            {
+                                                var maxFileSizeKb = question.MaximumFileSizeKb;
+                                                var allowedExtensions = question.AllowedFileExtensions;
+                                                var isRequired = question.IsRequired && string.IsNullOrEmpty(question.FileName);
+                                                <input type="file" name="Questions[@i].UploadedFile" class="form-control file-input" data-max-size="@maxFileSizeKb" data-allowed-ext="@allowedExtensions"
+                                                       @(isRequired ? "data-val='true' data-val-required='Please upload a file' required" : "") />
+                                                <button type="button" class="btn btn-sm btn-outline-secondary ms-2 clear-file-btn">
+                                                    <i class="fa fa-times me-1"></i> @T("Submit.Update.Clearfile")
+                                                </button>
+                                                <span class="text-danger" data-valmsg-for="Questions[@i].UploadedFile" data-valmsg-replace="true"></span>
+                                            }
+                                        </div>
+                                        break;
+                                    case "ReadonlyCheckboxes":
+                                        foreach (var opt in question.Options)
+                                        {
+                                            var isChecked = question.AnswerText?.Split(',').Contains(opt.Value) == true;
                                             <div class="form-check">
-                                                <input class="form-check-input"type="radio"name="Questions[@i].AnswerText"value="@opt.Value"
-                                                       @(opt.Value == question.AnswerText ? "checked" : "")
-                                                       @(question.IsRequired? "data-val='true' data-val-required='Please select an option'": "")
-                                                       @(Model.HasAlreadySubmitted && !Model.AllowEditingAfterSubmit ? "disabled" : "") />
+                                                <input class="form-check-input" type="checkbox" value="@opt.Value" checked="@isChecked" disabled />
                                                 <label class="form-check-label">@opt.Text</label>
                                             </div>
                                         }
-                                        @if (question.IsRequired)
-                                        {
-                                            <input type="hidden"name="Questions[@i].AnswerText"data-val="true"data-val-required="Please select an option" />
-                                        }
-                                        <span class="text-danger"data-valmsg-for="Questions[@i].AnswerText"data-valmsg-replace="true"></span>
-                                    </div>
-                                break;
-                                case "Checkboxes":
-                                    {
-                                        <div class="form-group checkbox-question"
-                                             data-question-index="@i">
-
-                                            @foreach (var opt in question.Options)
-                                            {
-                                                var isRequired = question.RequiredOptionValues.Contains(opt.Value);
-
-                                                <div class="form-check">
-                                                    <input class="form-check-input checkbox-option"
-                                                           type="checkbox"
-                                                           name="Questions[@i].AnswerText"
-                                                           value="@opt.Value"
-                                                           data-required="@isRequired.ToString().ToLower()"
-                                                           @(opt.Selected ? "checked" : "") />
-
-                                                    <label class="form-check-label checkbox-label">
-                                                        <span>@opt.Text</span>
-
-                                                        @if (isRequired)
-                                                        {
-                                                            <span class="required-star">*</span>
-                                                        }
-                                                    </label>
-                                                </div>
-                                            }
-
-                                            <span class="text-danger validation-message"
-                                                  data-valmsg-for="Questions[@i].AnswerText"></span>
-                                        </div>
+                                        @Html.Hidden($"Questions[{i}].AnswerText", question.AnswerText)
                                         break;
-                                    }
-                                case "Datepicker":
-                                    <div class="form-group">
-                                        <input type="date"name="Questions[@i].AnswerText"class="form-control"value="@question.AnswerText"
-                                               @(question.IsRequired? "data-val='true' data-val-required=\"Please select a date\" required": "")
-                                               @(Model.HasAlreadySubmitted && !Model.AllowEditingAfterSubmit ? "readonly disabled" : "") />
-                                             <span class="text-danger"data-valmsg-for="@( $"Questions[{i}].AnswerText")"data-valmsg-replace="true"></span>
-                                    </div>
-                                break;
-                                case "FileUpload":
-                                    <div class="form-group">
-                                        @* Show existing file *@
-                                        @if (!string.IsNullOrEmpty(question.FileName))
-                                        {
-                                            <div class="mb-2 p-2" style="background-color:#f5f5f5;border-radius:6px;">
-                                                @question.FileName
-                                            </div>
-                                            <input type="hidden" name="Questions[@i].FileName" value="@question.FileName" />
-                                            <input type="hidden" name="Questions[@i].FilePath" value="@question.ExistingFilePath" />
-                                        }
-                                        @if (!Model.HasAlreadySubmitted || Model.AllowEditingAfterSubmit)
-                                        {
-                                            var maxFileSizeKb = question.MaximumFileSizeKb;
-                                            var allowedExtensions = question.AllowedFileExtensions;
-                                            var isRequired = question.IsRequired && string.IsNullOrEmpty(question.FileName);
-                                            <input type="file"name="Questions[@i].UploadedFile"class="form-control file-input"data-max-size="@maxFileSizeKb"data-allowed-ext="@allowedExtensions"
-                                                   @(isRequired? "data-val='true' data-val-required='Please upload a file' required": "") />
-                                            <button type="button"class="btn btn-sm btn-outline-secondary ms-2 clear-file-btn">
-                                                <i class="fa fa-times me-1"></i> @T("Submit.Update.Clearfile")
-                                            </button>
-                                            <span class="text-danger"data-valmsg-for="Questions[@i].UploadedFile"data-valmsg-replace="true"></span>
-                                        }
-                                    </div>
-                                break;
-                                case "ReadonlyCheckboxes":
-                                    foreach (var opt in question.Options)
-                                    {
-                                        var isChecked = question.AnswerText?.Split(',').Contains(opt.Value) == true;
-                                        <div class="form-check">
-                                            <input class="form-check-input"type="checkbox"value="@opt.Value"checked="@isChecked"disabled />
-                                            <label class="form-check-label">@opt.Text</label>
-                                        </div>
-                                    }
-                                    @Html.Hidden($"Questions[{i}].AnswerText", question.AnswerText)
-                                break;
-                                default:
-                                    <input name="Questions[@i].AnswerText" class="form-control" />
-                                    <div class="text-danger small">[Unknown ControlType: @question.ControlType]</div>
-                                break;
-                            }
+                                    default:
+                                        <input name="Questions[@i].AnswerText" class="form-control" />
+                                        <div class="text-danger small">[Unknown ControlType: @question.ControlType]</div>
+                                        break;
+                                }
+                            </div>
                         </div>
-                    </div>
-                }
+                    }
                 </div>
                 @if (!Model.HasAlreadySubmitted || Model.AllowEditingAfterSubmit)
                 {
@@ -329,25 +371,25 @@
     });
 </script>
 <script>
-   // Submit Reply
-    $(document).on('click', '.submit-reply-btn', function () {
-        var parentId = $(this).data('parent-id');
-        var submissionId = $(this).data('submission-id'); // pass this in button HTML
-        var replyText = $('#reply-text-' + parentId).val().trim();
+    // Submit Reply
+     $(document).on('click', '.submit-reply-btn', function () {
+         var parentId = $(this).data('parent-id');
+         var submissionId = $(this).data('submission-id'); // pass this in button HTML
+         var replyText = $('#reply-text-' + parentId).val().trim();
 
-        if (!replyText) {
-            alert('Reply cannot be empty.');
-            return;
-        }
+         if (!replyText) {
+             alert('Reply cannot be empty.');
+             return;
+         }
 
-        $.post('@Url.Action("AddComment", "UpdateSubmission")', {
-            UpdateSubmissionId: submissionId,
-            CommentText: replyText,
-            ParentCommentId: parentId
-        }, function (html) {
-            $('#comments-container-' + submissionId).html(html);
-        }).fail(function () { alert('Error adding reply'); });
-    });
+         $.post('@Url.Action("AddComment", "UpdateSubmission")', {
+             UpdateSubmissionId: submissionId,
+             CommentText: replyText,
+             ParentCommentId: parentId
+         }, function (html) {
+             $('#comments-container-' + submissionId).html(html);
+         }).fail(function () { alert('Error adding reply'); });
+     });
 </script>
 <script>
     document.addEventListener("change", function (e) {

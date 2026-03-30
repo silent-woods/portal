@@ -213,6 +213,7 @@ public partial class AccountManagementController : BaseAdminController
             EnablePlugin = settings.EnablePlugin,
             InvoiceNumber = settings.InvoiceNumber,
             InvoiceLogoId = settings.InvoiceLogoId,
+            FinancialYearStartMonth = settings.FinancialYearStartMonth > 0 ? settings.FinancialYearStartMonth : 4,
             SalaryProcessingDay = expenseSettings.SalaryProcessingDay,
             SalaryExpenseCategoryId = expenseSettings.SalaryExpenseCategoryId,
             SalaryAccountGroupId = expenseSettings.SalaryAccountGroupId,
@@ -228,13 +229,13 @@ public partial class AccountManagementController : BaseAdminController
         model.AvailableExpenseCategories = categories
             .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = c.Name, Value = c.Id.ToString() })
             .ToList();
-        model.AvailableExpenseCategories.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = "--- Select Category ---", Value = "0" });
+        model.AvailableExpenseCategories.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Select.Category"), Value = "0" });
 
         var accountGroups = await _accountManagementService.GetAllAccountGroupsAsync();
         model.AvailableAccountGroups = accountGroups
             .Select(g => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = g.Name, Value = g.Id.ToString() })
             .ToList();
-        model.AvailableAccountGroups.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = "--- Select Account Group ---", Value = "0" });
+        model.AvailableAccountGroups.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Select.AccountGroup"), Value = "0" });
 
         var employees = await _employeeService.GetAllEmployeesAsync();
         model.AvailableHrEmployees = employees
@@ -244,7 +245,12 @@ public partial class AccountManagementController : BaseAdminController
                 Value = $"{e.FirstName} {e.LastName}".Trim()
             })
             .ToList();
-        model.AvailableHrEmployees.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = "--- Select HR Person ---", Value = "" });
+        model.AvailableHrEmployees.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Select.HrPerson"), Value = "" });
+
+        var monthNames = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
+        model.AvailableFinancialYearStartMonths = Enumerable.Range(1, 12)
+            .Select(m => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = monthNames[m - 1], Value = m.ToString() })
+            .ToList();
 
         return View(model);
     }
@@ -259,7 +265,8 @@ public partial class AccountManagementController : BaseAdminController
         {
             EnablePlugin = model.EnablePlugin,
             InvoiceNumber = model.InvoiceNumber,
-            InvoiceLogoId = model.InvoiceLogoId
+            InvoiceLogoId = model.InvoiceLogoId,
+            FinancialYearStartMonth = model.FinancialYearStartMonth > 0 ? model.FinancialYearStartMonth : 4
         };
         await _settingService.SaveSettingAsync(settings);
 

@@ -1,7 +1,6 @@
 ﻿using App.Web.Framework.Models;
 using App.Web.Framework.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 
@@ -37,26 +36,24 @@ namespace App.Web.Models.Extensions.UpdateForm
         public bool AllowEditingAfterSubmit { get; set; }
 
         public List<PeriodStatusModel> Periods { get; set; }
-
-       // public List<UpdateSubmissionCommentModel> Comments { get; set; } = new();
         public IList<UpdateSubmissionCommentModel> UpdateSubmissionComments { get; set; } = new List<UpdateSubmissionCommentModel>();
 
         public bool IsCurrentUserReviewer { get; set; }
         public bool IsCurrentUserSubmitter { get; set; }
         public List<UpdateSubmissionCommentModel> Comments { get; set; } = new();
-
+        public int? CurrentPeriodId { get; set; }
         #endregion
     }
 
     public class PeriodStatusModel
-        {
-            public DateTime PeriodStart { get; set; }
-            public DateTime PeriodEnd { get; set; }
-            public int PeriodId { get; set; }
-            public string PeriodLabel { get; set; } 
-            public string Status { get; set; }
-            public DateTime? SubmittedOnUtc { get; set; }
-        }
+    {
+        public DateTime PeriodStart { get; set; }
+        public DateTime PeriodEnd { get; set; }
+        public int PeriodId { get; set; }
+        public string PeriodLabel { get; set; }
+        public string Status { get; set; }
+        public DateTime? SubmittedOnUtc { get; set; }
+    }
 
 
 }

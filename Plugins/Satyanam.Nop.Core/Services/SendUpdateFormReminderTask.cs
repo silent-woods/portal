@@ -427,122 +427,116 @@ You did not submit the <strong>{template.Title}</strong> form for
             var submitterIds = template.SubmitterUserIds.Split(',').Select(int.Parse).ToList();
             var anyEmailQueued = false;
 
-            // ✅ FIX: get correct period based on scheduled date (NOT indiaNow)
-            var currentPeriod = await _periodRepo.Table
+            // IMPORTANT: Get ALL past periods till current loop date
+            var periods = await _periodRepo.Table
                 .Where(p =>
                     p.UpdateTemplateId == template.Id &&
-                    p.PeriodStart <= lastScheduledIndia &&
-                    p.PeriodEnd >= lastScheduledIndia)
-                .FirstOrDefaultAsync();
+                    p.PeriodStart <= lastScheduledIndia)
+                .OrderByDescending(p => p.PeriodStart)
+                .ToListAsync();
 
-            if (currentPeriod == null)
+            if (!periods.Any())
                 return;
 
-            foreach (var employeeId in submitterIds)
+            foreach (var period in periods)
             {
-                var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
-                if (employee == null || string.IsNullOrWhiteSpace(employee.OfficialEmail))
-                    continue;
+                var periodDate = period.PeriodStart.Date;
 
-                var customerId = employee.Customer_Id;
+                // Correct overdue calculation per period
+                var overdueDaysForPeriod = (indiaNow.Date - periodDate).Days;
 
-                // ✅ FIX: check submission for THAT specific date period
-                var existingSubmission = await _submissionRepo.Table
-                    .Where(s =>
-                        s.UpdateTemplateId == template.Id &&
-                        s.SubmittedByCustomerId == customerId &&
-                        s.PeriodId == currentPeriod.Id)
-                    .FirstOrDefaultAsync();
-
-                bool alreadySubmitted = existingSubmission != null;
-
-                if (alreadySubmitted)
-                    continue;
-
-                string subject;
-                string bodyMessage;
-                bool addViewerInCc = false;
-
-                // ✅ MAIN MAIL
-                if (indiaNow >= scheduledIst && indiaNow.Date == scheduledIst.Date)
+                foreach (var employeeId in submitterIds)
                 {
-                    subject = $"Action Required ({lastScheduledIndia:MMM dd}): Please submit '{template.Title}' form";
+                    var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
+                    if (employee == null || string.IsNullOrWhiteSpace(employee.OfficialEmail))
+                        continue;
 
-                    bodyMessage = $@"
+                    var customerId = employee.Customer_Id;
+
+                    // Check submission for THIS period
+                    var existingSubmission = await _submissionRepo.Table
+                        .Where(s =>
+                            s.UpdateTemplateId == template.Id &&
+                            s.SubmittedByCustomerId == customerId &&
+                            s.PeriodId == period.Id)
+                        .FirstOrDefaultAsync();
+
+                    if (existingSubmission != null)
+                        continue;
+
+                    string subject;
+                    string bodyMessage;
+                    bool addViewerInCc = false;
+
+                    // MAIN MAIL (today only)
+                    if (indiaNow >= scheduledIst && indiaNow.Date == scheduledIst.Date && periodDate == lastScheduledIndia.Date)
+                    {
+                        subject = $"Action Required ({periodDate:MMM dd}): Please submit '{template.Title}' form";
+
+                        bodyMessage = $@"
 <p>The form <strong>{template.Title}</strong> is now available for submission.</p>
 <p>Please complete and submit the form as soon as possible.</p>
 <p><strong>Submission time:</strong> {scheduledUtc.ToLocalTime():hh:mm tt}</p>";
-                }
-                // ✅ REMINDER
-                else if (indiaNow.Date == scheduledIst.Date && template.ReminderBeforeMinutes > 0)
-                {
-                    subject = $"Reminder: '{template.Title}' form is due today";
+                    }
+                    // REMINDER (today only)
+                    else if (indiaNow.Date == scheduledIst.Date && template.ReminderBeforeMinutes > 0 && periodDate == lastScheduledIndia.Date)
+                    {
+                        subject = $"Reminder: '{template.Title}' form is due today";
 
-                    bodyMessage = $@"
+                        bodyMessage = $@"
 <p>This is a reminder that your form <strong>{template.Title}</strong> 
 will be due today.</p>
 <p>Please ensure it is completed before the deadline.</p>";
-                }
-                // ✅ OVERDUE
-                else if (indiaNow.Date > scheduledIst.Date)
-                {
-                    if (overdueDays >= 3)
+                    }
+                    // OVERDUE (FIXED)
+                    else if (indiaNow.Date > periodDate)
                     {
-                        addViewerInCc = true;
+                        if (overdueDaysForPeriod >= 3)
+                        {
+                            addViewerInCc = true;
 
-                        subject = $"⚠️ Escalation ({lastScheduledIndia:MMM dd}): '{template.Title}' overdue for {overdueDays} days";
+                            subject = $"⚠️ Escalation ({periodDate:MMM dd}): '{template.Title}' overdue for {overdueDaysForPeriod} days";
 
-                        bodyMessage = $@"
+                            bodyMessage = $@"
 <p>
 The form <strong>{template.Title}</strong> for 
-<strong>{lastScheduledIndia:MMM dd, yyyy}</strong> has been 
-<strong style='color:red;'>overdue for {overdueDays} days</strong>.
+<strong>{periodDate:MMM dd, yyyy}</strong> has been 
+<strong style='color:red;'>overdue for {overdueDaysForPeriod} days</strong>.
 </p>
 <p>The assigned submitter has not completed the form.</p>
 <p><strong>Viewers have been copied for awareness and follow-up.</strong></p>";
+                        }
+                        else
+                        {
+                            subject = $"Overdue ({periodDate:MMM dd}): '{template.Title}' form still pending";
+
+                            bodyMessage = $@"
+<p>
+You did not submit the <strong>{template.Title}</strong> form for 
+<strong>{periodDate:MMM dd, yyyy}</strong>.
+</p>
+<p>Please submit it as soon as possible.</p>";
+                        }
                     }
                     else
                     {
-                        subject = $"Overdue ({lastScheduledIndia:MMM dd}): '{template.Title}' form still pending";
-
-                        bodyMessage = $@"
-<p>
-You did not submit the <strong>{template.Title}</strong> form for 
-<strong>{lastScheduledIndia:MMM dd, yyyy}</strong>.
-</p>
-<p>Please submit it as soon as possible.</p>";
+                        continue;
                     }
-                }
-                else
-                {
-                    if (template.ReminderBeforeMinutes <= 0)
+
+                    // Prevent duplicate emails
+                    var emailAlreadySent = await _queuedEmailRepo.Table.AnyAsync(e =>
+                        e.To == employee.OfficialEmail &&
+                        e.Subject.Contains(template.Title) &&
+                        e.Body.Contains(periodDate.ToString("MMM dd")) &&
+                        e.CreatedOnUtc.Date == nowUtc.Date
+                    );
+
+                    if (emailAlreadySent)
                         continue;
 
-                    subject = $"Reminder: Please fill the '{template.Title}' form";
+                    var formLink = $"{store.Url.TrimEnd('/')}/UpdateSubmission/Submit/{template.Id}?periodId={period.Id}";
 
-                    bodyMessage = $@"
-<p>This is a reminder to complete the 
-<strong>{template.Title}</strong> form before the deadline.</p>";
-                }
-
-                // ✅ FIX: allow multiple overdue emails (date-based)
-                var emailAlreadySent = await _queuedEmailRepo.Table.AnyAsync(e =>
-                    e.To == employee.OfficialEmail &&
-                    e.Subject.Contains(template.Title) &&
-                    e.CreatedOnUtc.Date == nowUtc.Date &&
-                    e.Body.Contains(lastScheduledIndia.ToString("MMM dd"))
-                );
-
-                if (emailAlreadySent)
-                    continue;
-
-                var formLink = $"{store.Url.TrimEnd('/')}/UpdateSubmission/Submit/{template.Id}";
-                var periodId = currentPeriod.Id;
-
-                if (periodId > 0)
-                    formLink += $"?periodId={periodId}";
-
-                var body = $@"
+                    var body = $@"
 <p>Dear {employee.FirstName} {employee.LastName},</p>
 
 {bodyMessage}
@@ -569,30 +563,32 @@ Fill The Form
 </table>
 </p>";
 
-                var email = new QueuedEmail
-                {
-                    From = emailAccount.Email,
-                    FromName = emailAccount.DisplayName,
-                    To = employee.OfficialEmail,
-                    CC = addViewerInCc && viewerEmails.Any() ? string.Join(";", viewerEmails) : null,
-                    Subject = subject,
-                    Body = body,
-                    Priority = QueuedEmailPriority.High,
-                    CreatedOnUtc = nowUtc,
-                    EmailAccountId = emailAccount.Id
-                };
+                    var email = new QueuedEmail
+                    {
+                        From = emailAccount.Email,
+                        FromName = emailAccount.DisplayName,
+                        To = employee.OfficialEmail,
+                        CC = addViewerInCc && viewerEmails.Any() ? string.Join(";", viewerEmails) : null,
+                        Subject = subject,
+                        Body = body,
+                        Priority = QueuedEmailPriority.High,
+                        CreatedOnUtc = nowUtc,
+                        EmailAccountId = emailAccount.Id
+                    };
 
-                await _queuedEmailService.InsertQueuedEmailAsync(email);
-                anyEmailQueued = true;
+                    await _queuedEmailService.InsertQueuedEmailAsync(email);
+                    anyEmailQueued = true;
+                }
             }
 
-            // ✅ update last reminder
+            // Update last reminder ONCE (safe)
             if (anyEmailQueued)
             {
                 template.LastReminderSentUtc = nowUtc;
                 await _templateRepo.UpdateAsync(template);
             }
         }
+      
         private bool IsReminderDueToday(UpdateTemplate template, DateTime nowUtc)
         {
             // Set up IST time zone

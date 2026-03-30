@@ -1,0 +1,1471 @@
+@using Satyanam.Plugin.Misc.AccountManagement.Services
+<div class="exec-dashboard content-header">
+    <div class="container-fluid">
+
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Title")</h1>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+
+                <div class="section-header">
+                    <span class="section-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.FinancialPerformance.Title")</span>
+                    <div class="btn-group granularity-toggle" role="group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm active" data-granularity="3">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Granularity.Month")</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-granularity="4">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Granularity.Year")</button>
+                    </div>
+                </div>
+
+<div id="preset-bar-month" class="preset-bar">
+                    <button class="btn-preset active" data-preset="lastmonth">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Preset.LastMonth")</button>
+                    <button class="btn-preset" data-preset="thismonth">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Preset.ThisMonth")</button>
+                    <button class="btn-preset" data-preset="last3months">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Preset.Last3Months")</button>
+                    <button class="btn-preset" data-preset="last6months">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Preset.Last6Months")</button>
+                    <div class="period-inputs ms-2">
+                        <select id="monthFromSelector">
+                            @for (var m = 1; m <= 12; m++) { <option value="@m">@(new DateTime(2000, m, 1).ToString("MMM"))</option> }
+                        </select>
+                        <select id="yearFromMonthSelector">
+                            @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                        </select>
+                        <span style="font-size:12px;color:#6b7280;padding:0 4px;">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Period.To")</span>
+                        <select id="monthToSelector">
+                            @for (var m = 1; m <= 12; m++) { <option value="@m">@(new DateTime(2000, m, 1).ToString("MMM"))</option> }
+                        </select>
+                        <select id="yearToMonthSelector">
+                            @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                        </select>
+                    </div>
+                </div>
+
+                <div id="preset-bar-year" class="preset-bar" style="display:none;">
+                    <button class="btn-preset" data-preset="thisyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Preset.ThisYear")</button>
+                    <button class="btn-preset" data-preset="lastyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Preset.LastYear")</button>
+                    <div class="period-inputs ms-2">
+                        <select id="yearFromSelector">
+                            @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
+                            {
+                                <option value="@y">@y</option>
+                            }
+                        </select>
+                        <span style="font-size:12px;color:#6b7280;padding:0 4px;">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Period.To")</span>
+                        <select id="yearToSelector">
+                            @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
+                            {
+                                <option value="@y">@y</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card revenue" data-card="revenue">
+                        <div class="kpi-card-top">
+                            <span class="kpi-label kpi-label-wrap">
+                                @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.TotalRevenue")
+                                <i class="fas fa-info-circle kpi-info-icon" data-toggle="tooltip" data-placement="top" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.Tooltip.TotalRevenue")"></i>
+                            </span>
+                            <div class="kpi-icon"><i class="fas fa-rupee-sign"></i></div>
+                        </div>
+                        <div class="kpi-value" id="val-revenue">—</div>
+                        <div><span class="kpi-trend neutral" id="trend-revenue">—</span></div>
+                        <div class="kpi-subtitle" id="sub-revenue"></div>
+                        <div class="kpi-sparkline-wrap"><canvas id="spark-revenue"></canvas></div>
+                        <div class="kpi-loading" id="load-revenue"><div class="spinner-sm"></div></div>
+                    </div>
+
+                    <div class="kpi-card gross" data-card="gross">
+                        <div class="kpi-card-top">
+                            <span class="kpi-label kpi-label-wrap">
+                                @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.GrossProfitPercent")
+                                <i class="fas fa-info-circle kpi-info-icon" data-toggle="tooltip" data-placement="top" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.Tooltip.GrossProfit")"></i>
+                            </span>
+                            <div class="kpi-icon"><i class="fas fa-chart-bar"></i></div>
+                        </div>
+                        <div class="kpi-value" id="val-gross">—</div>
+                        <div><span class="kpi-trend neutral" id="trend-gross">—</span></div>
+                        <div class="kpi-subtitle" id="sub-gross"></div>
+                        <div class="kpi-sparkline-wrap"><canvas id="spark-gross"></canvas></div>
+                        <div class="kpi-loading" id="load-gross"><div class="spinner-sm"></div></div>
+                    </div>
+
+                    <div class="kpi-card net" data-card="net">
+                        <div class="kpi-card-top">
+                            <span class="kpi-label kpi-label-wrap">
+                                @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.NetProfitPercent")
+                                <i class="fas fa-info-circle kpi-info-icon" data-toggle="tooltip" data-placement="top" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.Tooltip.NetProfit")"></i>
+                            </span>
+                            <div class="kpi-icon"><i class="fas fa-percentage"></i></div>
+                        </div>
+                        <div class="kpi-value" id="val-net">—</div>
+                        <div><span class="kpi-trend neutral" id="trend-net">—</span></div>
+                        <div class="kpi-subtitle" id="sub-net"></div>
+                        <div class="kpi-sparkline-wrap"><canvas id="spark-net"></canvas></div>
+                        <div class="kpi-loading" id="load-net"><div class="spinner-sm"></div></div>
+                    </div>
+
+                    <div class="kpi-card cashflow" data-card="cashflow">
+                        <div class="kpi-card-top">
+                            <span class="kpi-label kpi-label-wrap">
+                                @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.NetCashFlow")
+                                <i class="fas fa-info-circle kpi-info-icon" data-toggle="tooltip" data-placement="top" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.Tooltip.NetCashFlow")"></i>
+                            </span>
+                            <div class="kpi-icon"><i class="fas fa-exchange-alt"></i></div>
+                        </div>
+                        <div class="kpi-value" id="val-cashflow">—</div>
+                        <div><span class="kpi-trend neutral" id="trend-cashflow">—</span></div>
+                        <div class="kpi-subtitle" id="sub-cashflow"></div>
+                        <div class="kpi-sparkline-wrap"><canvas id="spark-cashflow"></canvas></div>
+                        <div class="kpi-loading" id="load-cashflow"><div class="spinner-sm"></div></div>
+                    </div>
+                </div>
+
+                <div class="cashflow-chart-section">
+                    <div class="cashflow-chart-header">
+                        <span class="cashflow-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.CashFlowOverview")</span>
+                        <span id="cashflow-chart-note" style="font-size:11px;color:#9ca3af;">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.CashFlowNote")</span>
+                    </div>
+                    <div class="cashflow-chart-wrap">
+                        <canvas id="cashflow-overview-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="rev-cost-chart-section">
+                    <div class="cashflow-chart-header">
+                        <span class="cashflow-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.RevenueVsDirectCost")</span>
+                        <span id="revcost-chart-note" style="font-size:11px;color:#9ca3af;">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.RevCostNote")</span>
+                    </div>
+                    <div class="rev-cost-chart-wrap">
+                        <canvas id="rev-cost-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="inv-status-section">
+                    <div class="cashflow-chart-header">
+                        <span class="cashflow-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Title")</span>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="font-size:11px;color:#9ca3af;">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.ClickHint")</span>
+                            <select id="inv-period-filter" style="font-size:12px;padding:4px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;cursor:pointer;">
+                                <option value="3">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Filter.Last3Months")</option>
+                                <option value="6" selected>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Filter.Last6Months")</option>
+                                <option value="12">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Filter.Last1Year")</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="inv-status-layout">
+                        <div class="inv-donut-wrap">
+                            <canvas id="inv-donut-chart"></canvas>
+                            <div class="inv-donut-center">
+                                <div class="inv-donut-total-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Total")</div>
+                                <div class="inv-donut-total-value" id="inv-donut-total">—</div>
+                            </div>
+                        </div>
+                        <div class="inv-status-grid">
+                            <div class="inv-stat-card paid" data-inv-status="Paid">
+                                <div class="inv-stat-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Paid")</div>
+                                <div class="inv-stat-count" id="inv-count-paid">—</div>
+                                <div class="inv-stat-sub">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.InvoicesCount")</div>
+                                <div class="inv-stat-amount" id="inv-amount-paid">—</div>
+                            </div>
+                            <div class="inv-stat-card pending" data-inv-status="Pending">
+                                <div class="inv-stat-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Pending")</div>
+                                <div class="inv-stat-count" id="inv-count-pending">—</div>
+                                <div class="inv-stat-sub">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.InvoicesCount")</div>
+                                <div class="inv-stat-amount" id="inv-amount-pending">—</div>
+                            </div>
+                            <div class="inv-stat-card overdue" data-inv-status="Overdue">
+                                <div class="inv-stat-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Overdue")</div>
+                                <div class="inv-stat-count" id="inv-count-overdue">—</div>
+                                <div class="inv-stat-sub">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.PastDueDate")</div>
+                                <div class="inv-stat-amount" id="inv-amount-overdue">—</div>
+                            </div>
+                            <div class="inv-stat-card draft" data-inv-status="Draft">
+                                <div class="inv-stat-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Draft")</div>
+                                <div class="inv-stat-count" id="inv-count-draft">—</div>
+                                <div class="inv-stat-sub">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.NotSent")</div>
+                                <div class="inv-stat-amount" id="inv-amount-draft">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="invoiceListModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="invoiceListModalTitle">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.InvoiceList.Title")</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="invoiceListModalBody">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="kpiDetailModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="kpiDetailModalTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="kpiDetailModalBody">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    var sparkCharts = {};
+    var cashflowOverviewChart = null;
+    var revCostChart = null;
+    var invDonutChart = null;
+    var invoiceEditBaseUrl = '@Url.Action("InvoiceEdit", "AccountManagement")';
+
+    var now = new Date();
+    var fyStartMonth = @(ViewBag.FyStartMonth ?? 4);
+    var _t = {
+        trendNewUp:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Trend.NewUp")',
+        trendNewDown:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Trend.NewDown")',
+        trendNA:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Trend.NA")',
+        cashIn:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.CashIn")',
+        cashOut:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.CashOut")',
+        revenue:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.Revenue")',
+        directCost:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.DirectCost")',
+        netProfit:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.NetProfit")',
+        expense:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.Expense")',
+        salaryCost:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.SalaryCost")',
+        noData:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.NoData")',
+        noRevenue:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.NoRevenue")',
+        cashFlowNote:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.CashFlowNote")',
+        revCostNote:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.RevCostNote")',
+        paid:           '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Paid")',
+        pending:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Pending")',
+        overdue:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Overdue")',
+        draft:          '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Draft")',
+        failedToLoad:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.InvoiceList.FailedToLoad")',
+        invNumber:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.InvoiceList.Invoice")',
+        invTitle:       '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.InvoiceList.ItemTitle")',
+        invDate:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.InvoiceList.InvoiceDate")',
+        invDueDate:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.InvoiceList.DueDate")',
+        colAmount:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.Columns.Amount")',
+        daysOverdue:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.InvoiceList.DaysOverdue")',
+        noInvoices:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.InvoiceList.NoInvoices")',
+        howCalculated:  '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.GrossProfit.HowCalculated")',
+        formulaRev:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.GrossProfit.FormulaRevenue")',
+        formulaSalTxn:  '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.GrossProfit.FormulaSalaryTxn")',
+        formulaGP:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.GrossProfit.FormulaResult")',
+        gpSalaryCost:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.GrossProfit.SalaryCost")',
+        npRevenue:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.NetProfit.Revenue")',
+        npTotalExpense: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.NetProfit.TotalExpense")',
+        subCashIn:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.SubCashIn")',
+        subCashOut:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.SubCashOut")',
+        subSalaries:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.SubSalaries")',
+        subRev:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.SubRev")'
+    };
+    var currentFYStartYear = (now.getMonth() + 1 >= fyStartMonth) ? now.getFullYear() : now.getFullYear() - 1;
+
+    var lastMonth = now.getMonth() === 0 ? 12 : now.getMonth();
+    var lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    var state = {
+        granularity: 3,
+        monthFrom: lastMonth, yearFrom: lastMonthYear,
+        monthTo: lastMonth, yearTo: lastMonthYear,
+        yearFrom: currentFYStartYear, yearTo: currentFYStartYear
+    };
+
+    function addMonths(month, year, n) {
+        var d = new Date(year, month - 1 + n, 1);
+        return { month: d.getMonth() + 1, year: d.getFullYear() };
+    }
+
+    $('#monthFromSelector').val(state.monthFrom); $('#yearFromMonthSelector').val(state.yearFrom);
+    $('#monthToSelector').val(state.monthTo);     $('#yearToMonthSelector').val(state.yearTo);
+    $('#yearFromSelector').val(state.yearFrom);   $('#yearToSelector').val(state.yearTo);
+    function fyLabel(year) {
+        if (fyStartMonth === 1) return year.toString();
+        var endYr = (year + 1) % 100;
+        return 'FY ' + year + '-' + (endYr < 10 ? '0' + endYr : endYr);
+    }
+    if (fyStartMonth !== 1) {
+        $('#yearFromSelector option, #yearToSelector option').each(function () {
+            $(this).text(fyLabel(parseInt($(this).val())));
+        });
+    }
+
+    function fmt(n) {
+        if (n == null || n === '') return '—';
+        return '₹' + parseFloat(n).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+    function fmtPct(n) {
+        if (n == null) return '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.NoData")';
+        return parseFloat(n).toFixed(1) + '%';
+    }
+    function setTrend(id, current, previous, isAmount) {
+        var $el = $('#' + id);
+        if (!$el.length) return;
+        var $new = $(trendHtml(current, previous, isAmount));
+        $el.attr('class', $new.attr('class')).html($new.html());
+    }
+    function trendHtml(current, previous, isAmount) {
+        if (previous == null || previous === 0) {
+            if (current != null && current > 0) return '<span class="kpi-trend up">' + _t.trendNewUp + '</span>';
+            if (current != null && current < 0) return '<span class="kpi-trend down">' + _t.trendNewDown + '</span>';
+            return '<span class="kpi-trend neutral">' + _t.trendNA + '</span>';
+        }
+        var diff = ((current - previous) / Math.abs(previous)) * 100;
+        var up = diff >= 0;
+        var icon = up ? '↑' : '↓';
+        var cls = up ? 'up' : 'down';
+        return '<span class="kpi-trend ' + cls + '">' + icon + ' ' + Math.abs(diff).toFixed(1) + '%</span>';
+    }
+    function trendPctHtml(current, previous) {
+        if (previous == null || previous < -0.5) return '<span class="kpi-trend neutral">— N/A</span>';
+        var diff = current - previous;
+        var up = diff >= 0;
+        var icon = up ? '↑' : '↓';
+        var cls = up ? 'up' : 'down';
+        return '<span class="kpi-trend ' + cls + '">' + icon + ' ' + Math.abs(diff).toFixed(1) + 'pp</span>';
+    }
+
+    function showLoaders() {
+        ['revenue', 'gross', 'net', 'cashflow'].forEach(function (k) { $('#load-' + k).show(); });
+    }
+    function hideLoaders() {
+        ['revenue', 'gross', 'net', 'cashflow'].forEach(function (k) { $('#load-' + k).hide(); });
+    }
+
+    var sparkCfg = {
+        type: 'line',
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: { x: { display: false }, y: { display: false } },
+            elements: { point: { radius: 0 }, line: { borderWidth: 2, tension: 0.4 } },
+            animation: false
+        }
+    };
+
+    function drawSparkline(id, points, color) {
+        var canvas = document.getElementById(id);
+        if (!canvas) return;
+        if (sparkCharts[id]) { sparkCharts[id].destroy(); }
+        var cfg = JSON.parse(JSON.stringify(sparkCfg));
+        cfg.data = {
+            labels: points.map(function (_, i) { return i; }),
+            datasets: [{ data: points, borderColor: color, backgroundColor: color + '22', fill: true }]
+        };
+        sparkCharts[id] = new Chart(canvas, cfg);
+    }
+
+    function drawCashFlowChart(labels, cashIn, cashOut) {
+        var canvas = document.getElementById('cashflow-overview-chart');
+        if (!canvas) return;
+        if (cashflowOverviewChart) { cashflowOverviewChart.destroy(); cashflowOverviewChart = null; }
+        cashflowOverviewChart = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: _t.cashIn,
+                        data: cashIn,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.08)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#10b981'
+                    },
+                    {
+                        label: _t.cashOut,
+                        data: cashOut,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239,68,68,0.06)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#ef4444'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top', labels: { font: { size: 12 }, boxWidth: 12, padding: 16 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                return ' ' + ctx.dataset.label + ': ₹' + parseFloat(ctx.raw).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 } } },
+                    y: {
+                        grid: { color: '#f3f4f6' },
+                        ticks: {
+                            font: { size: 11 },
+                            callback: function (v) { return '₹' + (v >= 100000 ? (v / 100000).toFixed(1) + 'L' : v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v); }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function drawRevCostChart(labels, revenue, directCost, netProfit) {
+        var canvas = document.getElementById('rev-cost-chart');
+        if (!canvas) return;
+        if (revCostChart) { revCostChart.destroy(); revCostChart = null; }
+        var yFmt = function (v) { return '₹' + (v >= 10000000 ? (v/10000000).toFixed(1)+'Cr' : v >= 100000 ? (v/100000).toFixed(1)+'L' : v >= 1000 ? (v/1000).toFixed(0)+'K' : v); };
+        revCostChart = new Chart(canvas, {
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: _t.revenue,
+                        data: revenue,
+                        backgroundColor: 'rgba(6,182,212,0.75)',
+                        borderColor: '#06b6d4',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        order: 2
+                    },
+                    {
+                        type: 'bar',
+                        label: _t.directCost,
+                        data: directCost,
+                        backgroundColor: 'rgba(139,92,246,0.75)',
+                        borderColor: '#8b5cf6',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        order: 2
+                    },
+                    {
+                        type: 'line',
+                        label: _t.netProfit,
+                        data: netProfit,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.08)',
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#10b981',
+                        tension: 0.4,
+                        fill: false,
+                        order: 1,
+                        yAxisID: 'y'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top', labels: { font: { size: 12 }, boxWidth: 12, padding: 16 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                return ' ' + ctx.dataset.label + ': ₹' + parseFloat(ctx.raw).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 } } },
+                    y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 }, callback: yFmt } }
+                }
+            }
+        });
+    }
+
+    function updateCards(d) {
+        if (!d || typeof d !== 'object') return;
+        $('#val-revenue').text(fmt(d.revenue));
+        setTrend('trend-revenue', d.revenue, d.prevRevenue, true);
+        $('#sub-revenue').text('vs ' + fmt(d.prevRevenue) + ' ' + (d.prevPeriodLabel || ''));
+        var gVal = d.grossPct == null ? '—' : parseFloat(d.grossPct).toFixed(1) + '%';
+        $('#val-gross').text(gVal);
+        setTrend('trend-gross', d.grossPct != null ? parseFloat(d.grossPct) : null, d.prevGrossPct != null ? parseFloat(d.prevGrossPct) : null, false);
+        $('#sub-gross').text(d.grossPct == null ? _t.noRevenue : _t.subRev + ' ' + fmt(d.revenue) + ' · ' + _t.subSalaries + ' ' + fmt(d.directCost));
+        var nVal = d.netPct == null ? '—' : parseFloat(d.netPct).toFixed(1) + '%';
+        var netColor = d.netPct == null ? '#9ca3af' : (d.netPct >= 0 ? '#111827' : '#dc2626');
+        $('#val-net').text(nVal).css('color', netColor);
+        setTrend('trend-net', d.netPct != null ? parseFloat(d.netPct) : null, d.prevNetPct != null ? parseFloat(d.prevNetPct) : null, false);
+        $('#sub-net').text(d.netPct == null ? _t.noRevenue : 'After overheads ' + fmt(d.totalExpense));
+        var cfPositive = d.netCashFlow >= 0;
+        $('#val-cashflow').text(fmt(d.netCashFlow)).css('color', cfPositive ? '#111827' : '#dc2626');
+        setTrend('trend-cashflow', d.netCashFlow, d.prevNetCashFlow, true);
+        $('#sub-cashflow').text(_t.subCashIn + ' ' + fmt(d.cashIn || d.revenue) + ' · ' + _t.subCashOut + ' ' + fmt(d.totalExpense));
+
+        drawSparkline('spark-revenue', d.revenuePoints || [], '#0d9488');
+        drawSparkline('spark-gross', d.revenuePoints || [], '#16a34a');
+        drawSparkline('spark-net', (d.netProfitPoints || d.cashFlowPoints || []), '#d97706');
+        drawSparkline('spark-cashflow', d.cashFlowPoints || [], '#2563eb');
+
+        var chartNote = d.chartNote || '';
+        $('#cashflow-chart-note').text(chartNote ? _t.cashIn + ' vs ' + _t.cashOut + ' · ' + chartNote : _t.cashFlowNote);
+        $('#revcost-chart-note').text(chartNote ? _t.revenue + ' · ' + _t.salaryCost + ' · ' + _t.netProfit + ' · ' + chartNote : _t.revCostNote);
+
+        drawCashFlowChart(d.sparklineLabels || [], d.cashInPoints || [], d.cashOutPoints || []);
+
+        var netProfitPoints = (d.cashInPoints || []).map(function (r, i) { return r - (d.cashOutPoints || [])[i]; });
+        drawRevCostChart(d.sparklineLabels || [], d.cashInPoints || [], d.directCostPoints || [], netProfitPoints);
+    }
+
+    function buildRequestData() {
+        var data = { granularityId: state.granularity };
+        if (state.granularity === 3) {
+            data.monthFrom = state.monthFrom; data.yearFrom = state.yearFrom;
+            data.monthTo = state.monthTo;     data.yearTo = state.yearTo;
+        } else if (state.granularity === 4) {
+            data.yearFrom = state.yearFrom;
+            data.yearTo = state.yearTo;
+        }
+        addAntiForgeryToken(data);
+        return data;
+    }
+
+    var lastInvoiceSummary = null; 
+
+    function loadKPIData() {
+        showLoaders();
+        $.ajax({
+            cache: false,
+            type: 'POST',
+            url: '@Url.Action("GetFinancialKPIData", "ExecutiveDashboard")',
+            data: buildRequestData(),
+            success: function (d) {
+                if (d && typeof d === 'object') { updateCards(d); }
+                hideLoaders();
+            },
+            error: function (xhr) {
+                hideLoaders();
+                console.error('KPI load failed', xhr.status, xhr.responseText);
+            }
+        });
+    }
+
+    function drawInvoiceDonut(paid, pending, overdue, draft) {
+        paid = paid || 0; pending = pending || 0; overdue = overdue || 0; draft = draft || 0;
+        var canvas = document.getElementById('inv-donut-chart');
+        if (!canvas) return;
+        if (invDonutChart) { invDonutChart.destroy(); invDonutChart = null; }
+
+        var total = paid + pending + overdue + draft;
+        var allZero = total === 0;
+        var totalFmt = allZero ? '—'
+            : total >= 10000000 ? '₹' + (total / 10000000).toFixed(1) + 'Cr'
+            : total >= 100000  ? '₹' + (total / 100000).toFixed(1) + 'L'
+            : total >= 1000    ? '₹' + (total / 1000).toFixed(0) + 'K'
+            : '₹' + total.toFixed(0);
+        $('#inv-donut-total').text(totalFmt);
+
+        invDonutChart = new Chart(canvas, {
+            type: 'doughnut',
+            data: {
+                labels: [_t.paid, _t.pending, _t.overdue, _t.draft],
+                datasets: [{
+                    data: allZero ? [1, 0, 0, 0] : [paid, pending, overdue, draft],
+                    backgroundColor: allZero
+                        ? ['#e5e7eb', '#e5e7eb', '#e5e7eb', '#e5e7eb']
+                        : ['#16a34a', '#2563eb', '#dc2626', '#d1d5db'],
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                cutout: '68%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                if (allZero) return ' ' + _t.noData;
+                                var val = ctx.raw;
+                                var pct = total > 0 ? ' (' + ((val / total) * 100).toFixed(1) + '%)' : '';
+                                return ' ' + ctx.label + ': ₹' + parseFloat(val).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + pct;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    function buildInvoiceRequestData() {
+        var months = parseInt($('#inv-period-filter').val());
+        var today = new Date();
+        var toMonth = today.getMonth() + 1;
+        var toYear = today.getFullYear();
+        var from = addMonths(toMonth, toYear, -(months - 1));
+        var data = {
+            granularityId: 3,
+            monthFrom: from.month, yearFrom: from.year,
+            monthTo: toMonth, yearTo: toYear
+        };
+        addAntiForgeryToken(data);
+        return data;
+    }
+    function loadInvoiceStatusSummary() {
+        $('.inv-stat-card').addClass('inv-loading');
+        $.ajax({
+            cache: false,
+            type: 'POST',
+            url: '@Url.Action("GetInvoiceStatusSummary", "ExecutiveDashboard")',
+            data: buildInvoiceRequestData(),
+            success: function (d) {
+                if (!d || !d.paid || !d.pending || !d.overdue || !d.draft) return;
+                lastInvoiceSummary = d;
+                $('#inv-count-paid').text((d.paid && d.paid.count) || 0);
+                $('#inv-amount-paid').text(fmt((d.paid && d.paid.amount) || 0));
+                $('#inv-count-pending').text((d.pending && d.pending.count) || 0);
+                $('#inv-amount-pending').text(fmt((d.pending && d.pending.amount) || 0));
+                $('#inv-count-overdue').text((d.overdue && d.overdue.count) || 0);
+                $('#inv-amount-overdue').text(fmt((d.overdue && d.overdue.amount) || 0));
+                $('#inv-count-draft').text((d.draft && d.draft.count) || 0);
+                $('#inv-amount-draft').text(fmt((d.draft && d.draft.amount) || 0));
+                drawInvoiceDonut((d.paid && d.paid.amount) || 0, (d.pending && d.pending.amount) || 0, (d.overdue && d.overdue.amount) || 0, (d.draft && d.draft.amount) || 0);
+                $('.inv-stat-card').removeClass('inv-loading');
+            },
+            error: function (xhr) {
+                $('.inv-stat-card').removeClass('inv-loading');
+                console.error('Invoice summary failed', xhr.status, xhr.responseText);
+            }
+        });
+    }
+    function loadAll() {
+        loadKPIData();
+    }
+    $('.granularity-toggle .btn').on('click', function () {
+        $('.granularity-toggle .btn').removeClass('active');
+        $(this).addClass('active');
+        state.granularity = parseInt($(this).data('granularity'));
+        $('#preset-bar-month').toggle(state.granularity === 3);
+        $('#preset-bar-year').toggle(state.granularity === 4);
+        if (state.granularity === 3) applyPreset('lastmonth');
+        else applyPreset('thisyear');
+    });
+
+    function applyPreset(preset) {
+        var today = new Date();
+
+        $('.btn-preset').removeClass('active');
+        $('[data-preset="' + preset + '"]').addClass('active');
+
+        switch (preset) {
+            case 'thismonth':
+                var tm = addMonths(today.getMonth() + 1, today.getFullYear(), 0);
+                state.monthFrom = tm.month; state.yearFrom = tm.year;
+                state.monthTo = tm.month;   state.yearTo = tm.year;
+                syncMonthSelectors(); break;
+            case 'lastmonth':
+                var lm = addMonths(today.getMonth() + 1, today.getFullYear(), -1);
+                state.monthFrom = lm.month; state.yearFrom = lm.year;
+                state.monthTo = lm.month;   state.yearTo = lm.year;
+                syncMonthSelectors(); break;
+            case 'last3months':
+                var l3to = addMonths(today.getMonth() + 1, today.getFullYear(), -1);
+                var l3from = addMonths(l3to.month, l3to.year, -2);
+                state.monthFrom = l3from.month; state.yearFrom = l3from.year;
+                state.monthTo = l3to.month;     state.yearTo = l3to.year;
+                syncMonthSelectors(); break;
+            case 'last6months':
+                var l6to = addMonths(today.getMonth() + 1, today.getFullYear(), -1);
+                var l6from = addMonths(l6to.month, l6to.year, -5);
+                state.monthFrom = l6from.month; state.yearFrom = l6from.year;
+                state.monthTo = l6to.month;     state.yearTo = l6to.year;
+                syncMonthSelectors(); break;
+            case 'thisyear':
+                var fyThis = (today.getMonth() + 1 >= fyStartMonth) ? today.getFullYear() : today.getFullYear() - 1;
+                state.yearFrom = fyThis; state.yearTo = fyThis;
+                $('#yearFromSelector').val(state.yearFrom); $('#yearToSelector').val(state.yearTo); break;
+            case 'lastyear':
+                var fyLast = ((today.getMonth() + 1 >= fyStartMonth) ? today.getFullYear() : today.getFullYear() - 1) - 1;
+                state.yearFrom = fyLast; state.yearTo = fyLast;
+                $('#yearFromSelector').val(state.yearFrom); $('#yearToSelector').val(state.yearTo); break;
+        }
+        loadAll();
+    }
+
+    function syncMonthSelectors() {
+        $('#monthFromSelector').val(state.monthFrom); $('#yearFromMonthSelector').val(state.yearFrom);
+        $('#monthToSelector').val(state.monthTo);     $('#yearToMonthSelector').val(state.yearTo);
+    }
+
+    $('.btn-preset').on('click', function () { applyPreset($(this).data('preset')); });
+
+    $('#monthFromSelector, #yearFromMonthSelector, #monthToSelector, #yearToMonthSelector').on('change', function () {
+        state.monthFrom = parseInt($('#monthFromSelector').val());
+        state.yearFrom  = parseInt($('#yearFromMonthSelector').val());
+        state.monthTo   = parseInt($('#monthToSelector').val());
+        state.yearTo    = parseInt($('#yearToMonthSelector').val());
+        $('.btn-preset').removeClass('active');
+        loadAll();
+    });
+
+    $('#yearFromSelector, #yearToSelector').on('change', function () {
+        state.yearFrom = parseInt($('#yearFromSelector').val());
+        state.yearTo = parseInt($('#yearToSelector').val());
+        $('.btn-preset').removeClass('active');
+        loadAll();
+    });
+    var modalDetailChart = null;
+    var actionMap = {
+        revenue: '@Url.Action("GetRevenueDetail", "ExecutiveDashboard")',
+        gross: '@Url.Action("GetGrossProfitDetail", "ExecutiveDashboard")',
+        net: '@Url.Action("GetNetProfitDetail", "ExecutiveDashboard")',
+        cashflow: '@Url.Action("GetCashFlowDetail", "ExecutiveDashboard")'
+    };
+    var modalTitles = {
+        revenue: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.RevenueDetail")',
+        gross: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.GrossProfitDetail")',
+        net: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.NetProfitDetail")',
+        cashflow: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlowDetail")'
+    };
+
+    $('.kpi-card').on('click', function () {
+        var cardType = $(this).data('card');
+        if (!cardType) return; // ignore ops section cards (they use data-ops-card)
+        $('#kpiDetailModalTitle').text(modalTitles[cardType]);
+        $('#kpiDetailModalBody').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
+        $('#kpiDetailModal').modal('show');
+
+        $.ajax({
+            cache: false,
+            type: 'POST',
+            url: actionMap[cardType],
+            data: buildRequestData(),
+            success: function (d) {
+                if (modalDetailChart) { modalDetailChart.destroy(); modalDetailChart = null; }
+                renderDetailModal(cardType, d);
+            },
+            error: function (xhr) {
+                $('#kpiDetailModalBody').html('<div class="text-center text-danger py-3">' + _t.failedToLoad + '</div>');
+                console.error('Detail load failed', xhr.status, xhr.responseText);
+            }
+        });
+    });
+    $('#kpiDetailModal').on('hidden.bs.modal', function () {
+        if (modalDetailChart) { modalDetailChart.destroy(); modalDetailChart = null; }
+    });
+    $('.inv-stat-card').on('click', function () {
+        if (!lastInvoiceSummary || !lastInvoiceSummary.invoices) return;
+        var status = $(this).data('inv-status'); 
+        var filtered = lastInvoiceSummary.invoices.filter(function (inv) { return inv.statusLabel === status; });
+        var statusClass = status.toLowerCase();
+        var totalAmount = filtered.reduce(function (sum, inv) { return sum + inv.amount; }, 0);
+
+        $('#invoiceListModalTitle').html(
+            '<span class="inv-status-badge ' + statusClass + '">' + status + '</span> &nbsp;Invoices &nbsp;<small class="text-muted" style="font-size:13px;">' + filtered.length + ' invoice' + (filtered.length !== 1 ? 's' : '') + ' · ' + fmt(totalAmount) + '</small>'
+        );
+        var html = '';
+        if (!filtered.length) {
+            html = '<div class="text-center text-muted py-4">' + (_t.noInvoices || 'No {0} invoices in this period.').replace('{0}', (status || '').toLowerCase()) + '</div>';
+        } else {
+            html += '<div class="table-responsive">';
+            html += '<table class="table table-sm table-hover">';
+            html += '<thead><tr>';
+            html += '<th>' + _t.invNumber + '</th>';
+            html += '<th>' + _t.invTitle + '</th>';
+            html += '<th>' + _t.invDate + '</th>';
+            html += '<th>' + _t.invDueDate + '</th>';
+            html += '<th class="text-right">' + _t.colAmount + '</th>';
+            if (status === 'Overdue') { html += '<th>' + _t.daysOverdue + '</th>'; }
+            html += '</tr></thead><tbody>';
+            var rows = status === 'Overdue'
+                ? filtered.slice().sort(function (a, b) { return b.daysOverdue - a.daysOverdue; })
+                : filtered;
+
+            $.each(rows, function (_, inv) {
+                html += '<tr>';
+                html += '<td><strong>#' + inv.invoiceNumber + '</strong></td>';
+                html += '<td><a href="' + invoiceEditBaseUrl + '/' + inv.id + '" target="_blank" style="color:#2563eb;text-decoration:none;font-weight:500;">' + inv.title + ' <i class="fas fa-external-link-alt" style="font-size:10px;opacity:.6;"></i></a></td>';
+                html += '<td>' + inv.invoiceDate + '</td>';
+                html += '<td>' + inv.dueDate + '</td>';
+                html += '<td class="text-right"><strong>' + fmt(inv.amount) + '</strong></td>';
+                if (status === 'Overdue') {
+                    html += '<td><span class="days-overdue-badge">' + inv.daysOverdue + 'd</span></td>';
+                }
+                html += '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+        }
+
+        $('#invoiceListModalBody').html(html);
+        $('#invoiceListModal').modal('show');
+    });
+
+    function renderDetailModal(cardType, d) {
+        var html = '';
+        if (cardType === 'revenue') {
+            html += '<div class="modal-kpi-mini"><div class="modal-kpi-mini-card"><div class="modal-kpi-mini-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.TotalRevenue")</div><div class="modal-kpi-mini-value">' + fmt(d.revenue) + '</div></div></div>';
+            html += '<table class="table table-sm table-hover"><thead><tr><th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.Columns.Invoice")</th><th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.Columns.Date")</th><th class="text-right">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.Columns.Amount")</th></tr></thead><tbody>';
+            if (d.topInvoices && d.topInvoices.length) {
+                $.each(d.topInvoices, function (_, inv) {
+                    html += '<tr><td>#' + inv.invoiceNumber + '</td><td>' + inv.date + '</td><td class="text-right">' + fmt(inv.amount) + '</td></tr>';
+                });
+            } else {
+                html += '<tr><td colspan="3" class="text-center text-muted">—</td></tr>';
+            }
+            html += '</tbody></table>';
+        }
+        else if (cardType === 'gross') {
+            html += '<div class="modal-kpi-mini">';
+            html += '<div class="modal-kpi-mini-card"><div class="modal-kpi-mini-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.TotalRevenue")</div><div class="modal-kpi-mini-value">' + fmt(d.revenue) + '</div></div>';
+            html += '<div class="modal-kpi-mini-card"><div class="modal-kpi-mini-label">' + _t.gpSalaryCost + '</div><div class="modal-kpi-mini-value">' + fmt(d.directCost) + '</div></div>';
+            html += '<div class="modal-kpi-mini-card"><div class="modal-kpi-mini-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.GrossProfitPercent")</div><div class="modal-kpi-mini-value">' + fmtPct(d.grossPct) + '</div></div>';
+            html += '</div>';
+            html += '<div class="formula-box"><div class="formula-title">' + _t.howCalculated + '</div>';
+            html += '<div class="formula-row"><span>' + _t.formulaRev + '</span><strong>' + fmt(d.revenue) + '</strong></div>';
+            html += '<div class="formula-row"><span>' + _t.formulaSalTxn + '</span><strong>− ' + fmt(d.directCost) + '</strong></div>';
+            html += '<div class="formula-row mt-1" style="border-top:1px solid #bbf7d0;padding-top:6px"><span><strong>' + _t.formulaGP + '</strong></span><strong>' + fmt(d.grossProfit) + ' (' + fmtPct(d.grossPct) + ')</strong></div>';
+            html += '</div>';
+            html += '<canvas id="modalChart" height="140"></canvas>';
+            $('#kpiDetailModalBody').html(html);
+            if (Array.isArray(d.chartData) && d.chartData.length) {
+                modalDetailChart = new Chart(document.getElementById('modalChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: d.chartData.map(function (x) { return x.label; }),
+                        datasets: [{ label: _t.revenue, data: d.chartData.map(function (x) { return x.revenue; }), backgroundColor: '#bbf7d0', borderColor: '#16a34a', borderWidth: 1 }]
+                    },
+                    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: function (v) { return '₹' + v.toLocaleString('en-IN'); } } } } }
+                });
+            }
+            return;
+        }
+        else if (cardType === 'net') {
+            html += '<div class="modal-kpi-mini">';
+            html += '<div class="modal-kpi-mini-card"><div class="modal-kpi-mini-label">' + _t.npRevenue + '</div><div class="modal-kpi-mini-value">' + fmt(d.revenue) + '</div></div>';
+            html += '<div class="modal-kpi-mini-card"><div class="modal-kpi-mini-label">' + _t.npTotalExpense + '</div><div class="modal-kpi-mini-value">' + fmt(d.totalExpense) + '</div></div>';
+            html += '<div class="modal-kpi-mini-card"><div class="modal-kpi-mini-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.KPI.NetProfitPercent")</div><div class="modal-kpi-mini-value">' + fmtPct(d.netPct) + '</div></div>';
+            html += '</div>';
+            html += '<canvas id="modalChart" height="140"></canvas>';
+            $('#kpiDetailModalBody').html(html);
+            if (Array.isArray(d.chartData) && d.chartData.length) {
+                modalDetailChart = new Chart(document.getElementById('modalChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: d.chartData.map(function (x) { return x.label; }),
+                        datasets: [
+                            { label: _t.revenue, data: d.chartData.map(function (x) { return x.revenue; }), backgroundColor: '#bfdbfe', borderColor: '#2563eb', borderWidth: 1 },
+                            { label: _t.expense, data: d.chartData.map(function (x) { return x.expense; }), backgroundColor: '#fecaca', borderColor: '#dc2626', borderWidth: 1 }
+                        ]
+                    },
+                    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: function (v) { return '₹' + v.toLocaleString('en-IN'); } } } } }
+                });
+            }
+            return;
+        }
+        else if (cardType === 'cashflow') {
+            html += '<div class="modal-kpi-mini">';
+            html += '<div class="modal-kpi-mini-card"><div class="modal-kpi-mini-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.TotalCashIn")</div><div class="modal-kpi-mini-value" style="color:#16a34a">' + fmt(d.cashIn) + '</div></div>';
+            html += '<div class="modal-kpi-mini-card"><div class="modal-kpi-mini-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.TotalCashOut")</div><div class="modal-kpi-mini-value" style="color:#dc2626">' + fmt(d.cashOut) + '</div></div>';
+            html += '<div class="modal-kpi-mini-card"><div class="modal-kpi-mini-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.NetPosition")</div><div class="modal-kpi-mini-value" style="color:' + (d.netPosition >= 0 ? '#16a34a' : '#dc2626') + '">' + fmt(d.netPosition) + '</div></div>';
+            html += '</div>';
+            html += '<table class="table table-sm cashflow-table"><thead><tr><th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.Columns.Category")</th><th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.Columns.Type")</th><th class="text-right">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.Columns.Amount")</th></tr></thead><tbody>';
+            html += '<tr><td>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.ClientInvoices")</td><td><span class="badge-inflow">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.Inflow")</span></td><td class="text-right text-success font-weight-bold">+' + fmt(d.cashIn) + '</td></tr>';
+            if (d.expenseRows && d.expenseRows.length) {
+                $.each(d.expenseRows, function (_, row) {
+                    if (!row) return true;
+                    html += '<tr><td>' + row.category + '</td><td><span class="badge-outflow">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.Outflow")</span></td><td class="text-right text-danger">-' + fmt(row.amount) + '</td></tr>';
+                });
+            }
+            html += '<tr class="net-position-row"><td colspan="2"><strong>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.NetPosition")</strong></td><td class="text-right" style="color:' + (d.netPosition >= 0 ? '#16a34a' : '#dc2626') + '"><strong>' + (d.netPosition >= 0 ? '+' : '') + fmt(d.netPosition) + '</strong></td></tr>';
+            html += '</tbody></table>';
+        }
+        $('#kpiDetailModalBody').html(html);
+    }
+    $('#inv-period-filter').on('change', loadInvoiceStatusSummary);
+    $('[data-toggle="tooltip"]').tooltip({ trigger: 'hover', html: false });
+    applyPreset('lastmonth');
+    loadInvoiceStatusSummary();
+}());
+</script>
+
+<style>
+    .exec-dashboard {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #374151;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    .granularity-toggle .btn {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 5px 14px;
+        border-radius: 6px;
+    }
+
+        .granularity-toggle .btn.active {
+            background: #1d4ed8;
+            color: #fff;
+            border-color: #1d4ed8;
+        }
+
+    .preset-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+        align-items: center;
+    }
+
+        .preset-bar .btn-preset {
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #d1d5db;
+            background: #fff;
+            color: #374151;
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+            .preset-bar .btn-preset:hover, .preset-bar .btn-preset.active {
+                background: #eff6ff;
+                border-color: #2563eb;
+                color: #2563eb;
+            }
+
+    .period-inputs {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+        .period-inputs select, .period-inputs input[type=date] {
+            font-size: 13px;
+            padding: 5px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+
+    .kpi-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        border-left: 5px solid;
+        padding: 20px 20px 14px;
+        cursor: pointer;
+        transition: box-shadow .2s, transform .15s;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .kpi-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,.12);
+            transform: translateY(-2px);
+        }
+
+        .kpi-card.revenue {
+            border-color: #0d9488;
+        }
+
+        .kpi-card.gross {
+            border-color: #16a34a;
+        }
+
+        .kpi-card.net {
+            border-color: #d97706;
+        }
+
+        .kpi-card.cashflow {
+            border-color: #2563eb;
+        }
+
+    .kpi-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+
+    .kpi-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #6b7280;
+    }
+
+    .kpi-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+    }
+
+    .kpi-card.revenue .kpi-icon {
+        background: #f0fdfa;
+        color: #0d9488;
+    }
+
+    .kpi-card.gross .kpi-icon {
+        background: #f0fdf4;
+        color: #16a34a;
+    }
+
+    .kpi-card.net .kpi-icon {
+        background: #fffbeb;
+        color: #d97706;
+    }
+
+    .kpi-card.cashflow .kpi-icon {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1;
+        margin-bottom: 6px;
+    }
+
+    .kpi-trend {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 20px;
+        margin-bottom: 4px;
+    }
+
+        .kpi-trend.up {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .kpi-trend.down {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .kpi-trend.neutral {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+    .kpi-subtitle {
+        font-size: 12px;
+        color: #9ca3af;
+        margin-top: 4px;
+    }
+
+    .kpi-sparkline-wrap {
+        margin-top: 12px;
+        height: 44px;
+    }
+
+    .kpi-loading {
+        position: absolute;
+        inset: 0;
+        background: rgba(255,255,255,.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    .spinner-sm {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #e5e7eb;
+        border-top-color: #2563eb;
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .kpi-no-data {
+        color: #9ca3af;
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .kpi-label-wrap {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .kpi-info-icon {
+        font-size: 11px;
+        color: #9ca3af;
+        cursor: help;
+    }
+
+    .modal-kpi-mini {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .modal-kpi-mini-card {
+        flex: 1;
+        min-width: 120px;
+        background: #f9fafb;
+        border-radius: 10px;
+        padding: 14px 16px;
+    }
+
+    .modal-kpi-mini-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #6b7280;
+        letter-spacing: .05em;
+    }
+
+    .modal-kpi-mini-value {
+        font-size: 20px;
+        font-weight: 800;
+        color: #111827;
+        margin-top: 4px;
+    }
+
+    .formula-box {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 18px;
+    }
+
+        .formula-box .formula-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #16a34a;
+            letter-spacing: .05em;
+            margin-bottom: 10px;
+        }
+
+    .formula-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: #374151;
+        padding: 3px 0;
+    }
+
+        .formula-row strong {
+            color: #111827;
+        }
+
+    .cashflow-table th {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #6b7280;
+        font-weight: 700;
+    }
+
+    .cashflow-chart-section {
+        margin-top: 8px;
+    }
+
+    .cashflow-chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .cashflow-chart-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .cashflow-chart-wrap {
+        position: relative;
+        height: 220px;
+    }
+
+    .rev-cost-chart-section {
+        margin-top: 24px;
+    }
+
+    .rev-cost-chart-wrap {
+        position: relative;
+        height: 260px;
+    }
+
+    .badge-inflow {
+        background: #dcfce7;
+        color: #16a34a;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .badge-outflow {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .net-position-row td {
+        font-weight: 800;
+        font-size: 15px;
+    }
+
+    .inv-status-section {
+        margin-top: 28px;
+    }
+
+    .inv-status-layout {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        margin-top: 12px;
+    }
+
+    .inv-donut-wrap {
+        flex: 0 0 200px;
+        position: relative;
+        height: 200px;
+    }
+
+    .inv-donut-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+    .inv-donut-total-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: #9ca3af;
+    }
+
+    .inv-donut-total-value {
+        font-size: 18px;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.1;
+    }
+
+    .inv-status-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        flex: 1;
+    }
+
+    @@media (max-width: 768px) {
+        .inv-status-layout {
+            flex-direction: column;
+        }
+
+        .inv-donut-wrap {
+            flex: none;
+            width: 100%;
+        }
+    }
+
+    .inv-stat-card {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,.07);
+        padding: 16px 18px;
+        cursor: pointer;
+        transition: box-shadow .2s, transform .15s;
+        border-top: 4px solid;
+    }
+
+        .inv-stat-card:hover {
+            box-shadow: 0 4px 18px rgba(0,0,0,.12);
+            transform: translateY(-2px);
+        }
+
+        .inv-stat-card.paid {
+            border-color: #16a34a;
+        }
+
+        .inv-stat-card.pending {
+            border-color: #2563eb;
+        }
+
+        .inv-stat-card.overdue {
+            border-color: #dc2626;
+        }
+
+        .inv-stat-card.draft {
+            border-color: #9ca3af;
+        }
+
+    .inv-stat-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        margin-bottom: 8px;
+    }
+
+    .inv-stat-card.paid .inv-stat-label {
+        color: #16a34a;
+    }
+
+    .inv-stat-card.pending .inv-stat-label {
+        color: #2563eb;
+    }
+
+    .inv-stat-card.overdue .inv-stat-label {
+        color: #dc2626;
+    }
+
+    .inv-stat-card.draft .inv-stat-label {
+        color: #9ca3af;
+    }
+
+    .inv-stat-count {
+        font-size: 22px;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1;
+    }
+
+    .inv-stat-sub {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .inv-stat-amount {
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 6px;
+    }
+
+    .inv-stat-card.paid .inv-stat-amount {
+        color: #16a34a;
+    }
+
+    .inv-stat-card.pending .inv-stat-amount {
+        color: #2563eb;
+    }
+
+    .inv-stat-card.overdue .inv-stat-amount {
+        color: #dc2626;
+    }
+
+    .inv-stat-card.draft .inv-stat-amount {
+        color: #9ca3af;
+    }
+
+    .inv-loading {
+        opacity: .4;
+        pointer-events: none;
+    }
+
+    .inv-status-badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+        .inv-status-badge.paid {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .inv-status-badge.pending {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .inv-status-badge.overdue {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .inv-status-badge.draft {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+    .days-overdue-badge {
+        background: #fef2f2;
+        color: #dc2626;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 10px;
+    }
+</style>

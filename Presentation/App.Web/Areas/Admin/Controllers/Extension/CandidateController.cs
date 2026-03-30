@@ -428,16 +428,13 @@ namespace App.Web.Areas.Admin.Controllers
             if (activity == null)
                 return RedirectToAction("List");
 
-            //prepare model
-            var model = await _candidateModelFactory.PrepareCandidateModelAsync(null, activity);
-            var jobApplication = await _candidatesService.GetJobApplicationAsync(id, jobPostingId);
-
-            if (jobApplication != null)
+            var model = new CandidateModel
             {
-                model.StatusId = jobApplication.StatusId;
-                model.HrNotes = jobApplication.HrNotes;
-                model.JobPostingId = jobApplication.JobPostingId;
-            }
+                JobPostingId = jobPostingId
+            };
+
+            //  STEP 2: Load correct job application inside factory
+            model = await _candidateModelFactory.PrepareCandidateModelAsync(model, activity);
             return View("/Areas/Admin/Views/Extension/Candidate/Edit.cshtml", model);
         }
 
@@ -532,11 +529,21 @@ namespace App.Web.Areas.Admin.Controllers
             if (selectedIds == null || selectedIds.Count == 0)
                 return NoContent();
 
-            var data = await _candidatesService.GetCandidateByIdsAsync(selectedIds.ToArray());
+            var candidates = await _candidatesService.GetCandidateByIdsAsync(selectedIds.ToArray());
 
-            foreach (var item in data)
+            foreach (var candidate in candidates)
             {
-                await _candidatesService.DeleteCandidateAsync(item);
+                // DELETE JOB APPLICATIONS FIRST
+                var applications = _jobApplicationRepository.Table
+                    .Where(x => x.CandidateId == candidate.Id);
+
+                foreach (var app in applications)
+                {
+                    await _jobApplicationRepository.DeleteAsync(app);
+                }
+
+                // THEN DELETE CANDIDATE
+                await _candidatesService.DeleteCandidateAsync(candidate);
             }
 
             return Json(new { Result = true });

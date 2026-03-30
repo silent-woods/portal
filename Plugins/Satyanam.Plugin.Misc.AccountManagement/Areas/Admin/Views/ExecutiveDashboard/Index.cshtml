@@ -1,0 +1,75 @@
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Title").Text;
+    NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard");
+}
+
+<div class="exec-tab-bar">
+    <button class="exec-tab active" data-tab="financial">
+        <i class="fas fa-chart-line"></i> Financial Performance
+    </button>
+    <button class="exec-tab" data-tab="operational">
+        <i class="fas fa-tasks"></i> Operational Metrics
+    </button>
+</div>
+
+<div id="exec-tab-financial">
+    @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_FinancialPerformanceSection.cshtml")
+</div>
+<div id="exec-tab-operational" style="display:none;">
+    @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_OperationalMetricsSection.cshtml")
+</div>
+
+<style>
+    .exec-tab-bar {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 4px;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 0;
+    }
+    .exec-tab {
+        padding: 10px 24px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #6b7280;
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+        border-radius: 6px 6px 0 0;
+        transition: color 0.15s, border-color 0.15s;
+    }
+    .exec-tab:hover { color: #1d4ed8; }
+    .exec-tab.active {
+        color: #1d4ed8;
+        border-bottom-color: #1d4ed8;
+        background: #f0f4ff;
+    }
+    .exec-tab i { margin-right: 6px; }
+</style>
+
+<script>
+(function () {
+    var loaded = { financial: true, operational: false };
+
+    $(document).ready(function () {
+        $('.exec-tab').on('click', function () {
+            var tab = $(this).data('tab');
+            if ($(this).hasClass('active')) return;
+
+            $('.exec-tab').removeClass('active');
+            $(this).addClass('active');
+
+            $('#exec-tab-financial, #exec-tab-operational').hide();
+            $('#exec-tab-' + tab).show();
+
+            if (!loaded[tab]) {
+                loaded[tab] = true;
+                $(document).trigger('exec:load:' + tab);
+            }
+        });
+    });
+}());
+</script>

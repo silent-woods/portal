@@ -736,7 +736,7 @@ namespace App.Web.Factories.Extensions
             return model;
         }
 
-        public async Task<PendingDashboardModel> PrepareOverdueDashboardModelAsync(int currEmployeeId = 0, int projectId = 0, int employeeId = 0, string taskName = null, int statusId = 0)
+        public async Task<PendingDashboardModel> PrepareOverdueDashboardModelAsync(int currEmployeeId = 0,int projectId = 0,int employeeId = 0,string taskName = null,int statusId =0,bool holdOnly = false)
         {
             var currEmployee = await _employeeService.GetEmployeeByIdAsync(currEmployeeId);
 
@@ -754,8 +754,17 @@ namespace App.Web.Factories.Extensions
             await PrepareProjectListByEmployeeAsync(model);
             await PrepareEmployeeListAsync(model);
 
+            var holdTasks = await _commonPluginService
+     .GetOverdueTasksByCurrentEmployeeForDashboardAsync(
+         currEmployeeId: currEmployeeId,
+         projectId: projectId,
+         employeeId: employeeId,
+         taskName: taskName,
+         holdOnly: true);
+            model.HoldOverdueCount = holdTasks.Count;
+
             var overdueTasks = new List<ProjectTask>();
-            overdueTasks = (List<ProjectTask>)await _commonPluginService.GetOverdueTasksByCurrentEmployeeForDashboardAsync(currEmployeeId: currEmployeeId, projectId: projectId, employeeId: employeeId, taskName: taskName, statusId: statusId);
+            overdueTasks = (List<ProjectTask>)await _commonPluginService.GetOverdueTasksByCurrentEmployeeForDashboardAsync(currEmployeeId:currEmployeeId,projectId:projectId,employeeId:employeeId,taskName:taskName,statusId:statusId,holdOnly:holdOnly);
             var today = DateTime.UtcNow.Date;
             var statusIds = overdueTasks
     .Select(t => t.StatusId)

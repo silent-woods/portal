@@ -100,7 +100,7 @@ namespace App.Web.Areas.Admin.Factories
                         // get latest job application
                         var application = await _jobApplicationRepository.Table
                             .Where(x => x.CandidateId == candidate.Id)
-                            .OrderByDescending(x => x.Id)
+                            .OrderBy(x => x.Id)
                             .FirstOrDefaultAsync();
 
                         string positionName = "";
@@ -197,8 +197,25 @@ namespace App.Web.Areas.Admin.Factories
                 model.Email = candidate.Email;
                 model.Phone = candidate.Phone;
 
-                var application = await _candidatesService
-                    .GetJobApplicationByCandidateIdAsync(candidate.Id);
+                JobApplication application = null;
+
+                // ✅ CASE 1: When JobPostingId is passed (from Job Posting page)
+                if (model.JobPostingId > 0)
+                {
+                    application = await _jobApplicationRepository.Table
+                        .FirstOrDefaultAsync(x =>
+                            x.CandidateId == candidate.Id &&
+                            x.JobPostingId == model.JobPostingId);
+                }
+                else
+                {
+                    // ✅ CASE 2: From Candidate list (jobPostingId = 0)
+                    // fallback → get latest application
+                    application = await _jobApplicationRepository.Table
+                        .Where(x => x.CandidateId == candidate.Id)
+                        .OrderByDescending(x => x.AppliedOnUtc)
+                        .FirstOrDefaultAsync();
+                }
 
                 if (application != null)
                 {

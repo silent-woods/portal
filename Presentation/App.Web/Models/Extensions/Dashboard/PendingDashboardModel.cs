@@ -44,6 +44,7 @@ namespace App.Web.Models.Dashboard
         public int PendingCodeReviewCount { get; set; }
         public int PendingReadyToTestCount { get; set; }
         public int PendingOverdueCount { get; set; }
+        public int HoldOverdueCount { get; set; }
         public int SelectedAlertPercentage { get; set; }
         public int SearchProcessWorkflowId { get; set; }
         public int SearchStatusId { get; set; }

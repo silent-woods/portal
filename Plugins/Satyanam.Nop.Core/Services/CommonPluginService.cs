@@ -8,6 +8,7 @@ using App.Data;
 using App.Data.Extensions;
 using App.Services.Messages;
 using App.Services.ProjectEmployeeMappings;
+using App.Services.Projects;
 using App.Services.ProjectTasks;
 using App.Services.TimeSheets;
 using Humanizer;
@@ -34,10 +35,11 @@ namespace Satyanam.Nop.Core.Services
         private readonly MonthlyReportSetting _monthlyReportSetting;
         private readonly IRepository<TimeSheet> _timeSheetRepository;
         private readonly IProjectEmployeeMappingService _projectEmployeeMappingService;
+        private readonly IProjectsService _projectsService;
         #endregion
 
         #region Ctor
-        public CommonPluginService(IRepository<ProcessRules> processRulesRepository, IRepository<WorkflowStatus> workflowStatusRepository, IRepository<ProjectTask> projectTaskRepository, ITimeSheetsService timeSheetsService, IProjectTaskService projectTaskService, IWorkflowStatusService workflowStatusService, EmailSettings emailSettings, MonthlyReportSetting monthlyReportSetting, IRepository<TimeSheet> timeSheetRepository, IProjectEmployeeMappingService projectEmployeeMappingService)
+        public CommonPluginService(IRepository<ProcessRules> processRulesRepository, IRepository<WorkflowStatus> workflowStatusRepository, IRepository<ProjectTask> projectTaskRepository, ITimeSheetsService timeSheetsService, IProjectTaskService projectTaskService, IWorkflowStatusService workflowStatusService, EmailSettings emailSettings, MonthlyReportSetting monthlyReportSetting, IRepository<TimeSheet> timeSheetRepository, IProjectEmployeeMappingService projectEmployeeMappingService, IProjectsService projectsService)
         {
             _processRulesRepository = processRulesRepository;
             _workflowStatusRepository = workflowStatusRepository;
@@ -49,6 +51,7 @@ namespace Satyanam.Nop.Core.Services
             _monthlyReportSetting = monthlyReportSetting;
             _timeSheetRepository = timeSheetRepository;
             _projectEmployeeMappingService = projectEmployeeMappingService;
+            _projectsService = projectsService;
         }
         #endregion
 
@@ -386,10 +389,28 @@ namespace Satyanam.Nop.Core.Services
             return overdueTasks;
         }
 
-        public async Task<IList<ProjectTask>> GetOverdueTasksByCurrentEmployeeForDashboardAsync(int currEmployeeId=0,int projectId = 0,int employeeId = 0,string taskName = null,int statusId = 0)
+
+        public async Task<IList<ProjectTask>> GetOverdueTasksByCurrentEmployeeForDashboardAsync(
+            int currEmployeeId = 0,
+            int projectId = 0,
+            int employeeId = 0,
+            string taskName = null,
+            int statusId = 0,
+            bool holdOnly = false)
         {
             var today = DateTime.UtcNow.Date;
+
+            // ✅ EMPLOYEE SCOPE (SELF + JUNIORS) — KEEP AS IS
             var employeeIds = await GetEmployeeIdsForOverdueAsync(currEmployeeId);
+
+            // ✅ PROJECT SCOPE (SAME AS UI DROPDOWN)
+            var allowedProjectIds = (await _projectsService
+                .GetProjectListByEmployee(currEmployeeId))
+                .Where(p => p.StatusId != 4)
+                .Select(p => p.Id)
+                .ToList();
+
+            // ✅ ALL STATUSES
             var allStatuses = await _workflowStatusRepository.Table
                 .Where(s => s.ProcessWorkflowId != 0)
                 .Select(s => new
@@ -401,13 +422,26 @@ namespace Satyanam.Nop.Core.Services
                     s.StatusName
                 })
                 .ToListAsync();
+
+            // ✅ HOLD STATUS IDS
+            var holdStatusIds = allStatuses
+                .Where(s => (s.StatusName ?? "").Trim()
+                    .Equals("Hold", StringComparison.OrdinalIgnoreCase))
+                .Select(s => s.Id)
+                .ToList();
+
+            // ✅ ALLOWED STATUSES (EXCLUDING HOLD)
             var allowedStatuses = allStatuses
                 .GroupBy(s => s.ProcessWorkflowId)
                 .SelectMany(g =>
                 {
                     var statusIds = new List<int?>
                     {
-                g.OrderBy(s => s.DisplayOrder).FirstOrDefault()?.Id,
+                // 🚨 exclude HOLD from first/default
+                g.OrderBy(s => s.DisplayOrder)
+                    .FirstOrDefault(s => !(s.StatusName ?? "").Trim()
+                    .Equals("Hold", StringComparison.OrdinalIgnoreCase))?.Id,
+
                 g.FirstOrDefault(s => s.IsDefaultDeveloperStatus)?.Id,
 
                 g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
@@ -439,35 +473,60 @@ namespace Satyanam.Nop.Core.Services
                         .Distinct();
                 })
                 .ToList();
+
+            // ✅ BASE QUERY (NOW FULLY CORRECT)
             var query = _projectTaskRepository.Table
                 .Where(t =>
                     !t.IsDeleted &&
                     employeeIds.Contains(t.AssignedTo) &&
+                    allowedProjectIds.Contains(t.ProjectId) // ✅ FIXED LEAKAGE
+                    &&
                     t.DueDate.HasValue &&
                     t.DueDate.Value.Date < today &&
                     t.ProcessWorkflowId != 0 &&
                     t.StatusId != 0 &&
-                    t.Tasktypeid != (int)TaskTypeEnum.UserStory)
-                .Where(t =>
-                    allowedStatuses.Any(s =>
-                        s.WorkflowId == t.ProcessWorkflowId &&
-                        s.StatusId == t.StatusId));
+                    t.Tasktypeid != (int)TaskTypeEnum.UserStory);
+
+            // ✅ HOLD LOGIC
+            if (holdOnly)
+            {
+                // 👉 ONLY HOLD TASKS
+                query = query.Where(t => holdStatusIds.Contains(t.StatusId));
+            }
+            else
+            {
+                // 👉 EXCLUDE HOLD + APPLY NORMAL STATUS FLOW
+                query = query
+                    .Where(t => !holdStatusIds.Contains(t.StatusId))
+                    .Where(t =>
+                        allowedStatuses.Any(s =>
+                            s.WorkflowId == t.ProcessWorkflowId &&
+                            s.StatusId == t.StatusId));
+            }
+
+            // ✅ FILTERS (UNCHANGED)
             if (projectId > 0)
                 query = query.Where(t => t.ProjectId == projectId);
+
             if (employeeId > 0)
                 query = query.Where(t =>
                     t.AssignedTo == employeeId ||
                     t.DeveloperId == employeeId);
+
             if (statusId > 0)
                 query = query.Where(t => t.StatusId == statusId);
+
             if (!string.IsNullOrWhiteSpace(taskName))
                 query = query.Where(t => t.TaskTitle.Contains(taskName));
+
+            // ✅ EXECUTE
             var tasks = await query.ToListAsync();
-            var overdueTasks = tasks
+
+            // ✅ DISTINCT (SAFE)
+            return tasks
                 .GroupBy(t => t.Id)
                 .Select(g => g.First())
                 .ToList();
-            return overdueTasks;
         }
         public async Task<IList<int>> GetEmployeeIdsForOverdueAsync(int currEmployeeId)
         {
@@ -506,10 +565,23 @@ namespace Satyanam.Nop.Core.Services
             var totalMinutes = learningEntries.Sum(e => (e.SpentHours * 60) + e.SpentMinutes);
             return totalMinutes;
         }
-        public async Task<int> GetDashboardOverdueCountAsync(int currEmployeeId)
+        public async Task<int> GetDashboardOverdueCountAsync(
+    int currEmployeeId,
+    bool holdOnly = false)
         {
             var today = DateTime.UtcNow.Date;
+
+            // ✅ EMPLOYEE SCOPE (SELF + JUNIORS)
             var employeeIds = await GetEmployeeIdsForOverdueAsync(currEmployeeId);
+
+            // ✅ PROJECT SCOPE (MATCH UI)
+            var allowedProjectIds = (await _projectsService
+                .GetProjectListByEmployee(currEmployeeId))
+                .Where(p => p.StatusId != 4)
+                .Select(p => p.Id)
+                .ToList();
+
+            // ✅ ALL STATUSES
             var allStatuses = await _workflowStatusRepository.Table
                 .Where(s => s.ProcessWorkflowId != 0)
                 .Select(s => new
@@ -521,13 +593,25 @@ namespace Satyanam.Nop.Core.Services
                     s.StatusName
                 })
                 .ToListAsync();
+
+            // ✅ HOLD STATUS IDS
+            var holdStatusIds = allStatuses
+                .Where(s => (s.StatusName ?? "").Trim()
+                    .Equals("Hold", StringComparison.OrdinalIgnoreCase))
+                .Select(s => s.Id)
+                .ToList();
+
+            // ✅ ALLOWED STATUSES (EXCLUDING HOLD)
             var allowedStatuses = allStatuses
                 .GroupBy(s => s.ProcessWorkflowId)
                 .SelectMany(g =>
                 {
                     var statusIds = new List<int?>
                     {
-                g.OrderBy(s => s.DisplayOrder).FirstOrDefault()?.Id,
+                g.OrderBy(s => s.DisplayOrder)
+                    .FirstOrDefault(s => !(s.StatusName ?? "").Trim()
+                    .Equals("Hold", StringComparison.OrdinalIgnoreCase))?.Id,
+
                 g.FirstOrDefault(s => s.IsDefaultDeveloperStatus)?.Id,
 
                 g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
@@ -548,6 +632,7 @@ namespace Satyanam.Nop.Core.Services
                 g.FirstOrDefault(s => (s.StatusName ?? "").Trim()
                     .Equals("Test Failed", StringComparison.OrdinalIgnoreCase))?.Id
                     };
+
                     return statusIds
                         .Where(x => x.HasValue)
                         .Select(x => new
@@ -558,23 +643,40 @@ namespace Satyanam.Nop.Core.Services
                         .Distinct();
                 })
                 .ToList();
-            var count = await _projectTaskRepository.Table
+
+            // ✅ BASE QUERY (MATCH SERVICE)
+            var query = _projectTaskRepository.Table
                 .Where(t =>
                     !t.IsDeleted &&
                     employeeIds.Contains(t.AssignedTo) &&
+                    allowedProjectIds.Contains(t.ProjectId) // ✅ IMPORTANT
+                    &&
                     t.DueDate.HasValue &&
                     t.DueDate.Value.Date < today &&
                     t.ProcessWorkflowId != 0 &&
                     t.StatusId != 0 &&
-                    t.Tasktypeid != (int)TaskTypeEnum.UserStory)
-                .Where(t =>
-                    allowedStatuses.Any(s =>
-                        s.WorkflowId == t.ProcessWorkflowId &&
-                        s.StatusId == t.StatusId))
+                    t.Tasktypeid != (int)TaskTypeEnum.UserStory);
+
+            // ✅ HOLD LOGIC (MATCH SERVICE)
+            if (holdOnly)
+            {
+                query = query.Where(t => holdStatusIds.Contains(t.StatusId));
+            }
+            else
+            {
+                query = query
+                    .Where(t => !holdStatusIds.Contains(t.StatusId))
+                    .Where(t =>
+                        allowedStatuses.Any(s =>
+                            s.WorkflowId == t.ProcessWorkflowId &&
+                            s.StatusId == t.StatusId));
+            }
+
+            // ✅ FINAL COUNT
+            return await query
                 .Select(t => t.Id)
                 .Distinct()
                 .CountAsync();
-            return count;
         }
         #endregion
     }
