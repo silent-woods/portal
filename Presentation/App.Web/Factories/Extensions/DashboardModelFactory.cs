@@ -257,6 +257,7 @@ namespace App.Web.Factories.Extensions
               .ToDictionaryAsync(x => x.TaskId, x => x.LastTrackedUtc);
             var alertConfigs = await _taskAlertService
     .GetAllTaskAlertConfigurationsAsync();
+            var holdItems = new List<FollowUpTaskModel>();
 
             foreach (var f in allFollowUps)
             {
@@ -355,14 +356,22 @@ namespace App.Web.Factories.Extensions
                 };
                 if (statusType != 1)
                 {
-                    if (!f.NextFollowupDateTime.HasValue)
-                        model.Overdue.Add(item);
-                    else if (f.NextFollowupDateTime.Value.Date < today)
-                        model.Overdue.Add(item);
-                    else if (f.NextFollowupDateTime.Value.Date == today)
-                        model.DueToday.Add(item);
+                    var isHoldStatus = status?.StatusName?.Trim().ToLower() == "hold";
+                    if (isHoldStatus && statusId == 0)
+                    {
+                        holdItems.Add(item);
+                    }
                     else
-                        model.Upcoming.Add(item);
+                    {
+                        if (!f.NextFollowupDateTime.HasValue)
+                            model.Overdue.Add(item);
+                        else if (f.NextFollowupDateTime.Value.Date < today)
+                            model.Overdue.Add(item);
+                        else if (f.NextFollowupDateTime.Value.Date == today)
+                            model.DueToday.Add(item);
+                        else
+                            model.Upcoming.Add(item);
+                    }
                 }
                 else
                 {
@@ -371,13 +380,14 @@ namespace App.Web.Factories.Extensions
             }
             model.SearchStatusId = statusId;
             var allItems = model.Overdue.Concat(model.DueToday).Concat(model.Upcoming).ToList();
-            var uniqueStatusIds = allItems.Select(t => t.StatusId).Where(id => id > 0).Distinct().ToArray();
+            var allItemsForStatusFilter = allItems.Concat(holdItems).ToList();
+            var uniqueStatusIds = allItemsForStatusFilter.Select(t => t.StatusId).Where(id => id > 0).Distinct().ToArray();
             if (uniqueStatusIds.Any())
             {
                 var workflowStatuses = await _workflowStatusService.GetWorkflowStatusByIdsAsync(uniqueStatusIds);
                 var workflows = await _processWorkflowService.GetAllProcessWorkflowsAsync();
                 var workflowDict = workflows.ToDictionary(w => w.Id, w => w.Name);
-                var statusCountDict = allItems.GroupBy(t => t.StatusId).ToDictionary(g => g.Key, g => g.Count());
+                var statusCountDict = allItemsForStatusFilter.GroupBy(t => t.StatusId).ToDictionary(g => g.Key, g => g.Select(x => x.TaskId).Distinct().Count());
 
                 model.StatusFilters = workflowStatuses
                     .Select(s => new StatusFilterModel
@@ -390,7 +400,8 @@ namespace App.Web.Factories.Extensions
                         Count = statusCountDict.TryGetValue(s.Id, out var cnt) ? cnt : 0
                     })
                     .Where(x => x.Count > 0)
-                    .OrderBy(x => x.ProcessWorkflowName)
+                    .OrderBy(x => x.StatusName.Trim().ToLower() == "hold" ? 1 : 0)
+                    .ThenBy(x => x.ProcessWorkflowName)
                     .ThenBy(x => x.StatusName)
                     .ToList();
             }

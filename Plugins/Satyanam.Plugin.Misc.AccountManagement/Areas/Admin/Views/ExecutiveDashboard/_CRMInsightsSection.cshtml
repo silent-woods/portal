@@ -1,0 +1,919 @@
+<div class="card card-default crm-section-card">
+    <div class="card-body">
+
+        <div class="section-header crm-section-header">
+            <span class="section-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Section.Title")</span>
+            <div class="crm-filters-row">
+                <div class="btn-group crm-granularity-toggle" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm active" data-crm-granularity="month">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Granularity.Month")</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-crm-granularity="year">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Granularity.Year")</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="crm-preset-bar-month" class="preset-bar">
+            <button class="btn-preset" data-crm-preset="currentmonth">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Preset.ThisMonth")</button>
+            <button class="btn-preset active" data-crm-preset="lastmonth">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Preset.LastMonth")</button>
+            <button class="btn-preset" data-crm-preset="last3months">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Preset.Last3Months")</button>
+            <button class="btn-preset" data-crm-preset="last6months">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Preset.Last6Months")</button>
+            <div class="period-inputs ms-2">
+                <select id="crm-month-from">
+                    @for (var m = 1; m <= 12; m++) { <option value="@m">@(new DateTime(2000, m, 1).ToString("MMM"))</option> }
+                </select>
+                <select id="crm-year-from-month">
+                    @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                </select>
+                <span class="crm-period-sep">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Period.To")</span>
+                <select id="crm-month-to">
+                    @for (var m = 1; m <= 12; m++) { <option value="@m">@(new DateTime(2000, m, 1).ToString("MMM"))</option> }
+                </select>
+                <select id="crm-year-to-month">
+                    @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                </select>
+            </div>
+        </div>
+
+        <div id="crm-preset-bar-year" class="preset-bar" style="display:none;">
+            @{ var fyM = ViewBag.FyStartMonth != null ? (int)ViewBag.FyStartMonth : 1; }
+            <button class="btn-preset active" data-crm-preset="thisyear">@(fyM > 1 ? T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Preset.ThisFY").Text : T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Preset.ThisYear").Text)</button>
+            <button class="btn-preset" data-crm-preset="lastyear">@(fyM > 1 ? T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Preset.LastFY").Text : T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Preset.LastYear").Text)</button>
+            <div class="period-inputs ms-2">
+                <select id="crm-year-from">
+                    @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                </select>
+                <span class="crm-period-sep">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Period.To")</span>
+                <select id="crm-year-to">
+                    @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                </select>
+            </div>
+        </div>
+        <div class="kpi-grid">
+
+            <div class="kpi-card crm-pipeline" data-crm-modal="pipeline">
+                <div class="kpi-card-top">
+                    <span class="kpi-label kpi-label-wrap">
+                        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.KPI.Pipeline.Label")
+                        <i class="fas fa-info-circle kpi-info-icon" data-toggle="tooltip" data-placement="top" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.KPI.Pipeline.Tooltip")"></i>
+                    </span>
+                    <div class="kpi-icon crm-pipeline-icon"><i class="fas fa-funnel-dollar"></i></div>
+                </div>
+                <div class="kpi-value" id="crm-val-pipeline">—</div>
+                <div class="kpi-subtitle" id="crm-sub-pipeline"></div>
+                <div class="kpi-sparkline-wrap"><canvas id="crm-spark-pipeline"></canvas></div>
+                <div class="kpi-loading" id="crm-load-pipeline"><div class="spinner-sm"></div></div>
+            </div>
+
+            <div class="kpi-card crm-won" data-crm-modal="dealswon">
+                <div class="kpi-card-top">
+                    <span class="kpi-label kpi-label-wrap">
+                        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.KPI.DealsWon.Label")
+                        <i class="fas fa-info-circle kpi-info-icon" data-toggle="tooltip" data-placement="top" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.KPI.DealsWon.Tooltip")"></i>
+                    </span>
+                    <div class="kpi-icon crm-won-icon"><i class="fas fa-trophy"></i></div>
+                </div>
+                <div class="kpi-value" id="crm-val-won">—</div>
+                <div><span class="kpi-trend neutral" id="crm-trend-won">—</span></div>
+                <div class="kpi-subtitle" id="crm-sub-won"></div>
+                <div class="kpi-sparkline-wrap"><canvas id="crm-spark-won"></canvas></div>
+                <div class="kpi-loading" id="crm-load-won"><div class="spinner-sm"></div></div>
+            </div>
+
+            <div class="kpi-card crm-leads" data-crm-modal="leads">
+                <div class="kpi-card-top">
+                    <span class="kpi-label kpi-label-wrap">
+                        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.KPI.Leads.Label")
+                        <i class="fas fa-info-circle kpi-info-icon" data-toggle="tooltip" data-placement="top" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.KPI.Leads.Tooltip")"></i>
+                    </span>
+                    <div class="kpi-icon crm-leads-icon"><i class="fas fa-user-plus"></i></div>
+                </div>
+                <div class="kpi-value" id="crm-val-leads">—</div>
+                <div><span class="kpi-trend neutral" id="crm-trend-leads">—</span></div>
+                <div class="kpi-subtitle" id="crm-sub-leads"></div>
+                <div class="kpi-sparkline-wrap"><canvas id="crm-spark-leads"></canvas></div>
+                <div class="kpi-loading" id="crm-load-leads"><div class="spinner-sm"></div></div>
+            </div>
+
+            <div class="kpi-card crm-overdue" data-crm-modal="overdue">
+                <div class="kpi-card-top">
+                    <span class="kpi-label kpi-label-wrap">
+                        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.KPI.Overdue.Label")
+                        <i class="fas fa-info-circle kpi-info-icon" data-toggle="tooltip" data-placement="top" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.KPI.Overdue.Tooltip")"></i>
+                    </span>
+                    <div class="kpi-icon crm-overdue-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                </div>
+                <div class="kpi-value crm-overdue-value" id="crm-val-overdue">—</div>
+                <div class="kpi-subtitle" id="crm-sub-overdue"></div>
+                <div class="kpi-sparkline-wrap"></div>
+                <div class="kpi-loading" id="crm-load-overdue"><div class="spinner-sm"></div></div>
+            </div>
+
+        </div>
+        <div class="cashflow-chart-section crm-chart-section crm-linkedin-section">
+            <div class="cashflow-chart-header">
+                <span class="cashflow-chart-title"><i class="fab fa-linkedin crm-li-title-icon"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LinkedIn.SectionTitle")</span>
+                <div class="crm-li-summary" id="crm-li-summary"></div>
+            </div>
+            <div class="crm-li-stats-row">
+                <div class="crm-li-stat-card crm-li-stat-total" data-li-filter="all" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LinkedIn.TotalContacts.Tooltip")">
+                    <div class="crm-li-stat-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LinkedIn.TotalContacts") <i class="fas fa-external-link-alt crm-li-card-icon"></i></div>
+                    <div class="crm-li-stat-value" id="crm-li-total">—</div>
+                </div>
+                <div class="crm-li-stat-card crm-li-stat-converted" data-li-filter="converted" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LinkedIn.Converted.Tooltip")">
+                    <div class="crm-li-stat-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LinkedIn.Converted") <i class="fas fa-external-link-alt crm-li-card-icon"></i></div>
+                    <div class="crm-li-stat-value" id="crm-li-converted">—</div>
+                    <div class="crm-li-stat-sub" id="crm-li-conv-rate"></div>
+                </div>
+                <div class="crm-li-stat-card crm-li-stat-replied" data-li-filter="replied" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LinkedIn.RepliedInTalk.Tooltip")">
+                    <div class="crm-li-stat-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LinkedIn.RepliedInTalk") <i class="fas fa-external-link-alt crm-li-card-icon"></i></div>
+                    <div class="crm-li-stat-value" id="crm-li-replied">—</div>
+                </div>
+            </div>
+            <div class="crm-li-chart-area">
+                <div class="crm-li-chart-wrap">
+                    <canvas id="crm-linkedin-status-chart"></canvas>
+                    <div class="crm-li-donut-center" id="crm-li-donut-center"></div>
+                </div>
+            </div>
+        </div>
+        <div class="cashflow-chart-section crm-chart-section">
+            <div class="cashflow-chart-header">
+                <span class="cashflow-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Chart.PipelineByStage")</span>
+            </div>
+            <div class="cashflow-chart-wrap">
+                <canvas id="crm-pipeline-stage-chart"></canvas>
+            </div>
+        </div>
+        <div class="crm-two-col-charts">
+            <div class="cashflow-chart-section crm-chart-section crm-chart-half">
+                <div class="cashflow-chart-header">
+                    <span class="cashflow-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Chart.LeadsBySource")</span>
+                </div>
+                <div class="crm-donut-wrap">
+                    <canvas id="crm-leads-source-chart"></canvas>
+                </div>
+            </div>
+            <div class="cashflow-chart-section crm-chart-section crm-chart-half">
+                <div class="cashflow-chart-header">
+                    <span class="cashflow-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Chart.WinLossRate")</span>
+                </div>
+                <div class="crm-donut-wrap">
+                    <canvas id="crm-winloss-chart"></canvas>
+                    <div class="crm-winloss-center" id="crm-winloss-center"></div>
+                </div>
+            </div>
+        </div>
+        <div class="cashflow-chart-section crm-chart-section">
+            <div class="cashflow-chart-header">
+                <span class="cashflow-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Chart.MonthlyTrend")</span>
+            </div>
+            <div class="cashflow-chart-wrap">
+                <canvas id="crm-monthly-trend-chart"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="modal fade" id="crmPipelineModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Modal.Pipeline.Title")</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="crmPipelineModalBody">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
+            </div>
+            <div class="modal-footer">
+                <a href="/Admin/Deals/List" target="_blank" class="btn btn-sm btn-outline-primary">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Link.ViewAllDeals")</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="crmDealsWonModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="crmDealsWonModalTitle">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Modal.DealsWon.Title")</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="crmDealsWonModalBody">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
+            </div>
+            <div class="modal-footer">
+                <a href="/Admin/Deals/List" target="_blank" class="btn btn-sm btn-outline-primary">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Link.ViewAllDeals")</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="crmLeadsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="crmLeadsModalTitle">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Modal.Leads.Title")</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="crmLeadsModalBody">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
+            </div>
+            <div class="modal-footer">
+                <a href="/Admin/Lead/List" target="_blank" class="btn btn-sm btn-outline-primary me-2">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Link.ViewAllLeads")</a>
+                <a href="/Admin/Inquiry/List" target="_blank" class="btn btn-sm btn-outline-secondary">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Link.ViewAllInquiries")</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="crmOverdueModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Modal.Overdue.Title")</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="crmOverdueModalBody">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
+            </div>
+            <div class="modal-footer">
+                <a href="/Admin/LinkedInFollowups/List" target="_blank" class="btn btn-sm btn-outline-primary">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Link.ViewAllFollowups")</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="crmLinkedInContactsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header crm-li-modal-header">
+                <h5 class="modal-title"><i class="fab fa-linkedin crm-li-title-icon"></i> <span id="crmLinkedInContactsTitle">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Modal.LinkedIn.Title")</span></h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="crmLinkedInContactsBody">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
+            </div>
+            <div class="modal-footer">
+                <a href="/Admin/LinkedInFollowups/List" target="_blank" class="btn btn-sm btn-outline-primary">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Link.ViewAllFollowups")</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .kpi-card.crm-pipeline { border-left: 5px solid #2563eb; }
+    .kpi-card.crm-won      { border-left: 5px solid #16a34a; }
+    .kpi-card.crm-leads    { border-left: 5px solid #7c3aed; }
+    .kpi-card.crm-overdue  { border-left: 5px solid #dc2626; }
+    .kpi-icon.crm-pipeline-icon { background: rgba(37,99,235,0.10); color: #2563eb; }
+    .kpi-icon.crm-won-icon      { background: rgba(22,163,74,0.10);  color: #16a34a; }
+    .kpi-icon.crm-leads-icon    { background: rgba(124,58,237,0.10); color: #7c3aed; }
+    .kpi-icon.crm-overdue-icon  { background: rgba(220,38,38,0.10);  color: #dc2626; }
+    .crm-overdue-value          { color: #dc2626; }
+    .crm-section-card      { margin-top: 0; }
+    .crm-section-header    { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .crm-filters-row       { display: flex; align-items: center; gap: 8px; }
+    .crm-period-sep        { font-size: 12px; color: #6b7280; padding: 0 4px; }
+    .crm-chart-section     { margin-top: 20px; }
+    .crm-two-col-charts    { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+    .crm-chart-half        { flex: 1; min-width: 260px; margin-top: 0 !important; }
+    .crm-donut-wrap        { position: relative; max-width: 320px; margin: 0 auto; height: 260px; }
+    .crm-winloss-center    { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; pointer-events: none; }
+    .crm-linkedin-section  { border-left: 4px solid #0a66c2; padding-left: 16px; background: #f8faff; border-radius: 0 8px 8px 0; }
+    .crm-li-title-icon     { color: #0a66c2; margin-right: 6px; }
+    .crm-li-summary        { font-size: 12px; color: #6b7280; font-style: italic; }
+    .crm-li-stats-row      { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; margin-top: 8px; }
+    .crm-li-stat-card      { flex: 1; min-width: 130px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 18px; }
+    .crm-li-stat-card.crm-li-stat-total       { border-top: 3px solid #0a66c2; }
+    .crm-li-stat-card.crm-li-stat-converted   { border-top: 3px solid #16a34a; }
+    .crm-li-stat-card.crm-li-stat-replied     { border-top: 3px solid #f59e0b; }
+    .crm-li-stat-card.crm-li-stat-overdue-li  { border-top: 3px solid #dc2626; }
+    .crm-li-stat-label     { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #6b7280; margin-bottom: 4px; }
+    .crm-li-stat-value     { font-size: 28px; font-weight: 700; color: #111827; line-height: 1.1; }
+    .crm-li-stat-sub       { font-size: 12px; color: #6b7280; margin-top: 3px; }
+    .crm-li-stat-card[data-li-filter]:hover { box-shadow: 0 2px 8px rgba(10,102,194,0.15); border-color: #0a66c2 !important; transition: box-shadow .15s, border-color .15s; }
+    .crm-li-card-icon      { font-size: 9px; color: #9ca3af; margin-left: 4px; vertical-align: middle; }
+    .crm-li-chart-area     { display: flex; justify-content: center; }
+    .crm-li-chart-wrap     { width: 100%; max-width: 560px; height: 300px; position: relative; }
+    .crm-li-donut-center   { position: absolute; top: 36%; left: 50%; transform: translate(-50%,-50%); text-align: center; pointer-events: none; font-size: 14px; font-weight: 700; color: #374151; }
+    .crm-detail-table      { font-size: 13px; }
+    .crm-thead-row         { background: #f9fafb; }
+    .crm-thead-row th      { font-weight: 600; }
+    .crm-td-name           { vertical-align: middle; font-weight: 500; }
+    .crm-td-amount         { vertical-align: middle; font-weight: 600; color: #059669; }
+    .crm-td-muted          { vertical-align: middle; color: #6b7280; }
+    .crm-td-neutral        { vertical-align: middle; color: #374151; }
+    .crm-td-danger         { vertical-align: middle; color: #dc2626; font-weight: 600; }
+    .crm-modal-tabs        { margin-bottom: 16px; }
+    .kpi-card[data-crm-modal]         { cursor: pointer; }
+    .crm-li-stat-card[data-li-filter] { cursor: pointer; }
+    .crm-li-modal-header   { border-bottom: 2px solid #0a66c2; }
+    .crm-li-icon-inline    { color: #0a66c2; }
+    .crm-td-url            { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+    .crm-winloss-rate      { font-size: 20px; font-weight: 700; color: #111827; }
+    .crm-winloss-label     { font-size: 10px; color: #6b7280; }
+    .crm-donut-center-sub  { font-size: 10px; color: #6b7280; }
+</style>
+
+<script>
+(function () {
+    var crmRes = {
+        pipelineValue:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Chart.PipelineValue").Text',
+        winRate:            '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Chart.WinRate").Text',
+        won:                '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Chart.Won").Text',
+        lost:               '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Chart.Lost").Text',
+        lostToComp:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Chart.LostToComp").Text',
+        newLeads:           '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Chart.NewLeads").Text',
+        dealsWon:           '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Chart.DealsWon").Text',
+        noOpenDeals:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.NoOpenDeals").Text',
+        noDealsWon:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.NoDealsWon").Text',
+        noLeads:            '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.NoLeads").Text',
+        noInquiries:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.NoInquiries").Text',
+        noContacts:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.NoContacts").Text',
+        allOnTrack:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.AllOnTrack").Text',
+        noData:             '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.NoData").Text',
+        loadFailed:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.LoadFailed").Text',
+        actionRequired:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.ActionRequired").Text',
+        contacts:           '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.Contacts").Text',
+        conversion:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.Conversion").Text',
+        deals:              '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.Deals").Text',
+        deal:               '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.Deal").Text',
+        leads:              '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.Leads").Text',
+        inquiries:          '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.Inquiries").Text',
+        vsPrevPeriod:       '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.VsPrevPeriod").Text',
+        liFilterAll:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LinkedIn.Filter.All").Text',
+        liFilterConverted:  '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LinkedIn.Filter.Converted").Text',
+        liFilterReplied:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LinkedIn.Filter.Replied").Text',
+        liContacts:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Modal.LinkedIn.Title").Text',
+        colDealName:        '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.DealName").Text',
+        colCompany:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Company").Text',
+        colStage:           '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Stage").Text',
+        colAmount:          '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Amount").Text',
+        colProbability:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Probability").Text',
+        colClosingDate:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.ClosingDate").Text',
+        colName:            '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Name").Text',
+        colSource:          '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Source").Text',
+        colCreated:         '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Created").Text',
+        colProjectType:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.ProjectType").Text',
+        colBudget:          '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Budget").Text',
+        colLinkedInUrl:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.LinkedInUrl").Text',
+        colEmail:           '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Email").Text',
+        colStatus:          '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Status").Text',
+        colLastMessage:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.LastMessage").Text',
+        colNextFollowup:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.NextFollowup").Text',
+        colRemaining:       '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Remaining").Text',
+        colNextFollowupDate:'@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.NextFollowupDate").Text',
+        tabLeads:           '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Modal.Tab.Leads").Text',
+        tabInquiries:       '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Modal.Tab.Inquiries").Text'
+    };
+
+    var crmSparkCharts = {};
+    var crmPipelineStageChart = null;
+    var crmLeadsSourceChart = null;
+    var crmWinLossChart = null;
+    var crmMonthlyTrendChart = null;
+    var crmLinkedInChart = null;
+    var crmState = { granularity: 'month', preset: 'lastmonth' };
+    function fmtINR(n) {
+        if (n == null || n === '') return '—';
+        var v = parseFloat(n);
+        if (v >= 10000000) return '₹' + (v / 10000000).toFixed(2) + ' Cr';
+        if (v >= 100000)   return '₹' + (v / 100000).toFixed(1) + ' L';
+        if (v >= 1000)     return '₹' + (v / 1000).toFixed(0) + 'K';
+        return '₹' + v.toFixed(0);
+    }
+
+    function trendHtml(current, previous, isAmt) {
+        if (previous == null || previous === 0) {
+            if (current > 0) return '<span class="kpi-trend up">↑ New</span>';
+            return '<span class="kpi-trend neutral">—</span>';
+        }
+        var diff = ((current - previous) / Math.abs(previous)) * 100;
+        var up = diff >= 0;
+        var label = isAmt
+            ? (up ? '↑ ' : '↓ ') + Math.abs(diff).toFixed(1) + '%'
+            : (up ? '↑ ' : '↓ ') + Math.abs(diff).toFixed(1) + '%';
+        return '<span class="kpi-trend ' + (up ? 'up' : 'down') + '">' + label + '</span>';
+    }
+
+    function destroyChart(ref) { if (ref) { try { ref.destroy(); } catch (e) {} } return null; }
+
+    function buildPayload() {
+        var p = { period: crmState.preset };
+        if (!crmState.preset) {
+            p.period = null;
+            if (crmState.granularity === 'month') {
+                p.monthFrom = parseInt($('#crm-month-from').val());
+                p.yearFrom  = parseInt($('#crm-year-from-month').val());
+                p.monthTo   = parseInt($('#crm-month-to').val());
+                p.yearTo    = parseInt($('#crm-year-to-month').val());
+            } else {
+                p.yearFrom = parseInt($('#crm-year-from').val());
+                p.yearTo   = parseInt($('#crm-year-to').val());
+            }
+        }
+        return p;
+    }
+
+    function setLoading(show) {
+        ['pipeline', 'won', 'leads', 'overdue'].forEach(function (k) {
+            var el = document.getElementById('crm-load-' + k);
+            if (el) el.style.display = show ? 'flex' : 'none';
+        });
+    }
+
+    function drawSparkline(id, points, color) {
+        if (crmSparkCharts[id]) { crmSparkCharts[id].destroy(); delete crmSparkCharts[id]; }
+        var canvas = document.getElementById(id);
+        if (!canvas || !points || !points.length) return;
+        crmSparkCharts[id] = new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: points.map(function (_, i) { return i; }),
+                datasets: [{ data: points, borderColor: color, borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false }]
+            },
+            options: {
+                animation: false, responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: { x: { display: false }, y: { display: false } }
+            }
+        });
+    }
+    var linkedInLoaded = false;
+
+    function loadCRMData() {
+        setLoading(true);
+        $.post('@Url.Action("GetCRMInsightsData", "ExecutiveDashboard", new { area = "Admin" })', addAntiForgeryToken(buildPayload()))
+            .done(function (d) {
+                setLoading(false);
+                renderKPIs(d);
+                renderPipelineStageChart(d);
+                renderLeadsSourceChart(d);
+                renderWinLossChart(d);
+                renderMonthlyTrendChart(d);
+                if (!linkedInLoaded) {
+                    renderLinkedIn(d);
+                    linkedInLoaded = true;
+                }
+            })
+            .fail(function () { setLoading(false); });
+    }
+
+    function renderKPIs(d) {
+        $('#crm-val-pipeline').text(fmtINR(d.totalPipelineValue));
+        $('#crm-sub-pipeline').text((d.pipelineDealsCount || 0) + ' ' + (d.pipelineDealsCount !== 1 ? crmRes.deals : crmRes.deal));
+        $('#crm-val-won').text(d.dealsWonCount + ' ' + (d.dealsWonCount !== 1 ? crmRes.deals : crmRes.deal));
+        $('#crm-trend-won').replaceWith($(trendHtml(d.dealsWonValue, d.prevDealsWonValue, true)).attr('id', 'crm-trend-won'));
+        $('#crm-sub-won').text(fmtINR(d.dealsWonValue));
+        drawSparkline('crm-spark-won', d.dealsWonPoints, '#16a34a');
+        var total = (d.newLeadsCount || 0) + (d.newInquiriesCount || 0);
+        var prevTotal = (d.prevNewLeadsCount || 0) + (d.prevNewInquiriesCount || 0);
+        $('#crm-val-leads').text(total);
+        $('#crm-trend-leads').replaceWith($(trendHtml(total, prevTotal, false)).attr('id', 'crm-trend-leads'));
+        $('#crm-sub-leads').text(d.newLeadsCount + ' ' + crmRes.leads + ', ' + d.newInquiriesCount + ' ' + crmRes.inquiries);
+        drawSparkline('crm-spark-leads', d.newLeadsPoints, '#7c3aed');
+        var ov = d.overdueFollowupsCount || 0;
+        $('#crm-val-overdue').text(ov);
+        $('#crm-sub-overdue').text(ov > 0 ? crmRes.actionRequired : crmRes.allOnTrack);
+    }
+
+    function renderLinkedIn(d) {
+        $('#crm-li-total').text(d.linkedInTotalCount || 0);
+        $('#crm-li-converted').text(d.linkedInConvertedCount || 0);
+        var rate = d.linkedInConversionRate != null ? parseFloat(d.linkedInConversionRate).toFixed(1) + '%' : '0%';
+        $('#crm-li-conv-rate').text(crmRes.conversion + rate);
+        $('#crm-li-replied').text(d.linkedInRepliedCount || 0);
+
+        var pts = d.linkedInStatusCounts || [];
+        if (!pts.length) { $('#crm-li-donut-center').text(crmRes.noData); return; }
+
+        var labels = pts.map(function (p) { return p.statusName; });
+        var counts = pts.map(function (p) { return p.count; });
+        var colors = pts.map(function (p) { return p.color; });
+        var total  = counts.reduce(function (a, b) { return a + b; }, 0);
+        $('#crm-li-donut-center').html('<div>' + total + '</div><div class="crm-donut-center-sub">' + crmRes.contacts + '</div>');
+
+        crmLinkedInChart = destroyChart(crmLinkedInChart);
+        var ctx = document.getElementById('crm-linkedin-status-chart');
+        if (!ctx) return;
+        crmLinkedInChart = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: counts, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '62%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 }, padding: 14 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                var val = ctx.parsed;
+                                var pct = total > 0 ? ' (' + (val / total * 100).toFixed(1) + '%)' : '';
+                                return ' ' + ctx.label + ': ' + val + pct;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderPipelineStageChart(d) {
+        var pts = d.dealsByStage || [];
+        crmPipelineStageChart = destroyChart(crmPipelineStageChart);
+        var ctx = document.getElementById('crm-pipeline-stage-chart');
+        if (!ctx) return;
+        if (!pts.length) return;
+        var labels = pts.map(function (p) { return p.stageName; });
+        var values = pts.map(function (p) { return p.value; });
+        var counts = pts.map(function (p) { return p.count; });
+        crmPipelineStageChart = new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: crmRes.pipelineValue,
+                    data: values,
+                    backgroundColor: 'rgba(37,99,235,0.75)',
+                    borderColor: '#2563eb',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                var idx = ctx.dataIndex;
+                                return ' ' + fmtINR(ctx.parsed.x) + ' (' + counts[idx] + ' deals)';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { ticks: { callback: function (v) { return fmtINR(v); }, font: { size: 11 } } },
+                    y: { ticks: { font: { size: 12 } } }
+                }
+            }
+        });
+    }
+
+    function renderLeadsSourceChart(d) {
+        var pts = d.leadsBySource || [];
+        crmLeadsSourceChart = destroyChart(crmLeadsSourceChart);
+        var ctx = document.getElementById('crm-leads-source-chart');
+        if (!ctx) return;
+        if (!pts.length) return;
+        var palette = ['#7c3aed','#2563eb','#0891b2','#16a34a','#d97706','#dc2626','#9ca3af','#f59e0b'];
+        var labels = pts.map(function (p) { return p.sourceName; });
+        var counts = pts.map(function (p) { return p.count; });
+        var total  = counts.reduce(function (a, b) { return a + b; }, 0);
+        crmLeadsSourceChart = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: counts, backgroundColor: palette.slice(0, counts.length), borderWidth: 2, borderColor: '#fff', hoverOffset: 5 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '55%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                var pct = total > 0 ? ' (' + (ctx.parsed / total * 100).toFixed(1) + '%)' : '';
+                                return ' ' + ctx.label + ': ' + ctx.parsed + pct;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderWinLossChart(d) {
+        crmWinLossChart = destroyChart(crmWinLossChart);
+        var ctx = document.getElementById('crm-winloss-chart');
+        if (!ctx) return;
+        var won   = d.dealsClosedWon || 0;
+        var lost  = d.dealsClosedLost || 0;
+        var lostC = d.dealsClosedLostToComp || 0;
+        var total = won + lost + lostC;
+        var winRate = total > 0 ? (won / total * 100).toFixed(0) : 0;
+        $('#crm-winloss-center').html('<div class="crm-winloss-rate">' + winRate + '%</div><div class="crm-winloss-label">' + crmRes.winRate + '</div>');
+        crmWinLossChart = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: [crmRes.won, crmRes.lost, crmRes.lostToComp],
+                datasets: [{ data: [won, lost, lostC], backgroundColor: ['#16a34a','#dc2626','#f59e0b'], borderWidth: 2, borderColor: '#fff', hoverOffset: 5 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '58%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                var pct = total > 0 ? ' (' + (ctx.parsed / total * 100).toFixed(1) + '%)' : '';
+                                return ' ' + ctx.label + ': ' + ctx.parsed + pct;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderMonthlyTrendChart(d) {
+        crmMonthlyTrendChart = destroyChart(crmMonthlyTrendChart);
+        var ctx = document.getElementById('crm-monthly-trend-chart');
+        if (!ctx) return;
+        var labels = d.monthlyTrendLabels || [];
+        if (!labels.length) return;
+        crmMonthlyTrendChart = new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: crmRes.newLeads,
+                        data: d.monthlyLeadTrend || [],
+                        borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.08)',
+                        borderWidth: 2, pointRadius: 3, tension: 0.3, fill: true
+                    },
+                    {
+                        label: crmRes.dealsWon,
+                        data: d.monthlyDealTrend || [],
+                        borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.08)',
+                        borderWidth: 2, pointRadius: 3, tension: 0.3, fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 12 } } } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } },
+                    x: { ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+    }
+    $(document).on('click', '[data-crm-granularity]', function () {
+        var g = $(this).data('crm-granularity');
+        crmState.granularity = g;
+        crmState.preset = g === 'month' ? 'lastmonth' : 'thisyear';
+        $('.crm-granularity-toggle .btn').removeClass('active');
+        $(this).addClass('active');
+        if (g === 'month') {
+            $('#crm-preset-bar-month').show();
+            $('#crm-preset-bar-year').hide();
+            $('#crm-preset-bar-month .btn-preset').removeClass('active');
+            $('#crm-preset-bar-month [data-crm-preset="lastmonth"]').addClass('active');
+        } else {
+            $('#crm-preset-bar-month').hide();
+            $('#crm-preset-bar-year').show();
+            $('#crm-preset-bar-year .btn-preset').removeClass('active');
+            $('#crm-preset-bar-year [data-crm-preset="thisyear"]').addClass('active');
+        }
+        loadCRMData();
+    });
+
+    $(document).on('click', '[data-crm-preset]', function () {
+        crmState.preset = $(this).data('crm-preset');
+        $(this).closest('.preset-bar').find('.btn-preset').removeClass('active');
+        $(this).addClass('active');
+        loadCRMData();
+    });
+    $(document).on('change', '#crm-month-from, #crm-year-from-month, #crm-month-to, #crm-year-to-month', function () {
+        crmState.preset = null;
+        $('#crm-preset-bar-month .btn-preset').removeClass('active');
+        loadCRMData();
+    });
+    $(document).on('change', '#crm-year-from, #crm-year-to', function () {
+        crmState.preset = null;
+        $('#crm-preset-bar-year .btn-preset').removeClass('active');
+        loadCRMData();
+    });
+    $(document).on('click', '[data-crm-modal]', function () {
+        var modal = $(this).data('crm-modal');
+        if (modal === 'pipeline') {
+            $('#crmPipelineModalBody').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
+            $('#crmPipelineModal').modal('show');
+            $.post('@Url.Action("GetCRMPipelineDetail", "ExecutiveDashboard", new { area = "Admin" })', addAntiForgeryToken(buildPayload()))
+                .done(function (rows) { $('#crmPipelineModalBody').html(buildPipelineTable(rows)); })
+                .fail(function () { $('#crmPipelineModalBody').html('<p class="text-danger">' + crmRes.loadFailed + '</p>'); });
+        } else if (modal === 'dealswon') {
+            $('#crmDealsWonModalBody').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
+            $('#crmDealsWonModal').modal('show');
+            $.post('@Url.Action("GetCRMDealsWonDetail", "ExecutiveDashboard", new { area = "Admin" })', addAntiForgeryToken(buildPayload()))
+                .done(function (rows) { $('#crmDealsWonModalBody').html(buildDealsWonTable(rows)); })
+                .fail(function () { $('#crmDealsWonModalBody').html('<p class="text-danger">' + crmRes.loadFailed + '</p>'); });
+        } else if (modal === 'leads') {
+            $('#crmLeadsModalBody').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
+            $('#crmLeadsModal').modal('show');
+            $.post('@Url.Action("GetCRMLeadsInquiriesDetail", "ExecutiveDashboard", new { area = "Admin" })', addAntiForgeryToken(buildPayload()))
+                .done(function (data) { $('#crmLeadsModalBody').html(buildLeadsInquiriesHtml(data)); })
+                .fail(function () { $('#crmLeadsModalBody').html('<p class="text-danger">' + crmRes.loadFailed + '</p>'); });
+        } else if (modal === 'overdue') {
+            $('#crmOverdueModalBody').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
+            $('#crmOverdueModal').modal('show');
+            $.post('@Url.Action("GetCRMOverdueFollowupsDetail", "ExecutiveDashboard", new { area = "Admin" })', addAntiForgeryToken(buildPayload()))
+                .done(function (rows) { $('#crmOverdueModalBody').html(buildOverdueTable(rows)); })
+                .fail(function () { $('#crmOverdueModalBody').html('<p class="text-danger">' + crmRes.loadFailed + '</p>'); });
+        }
+    });
+    var _crmPT = {};   
+    var CRM_PAGE_SIZE = 15;
+
+    function crmBuildPagedTable(rows, headerHtml, rowFn, emptyMsg) {
+        if (!rows || !rows.length) return '<p class="text-muted text-center py-3">' + emptyMsg + '</p>';
+        var tid = 'crm-pt-' + Math.random().toString(36).substr(2, 8);
+        _crmPT[tid] = { rows: rows, rowFn: rowFn, pageSize: CRM_PAGE_SIZE, page: 0 };
+        var totalPages = Math.ceil(rows.length / CRM_PAGE_SIZE);
+        var html = '<div id="' + tid + '">'
+            + '<div class="table-responsive"><table class="table table-hover crm-detail-table">'
+            + '<thead><tr class="crm-thead-row">' + headerHtml + '</tr></thead>'
+            + '<tbody id="' + tid + '-body">' + _crmPTRows(tid, 0) + '</tbody>'
+            + '</table></div>'
+            + '<div class="ops-pagination-footer">'
+            + '<span class="ops-pagination-info" id="' + tid + '-info">' + _crmPTInfo(tid) + '</span>';
+        if (totalPages > 1) {
+            html += '<div class="ops-pagination-btns">'
+                + '<button class="btn btn-sm btn-outline-secondary crm-pt-prev" data-tid="' + tid + '" disabled>‹ Prev</button>'
+                + '<button class="btn btn-sm btn-outline-secondary crm-pt-next" data-tid="' + tid + '">Next ›</button>'
+                + '</div>';
+        }
+        html += '</div></div>';
+        return html;
+    }
+
+    function _crmPTRows(tid, page) {
+        var d = _crmPT[tid]; if (!d) return '';
+        var s = page * d.pageSize, e = Math.min(s + d.pageSize, d.rows.length), out = '';
+        for (var i = s; i < e; i++) out += d.rowFn(d.rows[i]);
+        return out;
+    }
+
+    function _crmPTInfo(tid) {
+        var d = _crmPT[tid]; if (!d) return '';
+        var s = d.page * d.pageSize + 1, e = Math.min(s + d.pageSize - 1, d.rows.length);
+        return 'Showing ' + s + '–' + e + ' of ' + d.rows.length;
+    }
+
+    $(document).on('click', '.crm-pt-prev, .crm-pt-next', function () {
+        var tid = $(this).data('tid'), d = _crmPT[tid]; if (!d) return;
+        var total = Math.ceil(d.rows.length / d.pageSize);
+        d.page = $(this).hasClass('crm-pt-next') ? d.page + 1 : d.page - 1;
+        d.page = Math.max(0, Math.min(d.page, total - 1));
+        $('#' + tid + '-body').html(_crmPTRows(tid, d.page));
+        $('#' + tid + '-info').text(_crmPTInfo(tid));
+        $('#' + tid).find('.crm-pt-prev').prop('disabled', d.page === 0);
+        $('#' + tid).find('.crm-pt-next').prop('disabled', d.page >= total - 1);
+    });
+    function buildPipelineTable(rows) {
+        return crmBuildPagedTable(
+            rows,
+            '<th>' + crmRes.colDealName + '</th><th>' + crmRes.colCompany + '</th><th>' + crmRes.colStage + '</th><th>' + crmRes.colAmount + '</th><th>' + crmRes.colProbability + '</th><th>' + crmRes.colClosingDate + '</th>',
+            function (r) {
+                return '<tr>'
+                    + '<td class="crm-td-name">' + escHtml(r.dealName) + '</td>'
+                    + '<td class="crm-td-neutral">' + escHtml(r.company || '—') + '</td>'
+                    + '<td><span class="badge badge-info">' + escHtml(r.stage || '—') + '</span></td>'
+                    + '<td class="crm-td-amount">' + fmtINR(r.amount) + '</td>'
+                    + '<td class="crm-td-neutral">' + (r.probability != null ? r.probability + '%' : '—') + '</td>'
+                    + '<td class="crm-td-muted">' + escHtml(r.closingDate || '—') + '</td>'
+                    + '</tr>';
+            },
+            crmRes.noOpenDeals
+        );
+    }
+
+    function buildDealsWonTable(rows) {
+        return crmBuildPagedTable(
+            rows,
+            '<th>' + crmRes.colDealName + '</th><th>' + crmRes.colCompany + '</th><th>' + crmRes.colAmount + '</th><th>' + crmRes.colProbability + '</th><th>' + crmRes.colClosingDate + '</th>',
+            function (r) {
+                return '<tr>'
+                    + '<td class="crm-td-name">' + escHtml(r.dealName) + '</td>'
+                    + '<td class="crm-td-neutral">' + escHtml(r.company || '—') + '</td>'
+                    + '<td class="crm-td-amount">' + fmtINR(r.amount) + '</td>'
+                    + '<td class="crm-td-neutral">' + (r.probability != null ? r.probability + '%' : '—') + '</td>'
+                    + '<td class="crm-td-muted">' + escHtml(r.closingDate || '—') + '</td>'
+                    + '</tr>';
+            },
+            crmRes.noDealsWon
+        );
+    }
+
+    function buildLeadsInquiriesHtml(data) {
+        var leads = data.leads || [];
+        var inqs  = data.inquiries || [];
+
+        var leadsHtml = crmBuildPagedTable(
+            leads,
+            '<th>' + crmRes.colName + '</th><th>' + crmRes.colCompany + '</th><th>' + crmRes.colSource + '</th><th>' + crmRes.colCreated + '</th>',
+            function (r) {
+                return '<tr>'
+                    + '<td class="crm-td-name">' + escHtml(r.name) + '</td>'
+                    + '<td class="crm-td-neutral">' + escHtml(r.company || '—') + '</td>'
+                    + '<td class="crm-td-muted">' + escHtml(r.source || '—') + '</td>'
+                    + '<td class="crm-td-muted">' + escHtml(r.createdOn) + '</td>'
+                    + '</tr>';
+            },
+            crmRes.noLeads
+        );
+
+        var inqsHtml = crmBuildPagedTable(
+            inqs,
+            '<th>' + crmRes.colName + '</th><th>' + crmRes.colCompany + '</th><th>' + crmRes.colProjectType + '</th><th>' + crmRes.colBudget + '</th><th>' + crmRes.colCreated + '</th>',
+            function (r) {
+                return '<tr>'
+                    + '<td class="crm-td-name">' + escHtml(r.name) + '</td>'
+                    + '<td class="crm-td-neutral">' + escHtml(r.company || '—') + '</td>'
+                    + '<td class="crm-td-neutral">' + escHtml(r.projectType || '—') + '</td>'
+                    + '<td class="crm-td-amount">' + (r.budget ? fmtINR(r.budget) : '—') + '</td>'
+                    + '<td class="crm-td-muted">' + escHtml(r.createdOn) + '</td>'
+                    + '</tr>';
+            },
+            crmRes.noInquiries
+        );
+
+        return '<ul class="nav nav-tabs crm-modal-tabs" role="tablist">'
+            + '<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#crm-tab-leads">' + crmRes.tabLeads + ' (' + leads.length + ')</a></li>'
+            + '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#crm-tab-inqs">' + crmRes.tabInquiries + ' (' + inqs.length + ')</a></li>'
+            + '</ul>'
+            + '<div class="tab-content">'
+            + '<div class="tab-pane fade show active" id="crm-tab-leads">' + leadsHtml + '</div>'
+            + '<div class="tab-pane fade" id="crm-tab-inqs">' + inqsHtml + '</div>'
+            + '</div>';
+    }
+    var liFilterTitles = { all: crmRes.liFilterAll, converted: crmRes.liFilterConverted, replied: crmRes.liFilterReplied };
+
+    $(document).on('click', '[data-li-filter]', function () {
+        var filter = $(this).data('li-filter');
+        $('#crmLinkedInContactsTitle').text(liFilterTitles[filter] || crmRes.liContacts);
+        $('#crmLinkedInContactsBody').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
+        $('#crmLinkedInContactsModal').modal('show');
+        $.post('@Url.Action("GetCRMLinkedInContactsDetail", "ExecutiveDashboard", new { area = "Admin" })',
+            addAntiForgeryToken({ filter: filter }))
+            .done(function (rows) { $('#crmLinkedInContactsBody').html(buildLinkedInContactsTable(rows)); })
+            .fail(function () { $('#crmLinkedInContactsBody').html('<p class="text-danger">' + crmRes.loadFailed + '</p>'); });
+    });
+
+    function buildLinkedInContactsTable(rows) {
+        return crmBuildPagedTable(
+            rows,
+            '<th>' + crmRes.colLinkedInUrl + '</th><th>' + crmRes.colEmail + '</th><th>' + crmRes.colStatus + '</th><th>' + crmRes.colLastMessage + '</th><th>' + crmRes.colNextFollowup + '</th><th>' + crmRes.colRemaining + '</th>',
+            function (r) {
+                return '<tr>'
+                    + '<td class="crm-td-url">'
+                        + (r.linkedinUrl ? '<a href="' + escAttr(r.linkedinUrl) + '" target="_blank" rel="noopener"><i class="fab fa-linkedin crm-li-icon-inline"></i> ' + escHtml(r.linkedinUrl) + '</a>' : '—')
+                        + '</td>'
+                    + '<td class="crm-td-muted">' + escHtml(r.email || '—') + '</td>'
+                    + '<td><span class="badge badge-secondary">' + escHtml(r.status) + '</span></td>'
+                    + '<td class="crm-td-muted">' + escHtml(r.lastMessageDate || '—') + '</td>'
+                    + '<td class="crm-td-neutral">' + escHtml(r.nextFollowUpDate || '—') + '</td>'
+                    + '<td class="crm-td-neutral text-center">' + (r.remainingFollowUps || 0) + '</td>'
+                    + '</tr>';
+            },
+            crmRes.noContacts
+        );
+    }
+
+    function buildOverdueTable(rows) {
+        return crmBuildPagedTable(
+            rows,
+            '<th>' + crmRes.colName + '</th><th>' + crmRes.colLinkedInUrl + '</th><th>' + crmRes.colNextFollowupDate + '</th><th>' + crmRes.colRemaining + '</th><th>' + crmRes.colStatus + '</th>',
+            function (r) {
+                return '<tr>'
+                    + '<td class="crm-td-name">' + escHtml(r.name) + '</td>'
+                    + '<td class="crm-td-url">'
+                        + (r.linkedinUrl ? '<a href="' + escAttr(r.linkedinUrl) + '" target="_blank" rel="noopener">' + escHtml(r.linkedinUrl) + '</a>' : '—')
+                        + '</td>'
+                    + '<td class="crm-td-danger">' + escHtml(r.nextFollowUpDate || '—') + '</td>'
+                    + '<td class="crm-td-neutral text-center">' + (r.remainingFollowUps || 0) + '</td>'
+                    + '<td>' + escHtml(r.status || '—') + '</td>'
+                    + '</tr>';
+            },
+            '<i class="fas fa-check-circle text-success"></i> ' + crmRes.allOnTrack
+        );
+    }
+
+    function escHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function escAttr(s) { return escHtml(s); }
+    $(document).on('exec:load:crm', function () {
+        var activeBar = crmState.granularity === 'month' ? '#crm-preset-bar-month' : '#crm-preset-bar-year';
+        $(activeBar + ' .btn-preset').removeClass('active');
+        if (crmState.preset) {
+            $(activeBar + ' [data-crm-preset="' + crmState.preset + '"]').addClass('active');
+        }
+        $('[data-toggle="tooltip"]').tooltip();
+        loadCRMData(); 
+    });
+}());
+</script>

@@ -11,6 +11,9 @@
     <button class="exec-tab" data-tab="operational">
         <i class="fas fa-tasks"></i> Operational Metrics
     </button>
+    <button class="exec-tab" data-tab="crm">
+        <i class="fas fa-handshake"></i> CRM Insights
+    </button>
 </div>
 
 <div id="exec-tab-financial">
@@ -18,6 +21,9 @@
 </div>
 <div id="exec-tab-operational" style="display:none;">
     @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_OperationalMetricsSection.cshtml")
+</div>
+<div id="exec-tab-crm" style="display:none;">
+    @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_CRMInsightsSection.cshtml")
 </div>
 
 <style>
@@ -52,7 +58,7 @@
 
 <script>
 (function () {
-    var loaded = { financial: true, operational: false };
+    var loaded = { financial: true, operational: false, crm: false };
 
     $(document).ready(function () {
         $('.exec-tab').on('click', function () {
@@ -62,7 +68,7 @@
             $('.exec-tab').removeClass('active');
             $(this).addClass('active');
 
-            $('#exec-tab-financial, #exec-tab-operational').hide();
+            $('#exec-tab-financial, #exec-tab-operational, #exec-tab-crm').hide();
             $('#exec-tab-' + tab).show();
 
             if (!loaded[tab]) {

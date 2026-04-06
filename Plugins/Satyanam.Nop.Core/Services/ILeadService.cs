@@ -30,5 +30,17 @@ namespace Satyanam.Nop.Core.Services
         Task<IList<Lead>> GetLeadsByIdsAsync(List<int> ids);
         Task<IList<Lead>> GetAllLeadsForReplyIoSyncAsync();
         Task<(IList<Lead> Leads, IList<Contacts> Contacts)> GetLeadsAndContactsByTagsAsync(List<int> tagIds);
+
+        /// <summary>
+        /// Gets a Lead
+        /// </summary>
+        /// <param name="firstName">Filter by first name</param>
+        /// <param name="lastName">Filter by last name</param>
+        /// <param name="email">Filter by email</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the lead
+        /// </returns>
+        Task<Lead> GetExistingLeadByEmailAndFirstNameAndLastNameAsync(string firstName = null, string lastName = null, string email = null);
     }
 }

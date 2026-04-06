@@ -1,6 +1,8 @@
+using App.Core.Domain.Directory;
 using App.Core.Domain.Extension.ProjectTasks;
 using App.Core.Domain.Extension.Projects;
 using App.Services.Configuration;
+using App.Services.Directory;
 using App.Services.Employees;
 using App.Services.Localization;
 using App.Services.Projects;
@@ -11,6 +13,7 @@ using App.Web.Areas.Admin.Controllers;
 using App.Web.Framework.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Satyanam.Nop.Core.Domains;
 using Satyanam.Nop.Core.Services;
 using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.Enums;
 using Satyanam.Plugin.Misc.AccountManagement.Services;
@@ -40,6 +43,14 @@ public partial class ExecutiveDashboardController : BaseAdminController
     private readonly IEmployeeService _employeeService;
     private readonly IWorkflowStatusService _workflowStatusService;
     private readonly IMemoryCache _memoryCache;
+    // CRM services
+    private readonly ILeadService _leadService;
+    private readonly IDealsService _dealsService;
+    private readonly ILeadSourceService _leadSourceService;
+    private readonly ILinkedInFollowupsService _linkedInFollowupsService;
+    private readonly IInquiryService _inquiryService;
+    private readonly ICompanyService _companyService;
+    private readonly ICurrencyService _currencyService;
 
     #endregion
 
@@ -55,7 +66,14 @@ public partial class ExecutiveDashboardController : BaseAdminController
         IProjectsService projectsService,
         IEmployeeService employeeService,
         IWorkflowStatusService workflowStatusService,
-        IMemoryCache memoryCache)
+        IMemoryCache memoryCache,
+        ILeadService leadService,
+        IDealsService dealsService,
+        ILeadSourceService leadSourceService,
+        ILinkedInFollowupsService linkedInFollowupsService,
+        IInquiryService inquiryService,
+        ICompanyService companyService,
+        ICurrencyService currencyService)
     {
         _accountManagementService = accountManagementService;
         _localizationService = localizationService;
@@ -67,6 +85,13 @@ public partial class ExecutiveDashboardController : BaseAdminController
         _employeeService = employeeService;
         _workflowStatusService = workflowStatusService;
         _memoryCache = memoryCache;
+        _leadService = leadService;
+        _dealsService = dealsService;
+        _leadSourceService = leadSourceService;
+        _linkedInFollowupsService = linkedInFollowupsService;
+        _inquiryService = inquiryService;
+        _companyService = companyService;
+        _currencyService = currencyService;
     }
 
     #endregion
@@ -434,6 +459,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
         decimal revenue;
         IEnumerable<object> topInvoices;
 
+        List<Domain.Invoice> allInvoicesForRevenue;
         var intervals = ResolveModalIntervals(granularityId, monthFrom, yearFrom, monthTo, yearTo, yearFrom, yearTo, fyStartMonth);
         if (intervals != null)
         {
@@ -441,9 +467,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
             var invTasks = intervals.Select(i => _accountManagementService.GetAllInvoicesAsync(monthId: i.month, yearId: i.year)).ToList();
             await Task.WhenAll(revTasks.Cast<Task>().Concat(invTasks.Cast<Task>()));
             revenue = revTasks.Sum(t => t.Result.TotalIncome);
-            topInvoices = invTasks.SelectMany(t => t.Result ?? Enumerable.Empty<Domain.Invoice>())
-                .OrderByDescending(x => x.TotalPaymentAmount).Take(10)
-                .Select(x => (object)new { invoiceNumber = x.InvoiceNumber, amount = x.TotalPaymentAmount, date = x.InvoiceDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture), statusId = x.StatusId });
+            allInvoicesForRevenue = invTasks.SelectMany(t => t.Result ?? Enumerable.Empty<Domain.Invoice>()).ToList();
         }
         else
         {
@@ -451,9 +475,24 @@ public partial class ExecutiveDashboardController : BaseAdminController
             var invoicesTask = _accountManagementService.GetAllInvoicesAsync(createdFromUTC: dateFrom, createdToUTC: dateTo);
             await Task.WhenAll(summaryTask, invoicesTask);
             revenue = summaryTask.Result.TotalIncome;
-            topInvoices = (invoicesTask.Result ?? Enumerable.Empty<Domain.Invoice>()).OrderByDescending(x => x.TotalPaymentAmount).Take(10)
-                .Select(x => (object)new { invoiceNumber = x.InvoiceNumber, amount = x.TotalPaymentAmount, date = x.InvoiceDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture), statusId = x.StatusId });
+            allInvoicesForRevenue = (invoicesTask.Result ?? Enumerable.Empty<Domain.Invoice>()).ToList();
         }
+
+        var revBillingMap  = await BuildBillingMapAsync(allInvoicesForRevenue);
+        var revInrCurrency = await GetInrCurrencyAsync();
+
+        var revInrAmounts = new Dictionary<int, decimal>();
+        foreach (var inv in allInvoicesForRevenue)
+        {
+            var currencyId = revBillingMap.TryGetValue(inv.ProjectBillingId, out var b) ? b.PaymentCurrencyId : 0;
+            revInrAmounts[inv.Id] = currencyId > 0
+                ? await ToInrAsync(inv.TotalPaymentAmount, currencyId, revInrCurrency)
+                : inv.TotalPaymentAmount;
+        }
+
+        topInvoices = allInvoicesForRevenue
+            .OrderByDescending(x => revInrAmounts[x.Id]).Take(10)
+            .Select(x => (object)new { invoiceNumber = x.InvoiceNumber, amount = revInrAmounts[x.Id], date = x.InvoiceDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture), statusId = x.StatusId });
 
         return Json(new { revenue, topInvoices });
     }
@@ -601,8 +640,20 @@ public partial class ExecutiveDashboardController : BaseAdminController
         var lblPending   = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Pending") ?? "Pending";
         var lblCancelled = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Cancelled") ?? "Cancelled";
         var lblDraft     = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.Draft") ?? "Draft";
+        var billingMap  = await BuildBillingMapAsync(allInvoices);
+        var inrCurrency = await GetInrCurrencyAsync();
+
+        var inrAmounts = new Dictionary<int, decimal>();
+        foreach (var inv in allInvoices)
+        {
+            var currencyId = billingMap.TryGetValue(inv.ProjectBillingId, out var b) ? b.PaymentCurrencyId : 0;
+            inrAmounts[inv.Id] = currencyId > 0
+                ? await ToInrAsync(inv.TotalPaymentAmount, currencyId, inrCurrency)
+                : inv.TotalPaymentAmount;
+        }
+
         var invoiceRows = allInvoices
-            .OrderByDescending(i => i.TotalPaymentAmount)
+            .OrderByDescending(i => inrAmounts[i.Id])
             .Select(i =>
             {
                 var isOverdue = unpaidStatuses.Contains(i.StatusId) && i.DueDate != default && i.DueDate.Date < today;
@@ -618,7 +669,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
                     title = string.IsNullOrWhiteSpace(i.Title) ? $"Invoice #{i.InvoiceNumber}" : i.Title,
                     invoiceDate = i.InvoiceDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture),
                     dueDate = i.DueDate != default ? i.DueDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture) : "—",
-                    amount = i.TotalPaymentAmount,
+                    amount = inrAmounts[i.Id],
                     statusLabel,
                     daysOverdue = isOverdue ? (today - i.DueDate.Date).Days : 0
                 };
@@ -626,12 +677,40 @@ public partial class ExecutiveDashboardController : BaseAdminController
 
         return Json(new
         {
-            paid    = new { count = paid.Count,    amount = paid.Sum(i => i.TotalPaymentAmount) },
-            overdue = new { count = overdue.Count, amount = overdue.Sum(i => i.TotalPaymentAmount) },
-            pending = new { count = pending.Count, amount = pending.Sum(i => i.TotalPaymentAmount) },
-            draft   = new { count = draft.Count,   amount = draft.Sum(i => i.TotalPaymentAmount) },
+            paid    = new { count = paid.Count,    amount = paid.Sum(i => inrAmounts[i.Id]) },
+            overdue = new { count = overdue.Count, amount = overdue.Sum(i => inrAmounts[i.Id]) },
+            pending = new { count = pending.Count, amount = pending.Sum(i => inrAmounts[i.Id]) },
+            draft   = new { count = draft.Count,   amount = draft.Sum(i => inrAmounts[i.Id]) },
             invoices = invoiceRows
         });
+    }
+
+    private async Task<Currency> GetInrCurrencyAsync()
+    {
+        var currencies = await _currencyService.GetAllCurrenciesAsync(showHidden: true);
+        return currencies.FirstOrDefault(c => c.CurrencyCode == "INR");
+    }
+
+    private async Task<Dictionary<int, Domain.ProjectBilling>> BuildBillingMapAsync(IEnumerable<Domain.Invoice> invoices)
+    {
+        var map = new Dictionary<int, Domain.ProjectBilling>();
+        foreach (var id in invoices.Select(i => i.ProjectBillingId).Distinct())
+        {
+            var billing = await _accountManagementService.GetProjectBillingByIdAsync(id);
+            if (billing != null)
+                map[id] = billing;
+        }
+        return map;
+    }
+
+    private async Task<decimal> ToInrAsync(decimal amount, int paymentCurrencyId, Currency inrCurrency)
+    {
+        if (inrCurrency == null || paymentCurrencyId == inrCurrency.Id)
+            return amount;
+        var source = await _currencyService.GetCurrencyByIdAsync(paymentCurrencyId);
+        if (source == null)
+            return amount;
+        return await _currencyService.ConvertCurrencyAsync(amount, source, inrCurrency);
     }
 
     private const string StatusCacheKey = "exec_dashboard_workflow_statuses";
@@ -670,7 +749,8 @@ public partial class ExecutiveDashboardController : BaseAdminController
         ResolveOperationalPeriod(string period,
             DateTime? dateFrom = null, DateTime? dateTo = null,
             int? monthFrom = null, int? yearFrom = null,
-            int? monthTo = null, int? yearTo = null)
+            int? monthTo = null, int? yearTo = null,
+            int fyStartMonth = 1)
     {
         var today = DateTime.UtcNow.Date;
         DateTime from, to, pFrom, pTo;
@@ -761,20 +841,47 @@ public partial class ExecutiveDashboardController : BaseAdminController
                 pLbl = $"{pFrom:MMM yyyy} – {pTo:MMM yyyy}";
                 break;
             case "thisyear":
-                from = new DateTime(today.Year, 1, 1);
-                to = today;
-                pFrom = new DateTime(today.Year - 1, 1, 1);
-                pTo = new DateTime(today.Year - 1, 12, 31);
-                lbl = today.Year.ToString();
-                pLbl = (today.Year - 1).ToString();
+                if (fyStartMonth <= 1)
+                {
+                    from = new DateTime(today.Year, 1, 1);
+                    to = today;
+                    pFrom = new DateTime(today.Year - 1, 1, 1);
+                    pTo = new DateTime(today.Year - 1, 12, 31);
+                    lbl = today.Year.ToString();
+                    pLbl = (today.Year - 1).ToString();
+                }
+                else
+                {
+                    var fyYear = today.Month >= fyStartMonth ? today.Year : today.Year - 1;
+                    from = new DateTime(fyYear, fyStartMonth, 1);
+                    to = today;
+                    pFrom = new DateTime(fyYear - 1, fyStartMonth, 1);
+                    pTo = from.AddDays(-1);
+                    lbl = FyLabel(fyYear, fyStartMonth);
+                    pLbl = FyLabel(fyYear - 1, fyStartMonth);
+                }
                 break;
             case "lastyear":
-                from = new DateTime(today.Year - 1, 1, 1);
-                to = new DateTime(today.Year - 1, 12, 31);
-                pFrom = new DateTime(today.Year - 2, 1, 1);
-                pTo = new DateTime(today.Year - 2, 12, 31);
-                lbl = (today.Year - 1).ToString();
-                pLbl = (today.Year - 2).ToString();
+                if (fyStartMonth <= 1)
+                {
+                    from = new DateTime(today.Year - 1, 1, 1);
+                    to = new DateTime(today.Year - 1, 12, 31);
+                    pFrom = new DateTime(today.Year - 2, 1, 1);
+                    pTo = new DateTime(today.Year - 2, 12, 31);
+                    lbl = (today.Year - 1).ToString();
+                    pLbl = (today.Year - 2).ToString();
+                }
+                else
+                {
+                    var fyYear = today.Month >= fyStartMonth ? today.Year : today.Year - 1;
+                    var prevFyYear = fyYear - 1;
+                    from = new DateTime(prevFyYear, fyStartMonth, 1);
+                    to = new DateTime(fyYear, fyStartMonth, 1).AddDays(-1);
+                    pFrom = new DateTime(prevFyYear - 1, fyStartMonth, 1);
+                    pTo = from.AddDays(-1);
+                    lbl = FyLabel(prevFyYear, fyStartMonth);
+                    pLbl = FyLabel(prevFyYear - 1, fyStartMonth);
+                }
                 break;
             default:
                 from = new DateTime(today.AddMonths(-3).Year, today.AddMonths(-3).Month, 1);
@@ -842,7 +949,8 @@ public partial class ExecutiveDashboardController : BaseAdminController
         if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
             return AccessDeniedView();
 
-        var (dateFrom, dateTo, prevFrom, prevTo, periodLabel, prevPeriodLabel) = ResolveOperationalPeriod(period, customFrom, customTo, monthFrom, yearFrom, monthTo, yearTo);
+        var fyStartMonth = await GetFyStartMonthAsync();
+        var (dateFrom, dateTo, prevFrom, prevTo, periodLabel, prevPeriodLabel) = ResolveOperationalPeriod(period, customFrom, customTo, monthFrom, yearFrom, monthTo, yearTo, fyStartMonth);
         var today = DateTime.UtcNow.Date;
         var pIds = projectId.HasValue ? new List<int> { projectId.Value } : null;
         var eIds = employeeId.HasValue ? new List<int> { employeeId.Value } : null;
@@ -860,9 +968,6 @@ public partial class ExecutiveDashboardController : BaseAdminController
             .Where(t => t.Tasktypeid == (int)TaskTypeEnum.Bug && t.ParentTaskId > 0)
             .GroupBy(t => t.ParentTaskId)
             .ToDictionary(g => g.Key, g => g.Count());
-
-        // allTaskMap built from raw result (includes UserStory) so bug→parent resolution works
-        // even when the parent task is a UserStory (matches performance report behaviour)
         var allTaskMap = allTasksTask.Result.ToDictionary(t => t.Id);
 
         var allTasks = allTasksTask.Result
@@ -957,7 +1062,6 @@ public partial class ExecutiveDashboardController : BaseAdminController
         object projectRadar;
         if (isAllProjects && isEmpFilter)
         {
-            // Use timesheets as task source (same as performance report: SpentDate filter, bug→parent resolution)
             var empTsTaskIds  = curTs.Where(t => t.TaskId > 0).Select(t => t.TaskId).ToHashSet();
             var empPeriodTasks = allTasks
                 .Where(t => empTsTaskIds.Contains(t.Id))
@@ -999,7 +1103,6 @@ public partial class ExecutiveDashboardController : BaseAdminController
                 .Take(6)
                 .ToList();
 
-            // Append global weighted average (same values as KPI cards) so JS uses correct average line
             perProjectEntries.Add(new
             {
                 project       = avgLabel,
@@ -1153,7 +1256,8 @@ public partial class ExecutiveDashboardController : BaseAdminController
         if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
             return AccessDeniedView();
 
-        var (dateFrom, dateTo, _, _, _, _) = ResolveOperationalPeriod(period, customFrom, customTo, monthFrom, yearFrom, monthTo, yearTo);
+        var fyStartMonth = await GetFyStartMonthAsync();
+        var (dateFrom, dateTo, _, _, _, _) = ResolveOperationalPeriod(period, customFrom, customTo, monthFrom, yearFrom, monthTo, yearTo, fyStartMonth);
         var pIds = projectId.HasValue ? new List<int> { projectId.Value } : null;
         var eIds = employeeId.HasValue ? new List<int> { employeeId.Value } : null;
 
@@ -1238,7 +1342,8 @@ public partial class ExecutiveDashboardController : BaseAdminController
         if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
             return AccessDeniedView();
 
-        var (dateFrom, dateTo, _, _, _, _) = ResolveOperationalPeriod(period, customFrom, customTo, monthFrom, yearFrom, monthTo, yearTo);
+        var fyStartMonth = await GetFyStartMonthAsync();
+        var (dateFrom, dateTo, _, _, _, _) = ResolveOperationalPeriod(period, customFrom, customTo, monthFrom, yearFrom, monthTo, yearTo, fyStartMonth);
 
         var pIds = projectId.HasValue ? new List<int> { projectId.Value } : null;
         var eIds = employeeId.HasValue ? new List<int> { employeeId.Value } : null;
@@ -1384,7 +1489,8 @@ public partial class ExecutiveDashboardController : BaseAdminController
         if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
             return AccessDeniedView();
 
-        var (dateFrom, dateTo, _, _, _, _) = ResolveOperationalPeriod(period, customFrom, customTo, monthFrom, yearFrom, monthTo, yearTo);
+        var fyStartMonth = await GetFyStartMonthAsync();
+        var (dateFrom, dateTo, _, _, _, _) = ResolveOperationalPeriod(period, customFrom, customTo, monthFrom, yearFrom, monthTo, yearTo, fyStartMonth);
 
         var pIds = projectId.HasValue ? new List<int> { projectId.Value } : null;
         var eIds = employeeId.HasValue ? new List<int> { employeeId.Value } : null;
@@ -1516,6 +1622,368 @@ public partial class ExecutiveDashboardController : BaseAdminController
             projectQuality
         });
     }
+    private static List<(int month, int year, string label)> BuildMonthlyIntervals(DateTime from, DateTime to)
+    {
+        var result = new List<(int, int, string)>();
+        var current = new DateTime(from.Year, from.Month, 1);
+        var end = new DateTime(to.Year, to.Month, 1);
+        var fmt = from.Year == to.Year ? "MMM" : "MMM yy";
+        while (current <= end)
+        {
+            result.Add((current.Month, current.Year, current.ToString(fmt, CultureInfo.InvariantCulture)));
+            current = current.AddMonths(1);
+        }
+        return result;
+    }
+
+    private async Task<Dictionary<int, string>> GetLocalizedStageNamesAsync()
+    {
+        var prefix = "Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Stage.";
+        var result = new Dictionary<int, string>();
+        for (var i = 1; i <= 9; i++)
+            result[i] = await _localizationService.GetResourceAsync(prefix + i);
+        return result;
+    }
+
+    private async Task<Dictionary<int, string>> GetLocalizedFollowUpStatusNamesAsync()
+    {
+        var prefix = "Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LinkedInStatus.";
+        var result = new Dictionary<int, string>();
+        for (var i = 0; i <= 8; i++)
+            result[i] = await _localizationService.GetResourceAsync(prefix + i);
+        return result;
+    }
+
+    private static readonly Dictionary<int, string> FollowUpStatusColors = new()
+    {
+        { 0, "#9ca3af" },
+        { 1, "#6b7280" },
+        { 2, "#3b82f6" },
+        { 3, "#06b6d4" },
+        { 4, "#10b981" },
+        { 5, "#f59e0b" },
+        { 6, "#16a34a" },
+        { 7, "#7c3aed" },
+        { 8, "#ef4444" }
+    };
+
+    [HttpPost]
+    public virtual async Task<IActionResult> GetCRMInsightsData(
+        string period = "lastmonth",
+        DateTime? dateFrom = null, DateTime? dateTo = null,
+        int? monthFrom = null, int? yearFrom = null,
+        int? monthTo = null, int? yearTo = null)
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+            return AccessDeniedView();
+
+        var fyStartMonth = await GetFyStartMonthAsync();
+        var (dfrom, dto, prevFrom, prevTo, periodLabel, prevPeriodLabel) =
+            ResolveOperationalPeriod(period, dateFrom, dateTo, monthFrom, yearFrom, monthTo, yearTo, fyStartMonth);
+        var dealsTask    = _dealsService.GetAllDealsAsync("", 0, 0, null, pageSize: int.MaxValue);
+        var leadsTask    = _leadService.GetAllLeadAsync("", "", null, "", "", 0, 0, null, 0, pageSize: int.MaxValue);
+        var followupsTask = _linkedInFollowupsService.GetAllLinkedInFollowupsAsync("", "", "", "", "", pageSize: int.MaxValue);
+        var inquiriesTask = _inquiryService.GetAllInquiryAsync(pageSize: int.MaxValue);
+        var sourcesTask  = _leadSourceService.GetAllLeadSourceAsync("", pageSize: int.MaxValue);
+
+        await Task.WhenAll(dealsTask, leadsTask, followupsTask, inquiriesTask, sourcesTask);
+
+        var allDeals     = dealsTask.Result.ToList();
+        var allLeads     = leadsTask.Result.ToList();
+        var allFollowups = followupsTask.Result.ToList();
+        var allInquiries = inquiriesTask.Result.ToList();
+        var sourceMap    = sourcesTask.Result.ToDictionary(s => s.Id, s => s.Name);
+
+        var stageNamesMap       = await GetLocalizedStageNamesAsync();
+        var followUpStatusNames = await GetLocalizedFollowUpStatusNamesAsync();
+        var openDeals = allDeals.Where(d => d.StageId >= 1 && d.StageId <= 6).ToList();
+        var totalPipelineValue = (decimal)openDeals.Sum(d => d.Amount);
+        var dealsWon = allDeals.Where(d =>
+            d.StageId == 7 && d.ClosingDate.HasValue &&
+            d.ClosingDate.Value >= dfrom && d.ClosingDate.Value <= dto).ToList();
+        var prevDealsWon = allDeals.Where(d =>
+            d.StageId == 7 && d.ClosingDate.HasValue &&
+            d.ClosingDate.Value >= prevFrom && d.ClosingDate.Value <= prevTo).ToList();
+        var newLeads     = allLeads.Where(l => l.CreatedOnUtc >= dfrom && l.CreatedOnUtc <= dto).ToList();
+        var prevLeads    = allLeads.Where(l => l.CreatedOnUtc >= prevFrom && l.CreatedOnUtc <= prevTo).ToList();
+        var newInqs      = allInquiries.Where(i => i.CreatedOnUtc >= dfrom && i.CreatedOnUtc <= dto).ToList();
+        var prevInqs     = allInquiries.Where(i => i.CreatedOnUtc >= prevFrom && i.CreatedOnUtc <= prevTo).ToList();
+        var today = DateTime.UtcNow.Date;
+        var overdueCount = allFollowups.Count(f =>
+            f.NextFollowUpDate.HasValue &&
+            f.NextFollowUpDate.Value.Date < today &&
+            f.RemainingFollowUps > 0 &&
+            f.StatusId != (int)FollowUpStatusEnum.Closed &&
+            f.StatusId != (int)FollowUpStatusEnum.Converted &&
+            f.StatusId != (int)FollowUpStatusEnum.NotInterested &&
+            f.StatusId != (int)FollowUpStatusEnum.BlockedOrRemoved);
+        var intervals = BuildMonthlyIntervals(dfrom, dto);
+        var dealsWonPoints = intervals.Select(i =>
+            (decimal)allDeals
+                .Where(d => d.StageId == 7 && d.ClosingDate.HasValue &&
+                            d.ClosingDate.Value.Year == i.year && d.ClosingDate.Value.Month == i.month)
+                .Sum(d => d.Amount)).ToList();
+        var newLeadsPoints = intervals.Select(i =>
+            allLeads.Count(l => l.CreatedOnUtc.Year == i.year && l.CreatedOnUtc.Month == i.month)).ToList();
+        var sparklineLabels = intervals.Select(i => i.label).ToList();
+        var dealsByStage = Enumerable.Range(1, 6).Select(stageId =>
+        {
+            var stageDeals = openDeals.Where(d => d.StageId == stageId).ToList();
+            return new
+            {
+                stageName = stageNamesMap.GetValueOrDefault(stageId, stageId.ToString()),
+                count = stageDeals.Count,
+                value = (decimal)stageDeals.Sum(d => d.Amount)
+            };
+        }).ToList();
+        var leadsBySource = allLeads
+            .GroupBy(l => l.LeadSourceId)
+            .Select(g => new
+            {
+                sourceName = sourceMap.GetValueOrDefault(g.Key, "Unknown"),
+                count = g.Count()
+            })
+            .Where(s => s.count > 0)
+            .OrderByDescending(s => s.count)
+            .ToList();
+        var trendIntervals   = BuildMonthlyIntervals(dfrom, dto);
+        var monthlyLeadTrend = trendIntervals.Select(i =>
+            allLeads.Count(l => l.CreatedOnUtc.Year == i.year && l.CreatedOnUtc.Month == i.month)).ToList();
+        var monthlyDealTrend = trendIntervals.Select(i =>
+            allDeals.Count(d => d.CreatedOnUtc.Year == i.year && d.CreatedOnUtc.Month == i.month)).ToList();
+        var monthlyTrendLabels = trendIntervals.Select(i => i.label).ToList();
+        var dealsClosedWon      = allDeals.Count(d => d.StageId == 7);
+        var dealsClosedLost     = allDeals.Count(d => d.StageId == 8);
+        var dealsClosedLostComp = allDeals.Count(d => d.StageId == 9);
+        var linkedInStatusCounts = allFollowups
+            .GroupBy(f => f.StatusId)
+            .Select(g => new
+            {
+                statusName = followUpStatusNames.GetValueOrDefault(g.Key, g.Key.ToString()),
+                count = g.Count(),
+                color = FollowUpStatusColors.GetValueOrDefault(g.Key, "#9ca3af")
+            })
+            .Where(s => s.count > 0)
+            .OrderBy(s => s.statusName)
+            .ToList();
+
+        var linkedInTotal     = allFollowups.Count;
+        var linkedInConverted = allFollowups.Count(f => f.StatusId == (int)FollowUpStatusEnum.Converted);
+        var linkedInReplied   = allFollowups.Count(f =>
+            f.StatusId == (int)FollowUpStatusEnum.Replied ||
+            f.StatusId == (int)FollowUpStatusEnum.InConversation);
+        var linkedInConvRate  = linkedInTotal > 0
+            ? Math.Round((decimal)linkedInConverted / linkedInTotal * 100, 1)
+            : 0m;
+
+        return Json(new
+        {
+            // KPIs
+            totalPipelineValue,
+            pipelineDealsCount = openDeals.Count,
+            dealsWonCount    = dealsWon.Count,
+            dealsWonValue    = (decimal)dealsWon.Sum(d => d.Amount),
+            prevDealsWonValue = (decimal)prevDealsWon.Sum(d => d.Amount),
+            newLeadsCount    = newLeads.Count,
+            newInquiriesCount = newInqs.Count,
+            prevNewLeadsCount = prevLeads.Count,
+            prevNewInquiriesCount = prevInqs.Count,
+            overdueFollowupsCount = overdueCount,
+            dealsWonPoints,
+            newLeadsPoints,
+            sparklineLabels,
+            dealsByStage,
+            leadsBySource,
+            monthlyLeadTrend,
+            monthlyDealTrend,
+            monthlyTrendLabels,
+            dealsClosedWon,
+            dealsClosedLost,
+            dealsClosedLostToComp = dealsClosedLostComp,
+            linkedInStatusCounts,
+            linkedInTotalCount    = linkedInTotal,
+            linkedInConvertedCount = linkedInConverted,
+            linkedInRepliedCount  = linkedInReplied,
+            linkedInConversionRate = linkedInConvRate,
+            periodLabel,
+            prevPeriodLabel
+        });
+    }
+
+    [HttpPost]
+    public virtual async Task<IActionResult> GetCRMPipelineDetail()
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+            return AccessDeniedView();
+
+        var allDeals = (await _dealsService.GetAllDealsAsync("", 0, 0, null, pageSize: int.MaxValue)).ToList();
+        var openDeals = allDeals.Where(d => d.StageId >= 1 && d.StageId <= 6).OrderBy(d => d.StageId).ToList();
+
+        var allCompanies = (await _companyService.GetAllCompanyAsync("", "", pageSize: int.MaxValue))
+            .ToDictionary(c => c.Id, c => c.CompanyName);
+        var stageNamesMap = await GetLocalizedStageNamesAsync();
+
+        var rows = openDeals.Select(d => new
+        {
+            dealName    = d.DealName,
+            company     = allCompanies.GetValueOrDefault(d.CompanyId, "—"),
+            stage       = stageNamesMap.GetValueOrDefault(d.StageId, "—"),
+            amount      = d.Amount,
+            probability = d.Probability,
+            closingDate = d.ClosingDate.HasValue ? d.ClosingDate.Value.ToString("dd MMM yyyy") : "—"
+        });
+
+        return Json(rows);
+    }
+
+    [HttpPost]
+    public virtual async Task<IActionResult> GetCRMDealsWonDetail(
+        string period = "lastmonth",
+        DateTime? dateFrom = null, DateTime? dateTo = null,
+        int? monthFrom = null, int? yearFrom = null,
+        int? monthTo = null, int? yearTo = null)
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+            return AccessDeniedView();
+
+        var fyStartMonth = await GetFyStartMonthAsync();
+        var (dfrom, dto, _, _, _, _) =
+            ResolveOperationalPeriod(period, dateFrom, dateTo, monthFrom, yearFrom, monthTo, yearTo, fyStartMonth);
+
+        var allDeals = (await _dealsService.GetAllDealsAsync("", 0, 7, null, pageSize: int.MaxValue)).ToList();
+        var wonDeals = allDeals.Where(d =>
+            d.ClosingDate.HasValue && d.ClosingDate.Value >= dfrom && d.ClosingDate.Value <= dto)
+            .OrderByDescending(d => d.ClosingDate).ToList();
+
+        var allCompanies = (await _companyService.GetAllCompanyAsync("", "", pageSize: int.MaxValue))
+            .ToDictionary(c => c.Id, c => c.CompanyName);
+
+        var rows = wonDeals.Select(d => new
+        {
+            dealName    = d.DealName,
+            company     = allCompanies.GetValueOrDefault(d.CompanyId, "—"),
+            amount      = d.Amount,
+            probability = d.Probability,
+            closingDate = d.ClosingDate.HasValue ? d.ClosingDate.Value.ToString("dd MMM yyyy") : "—"
+        });
+
+        return Json(rows);
+    }
+
+    [HttpPost]
+    public virtual async Task<IActionResult> GetCRMLeadsInquiriesDetail(
+        string period = "lastmonth",
+        DateTime? dateFrom = null, DateTime? dateTo = null,
+        int? monthFrom = null, int? yearFrom = null,
+        int? monthTo = null, int? yearTo = null)
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+            return AccessDeniedView();
+
+        var fyStartMonth = await GetFyStartMonthAsync();
+        var (dfrom, dto, _, _, _, _) =
+            ResolveOperationalPeriod(period, dateFrom, dateTo, monthFrom, yearFrom, monthTo, yearTo, fyStartMonth);
+
+        var leadsTask  = _leadService.GetAllLeadAsync("", "", null, "", "", 0, 0, null, 0, pageSize: int.MaxValue);
+        var inqTask    = _inquiryService.GetAllInquiryAsync(pageSize: int.MaxValue);
+        var sourcesTask = _leadSourceService.GetAllLeadSourceAsync("", pageSize: int.MaxValue);
+
+        await Task.WhenAll(leadsTask, inqTask, sourcesTask);
+
+        var sourceMap = sourcesTask.Result.ToDictionary(s => s.Id, s => s.Name);
+
+        var leads = leadsTask.Result
+            .Where(l => l.CreatedOnUtc >= dfrom && l.CreatedOnUtc <= dto)
+            .OrderByDescending(l => l.CreatedOnUtc)
+            .Select(l => new
+            {
+                name        = $"{l.FirstName} {l.LastName}".Trim(),
+                company     = l.CompanyName,
+                source      = sourceMap.GetValueOrDefault(l.LeadSourceId, "—"),
+                createdOn   = l.CreatedOnUtc.ToString("dd MMM yyyy")
+            }).ToList();
+
+        var inquiries = inqTask.Result
+            .Where(i => i.CreatedOnUtc >= dfrom && i.CreatedOnUtc <= dto)
+            .OrderByDescending(i => i.CreatedOnUtc)
+            .Select(i => new
+            {
+                name        = $"{i.FirstName} {i.LastName}".Trim(),
+                company     = i.Company,
+                projectType = i.ProjectType,
+                budget      = i.Budget,
+                createdOn   = i.CreatedOnUtc.ToString("dd MMM yyyy")
+            }).ToList();
+
+        return Json(new { leads, inquiries });
+    }
+
+    [HttpPost]
+    public virtual async Task<IActionResult> GetCRMOverdueFollowupsDetail()
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+            return AccessDeniedView();
+
+        var today = DateTime.UtcNow.Date;
+        var all = (await _linkedInFollowupsService.GetAllLinkedInFollowupsAsync("", "", "", "", "", pageSize: int.MaxValue)).ToList();
+        var followUpStatusNames = await GetLocalizedFollowUpStatusNamesAsync();
+
+        var overdue = all
+            .Where(f =>
+                f.NextFollowUpDate.HasValue &&
+                f.NextFollowUpDate.Value.Date < today &&
+                f.RemainingFollowUps > 0 &&
+                f.StatusId != (int)FollowUpStatusEnum.Closed &&
+                f.StatusId != (int)FollowUpStatusEnum.Converted &&
+                f.StatusId != (int)FollowUpStatusEnum.NotInterested &&
+                f.StatusId != (int)FollowUpStatusEnum.BlockedOrRemoved)
+            .OrderBy(f => f.NextFollowUpDate)
+            .Select(f => new
+            {
+                name              = $"{f.FirstName} {f.LastName}".Trim(),
+                linkedinUrl       = f.LinkedinUrl,
+                nextFollowUpDate  = f.NextFollowUpDate.HasValue ? f.NextFollowUpDate.Value.ToString("dd MMM yyyy") : "—",
+                remainingFollowUps = f.RemainingFollowUps,
+                status            = followUpStatusNames.GetValueOrDefault(f.StatusId, "—")
+            }).ToList();
+
+        return Json(overdue);
+    }
+
+    [HttpPost]
+    public virtual async Task<IActionResult> GetCRMLinkedInContactsDetail(string filter = "all")
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+            return AccessDeniedView();
+
+        var all = (await _linkedInFollowupsService.GetAllLinkedInFollowupsAsync("", "", "", "", "", pageSize: int.MaxValue)).ToList();
+
+        IEnumerable<LinkedInFollowups> filtered = filter switch
+        {
+            "converted" => all.Where(f => f.StatusId == (int)FollowUpStatusEnum.Converted),
+            "replied"   => all.Where(f => f.StatusId == (int)FollowUpStatusEnum.Replied
+                                       || f.StatusId == (int)FollowUpStatusEnum.InConversation),
+            _           => all
+        };
+
+        var followUpStatusNamesLi = await GetLocalizedFollowUpStatusNamesAsync();
+
+        var rows = filtered
+            .OrderByDescending(f => f.UpdatedOnUtc)
+            .Select(f => new
+            {
+                fullName          = $"{f.FirstName} {f.LastName}".Trim(),
+                linkedinUrl       = f.LinkedinUrl,
+                email             = f.Email,
+                status            = followUpStatusNamesLi.GetValueOrDefault(f.StatusId, "—"),
+                nextFollowUpDate  = f.NextFollowUpDate.HasValue ? f.NextFollowUpDate.Value.ToString("dd MMM yyyy") : "—",
+                remainingFollowUps = f.RemainingFollowUps,
+                lastMessageDate   = f.LastMessageDate.HasValue ? f.LastMessageDate.Value.ToString("dd MMM yyyy") : "—"
+            }).ToList();
+
+        return Json(rows);
+    }
+
     private static void BuildExpenseRows(
         IEnumerable<Domain.AccountTransaction> transactions,
         IEnumerable<Domain.AccountGroup> accountGroups,

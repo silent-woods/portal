@@ -46,8 +46,9 @@
         </div>
 
         <div id="ops-preset-bar-year" class="preset-bar" style="display:none;">
-            <button class="btn-preset active" data-ops-preset="thisyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.ThisYear")</button>
-            <button class="btn-preset" data-ops-preset="lastyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.LastYear")</button>
+            @{ var opsfyM = ViewBag.FyStartMonth != null ? (int)ViewBag.FyStartMonth : 1; }
+            <button class="btn-preset active" data-ops-preset="thisyear">@(opsfyM > 1 ? "This FY" : T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.ThisYear").Text)</button>
+            <button class="btn-preset" data-ops-preset="lastyear">@(opsfyM > 1 ? "Last FY" : T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.LastYear").Text)</button>
             <div class="period-inputs ms-2">
                 <select id="ops-year-from">
                     @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }

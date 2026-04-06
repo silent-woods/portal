@@ -134,7 +134,8 @@
                     @foreach (var s in wfGroup)
                     {
                         <span class="status-pill @(s.StatusId == Model.SearchStatusId ? "active" : "")"
-                              data-statusid="@s.StatusId">
+                              data-statusid="@s.StatusId"
+                              @(s.StatusName?.Trim().ToLower() == "hold" ? Html.Raw("data-ishold=\"true\"") : Html.Raw(""))>
                             <span class="dot" style="background:@s.ColorCode"></span>
                             @s.StatusName
                             <span class="count">@s.Count</span>
@@ -369,9 +370,22 @@
             var sid = parseInt($(this).data("statusid"));
             if (sid) counts[sid] = (counts[sid] || 0) + 1;
         });
+        var holdCountMap = {};
+        $(".hold-status-data").each(function () {
+            var sid = parseInt($(this).data("hold-status-id")) || 0;
+            var cnt = parseInt($(this).data("hold-count")) || 0;
+            if (sid > 0) holdCountMap[sid] = cnt;
+        });
+
         $(".status-pill").each(function () {
             var $pill = $(this);
             var sid   = parseInt($pill.data("statusid"));
+            if (selectedStatusId === 0 && $pill.data("ishold")) {
+                var holdCount = holdCountMap[sid] || 0;
+                $pill.find(".count").text(holdCount);
+                holdCount > 0 ? $pill.show() : $pill.hide();
+                return;
+            }
             var count = counts[sid] || 0;
             $pill.find(".count").text(count);
             if (selectedStatusId === 0) {

@@ -156,8 +156,7 @@ public partial class LeadAPIController : BasePluginController
             }
 
             if (string.IsNullOrWhiteSpace(model.Name) ||
-                string.IsNullOrWhiteSpace(model.CompanyName) ||
-                string.IsNullOrWhiteSpace(model.Email))
+                string.IsNullOrWhiteSpace(model.CompanyName))
             {
                 leadAPIResponseModel.Success = false;
                 leadAPIResponseModel.ResponseMessage = await _localizationService
@@ -178,6 +177,17 @@ public partial class LeadAPIController : BasePluginController
                     lastName = nameParts[1];
             }
 
+            var existingLead = await _leadService.GetExistingLeadByEmailAndFirstNameAndLastNameAsync(firstName, lastName, model.Email);
+            if (existingLead != null)
+            {
+                leadAPIResponseModel.Success = false;
+                leadAPIResponseModel.ResponseMessage = await _localizationService
+                    .GetResourceAsync("Satyanam.Plugin.Misc.LeadAPI.Common.AlreadyExists");
+
+                await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, model);
+                return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
+            }
+
             var lead = new Lead
             {
                 FirstName = firstName,
@@ -185,6 +195,8 @@ public partial class LeadAPIController : BasePluginController
                 CompanyName = model.CompanyName,
                 Email = model.Email,
                 Phone = model.MobileNo,
+                Description = model.Summary,
+                LinkedinUrl = model.LinkedInUrl,
                 CreatedOnUtc = DateTime.UtcNow
             };
 

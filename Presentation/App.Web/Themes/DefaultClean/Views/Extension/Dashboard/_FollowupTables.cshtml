@@ -4,6 +4,17 @@
         (Model.Overdue?.Any() == true) ||
         (Model.DueToday?.Any() == true) ||
         (Model.Upcoming?.Any() == true);
+    var holdFilters = Model.StatusFilters?.Where(s => s.StatusName?.Trim().ToLower() == "hold").ToList();
+}
+@if (holdFilters != null)
+{
+    foreach (var hf in holdFilters)
+    {
+        <div class="hold-status-data"
+             data-hold-status-id="@hf.StatusId"
+             data-hold-count="@hf.Count"
+             style="display:none;"></div>
+    }
 }
 @if (!hasAnyData)
 {

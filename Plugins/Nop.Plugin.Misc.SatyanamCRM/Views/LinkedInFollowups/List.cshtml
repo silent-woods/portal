@@ -369,7 +369,9 @@
                                 Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.LastMessageDate").Text,
                                 Editable = true,
                                 EditType = EditType.String,
-                                Width = "120"
+                                Width = "150",
+                                ClassName = "col-lastmessage"
+
                             });
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.FollowUp))
                             {
@@ -388,19 +390,25 @@
                             {
                                 Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.FirstName").Text,
                                 Editable = true,
-                                EditType = EditType.String
+                                EditType = EditType.String,
+                                Width = "150",
+                                ClassName = "col-firstname"
                             });
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.LastName))
                             {
                                 Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.LastName").Text,
                                 Editable = true,
-                                EditType = EditType.String
+                                EditType = EditType.String,
+                                Width = "150",
+                                ClassName = "col-lastname"
                             });
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.Email))
                             {
                                 Title = T("Plugin.SatyanamCRM.LinkedInFollowups.Fields.Email").Text,
                                 Editable = true,
-                                EditType = EditType.String
+                                EditType = EditType.String,
+                                Width = "220",
+                                ClassName = "col-email"
                             });
                             gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LinkedInFollowupsModel.WebsiteUrl))
                             {
@@ -708,7 +716,7 @@
                         return;
                     }
                     updateTable('#linkedInFollowups-grid');
-
+                    refreshLinkedInFollowupsGrid();
                 }
             });
             $('#delete-selected-action-confirmation').modal('toggle');
@@ -943,6 +951,29 @@
             }, 500);
         }
     </script>
+    <style>
+        /* Increase input width in inline edit */
+        #linkedInFollowups-grid td.col-lastmessage input {
+            width: 140px !important;
+            min-width: 140px;
+        }
 
+        #linkedInFollowups-grid td.col-firstname input,
+        #linkedInFollowups-grid td.col-lastname input {
+            width: 140px !important;
+            min-width: 140px;
+        }
+
+        #linkedInFollowups-grid td.col-email input {
+            width: 220px !important;
+            min-width: 220px;
+        }
+
+        /* Optional: better spacing */
+        #linkedInFollowups-grid input {
+            padding: 4px 6px;
+            height: 32px;
+        }
+    </style>
 
 </section>

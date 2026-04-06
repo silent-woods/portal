@@ -305,6 +305,25 @@ namespace Satyanam.Nop.Core.Services
             })).ToList();
         }
 
+        /// <summary>
+        /// Gets a Lead
+        /// </summary>
+        /// <param name="firstName">Filter by first name</param>
+        /// <param name="lastName">Filter by last name</param>
+        /// <param name="email">Filter by email</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the lead
+        /// </returns>
+        public virtual async Task<Lead> GetExistingLeadByEmailAndFirstNameAndLastNameAsync(string firstName = null, string lastName = null, string email = null)
+        {
+            var existingLead = from l in _leadRepository.Table
+                               where l.FirstName == firstName && l.LastName == lastName && l.Email == email
+                               select l;
+
+            return await existingLead.FirstOrDefaultAsync();
+        }
+
         #endregion
 
         #endregion
