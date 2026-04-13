@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Satyanam.Nop.Core.Domains;
 using Satyanam.Nop.Core.Services;
+using Satyanam.Nop.Core.Settings;
 using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.Enums;
 using Satyanam.Plugin.Misc.AccountManagement.Services;
 using System;
@@ -51,6 +52,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     private readonly IInquiryService _inquiryService;
     private readonly ICompanyService _companyService;
     private readonly ICurrencyService _currencyService;
+    private readonly IZohoCampaignService _zohoCampaignService;
 
     #endregion
 
@@ -73,7 +75,8 @@ public partial class ExecutiveDashboardController : BaseAdminController
         ILinkedInFollowupsService linkedInFollowupsService,
         IInquiryService inquiryService,
         ICompanyService companyService,
-        ICurrencyService currencyService)
+        ICurrencyService currencyService,
+        IZohoCampaignService zohoCampaignService)
     {
         _accountManagementService = accountManagementService;
         _localizationService = localizationService;
@@ -92,6 +95,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
         _inquiryService = inquiryService;
         _companyService = companyService;
         _currencyService = currencyService;
+        _zohoCampaignService = zohoCampaignService;
     }
 
     #endregion
@@ -260,13 +264,16 @@ public partial class ExecutiveDashboardController : BaseAdminController
             return AccessDeniedView();
 
         ViewBag.FyStartMonth = await GetFyStartMonthAsync();
+        ViewBag.CanViewFinancial   = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial);
+        ViewBag.CanViewOperational = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational);
+        ViewBag.CanViewCRM         = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM);
         return View();
     }
 
     [HttpPost]
     public virtual async Task<IActionResult> GetFinancialKPIData(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
 
         decimal revenue = 0, expense = 0, prevRevenue = 0, prevExpense = 0, directCost = 0, prevDirectCost = 0;
@@ -452,7 +459,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetRevenueDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
 
         var fyStartMonth = granularityId == 4 ? await GetFyStartMonthAsync() : 4;
@@ -500,7 +507,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetGrossProfitDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
 
         var fyStartMonth = granularityId == 4 ? await GetFyStartMonthAsync() : 4;
@@ -535,7 +542,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetNetProfitDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
 
         var fyStartMonth = granularityId == 4 ? await GetFyStartMonthAsync() : 4;
@@ -569,7 +576,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetCashFlowDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
 
         var fyStartMonth = granularityId == 4 ? await GetFyStartMonthAsync() : 4;
@@ -610,7 +617,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetInvoiceStatusSummary(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
 
         var today = DateTime.UtcNow.Date;
@@ -713,7 +720,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
         return await _currencyService.ConvertCurrencyAsync(amount, source, inrCurrency);
     }
 
-    private const string StatusCacheKey = "exec_dashboard_workflow_statuses";
+    private const string StatusCacheKey = "exec_dashboard_workflow_statuses_v2";
 
     private async Task<(HashSet<int> completedIds, HashSet<int> notStartedIds)> GetCachedStatusSetsAsync()
     {
@@ -725,7 +732,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
             .Where(s => (s.StatusName ?? "").Trim().ToLowerInvariant() == "closed")
             .Select(s => s.Id).ToHashSet();
         var notStartedIds = statuses
-            .Where(s => { var n = (s.StatusName ?? "").Trim().ToLowerInvariant(); return n == "new" || n.Contains("not start"); })
+            .Where(s => (s.StatusName ?? "").Trim().ToLowerInvariant() == "new")
             .Select(s => s.Id).ToHashSet();
 
         var result = (completedIds, notStartedIds);
@@ -737,11 +744,12 @@ public partial class ExecutiveDashboardController : BaseAdminController
         var today = DateTime.UtcNow.Date;
         return (period?.ToLowerInvariant()) switch
         {
-            "last3months" => (new DateTime(today.AddMonths(-3).Year, today.AddMonths(-3).Month, 1), today),
-            "last6months" => (new DateTime(today.AddMonths(-6).Year, today.AddMonths(-6).Month, 1), today),
-            "thisyear"    => (new DateTime(today.Year, 1, 1), today),
+            // No upper cap on last3/last6 so tasks due later this month or next are included
+            "last3months" => (new DateTime(today.AddMonths(-3).Year, today.AddMonths(-3).Month, 1), DateTime.MaxValue),
+            "last6months" => (new DateTime(today.AddMonths(-6).Year, today.AddMonths(-6).Month, 1), DateTime.MaxValue),
+            "thisyear"    => (new DateTime(today.Year, 1, 1), DateTime.MaxValue),
             "lastyear"    => (new DateTime(today.Year - 1, 1, 1), new DateTime(today.Year - 1, 12, 31)),
-            "last2years"  => (new DateTime(today.Year - 2, 1, 1), today),
+            "last2years"  => (new DateTime(today.Year - 2, 1, 1), DateTime.MaxValue),
             _             => (DateTime.MinValue, DateTime.MaxValue) // alltime
         };
     }
@@ -916,7 +924,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetEmployeesList()
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational))
             return AccessDeniedView();
 
         var employees = await _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: false);
@@ -930,7 +938,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetProjectsList()
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational))
             return AccessDeniedView();
 
         var projects = await _projectsService.GetAllProjectsAsync(pageSize: int.MaxValue);
@@ -946,7 +954,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
         DateTime? customFrom = null, DateTime? customTo = null, int? monthFrom = null, int? yearFrom = null, int? monthTo = null, int? yearTo = null,
         string taskPeriod = "last3months")
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational))
             return AccessDeniedView();
 
         var fyStartMonth = await GetFyStartMonthAsync();
@@ -1154,7 +1162,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetTaskStatusBreakdown(int? projectId = null, int? employeeId = null, string taskPeriod = "alltime")
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational))
             return AccessDeniedView();
 
         var today = DateTime.UtcNow.Date;
@@ -1187,7 +1195,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetTaskStatusList(string status = "inprogress", int page = 0, int pageSize = 15, int? projectId = null, int? employeeId = null, string taskPeriod = "alltime")
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational))
             return AccessDeniedView();
 
         var today = DateTime.UtcNow.Date;
@@ -1253,7 +1261,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     public virtual async Task<IActionResult> GetBillableUtilDetail(string period = "last3months", int? projectId = null, int? employeeId = null,
         DateTime? customFrom = null, DateTime? customTo = null, int? monthFrom = null, int? yearFrom = null, int? monthTo = null, int? yearTo = null)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational))
             return AccessDeniedView();
 
         var fyStartMonth = await GetFyStartMonthAsync();
@@ -1339,7 +1347,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
         int? monthTo = null,
         int? yearTo = null)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational))
             return AccessDeniedView();
 
         var fyStartMonth = await GetFyStartMonthAsync();
@@ -1486,7 +1494,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
        int? monthTo = null,
        int? yearTo = null)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational))
             return AccessDeniedView();
 
         var fyStartMonth = await GetFyStartMonthAsync();
@@ -1674,7 +1682,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
         int? monthFrom = null, int? yearFrom = null,
         int? monthTo = null, int? yearTo = null)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM))
             return AccessDeniedView();
 
         var fyStartMonth = await GetFyStartMonthAsync();
@@ -1776,6 +1784,72 @@ public partial class ExecutiveDashboardController : BaseAdminController
             ? Math.Round((decimal)linkedInConverted / linkedInTotal * 100, 1)
             : 0m;
 
+        var zohoCampaigns       = new List<object>();
+        var zohoAvailable       = false;
+        string zohoLastSynced   = null;
+        double zohoAvgOpenRate      = 0;
+        double zohoAvgDeliveredRate = 0;
+        double zohoAvgClickRate     = 0;
+        double zohoAvgBounceRate    = 0;
+        int    zohoCampaignCount    = 0;
+        try
+        {
+            var zohoSettings = await _settingService.LoadSettingAsync<ZohoCampaignSettings>();
+            if (zohoSettings.IsEnabled)
+            {
+                var stats = await _zohoCampaignService.GetStoredStatsAsync(limit: 10);
+                zohoAvailable  = stats.Any();
+                zohoLastSynced = zohoSettings.LastSyncedUtc?.ToString("MMM d, yyyy h:mm tt");
+                var campaignList = new List<object>();
+                foreach (var s in stats)
+                {
+                    var locs = await _zohoCampaignService.GetLocationStatsByKeyAsync(s.CampaignKey);
+                    campaignList.Add(new
+                    {
+                        campaignKey      = s.CampaignKey,
+                        name             = s.CampaignName,
+                        emailSubject     = s.EmailSubject ?? "",
+                        emailFrom        = s.EmailFrom ?? "",
+                        sentOn           = s.SentTime.HasValue ? s.SentTime.Value.ToString("MMM d") : "",
+                        sentOnFull       = s.SentTime.HasValue ? s.SentTime.Value.ToString("dd MMM yyyy, h:mm tt") : "",
+                        sentTimeIso      = s.SentTime.HasValue ? s.SentTime.Value.ToString("yyyy-MM-dd") : "",
+                        createdOn        = s.CreatedTime.HasValue ? s.CreatedTime.Value.ToString("dd MMM yyyy, h:mm tt") : "",
+                        emailsSent       = s.EmailsSentCount,
+                        deliveredCount   = s.DeliveredCount,
+                        deliveredPercent = s.DeliveredPercent,
+                        opensCount       = s.OpensCount,
+                        openPercent      = s.OpenPercent,
+                        unopenedCount    = s.UnopenedCount,
+                        clickedCount     = s.UniqueClicksCount,
+                        clickedPercent   = s.UniqueClickedPercent,
+                        clicksPerOpen    = s.ClicksPerOpenRate,
+                        bouncesCount     = s.BouncesCount,
+                        hardBounce       = s.HardBounceCount,
+                        softBounce       = s.SoftBounceCount,
+                        bouncePercent    = s.BouncePercent,
+                        unsubCount       = s.UnsubCount,
+                        unsubPercent     = s.UnsubscribePercent,
+                        spamsCount       = s.SpamsCount,
+                        complaintsCount  = s.ComplaintsCount,
+                        forwardsCount    = s.ForwardsCount,
+                        autoreplyCount   = s.AutoreplyCount,
+                        countries        = locs.Select(l => new { country = l.Country, opens = l.OpensCount }).ToList()
+                    });
+                }
+                zohoCampaigns = campaignList;
+
+                if (stats.Any())
+                {
+                    zohoAvgOpenRate      = Math.Round((double)stats.Average(s => s.OpenPercent), 1);
+                    zohoAvgDeliveredRate = Math.Round((double)stats.Average(s => s.DeliveredPercent), 1);
+                    zohoAvgClickRate     = Math.Round((double)stats.Average(s => s.UniqueClickedPercent), 1);
+                    zohoAvgBounceRate    = Math.Round((double)stats.Average(s => s.BouncePercent), 1);
+                    zohoCampaignCount    = stats.Count;
+                }
+            }
+        }
+        catch { }
+
         return Json(new
         {
             // KPIs
@@ -1805,6 +1879,14 @@ public partial class ExecutiveDashboardController : BaseAdminController
             linkedInConvertedCount = linkedInConverted,
             linkedInRepliedCount  = linkedInReplied,
             linkedInConversionRate = linkedInConvRate,
+            zohoAvailable,
+            zohoLastSynced,
+            zohoCampaigns,
+            zohoAvgOpenRate,
+            zohoAvgDeliveredRate,
+            zohoAvgClickRate,
+            zohoAvgBounceRate,
+            zohoCampaignCount,
             periodLabel,
             prevPeriodLabel
         });
@@ -1813,7 +1895,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetCRMPipelineDetail()
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM))
             return AccessDeniedView();
 
         var allDeals = (await _dealsService.GetAllDealsAsync("", 0, 0, null, pageSize: int.MaxValue)).ToList();
@@ -1843,7 +1925,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
         int? monthFrom = null, int? yearFrom = null,
         int? monthTo = null, int? yearTo = null)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM))
             return AccessDeniedView();
 
         var fyStartMonth = await GetFyStartMonthAsync();
@@ -1877,7 +1959,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
         int? monthFrom = null, int? yearFrom = null,
         int? monthTo = null, int? yearTo = null)
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM))
             return AccessDeniedView();
 
         var fyStartMonth = await GetFyStartMonthAsync();
@@ -1921,7 +2003,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetCRMOverdueFollowupsDetail()
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM))
             return AccessDeniedView();
 
         var today = DateTime.UtcNow.Date;
@@ -1953,7 +2035,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetCRMLinkedInContactsDetail(string filter = "all")
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboard))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM))
             return AccessDeniedView();
 
         var all = (await _linkedInFollowupsService.GetAllLinkedInFollowupsAsync("", "", "", "", "", pageSize: int.MaxValue)).ToList();
@@ -2004,6 +2086,111 @@ public partial class ExecutiveDashboardController : BaseAdminController
 
         foreach (var g in grouped)
             rows.Add(new { category = g.Key, amount = g.Sum(t => t.Amount), isSalary = false });
+    }
+
+    #endregion
+
+    #region Zoho Campaign Timeline
+
+    [HttpGet]
+    public virtual async Task<IActionResult> GetCampaignTimeline(string campaignKey, int days = 30, string fromDate = null)
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM))
+            return AccessDeniedView();
+
+        if (string.IsNullOrEmpty(campaignKey))
+            return Json(new { success = false });
+
+        // No live sync here — reads only from DB for instant response.
+        // Use SyncCampaignTimeline endpoint for a manual refresh.
+        DateTime? from = DateTime.TryParse(fromDate, out var fd) ? fd.Date : (DateTime?)null;
+        var rows = await _zohoCampaignService.GetDailyStatsByKeyAsync(campaignKey, days, from);
+
+        return Json(new
+        {
+            success = true,
+            dates   = rows.Select(r => r.StatDate.ToString("dd MMM")).ToList(),
+            opens   = rows.Select(r => r.OpensCount).ToList(),
+            clicks  = rows.Select(r => r.ClicksCount).ToList(),
+            bounces = rows.Select(r => r.BouncesCount).ToList()
+        });
+    }
+
+    [HttpPost]
+    public virtual async Task<IActionResult> SyncCampaignTimeline(string campaignKey)
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM))
+            return AccessDeniedView();
+
+        if (string.IsNullOrEmpty(campaignKey))
+            return Json(new { success = false });
+
+        await _zohoCampaignService.SyncRecipientDataAsync(campaignKey);
+        return Json(new { success = true });
+    }
+
+    [HttpGet]
+    public virtual async Task<IActionResult> GetCombinedTimeline(string fromDate = null, string toDate = null, string keys = null)
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM))
+            return AccessDeniedView();
+
+        var from = DateTime.TryParse(fromDate, out var fd) ? fd.Date : DateTime.UtcNow.Date.AddDays(-30);
+        var to   = DateTime.TryParse(toDate,   out var td) ? td.Date : DateTime.UtcNow.Date;
+
+        var campaignKeys = string.IsNullOrEmpty(keys)
+            ? null
+            : keys.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+        var rows  = await _zohoCampaignService.GetCombinedDailyStatsAsync(from, to, campaignKeys);
+        var stats = await _zohoCampaignService.GetStoredStatsAsync(limit: 200);
+        var totalSent      = stats.Sum(s => s.EmailsSentCount);
+        var totalDelivered = stats.Sum(s => s.DeliveredCount);
+
+        return Json(new
+        {
+            success        = true,
+            totalSent      = totalSent,
+            totalDelivered = totalDelivered,
+            dates   = rows.Select(r => r.StatDate.ToString("dd MMM")).ToList(),
+            opens   = rows.Select(r => r.OpensCount).ToList(),
+            clicks  = rows.Select(r => r.ClicksCount).ToList(),
+            bounces = rows.Select(r => r.BouncesCount).ToList()
+        });
+    }
+
+    [HttpGet]
+    public virtual async Task<IActionResult> GetCampaignPeriodStats(string fromDate = null, string toDate = null)
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM))
+            return AccessDeniedView();
+
+        var from = DateTime.TryParse(fromDate, out var fd) ? fd.Date : DateTime.UtcNow.Date.AddDays(-30);
+        var to   = DateTime.TryParse(toDate,   out var td) ? td.Date : DateTime.UtcNow.Date;
+
+        var periodStats = await _zohoCampaignService.GetPeriodStatsByCampaignAsync(from, to);
+        var allStats    = await _zohoCampaignService.GetStoredStatsAsync(limit: 200);
+
+        var campaigns = allStats
+            .Select(s =>
+            {
+                periodStats.TryGetValue(s.CampaignKey, out var ps);
+                return new
+                {
+                    campaignKey = s.CampaignKey,
+                    name        = s.CampaignName,
+                    sentOn      = s.SentTime.HasValue ? s.SentTime.Value.ToString("MMM d") : "",
+                    sentTimeIso = s.SentTime.HasValue ? s.SentTime.Value.ToString("yyyy-MM-dd") : "",
+                    emailsSent  = s.EmailsSentCount,
+                    opens       = ps.Opens,
+                    clicks      = ps.Clicks,
+                    bounces     = ps.Bounces
+                };
+            })
+            .OrderByDescending(x => x.opens)
+            .ToList();
+
+        return Json(new { success = true, campaigns });
     }
 
     #endregion

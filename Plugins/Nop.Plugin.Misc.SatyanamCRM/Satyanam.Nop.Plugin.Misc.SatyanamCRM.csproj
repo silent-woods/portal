@@ -112,6 +112,7 @@
     <None Remove="Views\Unsubscribe\Index.cshtml" />
     <None Remove="Views\Unsubscribe\Unsubscribes.cshtml" />
     <None Remove="Views\_ViewImports.cshtml" />
+    <None Remove="Views\ZohoCampaign\Configure.cshtml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -493,6 +494,11 @@
     </Content>
     <Content Include="Views\_ViewImports.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\ZohoCampaign\Configure.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
 

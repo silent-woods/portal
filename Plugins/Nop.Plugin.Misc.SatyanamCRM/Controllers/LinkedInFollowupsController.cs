@@ -1,20 +1,18 @@
 ﻿using App.Core;
-using App.Core.Domain.Employees;
+using App.Core.Domain.Common;
 using App.Core.Domain.Security;
 using App.Data.Extensions;
 using App.Services;
+using App.Services.Common;
+using App.Services.Customers;
 using App.Services.Employees;
 using App.Services.Helpers;
 using App.Services.Localization;
 using App.Services.Messages;
 using App.Services.Security;
-using App.Web.Areas.Admin.Models.Extension.UpdateTemplate;
 using App.Web.Framework.Controllers;
 using App.Web.Framework.Models.Extensions;
 using App.Web.Framework.Mvc.Filters;
-using DocumentFormat.OpenXml.InkML;
-using DocumentFormat.OpenXml.Office2010.ExcelAc;
-using DocumentFormat.OpenXml.Vml.Office;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -22,6 +20,7 @@ using Satyanam.Nop.Core.Domains;
 using Satyanam.Nop.Core.Services;
 using Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services;
 using Satyanam.Nop.Plugin.SatyanamCRM.Models.LinkedInFollowups;
+using Satyanam.Plugin.Misc.EmailVerification.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -46,6 +45,10 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         private readonly ILinkedInFollowupsExportService _linkedInFollowupsExportService;
         private readonly ILinkedInFollowupsImportService _linkedInFollowupsImportService;
         private readonly IEmployeeService _employeeService;
+        private readonly ILeadService _leadService;
+        private readonly ICustomerService _customerService;
+        private readonly IAddressService _addressService;
+        private readonly IEmailverificationService _emailverificationService;
 
         #endregion
 
@@ -58,7 +61,11 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                                IDateTimeHelper dateTimeHelper,
                                ILinkedInFollowupsExportService linkedInFollowupsExportService,
                                ILinkedInFollowupsImportService linkedInFollowupsImportService,
-                               IEmployeeService employeeService)
+                               IEmployeeService employeeService,
+                               ILeadService leadService,
+                               ICustomerService customerService,
+                               IAddressService addressService,
+                               IEmailverificationService emailverificationService)
         {
             _permissionService = permissionService;
             _linkedInFollowupsService = linkedInFollowupsService;
@@ -68,6 +75,10 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             _linkedInFollowupsExportService = linkedInFollowupsExportService;
             _linkedInFollowupsImportService = linkedInFollowupsImportService;
             _employeeService = employeeService;
+            _leadService = leadService;
+            _customerService = customerService;
+            _addressService = addressService;
+            _emailverificationService = emailverificationService;
         }
 
         #endregion
@@ -370,6 +381,35 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             }).ToList();
             return model;
         }
+
+        private async Task<EmailValidationStatus> GetEmailValidationStatusAsync(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return EmailValidationStatus.None;
+
+            string verificationResult = await _emailverificationService.VerifyEmailApi(email);
+
+            if (verificationResult == "__SESSION_EXPIRED__")
+            {
+                _notificationService.WarningNotification("Plugin.SatyanamCRM.LinkedInFollowUps.Emailverification");
+                return EmailValidationStatus.None;
+            }
+
+            if (!string.IsNullOrWhiteSpace(verificationResult))
+            {
+                dynamic verificationResponse = Newtonsoft.Json.JsonConvert.DeserializeObject(verificationResult);
+
+                var result = ((string)verificationResponse?.result)?.ToLowerInvariant();
+                var safeToSend = ((string)verificationResponse?.safe_to_send)?.ToLowerInvariant();
+
+                if (result == "valid" && safeToSend == "true")
+                    return EmailValidationStatus.Valid;
+                else if (result == "invalid" || safeToSend == "false")
+                    return EmailValidationStatus.Invalid;
+            }
+
+            return EmailValidationStatus.None;
+        }
         #endregion
 
         #region Methods
@@ -525,7 +565,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 AutoStatus = model.AutoStatus,
                 StatusId = model.StatusId,
                 Notes = model.Notes,
-                CreatedByUserId =model.CreatedByUserId,
+                CreatedByUserId = model.CreatedByUserId,
                 CreatedOnUtc = DateTime.UtcNow,
                 UpdatedOnUtc = DateTime.UtcNow,
             };
@@ -643,7 +683,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     RemainingFollowUps = remainingFollowUps ?? 0,
                     AutoStatus = autoStatus,
                     StatusId = model.StatusId,
-                    CreatedByUserId=model.CreatedByUserId,
+                    CreatedByUserId = model.CreatedByUserId,
                     Notes = model.Notes,
                     UpdatedOnUtc = DateTime.UtcNow.ToString("yyyy-MM-dd")
                 }
@@ -768,6 +808,149 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             }
 
             return Json(new { Result = true });
+        }
+
+        [HttpPost]
+        public virtual async Task<IActionResult> CreateLeadFromFollowups(ICollection<int> selectedIds)
+        {
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
+                return AccessDeniedView();
+
+            if (selectedIds == null || selectedIds.Count == 0)
+                return NoContent();
+
+            int createdCount = 0;
+            int skippedCount = 0;
+            var skippedNames = new List<string>();
+
+            foreach (var id in selectedIds)
+            {
+                var followUp = await _linkedInFollowupsService.GetLinkedInFollowupsByIdAsync(id);
+                if (followUp == null)
+                    continue;
+
+                // --- Check for duplicate lead by email ---
+                if (!string.IsNullOrWhiteSpace(followUp.Email))
+                {
+                    var existingLeads = await _leadService.GetAllLeadAsync(
+                        name: "",
+                        companyName: "",
+                        selectedtagsid: null,
+                        email: followUp.Email,
+                        website: "",
+                        nofoEmployee: 0,
+                        leadStatusId: 0,
+                        titleid: null,
+                        emailStatusId: 0,
+                        pageIndex: 0,
+                        pageSize: 1,
+                        showHidden: true,
+                        isSyncedToReply: null);
+
+                    if (existingLeads != null && existingLeads.TotalCount > 0)
+                    {
+                        skippedCount++;
+                        skippedNames.Add($"{followUp.FirstName} {followUp.LastName}".Trim());
+                        continue;
+                    }
+                }
+                else if (string.IsNullOrWhiteSpace(followUp.Email) && !string.IsNullOrWhiteSpace(followUp.LinkedinUrl))
+                {
+                    var allLeads = await _leadService.GetAllLeadAsync(
+                        name: "",
+                        companyName: "",
+                        selectedtagsid: null,
+                        email: "",
+                        website: "",
+                        nofoEmployee: 0,
+                        leadStatusId: 0,
+                        titleid: null,
+                        emailStatusId: 0,
+                        pageIndex: 0,
+                        pageSize: int.MaxValue,
+                        showHidden: true,
+                        isSyncedToReply: null);
+
+                    if (allLeads != null && allLeads.Any(l =>
+                        !string.IsNullOrWhiteSpace(l.LinkedinUrl) &&
+                        l.LinkedinUrl.Equals(followUp.LinkedinUrl, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        skippedCount++;
+                        skippedNames.Add($"{followUp.FirstName} {followUp.LastName}".Trim());
+                        continue; // skip this record, LinkedIn URL already exists in Lead
+                    }
+                }
+                // --- Map Lead Owner: Employee → Customer (safe with null checks) ---
+                int customerId = 0;
+                if (followUp.CreatedByUserId > 0)
+                {
+                    try
+                    {
+                        var employee = await _employeeService.GetEmployeeByIdAsync(followUp.CreatedByUserId);
+                        if (employee != null && !string.IsNullOrWhiteSpace(employee.OfficialEmail))
+                        {
+                            var allCustomers = await _customerService.GetAllCustomersAsync();
+                            if (allCustomers != null)
+                            {
+                                var matchedCustomer = allCustomers.FirstOrDefault(c =>
+                                    c != null &&
+                                    !string.IsNullOrWhiteSpace(c.Email) &&
+                                    c.Email.Equals(employee.OfficialEmail, StringComparison.OrdinalIgnoreCase));
+
+                                if (matchedCustomer != null)
+                                    customerId = matchedCustomer.Id;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        customerId = 0;
+                    }
+                }
+                int emailStatusId = (int)EmailValidationStatus.None;  
+
+                if (!string.IsNullOrWhiteSpace(followUp.Email))
+                {
+                    emailStatusId = (int)await GetEmailValidationStatusAsync(followUp.Email);
+                }
+                // --- Create a blank Address record ---
+                var address = new Address
+                {
+                    CreatedOnUtc = DateTime.UtcNow
+                };
+                await _addressService.InsertAddressAsync(address);
+
+                // --- Build and insert the Lead ---
+                var lead = new Lead
+                {
+                    FirstName = followUp.FirstName ?? "",
+                    LastName = followUp.LastName ?? "",
+                    Email = followUp.Email ?? "",
+                    LinkedinUrl = followUp.LinkedinUrl ?? "",
+                    WebsiteUrl = followUp.WebsiteUrl ?? "",
+                    CustomerId = customerId,
+                    AddressId = address.Id,
+                    EmailStatusId = emailStatusId,
+                    CreatedOnUtc = DateTime.UtcNow,
+                    UpdatedOnUtc = DateTime.UtcNow,
+                };
+
+                await _leadService.InsertLeadAsync(lead);
+                createdCount++;
+            }
+
+            if (createdCount > 0)
+                _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Plugin.SatyanamCRM.Leads.Added"));
+
+            if (skippedCount > 0)
+            {
+                var message = string.Format(
+                    await _localizationService.GetResourceAsync("Plugin.SatyanamCRM.Leads.DuplicateSkipped"),skippedCount,string.Join(", ", skippedNames));
+
+                _notificationService.WarningNotification(message);
+            }
+
+            return Json(new { success = true });
         }
         #endregion
 

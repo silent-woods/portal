@@ -190,6 +190,12 @@ public partial class AccountManagementPlugin : BasePlugin,  IAdminMenuPlugin , I
         await base.UninstallAsync();
     }
 
+    public override async Task UpdateAsync(string currentVersion, string targetVersion)
+    {
+        await _permissionService.InstallPermissionsAsync(new AccountManagementPermissionProvider());
+        await base.UpdateAsync(currentVersion, targetVersion);
+    }
+
     #endregion
 
     #region Manage SiteMap Methods

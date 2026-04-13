@@ -5,17 +5,15 @@
     NopHtml.AddTitleParts("My Submissions");
 }
 <link rel="stylesheet" href="@Url.Content("~/Themes/DefaultClean/Content/css/updatetemplatesheet.css")" />
-<!-- Kendo UI CSS -->
 <link rel="stylesheet" href="https://kendo.cdn.telerik.com/themes/8.2.1/default/default-main.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
-<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Kendo UI JS -->
 <script src="https://kendo.cdn.telerik.com/2023.2.829/js/kendo.all.min.js"></script>
 <link rel="stylesheet" href="https://jqwidgets.com/public/jqwidgets/styles/jqx.base.css" type="text/css" />
 <script type="text/javascript" src="https://jqwidgets.com/public/jqwidgets/jqx-all.js"></script>
 
 <div class="container update-list-container">
+
     <!-- TEMPLATE TITLE -->
     <h2 class="mb-4 update-template-heading">
         @if (!string.IsNullOrEmpty(Model.TemplateTitle))
@@ -23,120 +21,159 @@
             <span class="update-template-title">@Model.TemplateTitle</span>
         }
     </h2>
+
     <!-- TOP ACTIONS -->
     <div class="update-top-actions">
-        <a href="@Url.Action("SubmissionList", "UpdateSubmission", new { templateId = Model.SelectedTemplateId })" class="btn btn-secondary back-to-list-btn">
+        <a href="@Url.Action("SubmissionList", "UpdateSubmission", new { templateId = Model.SelectedTemplateId })"
+           class="btn btn-secondary back-to-list-btn">
             @T("Submit.Update.Backtolist")
         </a>
     </div>
-    <!-- SEARCH / FILTER -->
-    <form method="get" class="search-bar">
-        <input type="hidden" name="SelectedTemplateId" value="@Model.SelectedTemplateId" />
-        <div class="fieldsets">
-            <div class="form-fields">
-                @if (Model.CanSeeSubmitterDropdown && Model.AvailableSubmitters?.Any() == true)
-                {
-                    <div class="inputs-row">
-                        <div class="inputs">
-                            <label asp-for="SelectedSubmitterId"></label>
-                            <nop-select asp-for="SelectedSubmitterId" class="select1" asp-items="Model.AvailableSubmitters" />
-                        </div>
-                    </div>
-                }
-                <div class="inputs-row">
-                    <div class="inputs">
-                        <label asp-for="SelectedPeriodId"></label>
-                        <select id="SelectedPeriodId"
-                                name="SelectedPeriodId"
-                                class="select1"
-                                onchange="toggleCustomDateRange()">
-                            @foreach (var item in Model.AvailablePeriods)
-                            {
-                                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div id="customDateRange"
-                     class="custom-date-range @(Model.SelectedPeriodId == -1 ? "show" : "hide")">
-                    <div class="inputs-row">
-                        <div class="inputs">
-                            <label asp-for="FromDate"></label>
-                            <input asp-for="FromDate" type="date" class="select2" />
-                        </div>
-                        <div class="inputs">
-                            <label asp-for="ToDate"></label>
-                            <input asp-for="ToDate" type="date" class="select2" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="text-center button-wrapper mt-3">
-                <button type="submit" class="btn-search">
-                    <i class="fas fa-search"></i> @T("Admin.Common.Search")
-                </button>
-            </div>
-        </div>
-    </form>
-    <!-- NOT SUBMITTED -->
-    @if (Model.NotSubmittedNames?.Any() == true)
-    {
-        <div class="alert alert-warning not-submitted-alert">
-            <strong>Not Submitted by:</strong>
-            @string.Join(", ", Model.NotSubmittedNames)
-        </div>
-    }
-    <!-- SUBMISSIONS -->
-    @if (!Model.Submissions.Any())
-    {
-        <div class="alert alert-info">@T("Submit.Update.NoSubmissionsFound")</div>
-    }
-    else
-    {
-        foreach (var submission in Model.Submissions)
+
+    <div class="reviewer-layout">
+
+        <!-- LEFT SIDEBAR: PERIODS (only for viewer) -->
+        @if (Model.CanSeeSubmitterDropdown && Model.PeriodStats?.Any() == true)
         {
-            <div class="update-card">
-                <!-- HEADER (always visible) -->
-                <div class="update-header collapsible-header">
-                    <h5>@submission.SubmitterName</h5>
-                    <div class="header-right">
-                        <span class="date">
-                            @submission.SubmittedOn.ToString("M/d/yyyy h:mm tt")
-                        </span>
-                        <!-- TOGGLE BUTTON -->
-                        <button type="button" class="card-toggle-btn">
-                            <i class="fas fa-chevron-down"></i>
+            <div class="reviewer-period-sidebar">
+                <h5>@T("Submit.Form.Periods")</h5>
+                @foreach (var stat in Model.PeriodStats)
+                {
+                    var isActive = Model.SelectedPeriodId == stat.PeriodId;
+                    var periodUrl = Url.Action("List", "UpdateSubmission", new
+                    {
+                        SelectedTemplateId = Model.SelectedTemplateId,
+                        SelectedPeriodId = stat.PeriodId,
+                        SelectedSubmitterId = Model.SelectedSubmitterId
+                    });
+                    <a href="@periodUrl" class="period-sidebar-item @(isActive ? "active" : stat.PendingCount > 0 ? "has-pending" : "all-submitted")">
+                        <span class="period-label">@stat.PeriodText</span>
+                        <div class="period-meta">
+                            <span>@T("Submit.Update.SubmittedCount"): @stat.SubmittedCount</span>
+                            <span>@T("Submit.Update.PendingCount"): @stat.PendingCount</span>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+
+        <!-- RIGHT MAIN CONTENT -->
+        <div class="reviewer-main">
+
+            <!-- SEARCH / FILTER -->
+            <form method="get" class="search-bar">
+                <input type="hidden" name="SelectedTemplateId" value="@Model.SelectedTemplateId" />
+                <div class="fieldsets">
+                    <div class="form-fields">
+                        @if (Model.CanSeeSubmitterDropdown && Model.AvailableSubmitters?.Any() == true)
+                        {
+                            <div class="inputs-row">
+                                <div class="inputs">
+                                    <label asp-for="SelectedSubmitterId"></label>
+                                    <nop-select asp-for="SelectedSubmitterId" class="select1"
+                                                asp-items="Model.AvailableSubmitters" />
+                                </div>
+                            </div>
+                        }
+                        <div class="inputs-row">
+                            <div class="inputs">
+                                <label asp-for="SelectedPeriodId"></label>
+                                <select id="SelectedPeriodId"
+                                        name="SelectedPeriodId"
+                                        class="select1"
+                                        onchange="toggleCustomDateRange()">
+                                    @foreach (var item in Model.AvailablePeriods)
+                                    {
+                                        <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div id="customDateRange"
+                             class="custom-date-range @(Model.SelectedPeriodId == -1 ? "show" : "hide")">
+                            <div class="inputs-row">
+                                <div class="inputs">
+                                    <label asp-for="FromDate"></label>
+                                    <input asp-for="FromDate" type="date" class="select2" />
+                                </div>
+                                <div class="inputs">
+                                    <label asp-for="ToDate"></label>
+                                    <input asp-for="ToDate" type="date" class="select2" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center button-wrapper mt-3">
+                        <button type="submit" class="btn-search">
+                            <i class="fas fa-search"></i> @T("Admin.Common.Search")
                         </button>
                     </div>
                 </div>
-                <!-- COLLAPSIBLE BODY -->
-                <div class="update-card-body">
-                    @foreach (var q in submission.Questions)
-                    {
-                        <div class="question-block">
-                            <div class="question-text">@q.QuestionText</div>
-                            <div class="answer-box">
-                                @if (!string.IsNullOrEmpty(q.FileName))
-                                {
-                                    var fileUrl = Url.Action("DownloadFile", "UpdateSubmission", new { fileName = q.FileName });
-                                    <div class="file-download-row">
-                                        <span class="file-name">
-                                            @System.IO.Path.GetFileName(q.FileName)
-                                        </span>
-                                        <a href="@fileUrl" class="download-button" download>📥 Download</a>
-                                    </div>
-                                }
-                                else
-                                {
-                                    @q.AnswerText
-                                }
+            </form>
+
+            <!-- NOT SUBMITTED -->
+            @if (Model.NotSubmittedNames?.Any() == true)
+            {
+                <div class="alert alert-warning not-submitted-alert">
+                    <strong>Not Submitted by:</strong>
+                    @string.Join(", ", Model.NotSubmittedNames)
+                </div>
+            }
+
+            <!-- SUBMISSIONS -->
+            @if (!Model.Submissions.Any())
+            {
+                <div class="alert alert-info">@T("Submit.Update.NoSubmissionsFound")</div>
+            }
+            else
+            {
+                foreach (var submission in Model.Submissions)
+                {
+                    <div class="update-card">
+                        <!-- HEADER -->
+                        <div class="update-header collapsible-header">
+                            <h5>@submission.SubmitterName</h5>
+                            <div class="header-right">
+                                <span class="date">
+                                    @submission.SubmittedOn.ToString("M/d/yyyy h:mm tt")
+                                </span>
+                                <button type="button" class="card-toggle-btn">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
                             </div>
                         </div>
-                    }
-                    <!-- COMMENTS -->
-                    <h4 class="comments-title">@T("Submit.Update.Comments")</h4>
-                    <div id="comments-container-@submission.Id" class="comments-container">
-                        @await Html.PartialAsync("~/Themes/DefaultClean/Views/Extension/UpdateForm/_CommentsPartial.cshtml", submission.Comments, new ViewDataDictionary(ViewData) { { "CanReply", false } })
+                        <!-- BODY -->
+                        <div class="update-card-body">
+                            @foreach (var q in submission.Questions)
+                            {
+                                <div class="question-block">
+                                    <div class="question-text">@q.QuestionText</div>
+                                    <div class="answer-box">
+                                        @if (!string.IsNullOrEmpty(q.FileName))
+                                        {
+                                            var fileUrl = Url.Action("DownloadFile", "UpdateSubmission",
+                                            new { fileName = q.FileName });
+                                            <div class="file-download-row">
+                                                <span class="file-name">
+                                                    @System.IO.Path.GetFileName(q.FileName)
+                                                </span>
+                                                <a href="@fileUrl" class="download-button" download>📥 Download</a>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            @q.AnswerText
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            <!-- COMMENTS -->
+                            <h4 class="comments-title">@T("Submit.Update.Comments")</h4>
+                            <div id="comments-container-@submission.Id" class="comments-container">
+                                @await Html.PartialAsync(
+                                "~/Themes/DefaultClean/Views/Extension/UpdateForm/_CommentsPartial.cshtml",
+                                                submission.Comments,
+                                                new ViewDataDictionary(ViewData) { { "CanReply", false } })
                     </div>
                     <div class="comment-input-row">
                         <input type="text"
@@ -151,9 +188,12 @@
                     </div>
                 </div>
             </div>
-        }
-    }
+                        }
+            }
+        </div>
+    </div>
 </div>
+
 <script>
     function toggleCustomDateRange() {
         var selectedVal = document.getElementById("SelectedPeriodId").value;
@@ -169,46 +209,33 @@
     });
 </script>
 <script>
-        $(document).ready(function () {
-        // Add Comment
-        $(document).ready(function () {
-            // ... existing change handlers ...
-
-            // Add top-level comment (for any submission)
-            $(document).on('click', '.add-comment-btn', function () {
-                var submissionId = $(this).data('id');
-                var txtSelector = '#new-comment-text-' + submissionId;
-                var commentText = $(txtSelector).val().trim();
-                if (!commentText) {
-                    alert('Comment cannot be empty.');
-                    return;
-                }
-                $.post('@Url.Action("AddComment", "UpdateSubmission")', {
-                    UpdateSubmissionId: submissionId,
-                    CommentText: commentText,
-                    ParentCommentId: null
-                }, function (html) {
-                    $('#comments-container-' + submissionId).html(html);
-                    $(txtSelector).val('');
-                }).fail(function () { alert('Error adding comment'); });
-            });
+    $(document).ready(function () {
+        $(document).on('click', '.add-comment-btn', function () {
+            var submissionId = $(this).data('id');
+            var txtSelector = '#new-comment-text-' + submissionId;
+            var commentText = $(txtSelector).val().trim();
+            if (!commentText) {
+                alert('Comment cannot be empty.');
+                return;
+            }
+            $.post('@Url.Action("AddComment", "UpdateSubmission")', {
+                UpdateSubmissionId: submissionId,
+                CommentText: commentText,
+                ParentCommentId: null
+            }, function (html) {
+                $('#comments-container-' + submissionId).html(html);
+                $(txtSelector).val('');
+            }).fail(function () { alert('Error adding comment'); });
         });
     });
 </script>
 <script>
     document.addEventListener("click", function (e) {
-
-        // Check if clicked inside header
         const header = e.target.closest(".collapsible-header");
         if (!header) return;
-
         const card = header.closest(".update-card");
         if (!card) return;
-
-        // Toggle open class
         card.classList.toggle("open");
-
-        // Rotate arrow icon
         const icon = header.querySelector(".card-toggle-btn i");
         if (icon) {
             icon.classList.toggle("fa-chevron-down");
@@ -218,22 +245,15 @@
 </script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-
-        // detect page refresh
         const navEntries = performance.getEntriesByType("navigation");
         if (navEntries.length > 0 && navEntries[0].type === "reload") {
-
             const url = new URL(window.location.href);
-
-            // if filters exist → redirect to clean page
             if (url.search.includes("SelectedSubmitterId") ||
                 url.search.includes("SelectedPeriodId") ||
                 url.search.includes("FromDate") ||
                 url.search.includes("ToDate")) {
-
                 window.location.href = '@Url.Action("List", "UpdateSubmission", new { selectedTemplateId = Model.SelectedTemplateId })';
             }
         }
-
     });
 </script>

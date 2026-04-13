@@ -274,7 +274,6 @@ namespace Nop.Web.Controllers
                 }
             }
         }
-
         public async Task<IList<SubmissionCardModel>> GetSubmissionCardsAsync(
     int currentUserId,
     int? filterSubmitterId,
@@ -292,28 +291,22 @@ namespace Nop.Web.Controllers
                     .Where(x => x.UpdateTemplateId == selectedTemplateId.Value);
             }
 
+            // ✅ Filter by submitter
             if (filterSubmitterId.HasValue)
+            {
                 submissionsQuery = submissionsQuery
                     .Where(x => x.SubmittedByCustomerId == filterSubmitterId.Value);
+            }
 
+            // ✅ ONLY PERIOD FILTER (MAIN FIX)
             if (selectedPeriodId.HasValue)
+            {
                 submissionsQuery = submissionsQuery
                     .Where(x => x.PeriodId == selectedPeriodId.Value);
-
-            // ✅ CRITICAL FIX — Filter by submission date range
-            if (from.HasValue)
-            {
-                submissionsQuery = submissionsQuery
-                    .Where(x => x.SubmittedOnUtc >= from.Value);
             }
 
-            if (to.HasValue)
-            {
-                var endDate = to.Value.Date.AddDays(1).AddTicks(-1);
-
-                submissionsQuery = submissionsQuery
-                    .Where(x => x.SubmittedOnUtc <= endDate);
-            }
+            // ❌ REMOVE DATE FILTER COMPLETELY
+            // NO SubmittedOnUtc filtering
 
             var submissions = await submissionsQuery
                 .OrderByDescending(x => x.SubmittedOnUtc)
@@ -434,6 +427,165 @@ namespace Nop.Web.Controllers
 
             return result;
         }
+        //    public async Task<IList<SubmissionCardModel>> GetSubmissionCardsAsync(
+        //int currentUserId,
+        //int? filterSubmitterId,
+        //DateTime? from,
+        //DateTime? to,
+        //int? selectedTemplateId,
+        //int? selectedPeriodId)
+        //    {
+        //        var submissionsQuery = _submissionRepository.Table;
+
+        //        // ✅ Filter by template
+        //        if (selectedTemplateId.HasValue)
+        //        {
+        //            submissionsQuery = submissionsQuery
+        //                .Where(x => x.UpdateTemplateId == selectedTemplateId.Value);
+        //        }
+
+        //        if (filterSubmitterId.HasValue)
+        //            submissionsQuery = submissionsQuery
+        //                .Where(x => x.SubmittedByCustomerId == filterSubmitterId.Value);
+
+        //        if (selectedPeriodId.HasValue)
+        //            submissionsQuery = submissionsQuery
+        //                .Where(x => x.PeriodId == selectedPeriodId.Value);
+
+        //        // ✅ CRITICAL FIX — Filter by submission date range
+        //        if (from.HasValue)
+        //        {
+        //            submissionsQuery = submissionsQuery
+        //                .Where(x => x.SubmittedOnUtc >= from.Value);
+        //        }
+
+        //        if (to.HasValue)
+        //        {
+        //            var endDate = to.Value.Date.AddDays(1).AddTicks(-1);
+
+        //            submissionsQuery = submissionsQuery
+        //                .Where(x => x.SubmittedOnUtc <= endDate);
+        //        }
+
+        //        var submissions = await submissionsQuery
+        //            .OrderByDescending(x => x.SubmittedOnUtc)
+        //            .ToListAsync();
+
+        //        if (!submissions.Any())
+        //            return new List<SubmissionCardModel>();
+
+        //        var submissionIds = submissions.Select(s => s.Id).ToList();
+
+        //        var submitterIds = submissions
+        //            .Where(s => s.SubmittedByCustomerId.HasValue)
+        //            .Select(s => s.SubmittedByCustomerId.Value)
+        //            .Distinct()
+        //            .ToList();
+
+        //        var templateIds = submissions
+        //            .Select(s => s.UpdateTemplateId)
+        //            .Distinct()
+        //            .ToList();
+
+        //        var allAnswers = await _answerRepository.Table
+        //            .Where(a => submissionIds.Contains(a.UpdateSubmissionId))
+        //            .ToListAsync();
+
+        //        var questionIds = allAnswers
+        //            .Select(a => a.UpdateTemplateQuestionId)
+        //            .Distinct()
+        //            .ToList();
+
+        //        var allQuestions = await _questionRepository.Table
+        //            .Where(q => questionIds.Contains(q.Id))
+        //            .ToListAsync();
+
+        //        var allSubmitters = await _customerService
+        //            .GetCustomersByIdsAsync(submitterIds.ToArray());
+
+        //        var allTemplates = await _updateTemplateRepository.Table
+        //            .Where(t => templateIds.Contains(t.Id))
+        //            .ToListAsync();
+
+        //        var allComments = await _updateSubmissionCommentRepository.Table
+        //            .Where(c => submissionIds.Contains(c.UpdateSubmissionId))
+        //            .OrderBy(c => c.CreatedOnUtc)
+        //            .ToListAsync();
+
+        //        var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+
+        //        var result = new List<SubmissionCardModel>();
+
+        //        foreach (var sub in submissions)
+        //        {
+        //            var answers = allAnswers
+        //                .Where(a => a.UpdateSubmissionId == sub.Id)
+        //                .ToList();
+
+        //            var questionModels = new List<SubmitUpdateQuestionModel>();
+
+        //            foreach (var ans in answers)
+        //            {
+        //                var question = allQuestions
+        //                    .FirstOrDefault(q => q.Id == ans.UpdateTemplateQuestionId);
+
+        //                var displayAnswer = ans.AnswerText;
+
+        //                if (question != null &&
+        //                    (question.ControlTypeId == (int)ControlTypeEnum.Checkboxes ||
+        //                     question.ControlTypeId == (int)ControlTypeEnum.ReadonlyCheckboxes))
+        //                {
+        //                    displayAnswer = await GetCheckboxAnswerDisplayTextAsync(
+        //                        question.Id,
+        //                        ans.AnswerText);
+        //                }
+
+        //                questionModels.Add(new SubmitUpdateQuestionModel
+        //                {
+        //                    QuestionId = ans.UpdateTemplateQuestionId,
+        //                    QuestionText = question?.QuestionText ?? "[Deleted Question]",
+        //                    AnswerText = displayAnswer,
+        //                    ControlType = question?.ControlTypeId.ToString() ?? "TextBox",
+        //                    FileName = ans.FileName
+        //                });
+        //            }
+
+        //            var submitter = allSubmitters
+        //                .FirstOrDefault(c => c.Id == sub.SubmittedByCustomerId);
+
+        //            var submitterName = submitter != null
+        //                ? $"{submitter.FirstName} {submitter.LastName}".Trim()
+        //                : "Unknown";
+
+        //            var template = allTemplates
+        //                .FirstOrDefault(t => t.Id == sub.UpdateTemplateId);
+
+        //            var templateName = template?.Title ?? "Unknown Template";
+
+        //            var model = new SubmissionCardModel
+        //            {
+        //                Id = sub.Id,
+        //                SubmissionId = sub.Id,
+        //                SubmitterName = submitterName,
+        //                SubmittedOn = TimeZoneInfo
+        //                    .ConvertTimeFromUtc(sub.SubmittedOnUtc, istTimeZone),
+        //                TemplateName = templateName,
+        //                Questions = questionModels
+        //            };
+
+        //            var commentsForSubmission = allComments
+        //                .Where(c => c.UpdateSubmissionId == sub.Id)
+        //                .ToList();
+
+        //            model.Comments = commentsForSubmission.Any()
+        //                ? await PrepareCommentModels(commentsForSubmission)
+        //                : new List<UpdateSubmissionCommentModel>();
+
+        //            result.Add(model);
+        //        }
+
+        //        return result;
+        //    }
 
         private async Task<List<UpdateSubmissionAnswer>> MapAnswersAsync(SubmitUpdateFormModel model)
         {
@@ -1764,7 +1916,33 @@ namespace Nop.Web.Controllers
                     Text = "Custom Range",
                     Selected = selectedPeriodId == -1
                 });
+                int totalSubmitters = submitterEmployeeIds.Count;
 
+                model.PeriodStats = periods.Select(p =>
+                {
+                    // ✅ Get unique submitted users for THIS period
+                    var submittedUserIds = _submissionRepository.Table
+                        .Where(s =>
+                            s.UpdateTemplateId == selectedTemplateId.Value &&
+                            s.PeriodId == p.Id &&
+                            s.SubmittedByCustomerId.HasValue)
+                        .Select(s => s.SubmittedByCustomerId.Value)
+                        .Distinct()
+                        .ToList();
+
+                    int submitted = submittedUserIds.Count;
+
+                    // ✅ Total submitters - submitted = pending
+                    int pending = submitterEmployeeIds.Count - submitted;
+
+                    return new PeriodStatItem
+                    {
+                        PeriodId = p.Id,
+                        PeriodText = GetDisplaysPeriodsText(template, p),
+                        SubmittedCount = submitted,
+                        PendingCount = pending < 0 ? 0 : pending
+                    };
+                }).ToList();
                 // PERIOD OR CUSTOM RANGE LOGIC
                 if (selectedPeriodId == -1)
                 {
@@ -1785,17 +1963,25 @@ namespace Nop.Web.Controllers
             int? filterSubmitterId = null;
             if (selectedTemplateId.HasValue && model.AvailableSubmitters?.Any() == true)
             {
-                IQueryable<UpdateSubmission> submissionsQuery = _submissionRepository.Table
-                    .Where(s => s.UpdateTemplateId == selectedTemplateId.Value);
+                //IQueryable<UpdateSubmission> submissionsQuery = _submissionRepository.Table
+                //    .Where(s => s.UpdateTemplateId == selectedTemplateId.Value);
 
-                // Period filter
-                // If specific period selected  always filter by PeriodId
+                //// Period filter
+                //// If specific period selected  always filter by PeriodId
+                //if (model.SelectedPeriodId.HasValue && model.SelectedPeriodId != -1)
+                //{
+                //    submissionsQuery = submissionsQuery
+                //        .Where(s => s.PeriodId == model.SelectedPeriodId.Value);
+                //}
+                IQueryable<UpdateSubmission> submissionsQuery = _submissionRepository.Table
+    .Where(s => s.UpdateTemplateId == selectedTemplateId.Value);
+
+                // ✅ ONLY PERIOD FILTER
                 if (model.SelectedPeriodId.HasValue && model.SelectedPeriodId != -1)
                 {
                     submissionsQuery = submissionsQuery
                         .Where(s => s.PeriodId == model.SelectedPeriodId.Value);
                 }
-
                 // If Custom Range selected  filter by PeriodStart instead of submission date
                 if (model.SelectedPeriodId == -1)
                 {
@@ -1818,9 +2004,9 @@ namespace Nop.Web.Controllers
                 }
 
                 var submittedCustomerIds = await submissionsQuery
-                    .Select(s => (int?)s.SubmittedByCustomerId)
-                    .Distinct()
-                    .ToListAsync();
+    .Select(s => (int?)s.SubmittedByCustomerId)
+    .Distinct()
+    .ToListAsync();
 
                 var submittedIds = submittedCustomerIds
                     .Where(x => x.HasValue)
@@ -1849,13 +2035,13 @@ namespace Nop.Web.Controllers
             if (model.CanSeeSubmitterDropdown && model.SelectedSubmitterId.HasValue)
                 filterSubmitterId = model.SelectedSubmitterId;
             model.Submissions = await GetSubmissionCardsAsync(
-    currentUserId: customer.Id,
-    filterSubmitterId: filterSubmitterId,
-    from: model.FromDate,
-    to: model.ToDate,
-    selectedTemplateId: model.SelectedTemplateId,
-    selectedPeriodId: model.SelectedPeriodId == -1 ? null : model.SelectedPeriodId
-);
+     currentUserId: customer.Id,
+     filterSubmitterId: filterSubmitterId,
+     from: null, // ✅ IMPORTANT
+     to: null,   // ✅ IMPORTANT
+     selectedTemplateId: model.SelectedTemplateId,
+     selectedPeriodId: model.SelectedPeriodId == -1 ? null : model.SelectedPeriodId
+ );
             return View("~/Themes/DefaultClean/Views/Extension/UpdateForm/List.cshtml", model);
         }
 

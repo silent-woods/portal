@@ -712,3 +712,128 @@ body {
     font-size: 16px;
     color: green
 }
+
+.period-sidebar {
+    width: 260px;
+}
+
+.period-card {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #f9f9f9;
+}
+
+    .period-card:hover {
+        background: #eef6ff;
+    }
+
+    .period-card.active {
+        border-left: 4px solid #007bff;
+        background: #e7f1ff;
+    }
+
+.period-title {
+    font-weight: 600;
+}
+
+.period-meta {
+    font-size: 13px;
+    color: #555;
+}
+
+.reviewer-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* RENAMED: period-sidebar ? reviewer-period-sidebar */
+.reviewer-period-sidebar {
+    width: 220px;
+    min-width: 200px;
+    flex-shrink: 0;
+    height: 400px;
+    overflow-y: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .03);
+}
+
+    .reviewer-period-sidebar h5 {
+        font-weight: 700;
+        margin-bottom: 12px;
+        font-size: 15px;
+        color: #333;
+    }
+
+.period-sidebar-item {
+    display: block;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    border-left: 4px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+    text-decoration: none;
+    color: #333;
+    transition: background 0.2s;
+}
+
+    .period-sidebar-item:hover {
+        text-decoration: none;
+        color: #333;
+        opacity: 0.85;
+    }
+
+    .period-sidebar-item.active {
+        background: #e8f0fe;
+        border-color: #4a6cf7;
+        border-left-color: #4a6cf7;
+    }
+
+    .period-sidebar-item.has-pending {
+        background: #fff0f0;
+        border-color: #ffc5c5;
+        border-left-color: #e53935;
+    }
+
+    .period-sidebar-item.all-submitted {
+        background: #f0fff4;
+        border-color: #b2dfdb;
+        border-left-color: #43a047;
+    }
+
+    .period-sidebar-item .period-label {
+        font-weight: 600;
+        font-size: 13px;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .period-sidebar-item.has-pending .period-label {
+        color: #c62828;
+    }
+
+    .period-sidebar-item.all-submitted .period-label {
+        color: #2e7d32;
+    }
+
+    .period-sidebar-item.active .period-label {
+        color: #1a3faa;
+    }
+
+    .period-sidebar-item .period-meta span {
+        display: block;
+        font-size: 12px;
+        color: #555;
+    }
+
+.reviewer-main {
+    flex: 1;
+    min-width: 0;
+}

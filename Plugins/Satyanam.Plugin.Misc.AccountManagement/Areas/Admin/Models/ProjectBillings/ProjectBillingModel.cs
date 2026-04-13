@@ -51,7 +51,7 @@ public partial record ProjectBillingModel : BaseNopEntityModel
     public string BillingType { get; set; }
 
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.ProjectBilling.Fields.BillingRate")]
-    public int BillingRate { get; set; }
+    public decimal BillingRate { get; set; }
 
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.ProjectBilling.Fields.PrimaryCurrencyId")]
     public int PrimaryCurrencyId { get; set; }

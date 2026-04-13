@@ -1,0 +1,87 @@
+@using Satyanam.Nop.Plugin.Misc.SatyanamCRM.Models.Zoho
+@{
+    Layout = "_AdminLayout";
+    NopHtml.SetActiveMenuItemSystemName("ZohoCampaign");
+}
+@model ZohoCampaignSettingsModel
+
+<form asp-controller="ZohoCampaign" asp-action="Configure" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            <i class="fas fa-envelope-open-text"></i> @T("Plugins.SatyanamCRM.ZohoCampaign.Configure.Title")
+        </h1>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card">
+                <div class="card-body">
+
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label class="col-form-label">@T("Plugins.SatyanamCRM.ZohoCampaign.Configure.Enabled")</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input asp-for="IsEnabled" type="checkbox" />
+                            <span class="hint">@T("Plugins.SatyanamCRM.ZohoCampaign.Configure.Enabled.Hint")</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label class="col-form-label">@T("Plugins.SatyanamCRM.ZohoCampaign.Configure.ClientId")</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input asp-for="ClientId" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label class="col-form-label">@T("Plugins.SatyanamCRM.ZohoCampaign.Configure.ClientSecret")</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input asp-for="ClientSecret" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label class="col-form-label">@T("Plugins.SatyanamCRM.ZohoCampaign.Configure.RefreshToken")</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input asp-for="RefreshToken" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label class="col-form-label">@T("Plugins.SatyanamCRM.ZohoCampaign.Configure.FetchLimit")</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input asp-for="CampaignFetchLimit" class="form-control" style="width:100px;" type="number" min="1" />
+                            <span class="hint">@T("Plugins.SatyanamCRM.ZohoCampaign.Configure.FetchLimit.Hint")</span>
+                        </div>
+                    </div>
+
+                    @if (Model.LastSyncedUtc.HasValue)
+                    {
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <label class="col-form-label">@T("Plugins.SatyanamCRM.ZohoCampaign.Configure.LastSynced")</label>
+                            </div>
+                            <div class="col-md-9">
+                                <span class="form-control-plaintext text-muted">@Model.LastSyncedUtc.Value.ToString("dd MMM yyyy, hh:mm tt") @T("Plugins.SatyanamCRM.ZohoCampaign.Configure.LastSynced.Utc")</span>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">@T("Plugins.SatyanamCRM.ZohoCampaign.Configure.SaveButton")</button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</form>

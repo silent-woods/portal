@@ -14,7 +14,7 @@ public partial class InvoiceItem : BaseEntity, ISoftDeletedEntity
 
     public decimal Hours { get; set; }
 
-    public int Rate { get; set; }
+    public decimal Rate { get; set; }
 
     public decimal Amount { get; set; }
 

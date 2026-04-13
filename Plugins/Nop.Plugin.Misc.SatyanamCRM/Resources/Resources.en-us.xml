@@ -2204,5 +2204,195 @@
 	<LocaleResource Name="Plugin.SatyanamCRM.ConnectionRequest.Fields.StatusText">
 		<Value>Status</Value>
 	</LocaleResource>
+		<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.SettingsSaved">
+			<Value>Zoho Campaigns settings saved.</Value>
+		</LocaleResource>
+		<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.SyncSuccess">
+			<Value>Zoho Campaigns sync completed successfully.</Value>
+		</LocaleResource>
+		<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.SyncFailed">
+			<Value>Sync failed: {0}</Value>
+		</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.SyncTask.Error">
+		<Value>Error occurred while syncing Zoho Campaigns task.</Value>
+	</LocaleResource>
+
+	<!-- ZohoCampaignService log messages -->
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.CheckingTokenValidity">
+		<Value>[Zoho] Checking token validity.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.CredentialsMissing">
+		<Value>[Zoho] ClientId, ClientSecret or RefreshToken is missing in ZohoCampaignSettings.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.CredentialsNotConfigured">
+		<Value>Zoho credentials not configured.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.TokenReused">
+		<Value>[Zoho] Existing access token is still valid, reusing.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.TokenRefreshing">
+		<Value>[Zoho] Access token missing or expired — refreshing via refresh token.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.TokenRefreshFailed">
+		<Value>[Zoho] Token refresh HTTP call failed.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.TokenRefreshEmptyToken">
+		<Value>[Zoho] Token refresh returned empty access_token. Check ClientId, ClientSecret, RefreshToken.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.TokenRefreshEmptyException">
+		<Value>Zoho token refresh returned empty token.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.TokenRefreshed">
+		<Value>[Zoho] Token refreshed successfully.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.SyncStarted">
+		<Value>[Zoho] SyncAsync started.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.SyncSkippedDisabled">
+		<Value>[Zoho] Sync skipped — IsEnabled is false.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.SyncAbortedNoToken">
+		<Value>[Zoho] SyncAsync aborted — could not get access token.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.FetchingCampaigns">
+		<Value>[Zoho] Fetching recent campaigns (limit={0}).</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.RawCampaignsResponse">
+		<Value>[Zoho] recentcampaigns raw response (first 2000 chars): {0}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.FetchCampaignsFailed">
+		<Value>[Zoho] GetRecentCampaignsAsync failed.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.CampaignsReceived">
+		<Value>[Zoho] Got {0} campaign(s) from recentcampaigns endpoint.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.NoCampaigns">
+		<Value>[Zoho] No campaigns returned. Check that your Zoho account has sent campaigns.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.CampaignNoKey">
+		<Value>[Zoho] Campaign '{0}' has no campaign_key — skipping. Raw keys: {1}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.ProcessingCampaign">
+		<Value>[Zoho] Processing campaign: '{0}' | key={1}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.RawReportResponse">
+		<Value>[Zoho] getcampaignreports raw response for key={0} (first 2000 chars): {1}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.ReportFetchFailed">
+		<Value>[Zoho] GetCampaignReportAsync failed for key={0}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.ReportParsed">
+		<Value>[Zoho] Report parsed for '{0}': reports={1} fields, details={2} fields, locations={3}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.ReportsEmpty">
+		<Value>[Zoho] campaign-reports section was empty for key={0}. The XML may have a different structure.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.DetailsEmpty">
+		<Value>[Zoho] campaign-details section was empty for key={0}. campaign_key in details may not match.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.StatInserted">
+		<Value>[Zoho] Inserted new stat row for '{0}'.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.StatUpdated">
+		<Value>[Zoho] Updated stat row for '{0}'.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.LocationsSaved">
+		<Value>[Zoho] Location stats saved: {0} countries for '{1}'.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.CampaignProcessError">
+		<Value>[Zoho] Unexpected error processing campaign key={0}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.SyncCompleted">
+		<Value>[Zoho] SyncAsync completed successfully.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.StoredStatsReturned">
+		<Value>[Zoho] GetStoredStatsAsync returned {0} row(s).</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.UnknownCampaignName">
+		<Value>(unknown)</Value>
+	</LocaleResource>
+
+	<!-- ZohoCampaignsHttpClient exception messages -->
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Error.TokenRefreshHttp">
+		<Value>[Zoho] Token refresh HTTP {0}. Body: {1}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Error.TokenRefreshZohoError">
+		<Value>[Zoho] Token refresh error from Zoho: {0}. Full response: {1}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Error.TokenRefreshNoToken">
+		<Value>[Zoho] Token refresh response has no access_token. Full response: {0}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Error.RecentCampaignsHttp">
+		<Value>[Zoho] recentcampaigns HTTP {0}. Body: {1}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Error.CampaignReportHttp">
+		<Value>[Zoho] getcampaignreports HTTP {0}. Body: {1}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.Title">
+		<Value>Zoho Campaigns Settings</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.Enabled">
+		<Value>Enabled</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.Enabled.Hint">
+		<Value>Enable automatic sync from Zoho Campaigns.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.ClientId">
+		<Value>Client ID</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.ClientSecret">
+		<Value>Client Secret</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.RefreshToken">
+		<Value>Refresh Token</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.FetchLimit">
+		<Value>Campaign Fetch Limit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.FetchLimit.Hint">
+		<Value>Number of recent campaigns to sync.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.LastSynced">
+		<Value>Last Synced</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.LastSynced.Utc">
+		<Value>UTC</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.SaveButton">
+		<Value>Save Settings</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.ManualSync.Title">
+		<Value>Manual Sync</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.ManualSync.Description">
+		<Value>Trigger an immediate sync from Zoho Campaigns. The scheduled task runs automatically every 12 hours.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Configure.ManualSync.Button">
+		<Value>Sync Now</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Error.RecipientsDataHttp">
+		<Value>[Zoho] getcampaignrecipientsdata ({0}) HTTP {1}. Body: {2}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.FetchingTimeline">
+		<Value>[Zoho] Fetching recipient timeline for campaign: {0}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.TimelineSyncSkipped">
+		<Value>[Zoho] Timeline sync skipped (data fresh within 24h) for campaign: {0}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.TimelineSynced">
+		<Value>[Zoho] Timeline synced for campaign {0}: {1} daily rows upserted.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugins.SatyanamCRM.ZohoCampaign.Log.TimelineFetchFailed">
+		<Value>[Zoho] Failed to fetch {0} data for campaign {1}.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.CreateLead">
+		<Value>Create Lead</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Leads.DuplicateSkipped">
+		<Value>{0} record(s) skipped due to duplicate email: {1}.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowUps.Emailverification">
+		<Value>Email verification limit reached or session expired. Skipping validation.</Value>
+	</LocaleResource>
 </Language>
 

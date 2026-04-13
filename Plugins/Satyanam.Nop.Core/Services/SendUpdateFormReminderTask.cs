@@ -116,6 +116,41 @@ namespace Satyanam.Nop.Core.Services
 
                     while (!days.Contains((int)lastScheduledIndia.DayOfWeek))
                         lastScheduledIndia = lastScheduledIndia.AddDays(-1);
+                    var pastWeeklyPeriods = await _periodRepo.Table
+                         .Where(p =>
+                             p.UpdateTemplateId == template.Id &&
+                             p.PeriodStart.Date < indiaNow.Date)
+                         .OrderByDescending(p => p.PeriodStart)
+                         .ToListAsync();
+
+                    foreach (var period in pastWeeklyPeriods)
+                    {
+                        // Find the LAST selected weekday that falls within PeriodStart–PeriodEnd
+                        var periodScheduledDate = GetFirstSelectedWeekdayInPeriod(
+                        period.PeriodStart.Date,
+                        period.PeriodEnd.Date,
+                        days);
+
+                        // No matching weekday found in this period — skip
+                        if (periodScheduledDate == null)
+                            continue;
+
+                        // Only process if the scheduled date is strictly in the past
+                        if (periodScheduledDate.Value >= indiaNow.Date)
+                            continue;
+
+                        var scheduledIstLoop = DateTime.SpecifyKind(
+                            periodScheduledDate.Value + dueTime, DateTimeKind.Unspecified);
+                        var scheduledUtcLoop = TimeZoneInfo.ConvertTimeToUtc(scheduledIstLoop, indiaTimeZone);
+                        var overdueDaysLoop = (indiaNow.Date - periodScheduledDate.Value).Days;
+
+                        await ProcessSinglePeriod(
+                            template, period,
+                            periodScheduledDate.Value,
+                            scheduledIstLoop, scheduledUtcLoop,
+                            overdueDaysLoop, indiaNow, nowUtc,
+                            store, emailAccount);
+                    }
                 }
 
                 // MONTHLY
@@ -127,6 +162,80 @@ namespace Satyanam.Nop.Core.Services
 
                     if (lastScheduledIndia > indiaNow)
                         lastScheduledIndia = lastScheduledIndia.AddMonths(-1);
+                    var pastMonthlyPeriods = await _periodRepo.Table
+        .Where(p =>
+            p.UpdateTemplateId == template.Id &&
+            p.PeriodStart.Date < indiaNow.Date)
+        .OrderByDescending(p => p.PeriodStart)
+        .ToListAsync();
+
+                    foreach (var period in pastMonthlyPeriods)
+                    {
+                        DateTime periodScheduledDate;
+
+                        try
+                        {
+                            periodScheduledDate = new DateTime(
+                                period.PeriodStart.Year,
+                                period.PeriodStart.Month,
+                                day);
+                        }
+                        catch
+                        {
+                            var lastDay = DateTime.DaysInMonth(
+                                period.PeriodStart.Year,
+                                period.PeriodStart.Month);
+
+                            periodScheduledDate = new DateTime(
+                                period.PeriodStart.Year,
+                                period.PeriodStart.Month,
+                                lastDay);
+                        }
+
+                        if (periodScheduledDate >= indiaNow.Date)
+                            continue;
+
+                        var scheduledIstLoop = DateTime.SpecifyKind(
+                            periodScheduledDate + dueTime, DateTimeKind.Unspecified);
+
+                        var scheduledUtcLoop = TimeZoneInfo.ConvertTimeToUtc(scheduledIstLoop, indiaTimeZone);
+
+                        var overdueDaysLoop = (indiaNow.Date - periodScheduledDate).Days;
+
+                        // ✅ FIX: Only check if at least ONE pending user exists
+                        var hasPendingUsers = await _submissionRepo.Table
+                            .Where(s =>
+                                s.UpdateTemplateId == template.Id &&
+                                s.PeriodId == period.Id)
+                            .Select(s => s.SubmittedByCustomerId)
+                            .ToListAsync();
+
+                        var submittersIds = template.SubmitterUserIds
+                            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(int.Parse)
+                            .ToList();
+
+                        var submitterCustomerIds = new List<int>();
+                        foreach (var empId in submittersIds)
+                        {
+                            var emp = await _employeeService.GetEmployeeByIdAsync(empId);
+                            if (emp != null)
+                                submitterCustomerIds.Add(emp.Customer_Id);
+                        }
+
+                        // ✅ If ALL submitted → skip
+                        if (submitterCustomerIds.All(id => hasPendingUsers.Contains(id)))
+                            continue;
+
+                        await ProcessSinglePeriod(
+                            template, period,
+                            periodScheduledDate,
+                            scheduledIstLoop, scheduledUtcLoop,
+                            overdueDaysLoop, indiaNow, nowUtc,
+                            store, emailAccount);
+                    }
+
+                    continue;
                 }
 
                 // DAILY or fallback
@@ -163,6 +272,7 @@ namespace Satyanam.Nop.Core.Services
                 var scheduledUtc = TimeZoneInfo.ConvertTimeToUtc(scheduledIst, indiaTimeZone);
 
                 var overdueDays = (indiaNow.Date - lastScheduledIndia.Date).Days;
+
                 // Decide overdue/due/future 
                 bool shouldSend = false;
 
@@ -395,6 +505,154 @@ You did not submit the <strong>{template.Title}</strong> form for
                     await _templateRepo.UpdateAsync(template);
                 }
             }
+        }
+        private DateTime? GetFirstSelectedWeekdayInPeriod(
+    DateTime periodStart,
+    DateTime periodEnd,
+    List<int> selectedDayNumbers)
+        {
+            for (var date = periodStart; date <= periodEnd; date = date.AddDays(1))
+            {
+                if (selectedDayNumbers.Contains((int)date.DayOfWeek))
+                    return date;
+            }
+            return null;
+        }
+        private async Task ProcessSinglePeriod(
+            UpdateTemplate template,
+            UpdateTemplatePeriod period,
+            DateTime periodScheduledDate,
+            DateTime scheduledIst,
+            DateTime scheduledUtc,
+            int overdueDays,
+            DateTime indiaNow,
+            DateTime nowUtc,
+            Store store,
+            EmailAccount emailAccount)
+        {
+            var viewerEmails = new List<string>();
+            if (!string.IsNullOrWhiteSpace(template.ViewerUserIds))
+            {
+                var viewerIds = template.ViewerUserIds
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(int.Parse).ToList();
+
+                foreach (var viewerId in viewerIds)
+                {
+                    var viewer = await _employeeService.GetEmployeeByIdAsync(viewerId);
+                    if (viewer != null && !string.IsNullOrWhiteSpace(viewer.OfficialEmail))
+                        viewerEmails.Add(viewer.OfficialEmail);
+                }
+            }
+
+            var submitterIds = template.SubmitterUserIds
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(int.Parse).ToList();
+
+            var anyEmailQueued = false;
+
+            foreach (var employeeId in submitterIds)
+            {
+                var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
+                if (employee == null || string.IsNullOrWhiteSpace(employee.OfficialEmail))
+                    continue;
+
+                // Skip if this employee already submitted for this period
+                var submitted = await _submissionRepo.Table.AnyAsync(s =>
+                    s.UpdateTemplateId == template.Id &&
+                    s.SubmittedByCustomerId == employee.Customer_Id &&
+                    s.PeriodId == period.Id);
+
+                if (submitted)
+                    continue;
+
+                string subject;
+                string bodyMessage;
+                bool addViewerInCc = false;
+
+                if (overdueDays >= 3)
+                {
+                    addViewerInCc = true;
+                    subject = $"⚠️ Escalation ({periodScheduledDate:MMM dd}): '{template.Title}' overdue for {overdueDays} days";
+                    bodyMessage = $@"
+<p>The form <strong>{template.Title}</strong> for
+<strong>{periodScheduledDate:MMM dd, yyyy}</strong> has been
+<strong style='color:red;'>overdue for {overdueDays} days</strong>.</p>
+<p>The assigned submitter has not completed the form.</p>
+<p><strong>Viewers have been copied for awareness and follow-up.</strong></p>";
+                }
+                else
+                {
+                    subject = $"Overdue ({periodScheduledDate:MMM dd}): '{template.Title}' form still pending";
+                    bodyMessage = $@"
+<p>You did not submit the <strong>{template.Title}</strong> form for
+<strong>{periodScheduledDate:MMM dd, yyyy}</strong>.</p>
+<p>Please submit it as soon as possible.</p>";
+                }
+
+                // Same-day duplicate guard — prevents double-firing within one scheduler run
+                // Tomorrow it will fire again for anything still unsubmitted (intended)
+                //var emailAlreadySent = await _queuedEmailRepo.Table.AnyAsync(e =>
+                //    e.To == employee.OfficialEmail &&
+                //    e.Subject == subject &&
+                //    e.CreatedOnUtc.Date == nowUtc.Date);
+                var emailAlreadySent = await _queuedEmailRepo.Table.AnyAsync(e =>
+                        e.To == employee.OfficialEmail &&
+                        e.Subject.Contains(template.Title) &&
+                        e.Body.Contains(periodScheduledDate.ToString("MMM dd")) &&
+                        e.CreatedOnUtc.Date == nowUtc.Date
+                    );
+
+                if (emailAlreadySent)
+                    continue;
+
+                var formLink = $"{store.Url.TrimEnd('/')}/UpdateSubmission/Submit/{template.Id}?periodId={period.Id}";
+                var body = BuildEmailBody(employee.FirstName, employee.LastName, bodyMessage, formLink);
+
+                var email = new QueuedEmail
+                {
+                    From = emailAccount.Email,
+                    FromName = emailAccount.DisplayName,
+                    To = employee.OfficialEmail,
+                    CC = addViewerInCc && viewerEmails.Any() ? string.Join(";", viewerEmails) : null,
+                    Subject = subject,
+                    Body = body,
+                    Priority = QueuedEmailPriority.High,
+                    CreatedOnUtc = nowUtc,
+                    EmailAccountId = emailAccount.Id
+                };
+
+                await _queuedEmailService.InsertQueuedEmailAsync(email);
+                anyEmailQueued = true;
+            }
+
+            if (anyEmailQueued)
+            {
+                template.LastReminderSentUtc = nowUtc;
+                await _templateRepo.UpdateAsync(template);
+            }
+        }
+        private string BuildEmailBody(
+            string firstName, string lastName,
+            string bodyMessage, string formLink)
+        {
+            return $@"
+<p>Dear {firstName} {lastName},</p>
+{bodyMessage}
+<p style='margin-top:20px;'>
+<table cellspacing='0' cellpadding='0' border='0'>
+<tr>
+<td align='center' bgcolor='#007bff' style='border-radius:6px;'>
+<a href='{formLink}' target='_blank'
+style='display:inline-block;padding:12px 24px;font-size:14px;
+font-family:Arial,sans-serif;color:#ffffff;text-decoration:none;
+font-weight:bold;border-radius:6px;'>
+Fill The Form
+</a>
+</td>
+</tr>
+</table>
+</p>";
         }
         private async Task ProcessTemplateForDate(
     UpdateTemplate template,

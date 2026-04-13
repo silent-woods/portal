@@ -2,29 +2,61 @@
     Layout = "_AdminLayout";
     ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Title").Text;
     NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard");
+
+    bool canViewFinancial   = ViewBag.CanViewFinancial   == true;
+    bool canViewOperational = ViewBag.CanViewOperational == true;
+    bool canViewCRM         = ViewBag.CanViewCRM         == true;
+
+    // Determine which tab should be active (first visible one)
+    string activeTab = canViewFinancial ? "financial" : canViewOperational ? "operational" : canViewCRM ? "crm" : "";
 }
 
-<div class="exec-tab-bar">
-    <button class="exec-tab active" data-tab="financial">
-        <i class="fas fa-chart-line"></i> Financial Performance
-    </button>
-    <button class="exec-tab" data-tab="operational">
-        <i class="fas fa-tasks"></i> Operational Metrics
-    </button>
-    <button class="exec-tab" data-tab="crm">
-        <i class="fas fa-handshake"></i> CRM Insights
-    </button>
-</div>
+@if (!canViewFinancial && !canViewOperational && !canViewCRM)
+{
+    <div class="alert alert-warning">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.NoSectionAccess")</div>
+}
+else
+{
+    <div class="exec-tab-bar">
+        @if (canViewFinancial)
+        {
+            <button class="exec-tab @(activeTab == "financial" ? "active" : "")" data-tab="financial">
+                <i class="fas fa-chart-line"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Tab.Financial")
+            </button>
+        }
+        @if (canViewOperational)
+        {
+            <button class="exec-tab @(activeTab == "operational" ? "active" : "")" data-tab="operational">
+                <i class="fas fa-tasks"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Tab.Operational")
+            </button>
+        }
+        @if (canViewCRM)
+        {
+            <button class="exec-tab @(activeTab == "crm" ? "active" : "")" data-tab="crm">
+                <i class="fas fa-handshake"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Tab.CRM")
+            </button>
+        }
+    </div>
 
-<div id="exec-tab-financial">
-    @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_FinancialPerformanceSection.cshtml")
-</div>
-<div id="exec-tab-operational" style="display:none;">
-    @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_OperationalMetricsSection.cshtml")
-</div>
-<div id="exec-tab-crm" style="display:none;">
-    @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_CRMInsightsSection.cshtml")
-</div>
+    @if (canViewFinancial)
+    {
+        <div id="exec-tab-financial" @(activeTab != "financial" ? Html.Raw("style=\"display:none;\"") : Html.Raw(""))>
+            @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_FinancialPerformanceSection.cshtml")
+        </div>
+    }
+    @if (canViewOperational)
+    {
+        <div id="exec-tab-operational" @(activeTab != "operational" ? Html.Raw("style=\"display:none;\"") : Html.Raw(""))>
+            @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_OperationalMetricsSection.cshtml")
+        </div>
+    }
+    @if (canViewCRM)
+    {
+        <div id="exec-tab-crm" @(activeTab != "crm" ? Html.Raw("style=\"display:none;\"") : Html.Raw(""))>
+            @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_CRMInsightsSection.cshtml")
+        </div>
+    }
+}
 
 <style>
     .exec-tab-bar {
@@ -58,7 +90,12 @@
 
 <script>
 (function () {
-    var loaded = { financial: true, operational: false, crm: false };
+    var activeTab = '@activeTab';
+    var loaded = {
+        financial:   activeTab === 'financial',
+        operational: activeTab === 'operational',
+        crm:         activeTab === 'crm'
+    };
 
     $(document).ready(function () {
         $('.exec-tab').on('click', function () {

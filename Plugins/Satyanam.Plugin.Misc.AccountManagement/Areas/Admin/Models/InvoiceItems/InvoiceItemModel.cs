@@ -16,7 +16,7 @@ public partial record InvoiceItemModel : BaseNopEntityModel
     public decimal Hours { get; set; }
 
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoiceItem.Fields.Rate")]
-    public int Rate { get; set; }
+    public decimal Rate { get; set; }
 
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.InvoiceItem.Fields.Amount")]
     public decimal Amount { get; set; }

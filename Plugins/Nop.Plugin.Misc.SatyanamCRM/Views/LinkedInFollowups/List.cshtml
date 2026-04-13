@@ -25,6 +25,14 @@
     <div class="float-right">
         @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
         {
+            <button type="button" id="create-lead-selected" class="btn btn-warning">
+                <i class="fas fa-user-plus"></i>
+                @T("Plugin.SatyanamCRM.CreateLead")
+            </button>
+        }
+        
+        @if (await permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
+        {
             <div class="btn-group">
                 <button type="button" class="btn btn-success">
                     <i class="fas fa-download"></i>
@@ -824,6 +832,56 @@
                 $('#selectedIds').val(selectedIds.join(','));
 
                 $('#export-excel-selected-form').submit();
+
+                return false;
+            });
+
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+
+            $('#create-lead-selected').on('click', function () {
+
+                if (typeof selectedIds === 'undefined' || selectedIds.length === 0) {
+                    showAlert('nothingSelectedAlert', '@T("Admin.Common.Alert.NothingSelected")');
+                    return false;
+                }
+
+                // Confirm before creating
+                if (!confirm('Are you sure you want to create Lead from the selected record?')) {
+                    return false;
+                }
+
+                // Show loading state on button
+                var $btn = $(this);
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Creating...');
+
+                var postData = {
+                    selectedIds: selectedIds
+                };
+                addAntiForgeryToken(postData);
+
+                $.ajax({
+                    cache: false,
+                    type: "POST",
+                    url: "@Url.Action("CreateLeadFromFollowups", "LinkedInFollowups")",
+                    data: postData,
+                            success: function (result) {
+            if (result.success) {
+                updateTable('#linkedInFollowups-grid');
+                // Reload page so nopCommerce notification bar shows at top
+                location.reload();
+            }
+        },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        showAlert('deleteSelectedFailed', 'Failed to create lead: ' + errorThrown);
+                    },
+                    complete: function () {
+                        // Restore button
+                        $btn.prop('disabled', false).html('<i class="fas fa-user-plus"></i> Create Lead');
+                    }
+                });
 
                 return false;
             });

@@ -1,13 +1,16 @@
 ﻿using App.Core;
+using App.Core.Domain.ScheduleTasks;
 using App.Core.Domain.Security;
 using App.Services.Common;
 using App.Services.Configuration;
 using App.Services.Plugins;
+using App.Services.ScheduleTasks;
 using App.Services.Security;
 using App.Web.Framework.Menu;
 using Microsoft.AspNetCore.Routing;
 using Satyanam.Nop.Core.Services;
 using Satyanam.Nop.Core.Settings;
+using Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services.ScheduleTasks;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,9 +20,10 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM
     {
         #region Fields
 
-        private readonly IPermissionService _permissionService;
-        private readonly IWebHelper _webHelper;
-        private readonly ISettingService _settingService;
+        private readonly IPermissionService    _permissionService;
+        private readonly IWebHelper            _webHelper;
+        private readonly ISettingService       _settingService;
+        private readonly IScheduleTaskService  _scheduleTaskService;
 
         #endregion
 
@@ -27,11 +31,13 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM
 
         public SatyanamCRMPlugin(IPermissionService permissionService,
             IWebHelper webHelper,
-            ISettingService settingService)
+            ISettingService settingService,
+            IScheduleTaskService scheduleTaskService)
         {
-            _permissionService = permissionService;
-            _webHelper = webHelper;
-            _settingService = settingService;
+            _permissionService   = permissionService;
+            _webHelper           = webHelper;
+            _settingService      = settingService;
+            _scheduleTaskService = scheduleTaskService;
         }
 
         #endregion
@@ -63,11 +69,33 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM
 
                 await _settingService.SaveSettingAsync(settings);
             }
+
+            var taskType = typeof(SyncZohoCampaignsTask).FullName;
+            if (await _scheduleTaskService.GetTaskByTypeAsync(taskType) == null)
+            {
+                await _scheduleTaskService.InsertTaskAsync(new ScheduleTask
+                {
+                    Name        = "Sync Zoho Campaigns",
+                    Type        = taskType,
+                    Seconds     = 43200,
+                    Enabled     = false,
+                    StopOnError = false
+                });
+            }
+
+            await _settingService.SaveSettingAsync(new ZohoCampaignSettings { IsEnabled = false, CampaignFetchLimit = 10 });
+
             await base.InstallAsync();
         }
 
         public override async Task UninstallAsync()
         {
+            var taskType = typeof(SyncZohoCampaignsTask).FullName;
+            var task = await _scheduleTaskService.GetTaskByTypeAsync(taskType);
+            if (task != null)
+                await _scheduleTaskService.DeleteTaskAsync(task);
+
+            await _settingService.DeleteSettingAsync<ZohoCampaignSettings>();
             //await base.UninstallAsync();
         }
 
@@ -167,6 +195,17 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM
                 Visible = await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageInquiries, PermissionAction.View),
                 RouteValues = new RouteValueDictionary() { { "area", "Admin" } },
                 IconClass = "fas fa-envelope-open-text"
+            });
+
+            menuItem.ChildNodes.Add(new SiteMapNode()
+            {
+                Title = "Zoho Campaigns",
+                ActionName = "Configure",
+                ControllerName = "ZohoCampaign",
+                SystemName = "ZohoCampaign",
+                Visible = await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageCampaigns, PermissionAction.View),
+                RouteValues = new RouteValueDictionary() { { "area", "Admin" } },
+                IconClass = "fas fa-paper-plane"
             });
 
             var mastersMenu = new SiteMapNode()

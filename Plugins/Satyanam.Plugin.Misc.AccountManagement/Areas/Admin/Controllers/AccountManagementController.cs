@@ -181,7 +181,7 @@ public partial class AccountManagementController : BaseAdminController
         return $"{nameWithoutExtension}_{timestamp}{extension}";
     }
 
-    protected virtual async Task<InvoiceItem> CreateInvoiceItemAsync(int invoiceId, string title, string role, decimal totalHours, int billingRate)
+    protected virtual async Task<InvoiceItem> CreateInvoiceItemAsync(int invoiceId, string title, string role, decimal totalHours, decimal billingRate)
     {
         var invoiceItem = new InvoiceItem
         {

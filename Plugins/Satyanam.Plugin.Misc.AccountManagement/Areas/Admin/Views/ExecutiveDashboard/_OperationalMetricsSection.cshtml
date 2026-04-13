@@ -134,8 +134,8 @@
                 <div class="ops-task-health-controls">
                     <span class="ops-click-hint">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.InvoiceStatus.ClickHint")</span>
                     <select id="task-health-period-select" class="ops-filter-select ops-th-period-select">
-                        <option value="last3months" selected>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.Last3Months")</option>
-                        <option value="last6months">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.Last6Months")</option>
+                        <option value="last3months">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.Last3Months")</option>
+                        <option value="last6months" selected>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.Last6Months")</option>
                         <option value="thisyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.ThisYear")</option>
                         <option value="lastyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.LastYear")</option>
                         <option value="last2years">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Operational.Filter.Last2Years")</option>
@@ -322,7 +322,7 @@
     var opsDetailChart = null;
     var PROJECT_COLORS = ['#7c3aed','#0284c7','#16a34a','#d97706','#dc2626','#0891b2'];
     var opsState = { granularity: 'month', preset: 'lastmonth', projectId: 0, employeeId: 0 };
-    var taskHealthPeriod = 'last3months';
+    var taskHealthPeriod = 'last6months';
 
     function debounce(fn, ms) {
         var timer;

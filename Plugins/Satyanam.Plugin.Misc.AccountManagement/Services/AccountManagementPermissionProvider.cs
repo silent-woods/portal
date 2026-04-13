@@ -25,6 +25,9 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
     public static readonly PermissionRecord ManageRecurringExpenses = new() { Name = "Admin area. Account Management - Manage Recurring Expenses", SystemName = "ManageRecurringExpenses", Category = "Account" };
     public static readonly PermissionRecord ManageSalaryProcessing = new() { Name = "Admin area. Account Management - Manage Salary Processing", SystemName = "ManageSalaryProcessing", Category = "Account" };
     public static readonly PermissionRecord ManageExecutiveDashboard = new() { Name = "Admin area. Account Management - Manage Executive Dashboard", SystemName = "ManageExecutiveDashboard", Category = "Account" };
+    public static readonly PermissionRecord ManageExecutiveDashboardFinancial = new() { Name = "Admin area. Account Management - Executive Dashboard: Financial Section", SystemName = "ManageExecutiveDashboardFinancial", Category = "Account" };
+    public static readonly PermissionRecord ManageExecutiveDashboardOperational = new() { Name = "Admin area. Account Management - Executive Dashboard: Operational Section", SystemName = "ManageExecutiveDashboardOperational", Category = "Account" };
+    public static readonly PermissionRecord ManageExecutiveDashboardCRM = new() { Name = "Admin area. Account Management - Executive Dashboard: CRM Section", SystemName = "ManageExecutiveDashboardCRM", Category = "Account" };
 
     #endregion
 
@@ -48,7 +51,10 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
             ManageExpenses,
             ManageRecurringExpenses,
             ManageSalaryProcessing,
-            ManageExecutiveDashboard
+            ManageExecutiveDashboard,
+            ManageExecutiveDashboardFinancial,
+            ManageExecutiveDashboardOperational,
+            ManageExecutiveDashboardCRM
         };
     }
 
@@ -74,7 +80,10 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
                     ManageExpenses,
                     ManageRecurringExpenses,
                     ManageSalaryProcessing,
-                    ManageExecutiveDashboard
+                    ManageExecutiveDashboard,
+                    ManageExecutiveDashboardFinancial,
+                    ManageExecutiveDashboardOperational,
+                    ManageExecutiveDashboardCRM
                 }
             ),
 

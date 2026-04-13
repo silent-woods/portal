@@ -18,7 +18,7 @@ public partial class ProjectBilling : BaseEntity, ISoftDeletedEntity
 
     public int BillingTypeId { get; set; }
 
-    public int BillingRate { get; set; }
+    public decimal BillingRate { get; set; }
 
     public int PrimaryCurrencyId { get; set; }
 

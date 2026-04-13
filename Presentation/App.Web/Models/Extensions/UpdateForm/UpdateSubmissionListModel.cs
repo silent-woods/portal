@@ -46,8 +46,15 @@ namespace App.Web.Models.Extensions.UpdateForm
         public List<string> NotSubmittedNames { get; set; } = new();
         public string TemplateTitle { get; set; }
 
+        public List<PeriodStatItem> PeriodStats { get; set; } = new();
         #endregion
     }
 
-
+    public class PeriodStatItem
+    {
+        public int PeriodId { get; set; }
+        public string PeriodText { get; set; }
+        public int SubmittedCount { get; set; }
+        public int PendingCount { get; set; }
+    }
 }
