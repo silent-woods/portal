@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Core;
@@ -230,6 +231,22 @@ namespace App.Services.Directory
         public virtual async Task UpdateCountryAsync(Country country)
         {
             await _countryRepository.UpdateAsync(country);
+        }
+
+
+        /// <summary>
+        /// Gets a country 
+        /// </summary>
+        /// <param name="countryName">Country name</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the country
+        /// </returns>
+        public virtual async Task<Country> GetCountryByNameAsync(string countryName)
+        {
+            ArgumentNullException.ThrowIfNull(nameof(countryName));
+
+            return await _countryRepository.Table.Where(c => c.Name == countryName).FirstOrDefaultAsync();
         }
 
         #endregion

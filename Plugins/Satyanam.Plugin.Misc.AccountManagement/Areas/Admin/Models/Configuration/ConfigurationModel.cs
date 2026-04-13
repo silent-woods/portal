@@ -16,6 +16,7 @@ public partial record ConfigurationModel : BaseNopEntityModel
         AvailableAccountGroups = new List<SelectListItem>();
         AvailableHrEmployees = new List<SelectListItem>();
         AvailableFinancialYearStartMonths = new List<SelectListItem>();
+        AvailableEmailAccounts = new List<SelectListItem>();
     }
 
     #endregion
@@ -31,6 +32,12 @@ public partial record ConfigurationModel : BaseNopEntityModel
     [UIHint("Picture")]
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Fields.InvoiceLogoId")]
     public int InvoiceLogoId { get; set; }
+
+
+    [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Fields.EmailAccountId")]
+    public int EmailAccountId { get; set; }
+
+    public IList<SelectListItem> AvailableEmailAccounts { get; set; }
 
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Fields.SalaryProcessingDay")]
     public int SalaryProcessingDay { get; set; }

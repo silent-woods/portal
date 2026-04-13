@@ -83,5 +83,15 @@ namespace App.Services.Directory
         /// <param name="stateProvince">State/province</param>
         /// <returns>A task that represents the asynchronous operation</returns>
         Task UpdateStateProvinceAsync(StateProvince stateProvince);
+
+        /// <summary>
+        /// Gets a state/province
+        /// </summary>
+        /// <param name="stateProvinceName">The state/province name</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the state/province
+        /// </returns>
+        Task<StateProvince> GetStateProvinceByNameAsync(string stateProvinceName);
     }
 }

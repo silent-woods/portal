@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Core.Caching;
@@ -172,6 +173,21 @@ namespace App.Services.Directory
         public virtual async Task UpdateStateProvinceAsync(StateProvince stateProvince)
         {
             await _stateProvinceRepository.UpdateAsync(stateProvince);
+        }
+
+        /// <summary>
+        /// Gets a state/province
+        /// </summary>
+        /// <param name="stateProvinceName">The state/province name</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the state/province
+        /// </returns>
+        public virtual async Task<StateProvince> GetStateProvinceByNameAsync(string stateProvinceName)
+        {
+            ArgumentNullException.ThrowIfNull(nameof(stateProvinceName));
+
+            return await _stateProvinceRepository.Table.Where(s => s.Name == stateProvinceName).FirstOrDefaultAsync();
         }
 
         #endregion

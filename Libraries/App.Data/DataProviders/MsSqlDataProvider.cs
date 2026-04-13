@@ -25,7 +25,7 @@ namespace App.Data.DataProviders
         {
             var connectionString = DataSettingsManager.LoadSettings().ConnectionString;
 
-            //var decrypted = ConnectionSecurity.Decrypt(connectionString);
+            var decrypted = ConnectionSecurity.Decrypt(connectionString);
 
             return new SqlConnectionStringBuilder(connectionString);
         }

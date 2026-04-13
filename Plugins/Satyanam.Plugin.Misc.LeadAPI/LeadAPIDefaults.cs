@@ -8,5 +8,9 @@ public static partial class LeadAPIDefaults
 
 	public const string APISecretKeyHeader = "X-APISecretkey";
 
+	public const string NewLeadStatus = "New";
+
+	public const string GetAvailableTags = "GetAvailableTags";
+
     #endregion
 }

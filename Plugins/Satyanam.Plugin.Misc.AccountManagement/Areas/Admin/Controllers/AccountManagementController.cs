@@ -19,6 +19,7 @@ using App.Web.Framework.Mvc;
 using App.Web.Framework.Mvc.Filters;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using NUglify.Helpers;
 using QuestPDF.Fluent;
 using Satyanam.Nop.Core.Services;
@@ -213,6 +214,7 @@ public partial class AccountManagementController : BaseAdminController
             EnablePlugin = settings.EnablePlugin,
             InvoiceNumber = settings.InvoiceNumber,
             InvoiceLogoId = settings.InvoiceLogoId,
+            EmailAccountId = settings.EmailAccountId,
             FinancialYearStartMonth = settings.FinancialYearStartMonth > 0 ? settings.FinancialYearStartMonth : 4,
             SalaryProcessingDay = expenseSettings.SalaryProcessingDay,
             SalaryExpenseCategoryId = expenseSettings.SalaryExpenseCategoryId,
@@ -222,34 +224,49 @@ public partial class AccountManagementController : BaseAdminController
             CompanyAddress = expenseSettings.CompanyAddress,
             CompanyCIN = expenseSettings.CompanyCIN,
             HrPersonName = expenseSettings.HrPersonName,
-            HrSignaturePictureId = expenseSettings.HrSignaturePictureId
+            HrSignaturePictureId = expenseSettings.HrSignaturePictureId,
         };
 
         var categories = await _expenseCategoryService.GetAllExpenseCategoriesAsync();
         model.AvailableExpenseCategories = categories
-            .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = c.Name, Value = c.Id.ToString() })
+            .Select(c => new SelectListItem { Text = c.Name, Value = c.Id.ToString() })
             .ToList();
-        model.AvailableExpenseCategories.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Select.Category"), Value = "0" });
+        model.AvailableExpenseCategories.Insert(0, new SelectListItem { Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Select.Category"), Value = "0" });
 
         var accountGroups = await _accountManagementService.GetAllAccountGroupsAsync();
         model.AvailableAccountGroups = accountGroups
-            .Select(g => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = g.Name, Value = g.Id.ToString() })
+            .Select(g => new SelectListItem { Text = g.Name, Value = g.Id.ToString() })
             .ToList();
-        model.AvailableAccountGroups.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Select.AccountGroup"), Value = "0" });
+        model.AvailableAccountGroups.Insert(0, new SelectListItem { Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Select.AccountGroup"), Value = "0" });
 
         var employees = await _employeeService.GetAllEmployeesAsync();
         model.AvailableHrEmployees = employees
-            .Select(e => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+            .Select(e => new SelectListItem
             {
                 Text = $"{e.FirstName} {e.LastName}".Trim(),
                 Value = $"{e.FirstName} {e.LastName}".Trim()
             })
             .ToList();
-        model.AvailableHrEmployees.Insert(0, new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Select.HrPerson"), Value = "" });
+        model.AvailableHrEmployees.Insert(0, new SelectListItem { Text = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Select.HrPerson"), Value = "" });
+
+        var emailAccounts = await _emailAccountService.GetAllEmailAccountsAsync();
+        foreach (var emailAccount in emailAccounts)
+        {
+            model.AvailableEmailAccounts.Add(new SelectListItem
+            {
+                Text = emailAccount.Email,
+                Value = emailAccount.Id.ToString()
+            });
+        }
+        model.AvailableEmailAccounts.Insert(0, new SelectListItem
+        {
+            Text = await _localizationService.GetResourceAsync("Admin.Common.Select"),
+            Value = "0"
+        });
 
         var monthNames = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
         model.AvailableFinancialYearStartMonths = Enumerable.Range(1, 12)
-            .Select(m => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = monthNames[m - 1], Value = m.ToString() })
+            .Select(m => new SelectListItem { Text = monthNames[m - 1], Value = m.ToString() })
             .ToList();
 
         return View(model);
@@ -266,7 +283,8 @@ public partial class AccountManagementController : BaseAdminController
             EnablePlugin = model.EnablePlugin,
             InvoiceNumber = model.InvoiceNumber,
             InvoiceLogoId = model.InvoiceLogoId,
-            FinancialYearStartMonth = model.FinancialYearStartMonth > 0 ? model.FinancialYearStartMonth : 4
+            EmailAccountId = model.EmailAccountId,
+            FinancialYearStartMonth = model.FinancialYearStartMonth > 0 ? model.FinancialYearStartMonth : 4,
         };
         await _settingService.SaveSettingAsync(settings);
 
@@ -1085,7 +1103,14 @@ public partial class AccountManagementController : BaseAdminController
                 return RedirectToAction(nameof(InvoiceEdit), new { id = model.Id });
             }
 
-            var emailAccount = await _emailAccountService.GetEmailAccountByIdAsync(_emailAccountSettings.DefaultEmailAccountId);
+            var settings = await _settingService.LoadSettingAsync<AccountManagementSettings>();
+            if (settings.EmailAccountId <= 0)
+            {
+                _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Fields.EmailAccountId.Required"));
+                return RedirectToAction(nameof(InvoiceEdit), new { id = model.Id });
+            }
+
+            var emailAccount = await _emailAccountService.GetEmailAccountByIdAsync(settings.EmailAccountId);
             if (emailAccount == null)
                 emailAccount = (await _emailAccountService.GetAllEmailAccountsAsync()).FirstOrDefault();
             if (emailAccount == null)

@@ -113,5 +113,15 @@ namespace App.Services.Directory
         /// <param name="country">Country</param>
         /// <returns>A task that represents the asynchronous operation</returns>
         Task UpdateCountryAsync(Country country);
+
+        /// <summary>
+        /// Gets a country 
+        /// </summary>
+        /// <param name="countryName">Country name</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the country
+        /// </returns>
+        Task<Country> GetCountryByNameAsync(string countryName);
     }
 }

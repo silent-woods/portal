@@ -2,6 +2,7 @@
 using App.Data;
 using App.Data.Extensions;
 using Satyanam.Nop.Core.Domains;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -139,6 +140,13 @@ namespace Satyanam.Nop.Core.Services
         {
             var leadStatus = await _leadStatusRepository.GetByIdAsync(id);
             return leadStatus?.Name ?? " "; // Return "Unknown" if no match is found
+        }
+
+        public virtual async Task<LeadStatus> GetLeadStatusByNameAsync(string leadStatusName)
+        {
+            ArgumentNullException.ThrowIfNull(nameof(leadStatusName));
+
+            return await _leadStatusRepository.Table.Where(ls => ls.Name == leadStatusName).FirstOrDefaultAsync();
         }
 
         #endregion

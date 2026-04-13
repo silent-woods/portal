@@ -20,5 +20,7 @@ namespace Satyanam.Nop.Core.Services
             int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? overridePublished = null);
         Task<LeadStatus> GetOrCreateLeadStatusByNameAsync(string leadStatusName);
         Task<string> GetLeadStatusNameByIdAsync(int id);
+
+        Task<LeadStatus> GetLeadStatusByNameAsync(string leadStatusName);
     }
 }
