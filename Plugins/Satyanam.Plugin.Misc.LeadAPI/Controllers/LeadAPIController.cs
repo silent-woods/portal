@@ -30,6 +30,7 @@ public partial class LeadAPIController : BaseController
     protected readonly IAddressService _addressService;
     protected readonly IAuthenticationService _authenticationService;
     protected readonly ICountryService _countryService;
+    protected readonly IIndustryService _industryService;
     protected readonly ILeadAPIService _leadAPIService;
     protected readonly ILeadService _leadService;
     protected readonly ILeadStatusService _leadStatusService;
@@ -48,6 +49,7 @@ public partial class LeadAPIController : BaseController
     public LeadAPIController(IAddressService addressService,
         IAuthenticationService authenticationService,
         ICountryService countryService,
+        IIndustryService industryService,
         ILeadAPIService leadAPIService,
         ILeadService leadService,
         ILeadStatusService leadStatusService,
@@ -62,6 +64,7 @@ public partial class LeadAPIController : BaseController
         _addressService = addressService;
         _authenticationService = authenticationService;
         _countryService = countryService;
+        _industryService = industryService;
         _leadAPIService = leadAPIService;
         _leadService = leadService;
         _leadStatusService = leadStatusService;
@@ -196,7 +199,7 @@ public partial class LeadAPIController : BaseController
                     lastName = nameParts[1];
             }
 
-            var existingLead = await _leadService.GetExistingLeadByEmailAndFirstNameAndLastNameAsync(firstName, lastName, model.Email);
+            var existingLead = await _leadService.GetExistingLeadByLinkedinUrlAsync(linkedinURL: model.LinkedInUrl);
             if (existingLead != null)
             {
                 leadAPIResponseModel.Success = false;
@@ -207,7 +210,7 @@ public partial class LeadAPIController : BaseController
                 return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
             }
 
-            var existingLeadSource = await _leadStatusService.GetLeadStatusByNameAsync(leadStatusName: LeadAPIDefaults.NewLeadStatus);
+            var existingLeadStatus = await _leadStatusService.GetLeadStatusByNameAsync(leadStatusName: LeadAPIDefaults.NewLeadStatus);
 
             var lead = new Lead
             {
@@ -218,6 +221,7 @@ public partial class LeadAPIController : BaseController
                 Phone = model.MobileNo,
                 Description = model.Summary,
                 LinkedinUrl = model.LinkedInUrl,
+                IndustryId = model.IndustryId,
                 EmailOptOut = true,
                 CreatedOnUtc = DateTime.UtcNow
             };
@@ -244,10 +248,19 @@ public partial class LeadAPIController : BaseController
                 }
             }
 
-            if (existingLeadSource != null)
-                lead.LeadSourceId = existingLeadSource.Id;
-
+            if (existingLeadStatus != null)
+                lead.LeadStatusId = existingLeadStatus.Id;
             await _leadService.InsertLeadAsync(lead);
+
+            foreach (var tag in model.Tags)
+            {
+                var leadTags = new LeadTags()
+                {
+                    LeadId = lead.Id,
+                    TagsId = tag 
+                };
+                await _leadService.InsertLeadTagsAsync(leadTags);
+            }
 
             leadAPIResponseModel.Success = true;
             leadAPIResponseModel.ResponseMessage = "Lead created successfully";
@@ -322,6 +335,69 @@ public partial class LeadAPIController : BaseController
         catch (Exception exception)
         {
             await _logger.ErrorAsync("Error in GetAllAvailbleTags API: " + exception.Message, exception);
+
+            leadAPIResponseModel.Success = false;
+            leadAPIResponseModel.ResponseMessage = "An error occurred while processing your request.";
+
+            await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, null);
+
+            return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
+        }
+    }
+
+    [HttpGet]
+    public virtual async Task<IActionResult> GetAllAvailableIndustries()
+    {
+        var leadAPIResponseModel = new LeadAPIResponseModel();
+        var leadAPILogs = new LeadAPILog();
+
+        try
+        {
+            leadAPIResponseModel = await CheckIfAuthenticated(leadAPIResponseModel);
+
+            if (!leadAPIResponseModel.Success)
+            {
+                leadAPIResponseModel.ResponseMessage = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.LeadAPI.Common.UnauthorizedAccess");
+                await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, null);
+
+                return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
+            }
+
+            if (string.IsNullOrWhiteSpace(_leadAPISettings.APIKey) || string.IsNullOrWhiteSpace(_leadAPISettings.APISecretKey))
+            {
+                leadAPIResponseModel.Success = false;
+                leadAPIResponseModel.ResponseMessage = "Invalid API Key";
+
+                await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, null);
+                return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
+            }
+
+            var model = new List<IndustriesModel>();
+            var existingAvailableIndustries = (await _industryService.GetAllIndustryAsync(name: string.Empty)).ToList();
+            foreach (var existingAvailableIndustry in existingAvailableIndustries)
+            {
+                var industriesModel = new IndustriesModel()
+                {
+                    Id = existingAvailableIndustry.Id,
+                    Name = existingAvailableIndustry.Name,
+                };
+                model.Add(industriesModel);
+            }
+
+            leadAPIResponseModel.Success = true;
+            leadAPIResponseModel.ResponseMessage = JsonConvert.SerializeObject(model);
+            await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, model);
+
+            return Json(new
+            {
+                result = true,
+                industries = model
+            });
+
+        }
+        catch (Exception exception)
+        {
+            await _logger.ErrorAsync("Error in GetAllAvailableIndustries API: " + exception.Message, exception);
 
             leadAPIResponseModel.Success = false;
             leadAPIResponseModel.ResponseMessage = "An error occurred while processing your request.";

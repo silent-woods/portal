@@ -27,7 +27,7 @@ public partial class LeadAPIModel
     public string Address1 { get; set; }
     public string Address2 { get; set; }
     public string ZipCode { get; set; }
-    public string Industry { get; set; }
+    public int IndustryId { get; set; }
     public IList<int> Tags { get; set; }
 
     #endregion

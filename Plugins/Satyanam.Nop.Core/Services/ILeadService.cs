@@ -34,13 +34,11 @@ namespace Satyanam.Nop.Core.Services
         /// <summary>
         /// Gets a Lead
         /// </summary>
-        /// <param name="firstName">Filter by first name</param>
-        /// <param name="lastName">Filter by last name</param>
-        /// <param name="email">Filter by email</param>
+        /// <param name="linkedinURL">Filter by Linkedin URL</param>
         /// <returns>
         /// A task that represents the asynchronous operation
         /// The task result contains the lead
         /// </returns>
-        Task<Lead> GetExistingLeadByEmailAndFirstNameAndLastNameAsync(string firstName = null, string lastName = null, string email = null);
+        Task<Lead> GetExistingLeadByLinkedinUrlAsync(string linkedinURL = null);
     }
 }

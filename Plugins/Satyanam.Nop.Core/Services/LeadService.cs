@@ -308,17 +308,15 @@ namespace Satyanam.Nop.Core.Services
         /// <summary>
         /// Gets a Lead
         /// </summary>
-        /// <param name="firstName">Filter by first name</param>
-        /// <param name="lastName">Filter by last name</param>
-        /// <param name="email">Filter by email</param>
+        /// <param name="linkedinURL">Filter by Linkedin URL</param>
         /// <returns>
         /// A task that represents the asynchronous operation
         /// The task result contains the lead
         /// </returns>
-        public virtual async Task<Lead> GetExistingLeadByEmailAndFirstNameAndLastNameAsync(string firstName = null, string lastName = null, string email = null)
+        public virtual async Task<Lead> GetExistingLeadByLinkedinUrlAsync(string linkedinURL = null)
         {
             var existingLead = from l in _leadRepository.Table
-                               where l.FirstName == firstName && l.LastName == lastName && l.Email == email
+                               where l.LinkedinUrl == linkedinURL
                                select l;
 
             return await existingLead.FirstOrDefaultAsync();

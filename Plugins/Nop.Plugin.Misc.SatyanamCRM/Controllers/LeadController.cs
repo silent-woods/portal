@@ -120,6 +120,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         #endregion
 
         #region Utilities
+
         public virtual async Task PrepareTitleListAsync(LeadModel model)
         {
             if (model == null)
@@ -140,6 +141,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 });
             }
         }
+
         public virtual async Task PrepareTitleListAsync(LeadSearchModel searchModel)
         {
             if (searchModel == null)
@@ -154,6 +156,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 });
             }
         }
+
         public virtual async Task PrepareLeadSourcesListAsync(LeadModel model)
         {
             if (model == null)
@@ -174,6 +177,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 });
             }
         }
+
         public virtual async Task PrepareIndustryListAsync(LeadModel model)
         {
             if (model == null)
@@ -215,6 +219,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 });
             }
         }
+
         public virtual async Task PrepareCategorysListAsync(LeadModel model)
         {
             if (model == null)
@@ -235,6 +240,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 });
             }
         }
+
         public virtual async Task PrepareTagsListAsync(LeadModel model, int leadId)
         {
             if (model == null)
@@ -265,7 +271,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             model.Countrys.Add(new SelectListItem
             {
                 Text = "Select",
-                Value = "0" // Usually, "0" represents a "Select" option in dropdowns.
+                Value = "0"
             });
 
             var countries = await _countryService.GetAllCountriesAsync();
@@ -278,6 +284,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 });
             }
         }
+
         public virtual async Task PrepareStatesListAsync(LeadModel model, int countryId)
         {
             if (model == null)
@@ -286,10 +293,10 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             model.States.Add(new SelectListItem
             {
                 Text = "Select State",
-                Value = "0" // Default "Select" option
+                Value = "0"
             });
 
-            if (countryId > 0) // Only fetch states if a valid country is selected
+            if (countryId > 0)
             {
                 var states = await _stateProvinceService.GetStateProvincesByCountryIdAsync(countryId);
                 foreach (var state in states)
@@ -310,7 +317,6 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             var currentUser = await _workContext.GetCurrentCustomerAsync();
             var currentUserId = currentUser?.Id.ToString() ?? "0";
 
-            // Only set default selected customer if not already set (initial GET)
             if (model.CustomerId == 0)
                 model.CustomerId = Convert.ToInt32(currentUserId);
 
@@ -345,10 +351,8 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
             model.Tags = new List<SelectListItem>();
 
-            // Get all tags from your tag service
             var tags = await _tagsService.GetAllTagsAsync("");
 
-            // Loop through the tags and build the SelectList
             foreach (var tag in tags)
             {
                 model.Tags.Add(new SelectListItem
@@ -367,7 +371,6 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
             string verificationResult = await _emailverificationService.VerifyEmailApi(email);
 
-            // Handle session/limit expired
             if (verificationResult == "__SESSION_EXPIRED__")
             {
                 _notificationService.WarningNotification("Email verification limit reached or session expired. Skipping validation.");
@@ -433,7 +436,6 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             }
             await PrepareTitleListAsync(searchModel);
             await PrepareTagsListAsync(searchModel);
-            //prepare page parameters
             searchModel.SetGridPageSize();
 
             return searchModel;
@@ -444,7 +446,6 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));
 
-            //get lead
             var leads = await _leadService.GetAllLeadAsync(showHidden: true,
                 name: searchModel.SearchName, companyName: searchModel.SearchCompanytName,
                 selectedtagsid: searchModel.SelectedTags,
@@ -521,7 +522,6 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             var status = await EmailValidationStatus.None.ToSelectListAsync();
             if (lead != null)
             {
-                //fill in model values from the entity
                 if (model == null)
                 {
                     model = new LeadModel();
@@ -606,10 +606,10 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         {
             if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
                 return AccessDeniedView();
-            // Show success notification if set via TempData (from popup)
+
             if (TempData.ContainsKey("SuccessNotification"))
                 _notificationService.SuccessNotification(TempData["SuccessNotification"].ToString());
-            //prepare model
+
             var model = await PrepareLeadSearchModelAsync(new LeadSearchModel());
 
             return View("~/Plugins/Misc.SatyanamCRM/Views/Leads/List.cshtml", model);
@@ -621,7 +621,6 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
                 return await AccessDeniedDataTablesJson();
 
-            //prepare model
             var model = await PrepareLeadListModelAsync(searchModel);
 
             return Json(model);
@@ -632,11 +631,11 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Add))
                 return AccessDeniedView();
 
-            //prepare model
             var model = await PrepareLeadModelAsync(new LeadModel(), null);
 
             return View("~/Plugins/Misc.SatyanamCRM/Views/Leads/Create.cshtml", model);
         }
+
         [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]
         public virtual async Task<IActionResult> Create(LeadModel model, bool continueEditing)
         {
@@ -645,17 +644,23 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
             if (ModelState.IsValid)
             {
-                var address = new Address
+                int addressId = 0;
+                if (!string.IsNullOrEmpty(model.Address1) && !string.IsNullOrEmpty(model.Address2) && !string.IsNullOrEmpty(model.City) && !string.IsNullOrEmpty(model.ZipCode))
                 {
-                    Address1 = model.Address1,
-                    Address2 = model.Address2,
-                    City = model.City,
-                    ZipPostalCode = model.ZipCode,
-                    CountryId = model.CountryId,
-                    StateProvinceId = model.StateId,
-                };
-                await _addressService.InsertAddressAsync(address);
-                var addressid = address.Id;
+                    var address = new Address
+                    {
+                        Address1 = model.Address1,
+                        Address2 = model.Address2,
+                        City = model.City,
+                        StateProvinceId = model.StateId,
+                        CountryId = model.CountryId,
+                        ZipPostalCode = model.ZipCode,
+                    };
+                    await _addressService.InsertAddressAsync(address);
+                    addressId = address.Id;
+                }
+
+
                 var lead = new Lead();
                 lead.Id = model.Id;
                 lead.FirstName = model.FirstName;
@@ -682,18 +687,18 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 lead.IsSyncedToReply = model.IsSyncedToReply;
                 lead.CreatedOnUtc = DateTime.UtcNow;
                 lead.UpdatedOnUtc = DateTime.UtcNow;
-                lead.AddressId = addressid;
+                lead.AddressId = addressId;
                 lead.CustomerId = model.CustomerId;
                 lead.EmailStatusId = (int)await GetEmailValidationStatusAsync(lead.Email);
                 await _leadService.InsertLeadAsync(lead);
-                if (model.SelectedTagIds != null && model.SelectedTagIds.Any())
+                if (model.SelectedTagIds.Any())
                 {
-                    foreach (var tagId in model.SelectedTagIds)
+                    foreach (var selectedTagId in model.SelectedTagIds)
                     {
                         var leadTag = new LeadTags
                         {
                             LeadId = lead.Id,
-                            TagsId = tagId
+                            TagsId = selectedTagId
                         };
                         await _leadService.InsertLeadTagsAsync(leadTag);
                     }
@@ -730,6 +735,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
             return View("~/Plugins/Misc.SatyanamCRM/Views/Leads/Edit.cshtml", model);
         }
+
         [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]
         public virtual async Task<IActionResult> Edit(LeadModel model, bool continueEditing)
         {
@@ -749,14 +755,14 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 if (leads.AddressId > 0)
                 {
                     var address = await _addressService.GetAddressByIdAsync(leads.AddressId);
-                    if (address != null)
+                    if (address != null && !string.IsNullOrEmpty(model.Address1) && !string.IsNullOrEmpty(model.Address2) && !string.IsNullOrEmpty(model.City) && !string.IsNullOrEmpty(model.ZipCode))
                     {
                         address.Address1 = model.Address1;
                         address.Address2 = model.Address2;
                         address.City = model.City;
-                        address.ZipPostalCode = model.ZipCode;
-                        address.CountryId = model.CountryId;
                         address.StateProvinceId = model.StateId;
+                        address.CountryId = model.CountryId;
+                        address.ZipPostalCode = model.ZipCode;
 
                         await _addressService.UpdateAddressAsync(address);
                     }
@@ -807,14 +813,14 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         await _leadService.DeleteLeadTagsByLeadIdAsync(leads.Id, tag.TagsId);
                 }
 
-                foreach (var tagId in model.SelectedTagIds)
+                foreach (var selectedTagId in model.SelectedTagIds)
                 {
-                    if (!existingTagIds.Contains(tagId))
+                    if (!existingTagIds.Contains(selectedTagId))
                     {
                         var newLeadTag = new LeadTags
                         {
                             LeadId = leads.Id,
-                            TagsId = tagId
+                            TagsId = selectedTagId
                         };
                         await _leadService.InsertLeadTagsAsync(newLeadTag);
                     }
@@ -858,6 +864,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
             return RedirectToAction("List");
         }
+
         public virtual async Task<IActionResult> DeleteSelected(ICollection<int> selectedIds)
         {
             if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Delete))

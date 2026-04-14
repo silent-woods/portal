@@ -49,6 +49,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         private readonly ICustomerService _customerService;
         private readonly IAddressService _addressService;
         private readonly IEmailverificationService _emailverificationService;
+        private readonly ILeadStatusService _leadStatusService;
 
         #endregion
 
@@ -65,7 +66,8 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                                ILeadService leadService,
                                ICustomerService customerService,
                                IAddressService addressService,
-                               IEmailverificationService emailverificationService)
+                               IEmailverificationService emailverificationService,
+                               ILeadStatusService leadStatusService)
         {
             _permissionService = permissionService;
             _linkedInFollowupsService = linkedInFollowupsService;
@@ -79,11 +81,13 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             _customerService = customerService;
             _addressService = addressService;
             _emailverificationService = emailverificationService;
+            _leadStatusService = leadStatusService;
         }
 
         #endregion
 
         #region Utilities
+
         private static string GetDisplayName(Enum enumValue)
         {
             var displayAttribute = enumValue.GetType()
@@ -96,19 +100,19 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             return displayAttribute?.Name ?? enumValue.ToString();
         }
 
-        public void PrepareFollowUpModel(LinkedInFollowupsModel model)
+        public virtual async Task PrepareFollowUpModel(LinkedInFollowupsModel model)
         {
             if (model == null)
                 throw new ArgumentNullException(nameof(model));
 
-            model.Status = Enum.GetValues(typeof(FollowUpStatusEnum))
-                .Cast<FollowUpStatusEnum>()
-                .Select(x => new SelectListItem
-                {
-                    Value = ((int)x).ToString(),
-                    Text = GetDisplayName(x)
-                }).ToList();
+            model.Status = (await _leadStatusService.GetAllLeadStatusByNameAsync(leadStatusName: string.Empty)).Select(ls => new SelectListItem
+            {
+                Text = ls.Name,
+                Value = ls.Id.ToString(),
+                Selected = ls.Id == model.StatusId
+            }).ToList();
         }
+
         [HttpGet]
         public async Task<IActionResult> GetStatusSummary(
     string searchFirstName,
@@ -373,11 +377,11 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 }
             }
             await PrepareLeadOwnerAsync(model);
-            model.Status = statusList.Select(s => new SelectListItem
+            model.Status = (await _leadStatusService.GetAllLeadStatusByNameAsync(leadStatusName: string.Empty)).Select(ls => new SelectListItem
             {
-                Value = s.Value,
-                Text = s.Text,
-                Selected = s.Value == model.StatusId.ToString()
+                Text = ls.Name,
+                Value = ls.Id.ToString(),
+                Selected = ls.Id == model.StatusId
             }).ToList();
             return model;
         }
@@ -447,6 +451,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
             return View("~/Plugins/Misc.SatyanamCRM/Views/LinkedInFollowups/Create.cshtml", model);
         }
+
         [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]
         public virtual async Task<IActionResult> Create(LinkedInFollowupsModel model, bool continueEditing)
         {
@@ -459,13 +464,11 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             if (string.IsNullOrWhiteSpace(model.LastName))
                 ModelState.AddModelError(nameof(model.LastName), "Enter a last name");
 
-            //  Parse LastMessageDate safely from form input
             DateTime? lastMessageDate = null;
             if (!string.IsNullOrEmpty(Request.Form["LastMessageDate"]))
             {
                 var rawDate = Request.Form["LastMessageDate"].ToString().Trim();
 
-                // Try multiple formats
                 if (DateTime.TryParseExact(rawDate, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
                     lastMessageDate = parsed;
                 else if (DateTime.TryParseExact(rawDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsed))
@@ -582,7 +585,6 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
 
         [HttpPost]
-
         public virtual async Task<IActionResult> InlineEdit(LinkedInFollowupsModel model)
         {
             if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLinkedInFollowups, PermissionAction.Edit))
@@ -708,7 +710,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             };
 
             //  prepare your enum dropdown here directly
-            PrepareFollowUpModel(model);
+            await PrepareFollowUpModel(model);
 
             // These are needed so popup knows which button & form to refresh
             ViewBag.btnId = btnId;
