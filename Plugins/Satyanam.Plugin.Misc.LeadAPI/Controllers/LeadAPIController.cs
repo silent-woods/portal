@@ -257,7 +257,7 @@ public partial class LeadAPIController : BaseController
                 var leadTags = new LeadTags()
                 {
                     LeadId = lead.Id,
-                    TagsId = tag 
+                    TagsId = tag
                 };
                 await _leadService.InsertLeadTagsAsync(leadTags);
             }

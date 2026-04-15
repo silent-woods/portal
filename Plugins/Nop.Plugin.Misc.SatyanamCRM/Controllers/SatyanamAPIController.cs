@@ -1,5 +1,6 @@
 ﻿using App.Core.Domain.Media;
 using App.Data;
+using App.Data.Extensions;
 using App.Services.JobPostings;
 using App.Services.Localization;
 using App.Services.Logging;
@@ -36,12 +37,12 @@ namespace Nop.Plugin.Misc.SatyanamCRM.Controllers
         private readonly IJobPostingService _jobPostingService;
         private readonly ICandidatesService _candidatesService;
         private readonly IRepository<Download> _downloadRepository;
-
+        private readonly IRepository<JobApplication> _jobApplicationRepository;
         #endregion
 
         #region Ctor 
 
-        public SatyanamAPIController(ILocalizationService localizationService, ILogger logger, SatyanamAPISettings satyanamAPISettings, IInquiryService inquiryService, IWorkflowMessageCRMService workflowMessageCRMService, IJobPostingService jobPostingService, ICandidatesService candidatesService, IRepository<Download> downloadRepository)
+        public SatyanamAPIController(ILocalizationService localizationService, ILogger logger, SatyanamAPISettings satyanamAPISettings, IInquiryService inquiryService, IWorkflowMessageCRMService workflowMessageCRMService, IJobPostingService jobPostingService, ICandidatesService candidatesService, IRepository<Download> downloadRepository, IRepository<JobApplication> jobApplicationRepository)
         {
             _localizationService = localizationService;
             _logger = logger;
@@ -51,6 +52,7 @@ namespace Nop.Plugin.Misc.SatyanamCRM.Controllers
             _jobPostingService = jobPostingService;
             _candidatesService = candidatesService;
             _downloadRepository = downloadRepository;
+            _jobApplicationRepository = jobApplicationRepository;
         }
 
         #endregion
@@ -336,33 +338,57 @@ namespace Nop.Plugin.Misc.SatyanamCRM.Controllers
         }
 
         [HttpPost]
+
         [Route("api/careers/apply", Name = "ApplyCareerJob")]
+
         public async Task<IActionResult> ApplyCareerJob([FromForm] ApplyJobApiModel model)
+
         {
+
             var response = new SatyanamAPIResponseModel();
 
             try
+
             {
+
+                // ✅ STEP 1: AUTH CHECK
+
                 response = await CheckIfAuthenticated(response);
 
                 if (!response.Success)
+
                 {
+
                     return Unauthorized(new
+
                     {
+
                         result = false,
+
                         message = response.ResponseMessage
+
                     });
+
                 }
+
+                // ✅ STEP 2: VALID JOB CHECK
 
                 var job = await _jobPostingService.GetJobPostingByIdAsync(model.JobPostingId);
 
                 if (job == null || !job.Publish)
+
                 {
+
                     return BadRequest(new
+
                     {
+
                         result = false,
+
                         message = "Invalid job"
+
                     });
+
                 }
 
                 int downloadId = 0;
@@ -370,121 +396,224 @@ namespace Nop.Plugin.Misc.SatyanamCRM.Controllers
                 #region Resume Upload
 
                 if (model.ResumeFile != null)
+
                 {
+
                     byte[] fileBytes;
 
                     using (var ms = new MemoryStream())
+
                     {
+
                         await model.ResumeFile.CopyToAsync(ms);
+
                         fileBytes = ms.ToArray();
+
                     }
 
                     var download = new Download
+
                     {
+
                         DownloadGuid = Guid.NewGuid(),
+
                         UseDownloadUrl = false,
+
                         DownloadBinary = fileBytes,
+
                         ContentType = model.ResumeFile.ContentType,
+
                         Filename = model.ResumeFile.FileName,
+
                         Extension = Path.GetExtension(model.ResumeFile.FileName),
+
                         IsNew = true
+
                     };
 
                     await _downloadRepository.InsertAsync(download);
 
                     downloadId = download.Id;
+
                 }
 
                 #endregion
-
 
                 #region Create or Update Candidate
 
                 var candidate = await _candidatesService.GetCandidateByEmailAsync(model.Email);
 
                 if (candidate == null)
+
                 {
+
                     candidate = new Candidate
+
                     {
+
                         FirstName = model.FirstName,
+
                         LastName = model.LastName,
+
                         Email = model.Email,
+
                         Phone = model.Phone,
+
                         CandidateTypeId = job.CandidateTypeId,
+
                         SourceTypeId = (int)SourceTypeEnum.Website,
+
                         CreatedOnUtc = DateTime.UtcNow,
+
                         UpdatedOnUtc = DateTime.UtcNow
+
                     };
 
                     await _candidatesService.InsertCandidateAsync(candidate);
+
                 }
+
                 else
+
                 {
+
                     candidate.FirstName = model.FirstName;
+
                     candidate.LastName = model.LastName;
+
                     candidate.Phone = model.Phone;
+
                     candidate.UpdatedOnUtc = DateTime.UtcNow;
 
                     await _candidatesService.UpdateCandidateAsync(candidate);
+
                 }
 
                 #endregion
 
+                #region 🚫 DUPLICATE CHECK
+
+                var existingApplication = await _jobApplicationRepository.Table
+
+                    .FirstOrDefaultAsync(x =>
+
+                        x.CandidateId == candidate.Id &&
+
+                        x.JobPostingId == model.JobPostingId);
+
+                if (existingApplication != null)
+
+                {
+
+                    return Ok(new
+
+                    {
+
+                        result = false,
+
+                        message = "You have already applied for this job."
+
+                    });
+
+                }
+
+                #endregion
 
                 #region Insert Job Application
 
                 var jobApplication = new JobApplication
+
                 {
+
                     CandidateId = candidate.Id,
+
                     JobPostingId = model.JobPostingId,
+
                     StatusId = (int)CandidateStatusEnum.Applied,
+
                     AppliedOnUtc = DateTime.UtcNow,
+
                     UpdatedOnUtc = DateTime.UtcNow,
+
                     ResumeDownloadId = downloadId,
+
                     PositionApplied = job.Title,
+
                     PositionId = job.PositionId,
+
                     AdditionalInformation = model.AdditionalInformation,
+
                     City = model.City
+
                 };
 
                 if (job.CandidateTypeId == (int)CandidateTypeEnum.Freelancer)
+
                 {
+
                     jobApplication.RateTypeId = model.RateTypeId;
+
                     jobApplication.Amount = model.Amount;
+
                     jobApplication.CoverLetter = model.CoverLetter;
+
                 }
+
                 else
+
                 {
+
                     jobApplication.ExperienceYears = model.ExperienceYears;
+
                     jobApplication.CurrentCompany = model.CurrentCompany;
+
                     jobApplication.CurrentCTC = model.CurrentCTC;
+
                     jobApplication.ExpectedCTC = model.ExpectedCTC;
+
                     jobApplication.NoticePeriodId = model.NoticePeriodId;
+
                     jobApplication.Skills = model.Skills;
+
                 }
 
                 await _candidatesService.InsertJobApplicationAsync(jobApplication);
 
                 #endregion
 
+                // ✅ SUCCESS RESPONSE
 
                 return Ok(new
+
                 {
+
                     result = true,
-                    message = "Application submitted successfully"
+
+                    message = "Application submitted successfully."
+
                 });
+
             }
+
             catch (Exception ex)
+
             {
+
                 await _logger.ErrorAsync("Error in ApplyCareerJob API", ex);
 
                 return StatusCode(500, new
+
                 {
+
                     result = false,
+
                     message = "Internal server error"
+
                 });
+
             }
         }
+
         #endregion
     }
 }

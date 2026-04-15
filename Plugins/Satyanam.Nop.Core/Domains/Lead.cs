@@ -34,7 +34,10 @@ namespace Satyanam.Nop.Core.Domains
         public bool IsSyncedToReply { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public DateTime UpdatedOnUtc { get; set; }
-
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedOnUtc { get; set; }
+        public int? InterestScore { get; set; }
+        public DateTime? InterestScoreUpdatedUtc { get; set; }
 
     }
 }

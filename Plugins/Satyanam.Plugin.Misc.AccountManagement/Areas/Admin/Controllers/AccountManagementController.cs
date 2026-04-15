@@ -1208,7 +1208,7 @@ public partial class AccountManagementController : BaseAdminController
                 existingInvoice.UpdatedOnUtc = DateTime.UtcNow;
                 await _accountManagementService.UpdateInvoiceAsync(existingInvoice);
             }
-            
+
             return RedirectToAction(nameof(InvoiceEdit), new { id = model.Id });
         }
         catch (Exception exception)

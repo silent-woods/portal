@@ -118,6 +118,7 @@ namespace Satyanam.Nop.Plugin.SatyanamCRM.Models.Leads
         public bool IsSyncedToReply { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public DateTime UpdatedOnUtc { get; set; }
+        public int? InterestScore { get; set; }
         #endregion
     }
 }

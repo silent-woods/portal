@@ -189,7 +189,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services.Zoho
             };
 
             var typeParam = action == "clickedcontacts" ? "&type=click_timeline" : "&type=open_timeline";
-            var pageSize  = 20;  
+            var pageSize  = 20;
             var fromIndex = 1;
             var hasMore   = true;
 
@@ -236,8 +236,9 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services.Zoho
 
                     if (isBounce)
                     {
+                        var dateField = action == "optoutcontacts" ? "optOutTime" : "bouncedDate";
                         var timeStr = contact.Elements("fl")
-                            .FirstOrDefault(fl => fl.Attribute("val")?.Value == "bouncedDate")?.Value;
+                            .FirstOrDefault(fl => fl.Attribute("val")?.Value == dateField)?.Value;
 
                         DateTime? ts = null;
                         if (!string.IsNullOrWhiteSpace(timeStr))

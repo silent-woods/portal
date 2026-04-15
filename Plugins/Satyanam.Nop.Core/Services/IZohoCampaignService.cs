@@ -18,5 +18,6 @@ namespace Satyanam.Nop.Core.Services
         Task<IDictionary<string, (int Opens, int Clicks, int Bounces)>> GetPeriodStatsByCampaignAsync(DateTime from, DateTime to);
         Task<IList<ZohoCampaignRecipient>> GetRecipientsByLeadIdAsync(int leadId);
         Task<IList<ZohoCampaignRecipient>> GetRecipientsByContactIdAsync(int contactId);
+        Task<IDictionary<int, (int TotalOpens, int TotalClicks, int TotalBounces, int TotalUnsubscribes)>> GetLeadEmailStatsAsync();
     }
 }

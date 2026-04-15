@@ -2,10 +2,11 @@
 @model LeadModel
 
 @{
-    const string hideInfoBlockAttributeName = "leadsDetails.HideInfoBlock";
-    var customer = await workContext.GetCurrentCustomerAsync();
-    var hideInfoBlock = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
-
+    const string hideInfoBlockAttributeName        = "leadsDetails.HideInfoBlock";
+    const string hideEmailEngagementAttributeName  = "leadsDetails.HideEmailEngagementBlock";
+    var customer          = await workContext.GetCurrentCustomerAsync();
+    var hideInfoBlock     = await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
+    var hideEmailEngagement = await genericAttributeService.GetAttributeAsync<bool>(customer, hideEmailEngagementAttributeName);
 }
 
 @* <div asp-validation-summary="All"></div> *@
@@ -17,6 +18,10 @@
             
             <nop-cards id="lead-item-cards">
                 <nop-card asp-name="lead-item-info" asp-icon="fas fa-info" asp-title="@T("Plugin.SatyanamCRM.Lead.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock">@await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Leads/_CreateOrUpdate.Info.cshtml", Model)</nop-card>
+                @if (Model.Id > 0)
+                {
+                    <nop-card asp-name="lead-email-engagement" asp-icon="fas fa-envelope-open-text" asp-title="@T("Plugin.SatyanamCRM.Lead.EmailEngagement.CardTitle")" asp-hide-block-attribute-name="@hideEmailEngagementAttributeName" asp-hide="@hideEmailEngagement">@await Html.PartialAsync("~/Plugins/Misc.SatyanamCRM/Views/Leads/_EmailEngagementReport.cshtml", Model)</nop-card>
+                }
             </nop-cards>
         </div>
     </div>

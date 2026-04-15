@@ -88,6 +88,9 @@
     <None Remove="Views\LeadStatus\List.cshtml" />
     <None Remove="Views\LeadStatus\_CreateOrUpdate.Info.cshtml" />
     <None Remove="Views\Leads\ConverLead.cshtml" />
+    <None Remove="Views\Leads\_EmailEngagementReport.cshtml" />
+    <None Remove="Content\crm.css" />
+    <None Remove="Resources\Resources.en-us.xml" />
     <None Remove="Views\Leads\Create.cshtml" />
     <None Remove="Views\Leads\Edit.cshtml" />
     <None Remove="Views\Leads\List.cshtml" />
@@ -400,6 +403,21 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Views\Leads\_CreateOrUpdate.Info.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Views\Leads\_EmailEngagementReport.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Content\crm.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Resources\Resources.en-us.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

@@ -1,6 +1,7 @@
 ﻿using App.Core;
 using App.Services.Messages;
 using Satyanam.Nop.Core.Domains;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -11,11 +12,11 @@ namespace Satyanam.Nop.Core.Services
     /// </summary>
     public partial interface ILeadService
     {
-        Task<IPagedList<Lead>> GetAllLeadAsync(string name, string companyName, IList<int> selectedtagsid, string email, string website, int nofoEmployee, int leadStatusId, IList<int> titleid,int emailStatusId, int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? isSyncedToReply = null);
+        Task<IPagedList<Lead>> GetAllLeadAsync(string name, string companyName, IList<int> selectedtagsid, string email, string website, int nofoEmployee, int leadStatusId, IList<int> titleid,int emailStatusId, int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? isSyncedToReply = null, bool sortByInterest = false);
         Task<Lead> GetLeadByIdAsync(int id);
         Task InsertLeadAsync(Lead lead);
         Task InsertLeadTagsAsync(LeadTags leadTags);
-		Task UpdateLeadAsync(Lead lead);
+        Task UpdateLeadAsync(Lead lead);
         Task DeleteLeadAsync(Lead lead);
         Task DeleteLeadTagsByLeadIdAsync(int leadId, int tagId);
         Task UpdateLeadTagsAsync(LeadTags leadTags);
@@ -30,6 +31,7 @@ namespace Satyanam.Nop.Core.Services
         Task<IList<Lead>> GetLeadsByIdsAsync(List<int> ids);
         Task<IList<Lead>> GetAllLeadsForReplyIoSyncAsync();
         Task<(IList<Lead> Leads, IList<Contacts> Contacts)> GetLeadsAndContactsByTagsAsync(List<int> tagIds);
+        Task RecalculateInterestScoreAsync(int leadId, IList<ZohoCampaignRecipient> recipients);
 
         /// <summary>
         /// Gets a Lead

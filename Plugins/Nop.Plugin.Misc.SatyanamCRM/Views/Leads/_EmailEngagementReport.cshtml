@@ -1,0 +1,293 @@
+@using Satyanam.Nop.Plugin.SatyanamCRM.Models.Leads
+@model LeadModel
+
+<link rel="stylesheet" href="~/Plugins/Misc.SatyanamCRM/Content/crm.css" />
+<script src="~/lib_npm/chart.js/Chart.min.js"></script>
+
+@{
+    var engagementUrl = Url.Action("GetLeadEmailEngagement", "Lead", new { leadId = Model.Id });
+}
+
+<div id="ee-loading" class="ee-loading">
+    <i class="fas fa-spinner fa-spin"></i> @T("Plugin.SatyanamCRM.Lead.EmailEngagement.Loading")
+</div>
+<div id="ee-content" style="display:none;">
+    <div class="ee-stats-row">
+        <div>
+            <div class="ee-score-circle" id="ee-score-circle">
+                <div class="ee-score-pct" id="ee-score-pct">—</div>
+                <div class="ee-score-label">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.InterestScore")</div>
+            </div>
+        </div>
+        <div class="ee-stat-card">
+            <div class="ee-stat-value" id="ee-campaigns">—</div>
+            <div class="ee-stat-label">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.CampaignsReceived")</div>
+        </div>
+        <div class="ee-stat-card">
+            <div class="ee-stat-value" id="ee-opens">—</div>
+            <div class="ee-stat-label">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.TotalOpens")</div>
+        </div>
+        <div class="ee-stat-card">
+            <div class="ee-stat-value" id="ee-clicks">—</div>
+            <div class="ee-stat-label">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.TotalClicks")</div>
+        </div>
+        <div class="ee-stat-card">
+            <div class="ee-stat-value text-danger" id="ee-bounces">—</div>
+            <div class="ee-stat-label">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.TotalBounces")</div>
+        </div>
+        <div class="ee-stat-card">
+            <div class="ee-stat-value text-warning" id="ee-unsubscribes">—</div>
+            <div class="ee-stat-label">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Unsubscribed")</div>
+        </div>
+        <div class="ee-stat-card">
+            <div class="ee-stat-value" id="ee-last-opened">—</div>
+            <div class="ee-stat-label">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.LastOpened")</div>
+        </div>
+    </div>
+
+    <div id="ee-no-data" class="ee-no-data" style="display:none;">
+        <i class="fas fa-envelope-open"></i> @T("Plugin.SatyanamCRM.Lead.EmailEngagement.NoData")
+    </div>
+
+    <div id="ee-data-sections" style="display:none;">
+        <div class="ee-timeline-header">
+            <div class="ee-section-title" style="margin-bottom:0;">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.TimelineTitle")</div>
+            <select id="ee-period-select" class="ee-period-select">
+                <option value="current_month">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Period.CurrentMonth")</option>
+                <option value="last_month">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Period.LastMonth")</option>
+                <option value="last_3_months">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Period.Last3Months")</option>
+                <option value="last_6_months">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Period.Last6Months")</option>
+                <option value="current_year">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Period.CurrentYear")</option>
+                <option value="last_year">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Period.LastYear")</option>
+                <option value="all" selected>@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Period.AllTime")</option>
+            </select>
+        </div>
+        <div style="position:relative; height:220px; margin-bottom:22px;">
+            <canvas id="ee-timeline-chart"></canvas>
+        </div>
+
+        <div class="ee-section-title">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Table.CampaignName")</div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover ee-table">
+                <thead class="thead-light">
+                    <tr>
+                        <th>@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Table.CampaignName")</th>
+                        <th>@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Table.SentDate")</th>
+                        <th class="text-center">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Table.Opens")</th>
+                        <th class="text-center">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Table.Clicks")</th>
+                        <th class="text-center">@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Table.Bounced")</th>
+                        <th>@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Table.FirstOpen")</th>
+                        <th>@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Table.LastOpen")</th>
+                    </tr>
+                </thead>
+                <tbody id="ee-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var eeRes = {
+        opens:          '@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Chart.Opens").Text',
+        clicks:         '@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Chart.Clicks").Text',
+        bounces:        '@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Chart.Bounces").Text',
+        noData:         '@T("Plugin.SatyanamCRM.Lead.EmailEngagement.NoData").Text',
+        unsubscribed:   '@T("Plugin.SatyanamCRM.Lead.EmailEngagement.Unsubscribed").Text',
+        unsubscribedOn: '@T("Plugin.SatyanamCRM.Lead.EmailEngagement.UnsubscribedOn").Text'
+    };
+
+    var eeChart = null;
+    var eeFullTimeline = [];
+
+    var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function padZ(n) { return String(n).padStart(2, '0'); }
+    function toDateStr(d) { return d.getFullYear() + '-' + padZ(d.getMonth() + 1) + '-' + padZ(d.getDate()); }
+    function getMondayOf(d) {
+        var r = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        var dow = r.getDay();
+        r.setDate(r.getDate() - (dow === 0 ? 6 : dow - 1));
+        return r;
+    }
+
+    function getPeriodRange(period) {
+        var now = new Date();
+        switch (period) {
+            case 'current_month': return { from: new Date(now.getFullYear(), now.getMonth(), 1),     to: new Date(now.getFullYear(), now.getMonth() + 1, 0) };
+            case 'last_month':    return { from: new Date(now.getFullYear(), now.getMonth() - 1, 1), to: new Date(now.getFullYear(), now.getMonth(), 0) };
+            case 'last_3_months': return { from: new Date(now.getFullYear(), now.getMonth() - 2, 1), to: now };
+            case 'last_6_months': return { from: new Date(now.getFullYear(), now.getMonth() - 5, 1), to: now };
+            case 'current_year':  return { from: new Date(now.getFullYear(), 0, 1),                  to: new Date(now.getFullYear(), 11, 31) };
+            case 'last_year':     return { from: new Date(now.getFullYear() - 1, 0, 1),              to: new Date(now.getFullYear() - 1, 11, 31) };
+            default:              return null;
+        }
+    }
+
+    function buildTimelineBuckets(period) {
+        var range = getPeriodRange(period);
+
+        if (!range) return eeFullTimeline; 
+
+        var from = range.from, to = range.to;
+        var spanDays = (to - from) / 86400000;
+        var buckets = [];
+        var parsed = eeFullTimeline.map(function (t) {
+            return { d: new Date(t.date), opens: t.opens, clicks: t.clicks, bounces: t.bounces };
+        });
+
+        function aggregate(bucketFrom, bucketTo) {
+            var opens = 0, clicks = 0, bounces = 0;
+            parsed.forEach(function (t) {
+                if (t.d >= bucketFrom && t.d < bucketTo) {
+                    opens += t.opens; clicks += t.clicks; bounces += t.bounces;
+                }
+            });
+            return { opens: opens, clicks: clicks, bounces: bounces };
+        }
+
+        if (spanDays <= 93) {
+            var cursor = getMondayOf(from);
+            var lastWk  = getMondayOf(to);
+            while (cursor <= lastWk) {
+                var nextWk = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 7);
+                var agg    = aggregate(cursor, nextWk);
+                buckets.push({ label: 'Wk ' + padZ(cursor.getDate()) + ' ' + MONTHS[cursor.getMonth()], date: toDateStr(cursor), opens: agg.opens, clicks: agg.clicks, bounces: agg.bounces });
+                cursor = nextWk;
+            }
+        } else {
+            var cursor = new Date(from.getFullYear(), from.getMonth(), 1);
+            var lastMo  = new Date(to.getFullYear(), to.getMonth(), 1);
+            while (cursor <= lastMo) {
+                var nextMo = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+                var agg    = aggregate(cursor, nextMo);
+                buckets.push({ label: MONTHS[cursor.getMonth()] + ' ' + cursor.getFullYear(), date: toDateStr(cursor), opens: agg.opens, clicks: agg.clicks, bounces: agg.bounces });
+                cursor = nextMo;
+            }
+        }
+        return buckets;
+    }
+
+    function loadEngagement() {
+        $.getJSON('@Html.Raw(engagementUrl)', function (data) {
+            $('#ee-loading').hide();
+
+            var s = data.summary;
+            $('#ee-campaigns').text(s.totalCampaigns || 0);
+            $('#ee-opens').text(s.totalOpens || 0);
+            $('#ee-clicks').text(s.totalClicks || 0);
+            $('#ee-bounces').text(s.totalBounces || 0);
+            $('#ee-unsubscribes').text(s.unsubscribeCount || 0);
+            $('#ee-last-opened').text(s.lastOpenedAt || '—');
+
+            var score = data.interestScore || 0;
+            $('#ee-score-pct').text(score + '%');
+            var cls = score >= 60 ? 'score-high' : score >= 30 ? 'score-mid' : 'score-low';
+            $('#ee-score-circle').addClass(cls);
+
+            $('#ee-content').show();
+
+            if (!data.campaigns || data.campaigns.length === 0) {
+                $('#ee-no-data').show();
+                return;
+            }
+
+            eeFullTimeline = data.timeline || [];
+            $('#ee-data-sections').show();
+            buildChart(buildTimelineBuckets($('#ee-period-select').val()));
+            buildTable(data.campaigns || []);
+
+            $('#ee-period-select').off('change').on('change', function () {
+                buildChart(buildTimelineBuckets($(this).val()));
+            });
+        });
+    }
+
+    function buildChart(timeline) {
+        if (eeChart) { eeChart.destroy(); eeChart = null; }
+        var ctx = document.getElementById('ee-timeline-chart').getContext('2d');
+        eeChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: timeline.map(function (t) { return t.label; }),
+                datasets: [
+                    {
+                        label: eeRes.opens,
+                        data: timeline.map(function (t) { return t.opens; }),
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: eeRes.clicks,
+                        data: timeline.map(function (t) { return t.clicks; }),
+                        backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                        borderColor: 'rgba(40, 167, 69, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: eeRes.bounces,
+                        data: timeline.map(function (t) { return t.bounces || 0; }),
+                        backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    xAxes: [{ ticks: { fontSize: 11 } }],
+                    yAxes: [{ ticks: { beginAtZero: true, precision: 0, fontSize: 11 } }]
+                },
+                legend: { labels: { fontSize: 12 } },
+                tooltips: { mode: 'index' }
+            }
+        });
+    }
+
+    function buildTable(campaigns) {
+        var rows = '';
+        campaigns.forEach(function (c) {
+            var openCell   = c.hasOpened  ? c.opens  + ' <span class="ee-badge-opened">&#10003;</span>'  : '<span class="text-muted">0</span>';
+            var clickCell  = c.hasClicked ? c.clicks + ' <span class="ee-badge-clicked">&#10003;</span>' : '<span class="text-muted">0</span>';
+            var bounceCell = c.hasBounced
+                ? '<span class="ee-badge-bounced">&#10005; ' + (c.bounceType === 'hard' ? 'Hard' : 'Soft') + '</span>'
+                  + (c.bouncedAt ? '<br><small class="text-muted">' + c.bouncedAt + '</small>' : '')
+                : '<span class="text-muted">—</span>';
+            var nameCell = $('<span>').text(c.campaignName).html();
+            if (c.hasUnsubscribed) {
+                nameCell += ' <span class="ee-badge-unsub" title="' + (c.unsubscribedAt ? eeRes.unsubscribedOn + ' ' + c.unsubscribedAt : eeRes.unsubscribed) + '">'
+                    + '&#128683; ' + eeRes.unsubscribed + '</span>';
+            }
+            var rowClass = c.hasUnsubscribed ? 'ee-row-unsub' : (c.hasBounced ? 'ee-row-bounced' : (c.hasOpened ? 'ee-row-opened' : ''));
+            rows += '<tr class="' + rowClass + '">'
+                + '<td>' + nameCell + '</td>'
+                + '<td>' + (c.sentDate || '—') + '</td>'
+                + '<td class="text-center">' + openCell + '</td>'
+                + '<td class="text-center">' + clickCell + '</td>'
+                + '<td class="text-center">' + bounceCell + '</td>'
+                + '<td>' + (c.firstOpenedAt || '—') + '</td>'
+                + '<td>' + (c.lastOpenedAt  || '—') + '</td>'
+                + '</tr>';
+        });
+        $('#ee-table-body').html(rows);
+    }
+    var $card = $('#ee-loading').closest('.card');
+    if ($card.length && $card.find('.card-body').is(':visible')) {
+        loadEngagement();
+    } else {
+        var loaded = false;
+        $(document).on('click', '[data-card-name="lead-email-engagement"] .card-title, [data-widget="collapse"]', function () {
+            if (!loaded) {
+                loaded = true;
+                loadEngagement();
+            }
+        });
+        if (!loaded) {
+            loadEngagement();
+        }
+    }
+}());
+</script>

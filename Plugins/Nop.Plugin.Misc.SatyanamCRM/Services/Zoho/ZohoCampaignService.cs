@@ -28,6 +28,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services.Zoho
         private IRepository<Lead>                  _leadRepository;
         private IRepository<Contacts>              _contactRepository;
         private readonly IServiceProvider          _serviceProvider;
+        private ILeadService                       _leadService;
 
         private static readonly string[] SentTimeFmts = new[]
         {
@@ -72,6 +73,9 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services.Zoho
 
         private IRepository<Contacts> ContactRepo
             => _contactRepository ??= (IRepository<Contacts>)_serviceProvider.GetService(typeof(IRepository<Contacts>));
+
+        private ILeadService LeadSvc
+            => _leadService ??= (ILeadService)_serviceProvider.GetService(typeof(ILeadService));
 
         private static DateTime? ParseZohoDate(string value)
         {
@@ -397,10 +401,11 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services.Zoho
                 }
             }
 
-            await FetchAndMerge("openedcontacts",  (m, d, v) => { var (op, cl, bo) = m[d]; m[d] = (op + v, cl, bo); });
-            await FetchAndMerge("clickedcontacts", (m, d, v) => { var (op, cl, bo) = m[d]; m[d] = (op, cl + v, bo); });
-            await FetchAndMerge("senthardbounce",  (m, d, v) => { var (op, cl, bo) = m[d]; m[d] = (op, cl, bo + v); });
-            await FetchAndMerge("sentsoftbounce",  (m, d, v) => { var (op, cl, bo) = m[d]; m[d] = (op, cl, bo + v); });
+            await FetchAndMerge("openedcontacts",       (m, d, v) => { var (op, cl, bo) = m[d]; m[d] = (op + v, cl, bo); });
+            await FetchAndMerge("clickedcontacts",      (m, d, v) => { var (op, cl, bo) = m[d]; m[d] = (op, cl + v, bo); });
+            await FetchAndMerge("senthardbounce",       (m, d, v) => { var (op, cl, bo) = m[d]; m[d] = (op, cl, bo + v); });
+            await FetchAndMerge("sentsoftbounce",       (m, d, v) => { var (op, cl, bo) = m[d]; m[d] = (op, cl, bo + v); });
+            await FetchAndMerge("optoutcontacts", (m, d, v) => { /* opt-outs don't affect daily stats */ });
 
             var now = DateTime.UtcNow;
             var oldDaily = DailyRepo.Table.Where(d => d.CampaignKey == campaignKey).ToList();
@@ -423,6 +428,20 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services.Zoho
             await _logger.InformationAsync(string.Format(
                 await _localizationService.GetResourceAsync("Plugins.SatyanamCRM.ZohoCampaign.Log.TimelineSynced"),
                 campaignKey, merged.Count));
+            var affectedLeadIds = RecipientRepo.Table
+                .Where(r => r.CampaignKey == campaignKey && r.LeadId.HasValue)
+                .Select(r => r.LeadId.Value)
+                .Distinct()
+                .ToList();
+
+            foreach (var lid in affectedLeadIds)
+            {
+                var leadRecipients = RecipientRepo.Table
+                    .Where(r => r.LeadId == lid)
+                    .ToList();
+                try { await LeadSvc.RecalculateInterestScoreAsync(lid, leadRecipients); }
+                catch {}
+            }
         }
 
         public virtual Task<IList<ZohoCampaignDailyStat>> GetDailyStatsByKeyAsync(string campaignKey, int pastDays = 30, DateTime? from = null)
@@ -494,6 +513,28 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services.Zoho
             return Task.FromResult(results);
         }
 
+        public virtual Task<IDictionary<int, (int TotalOpens, int TotalClicks, int TotalBounces, int TotalUnsubscribes)>> GetLeadEmailStatsAsync()
+        {
+            var rows = RecipientRepo.Table
+                .Where(r => r.LeadId.HasValue)
+                .GroupBy(r => r.LeadId.Value)
+                .Select(g => new
+                {
+                    LeadId       = g.Key,
+                    Opens        = g.Sum(r => r.OpenCount),
+                    Clicks       = g.Sum(r => r.ClickCount),
+                    Bounces      = g.Sum(r => r.BounceCount),
+                    Unsubscribes = g.Count(r => r.HasUnsubscribed)
+                })
+                .ToList();
+
+            IDictionary<int, (int, int, int, int)> result = rows.ToDictionary(
+                x => x.LeadId,
+                x => (x.Opens, x.Clicks, x.Bounces, x.Unsubscribes));
+
+            return Task.FromResult(result);
+        }
+
         #endregion
 
         #region Utilities (recipient sync)
@@ -535,8 +576,8 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services.Zoho
 
                 if (action == "openedcontacts")
                 {
-                    existing.HasOpened     = true;
-                    existing.OpenCount    += count;
+                    existing.HasOpened  = true;
+                    existing.OpenCount  = count;
                     if (!existing.FirstOpenedAt.HasValue || (firstAt != default && firstAt < existing.FirstOpenedAt))
                         existing.FirstOpenedAt = firstAt == default ? null : (DateTime?)firstAt;
                     if (lastAt != default && (!existing.LastOpenedAt.HasValue || lastAt > existing.LastOpenedAt))
@@ -544,8 +585,22 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services.Zoho
                 }
                 else if (action == "clickedcontacts")
                 {
-                    existing.HasClicked  = true;
-                    existing.ClickCount += count;
+                    existing.HasClicked = true;
+                    existing.ClickCount = count;
+                }
+                else if (action == "senthardbounce" || action == "sentsoftbounce")
+                {
+                    existing.HasBounced  = true;
+                    existing.BounceCount = count;
+                    existing.BounceType  = action == "senthardbounce" ? "hard" : "soft";
+                    if (firstAt != default(DateTime))
+                        existing.BouncedAt = firstAt;
+                }
+                else if (action == "optoutcontacts")
+                {
+                    existing.HasUnsubscribed = true;
+                    if (firstAt != default(DateTime))
+                        existing.UnsubscribedAt = firstAt;
                 }
 
                 existing.SyncedUtc = DateTime.UtcNow;

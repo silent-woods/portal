@@ -1,4 +1,4 @@
-<div class="card card-default crm-section-card">
+﻿<div class="card card-default crm-section-card">
     <div class="card-body">
 
         <div class="section-header crm-section-header">
@@ -212,6 +212,44 @@
             <p class="crm-zoho-placeholder-text">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Message.ZohoNotConfigured")</p>
         </div>
 
+        <div class="cashflow-chart-section crm-chart-section" id="crm-lead-intel-section">
+            <div class="cashflow-chart-header">
+                <span class="cashflow-chart-title"><i class="fas fa-brain crm-li-title-icon"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.Title")</span>
+            </div>
+            <div id="crm-top-leads-loading" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
+            <div id="crm-top-leads-wrap" style="display:none;">
+                <div class="table-responsive">
+                    <table class="table crm-lead-intel-table">
+                        <thead>
+                            <tr>
+                                <th class="crm-li-col-num">#</th>
+                                <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Name")</th>
+                                <th>@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Table.Company")</th>
+                                <th class="crm-li-col-sort crm-li-sort-active" data-li-sort="interestScore" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColScore")">
+                                    @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColScore") <i class="fas fa-sort-down crm-li-sort-icon"></i>
+                                </th>
+                                <th class="crm-li-col-sort" data-li-sort="opens" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColOpens")">
+                                    @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColOpens") <i class="fas fa-sort crm-li-sort-icon"></i>
+                                </th>
+                                <th class="crm-li-col-sort" data-li-sort="clicks" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColClicks")">
+                                    @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColClicks") <i class="fas fa-sort crm-li-sort-icon"></i>
+                                </th>
+                                <th class="crm-li-col-sort" data-li-sort="bounces" title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColBounces")">
+                                    @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColBounces") <i class="fas fa-sort crm-li-sort-icon"></i>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="crm-top-leads-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="crm-lead-intel-footer">
+                    <div class="crm-lead-intel-count" id="crm-top-leads-count"></div>
+                    <div class="crm-lead-intel-pagination" id="crm-top-leads-pagination"></div>
+                </div>
+            </div>
+            <div id="crm-top-leads-nodata" class="crm-no-data-msg" style="display:none;">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.NoData")</div>
+        </div>
+
     </div>
 </div>
 <div class="modal fade" id="crmPipelineModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -344,128 +382,7 @@
     </div>
 </div>
 
-<style>
-    .kpi-card.crm-pipeline { border-left: 5px solid #2563eb; }
-    .kpi-card.crm-won      { border-left: 5px solid #16a34a; }
-    .kpi-card.crm-leads    { border-left: 5px solid #7c3aed; }
-    .kpi-card.crm-overdue  { border-left: 5px solid #dc2626; }
-    .kpi-card.crm-email    { border-left: 5px solid #f59e0b; }
-    .kpi-icon.crm-pipeline-icon { background: rgba(37,99,235,0.10);  color: #2563eb; }
-    .kpi-icon.crm-won-icon      { background: rgba(22,163,74,0.10);   color: #16a34a; }
-    .kpi-icon.crm-leads-icon    { background: rgba(124,58,237,0.10);  color: #7c3aed; }
-    .kpi-icon.crm-overdue-icon  { background: rgba(220,38,38,0.10);   color: #dc2626; }
-    .kpi-icon.crm-email-icon    { background: rgba(245,158,11,0.12);  color: #f59e0b; }
-    .crm-email-modal-header     { border-bottom: 2px solid #f59e0b; }
-    .crm-email-modal-icon       { color: #f59e0b; margin-right: 6px; }
-    .crm-email-modal-summary    { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-    .crm-email-sum-card         { flex: 1; min-width: 130px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; text-align: center; }
-    .crm-email-sum-label        { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin-bottom: 4px; }
-    .crm-email-sum-value        { font-size: 26px; font-weight: 700; line-height: 1.1; }
-    .crm-email-modal-chart-wrap { margin-bottom: 20px; }
-    .crm-email-modal-chart-title{ font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
-    .crm-email-modal-table-wrap { }
-    .crm-email-cmp-table        { font-size: 12px; }
-    .crm-email-cmp-table th     { font-size: 11px; white-space: nowrap; }
-    .crm-email-cmp-table td     { vertical-align: middle; }
-    .crm-email-rank             { font-size: 11px; font-weight: 700; color: #9ca3af; width: 24px; }
-    .crm-email-cmp-name         { font-weight: 500; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .crm-email-cmp-date         { font-size: 10px; color: #9ca3af; }
-    .crm-email-pct-good         { color: #10b981; font-weight: 600; }
-    .crm-email-pct-warn         { color: #f59e0b; font-weight: 600; }
-    .crm-email-pct-bad          { color: #ef4444; font-weight: 600; }
-    .crm-timeline-total-row td  { border-top: 2px solid #e5e7eb; font-weight: 700; background: #f9fafb; }
-    .crm-overdue-value          { color: #dc2626; }
-    .crm-section-card      { margin-top: 0; }
-    .crm-section-header    { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .crm-filters-row       { display: flex; align-items: center; gap: 8px; }
-    .crm-period-sep        { font-size: 12px; color: #6b7280; padding: 0 4px; }
-    .crm-chart-section     { margin-top: 20px; }
-    .crm-two-col-charts    { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
-    .crm-chart-half        { flex: 1; min-width: 260px; margin-top: 0 !important; }
-    .crm-donut-wrap        { position: relative; max-width: 320px; margin: 0 auto; height: 260px; }
-    .crm-winloss-center    { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; pointer-events: none; }
-    .crm-linkedin-section  { border-left: 4px solid #0a66c2; padding-left: 16px; background: #f8faff; border-radius: 0 8px 8px 0; }
-    .crm-li-title-icon     { color: #0a66c2; margin-right: 6px; }
-    .crm-li-summary        { font-size: 12px; color: #6b7280; font-style: italic; }
-    .crm-li-stats-row      { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; margin-top: 8px; }
-    .crm-li-stat-card      { flex: 1; min-width: 130px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 18px; }
-    .crm-li-stat-card.crm-li-stat-total       { border-top: 3px solid #0a66c2; }
-    .crm-li-stat-card.crm-li-stat-converted   { border-top: 3px solid #16a34a; }
-    .crm-li-stat-card.crm-li-stat-replied     { border-top: 3px solid #f59e0b; }
-    .crm-li-stat-card.crm-li-stat-overdue-li  { border-top: 3px solid #dc2626; }
-    .crm-li-stat-label     { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #6b7280; margin-bottom: 4px; }
-    .crm-li-stat-value     { font-size: 28px; font-weight: 700; color: #111827; line-height: 1.1; }
-    .crm-li-stat-sub       { font-size: 12px; color: #6b7280; margin-top: 3px; }
-    .crm-li-stat-card[data-li-filter]:hover { box-shadow: 0 2px 8px rgba(10,102,194,0.15); border-color: #0a66c2 !important; transition: box-shadow .15s, border-color .15s; }
-    .crm-li-card-icon      { font-size: 9px; color: #9ca3af; margin-left: 4px; vertical-align: middle; }
-    .crm-li-chart-area     { display: flex; justify-content: center; }
-    .crm-li-chart-wrap     { width: 100%; max-width: 560px; height: 300px; position: relative; }
-    .crm-li-donut-center   { position: absolute; top: 36%; left: 50%; transform: translate(-50%,-50%); text-align: center; pointer-events: none; font-size: 14px; font-weight: 700; color: #374151; }
-    .crm-detail-table      { font-size: 13px; }
-    .crm-thead-row         { background: #f9fafb; }
-    .crm-thead-row th      { font-weight: 600; }
-    .crm-td-name           { vertical-align: middle; font-weight: 500; }
-    .crm-td-amount         { vertical-align: middle; font-weight: 600; color: #059669; }
-    .crm-td-muted          { vertical-align: middle; color: #6b7280; }
-    .crm-td-neutral        { vertical-align: middle; color: #374151; }
-    .crm-td-danger         { vertical-align: middle; color: #dc2626; font-weight: 600; }
-    .crm-modal-tabs        { margin-bottom: 16px; }
-    .kpi-card[data-crm-modal]         { cursor: pointer; }
-    .crm-li-stat-card[data-li-filter] { cursor: pointer; }
-    .crm-li-modal-header   { border-bottom: 2px solid #0a66c2; }
-    .crm-li-icon-inline    { color: #0a66c2; }
-    .crm-td-url            { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
-    .crm-winloss-rate      { font-size: 20px; font-weight: 700; color: #111827; }
-    .crm-winloss-label     { font-size: 10px; color: #6b7280; }
-    .crm-donut-center-sub       { font-size: 10px; color: #6b7280; }
-    .crm-zoho-synced            { font-size: 11px; color: #9ca3af; margin-left: 10px; }
-    .crm-zoho-placeholder       { display: flex; align-items: center; justify-content: center; min-height: 80px; }
-    .crm-zoho-placeholder-text  { color: #9ca3af; font-size: 13px; margin: 0; }
-    .crm-zoho-table             { font-size: 12px; margin-bottom: 0; }
-    .crm-zoho-table th          { font-size: 11px; color: #6b7280; font-weight: 600; white-space: nowrap; border-top: none; padding: 8px 10px; }
-    .crm-zoho-table td          { vertical-align: middle; padding: 8px 10px; border-color: #f3f4f6; }
-    .crm-zoho-th-stat           { width: 60px; text-align: right; }
-    .crm-zoho-th-bar            { width: 160px; }
-    .crm-zoho-campaign-name     { font-weight: 500; color: #1f2937; max-width: 260px; }
-    .crm-zoho-name-link         { color: #2563eb; text-decoration: none; }
-    .crm-zoho-name-link:hover   { text-decoration: underline; }
-    .crm-zoho-sent-date         { font-size: 10px; color: #9ca3af; }
-    .crm-zoho-stat-count        { text-align: right; color: #374151; font-weight: 600; font-size: 12px; }
-    .crm-zoho-bar-wrap          { display: flex; align-items: center; gap: 6px; }
-    .crm-zoho-bar-track         { flex: 1; height: 7px; background: #f3f4f6; border-radius: 4px; overflow: hidden; }
-    .crm-zoho-bar-fill          { height: 100%; border-radius: 4px; }
-    .crm-zoho-bar-label         { font-size: 11px; color: #374151; width: 38px; text-align: right; white-space: nowrap; }
-    .crm-zoho-modal-meta          { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 14px 18px; margin-bottom: 18px; font-size: 14px; }
-    .crm-zoho-modal-meta-row      { margin-bottom: 5px; color: #374151; }
-    .crm-zoho-modal-meta-row:last-child { margin-bottom: 0; }
-    .crm-zoho-modal-meta-key      { font-weight: 600; color: #6b7280; }
-    .crm-zoho-modal-stats-grid    { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; margin-bottom: 18px; }
-    .crm-zoho-modal-stat-block    { border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 16px; }
-    .crm-zoho-modal-block-title   { font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
-    .crm-zoho-modal-stat-table    { width: 100%; border-collapse: collapse; }
-    .crm-zoho-modal-label         { font-size: 13px; color: #6b7280; padding: 4px 0; }
-    .crm-zoho-modal-count         { font-size: 13px; font-weight: 600; color: #1f2937; text-align: right; padding: 4px 0; }
-    .crm-zoho-modal-pct           { font-size: 12px; font-weight: 400; margin-left: 4px; }
-    .crm-zoho-modal-country-section { border-top: 1px solid #e5e7eb; padding-top: 16px; }
-    .crm-zoho-modal-country-list  { margin-top: 10px; max-height: 280px; overflow-y: auto; }
-    .crm-zoho-modal-country-row   { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
-    .crm-zoho-modal-country-name  { font-size: 13px; color: #374151; width: 180px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .crm-zoho-modal-country-bar   { flex: 1; }
-    .crm-zoho-modal-country-count { font-size: 12px; font-weight: 600; color: #374151; width: 44px; text-align: right; flex-shrink: 0; }
-    .crm-zoho-modal-no-country    { font-size: 13px; color: #9ca3af; margin: 0; }
-    .crm-zoho-timeline-section    { border-top: 1px solid #e5e7eb; padding-top: 14px; margin-top: 4px; }
-    .crm-zoho-timeline-header     { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
-    .crm-zoho-timeline-pills      { display: flex; gap: 6px; margin: 8px 0 12px; }
-    .crm-timeline-pill            { padding: 2px 10px; font-size: 11px; border: 1px solid #d1d5db; background: #fff; border-radius: 20px; cursor: pointer; }
-    .crm-timeline-pill.active     { background: #3b82f6; color: #fff; border-color: #3b82f6; }
-    .crm-zoho-timeline-msg        { font-size: 12px; color: #9ca3af; padding: 12px 0; }
-    .crm-zoho-sync-msg            { font-size: 12px; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; }
-    .crm-sync-msg-ok              { background: #ecfdf5; color: #065f46; }
-    .crm-sync-msg-err             { background: #fef2f2; color: #991b1b; }
-    .crm-email-period-bar         { margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f3f4f6; }
-    .crm-email-period-label       { font-size: 12px; font-weight: 600; color: #374151; background: #f3f4f6; border-radius: 6px; padding: 4px 12px; display: inline-block; }
-    .crm-email-daily-msg          { font-size: 12px; color: #9ca3af; padding: 10px 0; }
-</style>
+<link rel="stylesheet" href="~/Plugins/Misc.AccountManagement/Content/crm-insights.css" />
 
 <script>
 (function () {
@@ -541,7 +458,14 @@
         emailTimelineOpens:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Zoho.Timeline.Opens").Text',
         emailTimelineClicks:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Zoho.Timeline.Clicks").Text',
         emailTimelineBounces:   '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.Zoho.Timeline.Bounces").Text',
-        emailTimelineTotal:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.KPI.Email.Modal.Timeline.Total").Text'
+        emailTimelineTotal:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.KPI.Email.Modal.Timeline.Total").Text',
+        liColScore:             '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColScore").Text',
+        liColOpens:             '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColOpens").Text',
+        liColClicks:            '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColClicks").Text',
+        liColBounces:           '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.ColBounces").Text',
+        liTagUnsubscribed:      '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.TagUnsubscribed").Text',
+        liNoData:               '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.NoData").Text',
+        liShowing:              '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.CRM.LeadIntel.Showing").Text'
     };
 
     var zohoModalRes = {
@@ -1676,6 +1600,104 @@
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
     function escAttr(s) { return escHtml(s); }
+
+    var liState = { page: 1, pageSize: 20, sortBy: 'interestScore', sortDir: 'desc', totalCount: 0, loading: false };
+    var liBaseUrl = '@Url.Action("GetLeadIntelligenceData", "ExecutiveDashboard", new { area = "Admin" })';
+
+    function interestBadge(score) {
+        var s = score || 0;
+        var cls = s >= 81 ? 'crm-interest-high'
+                : s >= 61 ? 'crm-interest-good'
+                : s >= 31 ? 'crm-interest-medium'
+                : s > 0   ? 'crm-interest-low'
+                : 'crm-interest-none';
+        return '<span class="crm-interest-badge ' + cls + '">' + s + '%</span>';
+    }
+
+    function loadLeadIntelligence() {
+        if (liState.loading) return;
+        liState.loading = true;
+        $('#crm-top-leads-loading').show();
+        $('#crm-top-leads-wrap').hide();
+        $('#crm-top-leads-nodata').hide();
+
+        $.getJSON(liBaseUrl, { page: liState.page, pageSize: liState.pageSize, sortBy: liState.sortBy, sortDir: liState.sortDir }, function (data) {
+            liState.loading    = false;
+            liState.totalCount = data.totalCount || 0;
+            $('#crm-top-leads-loading').hide();
+
+            var leads = data.leads || [];
+            if (!leads.length && liState.page === 1) {
+                $('#crm-top-leads-nodata').show();
+                return;
+            }
+
+            var startNum = (liState.page - 1) * liState.pageSize + 1;
+            var rows = '';
+            leads.forEach(function (l, i) {
+                rows += '<tr>'
+                    + '<td class="crm-li-col-num text-muted">' + (startNum + i) + '</td>'
+                    + '<td><a href="/Admin/Lead/Edit/' + l.id + '" target="_blank" class="crm-lead-name">' + escHtml(l.name || '—') + '</a>'
+                    + (l.totalUnsubscribes > 0 ? ' <span class="crm-li-unsub-tag">&#128683; ' + crmRes.liTagUnsubscribed + '</span>' : '')
+                    + '</td>'
+                    + '<td class="crm-lead-company">' + escHtml(l.company || '—') + '</td>'
+                    + '<td>' + interestBadge(l.interestScore) + '</td>'
+                    + '<td class="text-center crm-li-num-cell">' + (l.totalOpens  || 0) + '</td>'
+                    + '<td class="text-center crm-li-num-cell">' + (l.totalClicks || 0) + '</td>'
+                    + '<td class="text-center crm-li-num-cell' + (l.totalBounces > 0 ? ' crm-li-bounce-cell' : '') + '">' + (l.totalBounces || 0) + '</td>'
+                    + '</tr>';
+            });
+            $('#crm-top-leads-tbody').html(rows);
+
+            var totalPages = Math.ceil(liState.totalCount / liState.pageSize);
+            var end = Math.min(liState.page * liState.pageSize, liState.totalCount);
+            $('#crm-top-leads-count').text(liState.totalCount > 0
+                ? crmRes.liShowing.replace('{0}', startNum).replace('{1}', end).replace('{2}', liState.totalCount)
+                : '');
+
+            var pager = '';
+            if (liState.page > 1)
+                pager += '<button class="crm-page-btn" data-li-page="' + (liState.page - 1) + '">&lsaquo;</button>';
+            var from = Math.max(1, liState.page - 2), to = Math.min(totalPages, liState.page + 2);
+            for (var p = from; p <= to; p++)
+                pager += '<button class="crm-page-btn' + (p === liState.page ? ' active' : '') + '" data-li-page="' + p + '">' + p + '</button>';
+            if (liState.page < totalPages)
+                pager += '<button class="crm-page-btn" data-li-page="' + (liState.page + 1) + '">&rsaquo;</button>';
+            $('#crm-top-leads-pagination').html(pager);
+
+            $('#crm-top-leads-wrap').show();
+        }).fail(function () {
+            liState.loading = false;
+            $('#crm-top-leads-loading').hide();
+        });
+    }
+
+    $(document).on('click', '#crm-top-leads-pagination [data-li-page]', function () {
+        liState.page = parseInt($(this).attr('data-li-page'), 10);
+        loadLeadIntelligence();
+    });
+
+    $(document).on('click', '.crm-li-col-sort', function () {
+        var col = $(this).attr('data-li-sort');
+        if (liState.sortBy === col) {
+            liState.sortDir = liState.sortDir === 'desc' ? 'asc' : 'desc';
+        } else {
+            liState.sortBy  = col;
+            liState.sortDir = 'desc';
+        }
+        liState.page = 1;
+        $('.crm-li-col-sort').removeClass('crm-li-sort-active').find('i').attr('class', 'fas fa-sort crm-li-sort-icon');
+        var icon = liState.sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+        $(this).addClass('crm-li-sort-active').find('i').attr('class', 'fas ' + icon + ' crm-li-sort-icon');
+        loadLeadIntelligence();
+    });
+
+    $(document).on('change', '#crm-li-exclude-unsub', function () {
+        liState.excludeUnsubscribed = $(this).is(':checked');
+        liState.page = 1;
+        loadLeadIntelligence();
+    });
+
     $(document).on('exec:load:crm', function () {
         var activeBar = crmState.granularity === 'month' ? '#crm-preset-bar-month' : '#crm-preset-bar-year';
         $(activeBar + ' .btn-preset').removeClass('active');
@@ -1683,7 +1705,8 @@
             $(activeBar + ' [data-crm-preset="' + crmState.preset + '"]').addClass('active');
         }
         $('[data-toggle="tooltip"]').tooltip();
-        loadCRMData(); 
+        loadCRMData();
+        loadLeadIntelligence();
     });
 }());
 </script>

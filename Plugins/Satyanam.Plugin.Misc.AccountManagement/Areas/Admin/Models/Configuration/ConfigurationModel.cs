@@ -33,7 +33,6 @@ public partial record ConfigurationModel : BaseNopEntityModel
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Fields.InvoiceLogoId")]
     public int InvoiceLogoId { get; set; }
 
-
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Fields.EmailAccountId")]
     public int EmailAccountId { get; set; }
 

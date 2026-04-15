@@ -48,6 +48,9 @@ namespace Satyanam.Nop.Plugin.SatyanamCRM.Models.Leads
         [NopResourceDisplayName("Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SearchIsSyncedToReply")]
         public bool? IsSyncedToReply { get; set; }
         public IList<SelectListItem> AvailableIsSyncReplyOptions { get; set; }
+
+        [NopResourceDisplayName("Nop.Plugin.Misc.SatyanamCRM.Models.Lead.LeadSearchModel.SortByInterest")]
+        public bool SortByInterest { get; set; }
         #endregion
     }
 }

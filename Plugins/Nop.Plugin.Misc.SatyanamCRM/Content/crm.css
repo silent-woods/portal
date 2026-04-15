@@ -1,0 +1,81 @@
+.ee-stat-card {
+    background: #fff;
+    border: 1px solid #e3e6f0;
+    border-radius: 6px;
+    padding: 14px 18px;
+    text-align: center;
+    flex: 1;
+    min-width: 130px;
+}
+.ee-stat-card .ee-stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #343a40;
+    line-height: 1.2;
+}
+.ee-stat-card .ee-stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.ee-score-circle {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid #28a745;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 8px;
+    text-align: center;
+}
+.ee-score-circle.score-high { border-color: #28a745; color: #28a745; }
+.ee-score-circle.score-mid  { border-color: #ffc107; color: #ffc107; }
+.ee-score-circle.score-low  { border-color: #dc3545; color: #dc3545; }
+.ee-score-circle .ee-score-pct {
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1;
+}
+.ee-score-circle .ee-score-label {
+    font-size: 0.58rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-top: 4px;
+    line-height: 1.3;
+    word-break: break-word;
+}
+.ee-stats-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+.ee-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #495057;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+}
+.ee-table th { font-size: 0.78rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.04em; }
+.ee-table td { font-size: 0.85rem; vertical-align: middle; }
+.ee-row-opened  { background-color: #f0fff4; }
+.ee-row-bounced { background-color: #fff5f5; }
+.ee-badge-opened  { background: #d4edda; color: #155724; border-radius: 3px; padding: 1px 6px; font-size: 0.72rem; }
+.ee-badge-clicked { background: #cce5ff; color: #004085; border-radius: 3px; padding: 1px 6px; font-size: 0.72rem; }
+.ee-badge-bounced { background: #f8d7da; color: #721c24; border-radius: 3px; padding: 1px 6px; font-size: 0.72rem; }
+.ee-badge-unsub   { background: #fff3cd; color: #856404; border-radius: 3px; padding: 1px 6px; font-size: 0.72rem; font-weight: 600; cursor: default; }
+.ee-row-unsub td  { background-color: #fffbf0 !important; }
+.ee-no-data { padding: 30px; text-align: center; color: #6c757d; font-size: 0.9rem; }
+.ee-loading  { padding: 30px; text-align: center; color: #6c757d; font-size: 0.9rem; }
+.ee-timeline-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ee-period-select { font-size: 0.8rem; padding: 3px 8px; border: 1px solid #ced4da; border-radius: 4px; color: #495057; }

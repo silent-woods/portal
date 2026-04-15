@@ -823,6 +823,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
             int createdCount = 0;
             int skippedCount = 0;
+            int updatedCount = 0;
             var skippedNames = new List<string>();
 
             foreach (var id in selectedIds)
@@ -831,7 +832,9 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 if (followUp == null)
                     continue;
 
-                // --- Check for duplicate lead by email ---
+                Lead existingLead = null;
+
+                // --- Step 1: Try to find ACTIVE lead by Email ---
                 if (!string.IsNullOrWhiteSpace(followUp.Email))
                 {
                     var existingLeads = await _leadService.GetAllLeadAsync(
@@ -850,13 +853,11 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         isSyncedToReply: null);
 
                     if (existingLeads != null && existingLeads.TotalCount > 0)
-                    {
-                        skippedCount++;
-                        skippedNames.Add($"{followUp.FirstName} {followUp.LastName}".Trim());
-                        continue;
-                    }
+                        existingLead = existingLeads.FirstOrDefault();
                 }
-                else if (string.IsNullOrWhiteSpace(followUp.Email) && !string.IsNullOrWhiteSpace(followUp.LinkedinUrl))
+
+                // --- Step 2: Try to find ACTIVE lead by LinkedIn URL ---
+                if (existingLead == null && !string.IsNullOrWhiteSpace(followUp.LinkedinUrl))
                 {
                     var allLeads = await _leadService.GetAllLeadAsync(
                         name: "",
@@ -873,15 +874,12 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         showHidden: true,
                         isSyncedToReply: null);
 
-                    if (allLeads != null && allLeads.Any(l =>
-                        !string.IsNullOrWhiteSpace(l.LinkedinUrl) &&
-                        l.LinkedinUrl.Equals(followUp.LinkedinUrl, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        skippedCount++;
-                        skippedNames.Add($"{followUp.FirstName} {followUp.LastName}".Trim());
-                        continue; // skip this record, LinkedIn URL already exists in Lead
-                    }
+                    if (allLeads != null)
+                        existingLead = allLeads.FirstOrDefault(l =>
+                            !string.IsNullOrWhiteSpace(l.LinkedinUrl) &&
+                            l.LinkedinUrl.Equals(followUp.LinkedinUrl, StringComparison.OrdinalIgnoreCase));
                 }
+
                 // --- Map Lead Owner: Employee → Customer (safe with null checks) ---
                 int customerId = 0;
                 if (followUp.CreatedByUserId > 0)
@@ -909,20 +907,77 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         customerId = 0;
                     }
                 }
-                int emailStatusId = (int)EmailValidationStatus.None;  
 
+                int emailStatusId = (int)EmailValidationStatus.None;
                 if (!string.IsNullOrWhiteSpace(followUp.Email))
                 {
                     emailStatusId = (int)await GetEmailValidationStatusAsync(followUp.Email);
                 }
-                // --- Create a blank Address record ---
+
+                // --- If ACTIVE lead already exists, check for changes and update ---
+                if (existingLead != null)
+                {
+                    bool hasChanges = false;
+
+                    if ((existingLead.FirstName ?? "") != (followUp.FirstName ?? ""))
+                    {
+                        existingLead.FirstName = followUp.FirstName ?? "";
+                        hasChanges = true;
+                    }
+                    if ((existingLead.LastName ?? "") != (followUp.LastName ?? ""))
+                    {
+                        existingLead.LastName = followUp.LastName ?? "";
+                        hasChanges = true;
+                    }
+                    if ((existingLead.Email ?? "") != (followUp.Email ?? ""))
+                    {
+                        existingLead.Email = followUp.Email ?? "";
+                        hasChanges = true;
+                    }
+                    if ((existingLead.LinkedinUrl ?? "") != (followUp.LinkedinUrl ?? ""))
+                    {
+                        existingLead.LinkedinUrl = followUp.LinkedinUrl ?? "";
+                        hasChanges = true;
+                    }
+                    if ((existingLead.WebsiteUrl ?? "") != (followUp.WebsiteUrl ?? ""))
+                    {
+                        existingLead.WebsiteUrl = followUp.WebsiteUrl ?? "";
+                        hasChanges = true;
+                    }
+                    if (customerId > 0 && existingLead.CustomerId != customerId)
+                    {
+                        existingLead.CustomerId = customerId;
+                        hasChanges = true;
+                    }
+                    if (existingLead.EmailStatusId != emailStatusId)
+                    {
+                        existingLead.EmailStatusId = emailStatusId;
+                        hasChanges = true;
+                    }
+
+                    if (hasChanges)
+                    {
+                        existingLead.UpdatedOnUtc = DateTime.UtcNow;
+                        await _leadService.UpdateLeadAsync(existingLead);
+                        updatedCount++;
+                    }
+                    else
+                    {
+                        // No changes found, just skip
+                        skippedCount++;
+                        skippedNames.Add($"{followUp.FirstName} {followUp.LastName}".Trim());
+                    }
+
+                    continue;
+                }
+
+                // --- No active lead found (deleted leads ignored) → Create new ---
                 var address = new Address
                 {
                     CreatedOnUtc = DateTime.UtcNow
                 };
                 await _addressService.InsertAddressAsync(address);
 
-                // --- Build and insert the Lead ---
                 var lead = new Lead
                 {
                     FirstName = followUp.FirstName ?? "",
@@ -944,10 +999,13 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             if (createdCount > 0)
                 _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Plugin.SatyanamCRM.Leads.Added"));
 
+            if (updatedCount > 0)
+                _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Plugin.SatyanamCRM.Leads.Updated"));
+
             if (skippedCount > 0)
             {
                 var message = string.Format(
-                    await _localizationService.GetResourceAsync("Plugin.SatyanamCRM.Leads.DuplicateSkipped"),skippedCount,string.Join(", ", skippedNames));
+                    await _localizationService.GetResourceAsync("Plugin.SatyanamCRM.Leads.DuplicateSkipped"), skippedCount, string.Join(", ", skippedNames));
 
                 _notificationService.WarningNotification(message);
             }

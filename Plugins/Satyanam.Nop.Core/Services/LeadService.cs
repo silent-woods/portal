@@ -56,10 +56,12 @@ namespace Satyanam.Nop.Core.Services
         /// The task result contains the lead
         /// </returns>
 
-        public virtual async Task<IPagedList<Lead>> GetAllLeadAsync(string name, string companyName, IList<int> selectedtagsid, string email, string website, int nofoEmployee, int leadStatusId, IList<int> titleid, int emailStatusId, int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? isSyncedToReply = null)
+        public virtual async Task<IPagedList<Lead>> GetAllLeadAsync(string name, string companyName, IList<int> selectedtagsid, string email, string website, int nofoEmployee, int leadStatusId, IList<int> titleid, int emailStatusId, int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false, bool? isSyncedToReply = null, bool sortByInterest = false)
         {
             var query = await _leadRepository.GetAllAsync(async query =>
             {
+                query = query.Where(c => !c.IsDeleted);
+
                 if (!string.IsNullOrWhiteSpace(name))
                     query = query.Where(c => c.FirstName.Contains(name) || c.LastName.Contains(name) || (c.FirstName + " " + c.LastName).Contains(name));
                 if (!string.IsNullOrWhiteSpace(companyName))
@@ -93,7 +95,9 @@ namespace Satyanam.Nop.Core.Services
                 if (isSyncedToReply.HasValue)
                     query = query.Where(c => c.IsSyncedToReply == isSyncedToReply.Value);
 
-                return query.OrderBy(c => c.Id);
+                return sortByInterest
+                    ? query.OrderByDescending(c => c.InterestScore ?? 0)
+                    : query.OrderBy(c => c.Id);
             });
             //paging
             return new PagedList<Lead>(query.ToList(), pageIndex, pageSize);
@@ -109,12 +113,15 @@ namespace Satyanam.Nop.Core.Services
         /// </returns>
         public virtual async Task<Lead> GetLeadByIdAsync(int leadId)
         {
-            return await _leadRepository.GetByIdAsync(leadId);
+            var lead = await _leadRepository.GetByIdAsync(leadId);
+            return lead == null || lead.IsDeleted ? null : lead;
         }
 
         public virtual async Task<IList<Lead>> GetLeadByIdsAsync(int[] leadIds)
         {
-            return await _leadRepository.GetByIdsAsync(leadIds);
+            return await _leadRepository.Table
+                .Where(l => leadIds.Contains(l.Id) && !l.IsDeleted)
+                .ToListAsync();
         }
         public async Task<LeadTags> GetLeadTagsByLeadIdAsync(int leadId)
         {
@@ -148,6 +155,7 @@ namespace Satyanam.Nop.Core.Services
                                where tagIds.Contains(lt.TagsId)
                                      && l.EmailOptOut == true
                                      && l.EmailStatusId == 1
+                                     && !l.IsDeleted
                                select l)
                               .Distinct()
                               .ToListAsync();
@@ -173,7 +181,7 @@ namespace Satyanam.Nop.Core.Services
             // Fetch leads with matching tags and exclude those who opted out
             var leads = await (from lt in _leadTagsRepository.Table
                                join l in _leadRepository.Table on lt.LeadId equals l.Id
-                               where tagIds.Contains(lt.TagsId) && l.EmailOptOut == true && l.EmailStatusId==1
+                               where tagIds.Contains(lt.TagsId) && l.EmailOptOut == true && l.EmailStatusId == 1 && !l.IsDeleted
                                select l)
                               .Distinct()
                               .ToListAsync();
@@ -218,7 +226,9 @@ namespace Satyanam.Nop.Core.Services
         /// <returns>A task that represents the asynchronous operation</returns>
         public virtual async Task DeleteLeadAsync(Lead lead)
         {
-            await _leadRepository.DeleteAsync(lead);
+            lead.IsDeleted = true;
+            lead.DeletedOnUtc = DateTime.UtcNow;
+            await _leadRepository.UpdateAsync(lead);
         }
         public async Task DeleteTagsByLeadIdAsync(int leadId)
         {
@@ -279,16 +289,52 @@ namespace Satyanam.Nop.Core.Services
             if (string.IsNullOrEmpty(email))
                 return null;
 
-            var lead = await _leadRepository.Table
-                .FirstOrDefaultAsync(l => l.Email == email);
-
-            return lead;
+            return await _leadRepository.Table
+                .FirstOrDefaultAsync(l => l.Email == email && !l.IsDeleted);
         }
+
         public async Task<IList<Lead>> GetLeadsByIdsAsync(List<int> ids)
         {
             return await _leadRepository.Table
-                .Where(l => ids.Contains(l.Id))
+                .Where(l => ids.Contains(l.Id) && !l.IsDeleted)
                 .ToListAsync();
+        }
+
+        public async Task RecalculateInterestScoreAsync(int leadId, IList<ZohoCampaignRecipient> recipients)
+        {
+            var lead = await _leadRepository.GetByIdAsync(leadId);
+            if (lead == null || lead.IsDeleted)
+                return;
+
+            int score = 0;
+
+            if (recipients != null && recipients.Any())
+            {
+                var totalCampaigns = recipients.Count;
+                var bouncedCount   = recipients.Count(r => r.HasBounced);
+                var deliveredCount = totalCampaigns - bouncedCount;
+                var openedCount    = recipients.Count(r => r.HasOpened);
+                var clickedCount   = recipients.Count(r => r.HasClicked);
+                var lastOpen       = recipients.Where(r => r.LastOpenedAt.HasValue)
+                                               .Select(r => r.LastOpenedAt.Value)
+                                               .DefaultIfEmpty()
+                                               .Max();
+
+                var openRate  = deliveredCount > 0 ? (double)openedCount / deliveredCount : 0;
+                var clickRate = openedCount > 0 ? (double)clickedCount / openedCount : 0;
+                var recency   = lastOpen > DateTime.MinValue
+                    ? (DateTime.UtcNow - lastOpen).TotalDays <= 30  ? 1.0
+                    : (DateTime.UtcNow - lastOpen).TotalDays <= 90  ? 0.5
+                    : (DateTime.UtcNow - lastOpen).TotalDays <= 180 ? 0.25
+                    : 0.0
+                    : 0.0;
+
+                score = (int)Math.Round(openRate * 40 + clickRate * 45 + recency * 15);
+            }
+
+            lead.InterestScore           = score;
+            lead.InterestScoreUpdatedUtc = DateTime.UtcNow;
+            await _leadRepository.UpdateAsync(lead);
         }
 
         public async Task<IList<Lead>> GetAllLeadsForReplyIoSyncAsync()
@@ -296,6 +342,7 @@ namespace Satyanam.Nop.Core.Services
             return (await _leadRepository.GetAllAsync(query =>
             {
                 query = query.Where(x =>
+                    !x.IsDeleted &&
                     !x.IsSyncedToReply &&
                     x.EmailStatusId == 1 &&
                     !string.IsNullOrEmpty(x.FirstName) &&

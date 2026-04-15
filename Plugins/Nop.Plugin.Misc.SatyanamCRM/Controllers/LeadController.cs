@@ -63,6 +63,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         private readonly IDealsService _dealsService;
         private readonly IEmailverificationService _emailverificationService;
         private readonly ILeadExportService _leadExportService;
+        private readonly IZohoCampaignService _zohoCampaignService;
 
         #endregion
 
@@ -90,7 +91,8 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                                ICompanyService companyService,
                                IDealsService dealsService,
                                IEmailverificationService emailverificationService,
-                               ILeadExportService leadExportService)
+                               ILeadExportService leadExportService,
+                               IZohoCampaignService zohoCampaignService)
         {
             _permissionService = permissionService;
             _leadService = leadService;
@@ -115,6 +117,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             _dealsService = dealsService;
             _emailverificationService = emailverificationService;
             _leadExportService = leadExportService;
+            _zohoCampaignService = zohoCampaignService;
         }
 
         #endregion
@@ -393,7 +396,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             return EmailValidationStatus.None;
         }
 
-       
+
 
         public virtual async Task<LeadSearchModel> PrepareLeadSearchModelAsync(LeadSearchModel searchModel)
         {
@@ -455,8 +458,9 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 leadStatusId: searchModel.SearchLeadStatusId,
                 titleid: searchModel.SearchTitlesId,
                 emailStatusId: searchModel.SearchEmailStatusId,
-                isSyncedToReply:searchModel.IsSyncedToReply,
-                pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize);
+                isSyncedToReply: searchModel.IsSyncedToReply,
+                pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize,
+                sortByInterest: searchModel.SortByInterest);
             var allTags = await _tagsService.GetAllTagsAsync("");
             //prepare grid model
             var model = await new LeadListModel().PrepareToGridAsync(searchModel, leads, () =>
@@ -510,6 +514,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     leadModel.EmailStatusName = ((EmailValidationStatus)leads.EmailStatusId).ToString();
                     if (selectedAvailableOption != 0 || selectedAvailableOption != null) leadModel.EmailStatusId
                         = (int)((EmailValidationStatus)selectedAvailableOption);
+                    leadModel.InterestScore = leads.InterestScore;
 
                     return leadModel;
                 });
@@ -606,10 +611,10 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         {
             if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
                 return AccessDeniedView();
-
+            // Show success notification if set via TempData (from popup)
             if (TempData.ContainsKey("SuccessNotification"))
                 _notificationService.SuccessNotification(TempData["SuccessNotification"].ToString());
-
+            //prepare model
             var model = await PrepareLeadSearchModelAsync(new LeadSearchModel());
 
             return View("~/Plugins/Misc.SatyanamCRM/Views/Leads/List.cshtml", model);
@@ -705,18 +710,12 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 }
                 _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Plugin.SatyanamCRM.Leads.Added"));
 
-                //ViewBag.RefreshPage = true;
-
                 if (!continueEditing)
                     return RedirectToAction("List");
 
                 return RedirectToAction("Edit", new { id = lead.Id });
             }
-
-            //prepare model
             model = await PrepareLeadModelAsync(model, null, true);
-
-            //if we got this far, something failed, redisplay form
             return View("~/Plugins/Misc.SatyanamCRM/Views/Leads/Create.cshtml", model);
         }
 
@@ -724,13 +723,9 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         {
             if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
                 return AccessDeniedView();
-
-            //try to get a leads with the specified id
             var leads = await _leadService.GetLeadByIdAsync(id);
             if (leads == null)
                 return RedirectToAction("List");
-
-            //prepare model
             var model = await PrepareLeadModelAsync(null, leads);
 
             return View("~/Plugins/Misc.SatyanamCRM/Views/Leads/Edit.cshtml", model);
@@ -742,10 +737,6 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.Edit))
                 return AccessDeniedView();
             ModelState.Remove("DealsModels");
-            //ModelState.Remove("DealsModels.DealName");
-            //ModelState.Remove("DealsModels.Amount");
-            //ModelState.Remove("DealsModels.ClosingDate");
-            //ModelState.Remove("DealsModels.StageId");
             var leads = await _leadService.GetLeadByIdAsync(model.Id);
             if (leads == null)
                 return RedirectToAction("List");
@@ -911,7 +902,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 leadStatusId: searchModel.SearchLeadStatusId,
                 titleid: searchModel.SearchTitlesId,
                 emailStatusId: searchModel.SearchEmailStatusId,
-                isSyncedToReply:searchModel.IsSyncedToReply,
+                isSyncedToReply: searchModel.IsSyncedToReply,
                 pageIndex: 0, pageSize: int.MaxValue);
 
             var leadModelDto = new List<LeadDto>();
@@ -984,13 +975,13 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         Description = lead.Description ?? " ",
                         Country = country?.Name ?? " ",
                         State = state?.Name ?? " ",
-                        City =city,
+                        City = city,
                         ZipCode = zipCode,
                     };
                     leadModelDto.Add(leadDTO);
                 }
 
-                var bytes =await _leadExportService.ExportLeadsToExcelAsync(leadModelDto);
+                var bytes = await _leadExportService.ExportLeadsToExcelAsync(leadModelDto);
                 return File(bytes, MimeTypes.TextXlsx, "Lead.xlsx");
             }
             catch (Exception exc)
@@ -1015,7 +1006,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 leadStatusId: searchModel.SearchLeadStatusId,
                 titleid: searchModel.SearchTitlesId,
                 emailStatusId: searchModel.SearchEmailStatusId,
-                isSyncedToReply:searchModel.IsSyncedToReply,
+                isSyncedToReply: searchModel.IsSyncedToReply,
                 pageIndex: 0, pageSize: int.MaxValue);
 
             var leadModelDto = new List<LeadDto>();
@@ -1067,7 +1058,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         State = state?.Name ?? " ",
                         Country = country?.Name ?? " ",
                         LinkedinUrl = lead.LinkedinUrl ?? " ",
-                        LinkedInRecruiter =" ",
+                        LinkedInRecruiter = " ",
                         Phone = lead.Phone ?? " ",
 
                     };
@@ -1434,6 +1425,131 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
 
         #endregion
+
+        [HttpGet]
+        public virtual async Task<IActionResult> GetLeadEmailEngagement(int leadId)
+        {
+            if (!await _permissionService.AuthorizeAsync(SatyanamPermissionProvider.ManageLeads, PermissionAction.View))
+                return AccessDeniedView();
+
+            var recipients = await _zohoCampaignService.GetRecipientsByLeadIdAsync(leadId);
+
+            if (!recipients.Any())
+                return Json(new { campaigns = Array.Empty<object>(), interestScore = 0, timeline = Array.Empty<object>(), summary = new { totalCampaigns = 0, totalOpens = 0, totalClicks = 0, totalBounces = 0, unsubscribeCount = 0, lastOpenedAt = "" } });
+
+            var allStats = await _zohoCampaignService.GetStoredStatsAsync(500);
+            var statsByKey = allStats.ToDictionary(s => s.CampaignKey, StringComparer.OrdinalIgnoreCase);
+
+            var campaignRows = recipients.Select(r =>
+            {
+                statsByKey.TryGetValue(r.CampaignKey, out var stat);
+                return new
+                {
+                    campaignKey   = r.CampaignKey,
+                    campaignName  = stat?.CampaignName ?? r.CampaignKey,
+                    sentDate      = stat?.SentTime?.ToString("dd MMM yyyy") ?? "",
+                    opens         = r.OpenCount,
+                    clicks        = r.ClickCount,
+                    hasOpened     = r.HasOpened,
+                    hasClicked    = r.HasClicked,
+                    hasBounced       = r.HasBounced,
+                    bounceType       = r.BounceType ?? "",
+                    bouncedAt        = r.BouncedAt?.ToString("dd MMM yyyy") ?? "",
+                    firstOpenedAt    = r.FirstOpenedAt?.ToString("dd MMM yyyy") ?? "",
+                    lastOpenedAt     = r.LastOpenedAt?.ToString("dd MMM yyyy") ?? "",
+                    hasUnsubscribed  = r.HasUnsubscribed,
+                    unsubscribedAt   = r.UnsubscribedAt?.ToString("dd MMM yyyy") ?? "",
+                };
+            }).OrderByDescending(r => r.sentDate).ToList();
+            var datedRecipients = recipients
+                .Where(r => r.FirstOpenedAt.HasValue || r.BouncedAt.HasValue)
+                .Select(r => new
+                {
+                    Date      = (r.FirstOpenedAt ?? r.BouncedAt).Value.Date,
+                    OpenCount = r.OpenCount,
+                    ClickCount= r.ClickCount,
+                    HasBounced= r.HasBounced,
+                })
+                .ToList();
+
+            List<object> timelineData;
+            if (!datedRecipients.Any())
+            {
+                timelineData = new List<object>();
+            }
+            else
+            {
+                var minDate  = datedRecipients.Min(r => r.Date);
+                var maxDate  = datedRecipients.Max(r => r.Date);
+                var spanDays = (maxDate - minDate).TotalDays;
+
+                if (spanDays <= 93) 
+                {
+                    var weekLookup = datedRecipients
+                        .GroupBy(r => { var dow = (int)r.Date.DayOfWeek; return r.Date.AddDays(-(dow == 0 ? 6 : dow - 1)).Date; })
+                        .ToDictionary(g => g.Key, g => new { opens = g.Sum(r => r.OpenCount), clicks = g.Sum(r => r.ClickCount), bounces = g.Count(r => r.HasBounced) });
+                    var firstDow = (int)minDate.DayOfWeek;
+                    var weekCursor = minDate.AddDays(-(firstDow == 0 ? 6 : firstDow - 1)).Date;
+                    var lastDow = (int)maxDate.DayOfWeek;
+                    var lastWeek = maxDate.AddDays(-(lastDow == 0 ? 6 : lastDow - 1)).Date;
+
+                    timelineData = new List<object>();
+                    while (weekCursor <= lastWeek)
+                    {
+                        weekLookup.TryGetValue(weekCursor, out var wk);
+                        timelineData.Add(new { label = "Wk " + weekCursor.ToString("dd MMM"), date = weekCursor.ToString("yyyy-MM-dd"), opens = wk?.opens ?? 0, clicks = wk?.clicks ?? 0, bounces = wk?.bounces ?? 0 });
+                        weekCursor = weekCursor.AddDays(7);
+                    }
+                }
+                else 
+                {
+                    var monthLookup = datedRecipients
+                        .GroupBy(r => new DateTime(r.Date.Year, r.Date.Month, 1))
+                        .ToDictionary(g => g.Key, g => new { opens = g.Sum(r => r.OpenCount), clicks = g.Sum(r => r.ClickCount), bounces = g.Count(r => r.HasBounced) });
+
+                    var monthCursor = new DateTime(minDate.Year, minDate.Month, 1);
+                    var lastMonth   = new DateTime(maxDate.Year, maxDate.Month, 1);
+
+                    timelineData = new List<object>();
+                    while (monthCursor <= lastMonth)
+                    {
+                        monthLookup.TryGetValue(monthCursor, out var mo);
+                        timelineData.Add(new { label = monthCursor.ToString("MMM yyyy"), date = monthCursor.ToString("yyyy-MM-dd"), opens = mo?.opens ?? 0, clicks = mo?.clicks ?? 0, bounces = mo?.bounces ?? 0 });
+                        monthCursor = monthCursor.AddMonths(1);
+                    }
+                }
+            }
+
+            var totalCampaigns    = recipients.Count;
+            var bouncedCount      = recipients.Count(r => r.HasBounced);
+            var deliveredCount    = totalCampaigns - bouncedCount;
+            var openedCount       = recipients.Count(r => r.HasOpened);
+            var clickedCount      = recipients.Count(r => r.HasClicked);
+            var lastOpen          = recipients.Where(r => r.LastOpenedAt.HasValue).Select(r => r.LastOpenedAt.Value).DefaultIfEmpty().Max();
+
+            var openRate     = deliveredCount > 0 ? (double)openedCount / deliveredCount : 0;
+            var clickRate    = openedCount > 0 ? (double)clickedCount / openedCount : 0;
+            var recencyBonus = lastOpen > DateTime.MinValue
+                ? (DateTime.UtcNow - lastOpen).TotalDays <= 30  ? 1.0
+                : (DateTime.UtcNow - lastOpen).TotalDays <= 90  ? 0.5
+                : (DateTime.UtcNow - lastOpen).TotalDays <= 180 ? 0.25
+                : 0.0
+                : 0.0;
+
+            // Open rate 40% + Click rate 45% + Recency 15%
+            var interestScore = (int)Math.Round(openRate * 40 + clickRate * 45 + recencyBonus * 15);
+            var summary = new
+            {
+                totalCampaigns,
+                totalOpens       = recipients.Sum(r => r.OpenCount),
+                totalClicks      = recipients.Sum(r => r.ClickCount),
+                totalBounces     = recipients.Count(r => r.HasBounced),
+                unsubscribeCount = recipients.Count(r => r.HasUnsubscribed),
+                lastOpenedAt     = lastOpen > DateTime.MinValue ? lastOpen.ToString("dd MMM yyyy") : "",
+            };
+
+            return Json(new { campaigns = campaignRows, interestScore, timeline = timelineData, summary });
+        }
 
         [HttpPost]
         public virtual async Task<IActionResult> EmailSelectedCheck(string selectedIds)

@@ -292,6 +292,16 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SortByInterest" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SortByInterest" />
+                                        </div>
+                                    </div>
+                                </div>
 
                             </div>
                         </div>
@@ -329,7 +339,8 @@
                                 new FilterParameter(nameof(Model.SearchNoofEmployee)),
                                 new FilterParameter(nameof(Model.SearchLeadStatusId)),
                                 new FilterParameter(nameof(Model.SearchEmailStatusId)),
-                                new FilterParameter(nameof(Model.IsSyncedToReply))
+                                new FilterParameter(nameof(Model.IsSyncedToReply)),
+                                new FilterParameter(nameof(Model.SortByInterest), typeof(bool))
                             },
                         };
                         gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.Id))
@@ -400,6 +411,13 @@
                             ClassName = NopColumnClassDefaults.CenterAll,
                             Render = new RenderBoolean(),
                         });
+                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.InterestScore))
+                        {
+                            Title = T("Plugin.SatyanamCRM.Lead.Fields.InterestScore").Text,
+                            ClassName = NopColumnClassDefaults.CenterAll,
+                            Width = "90",
+                            Render = new RenderCustom("renderInterestScore")
+                        });
                         gridModel.ColumnCollection.Add(new ColumnProperty(nameof(LeadModel.CreatedOnUtc))
                         {
                             Title = T("Plugin.SatyanamCRM.Campaings.Lead.CreatedOnUtc").Text,
@@ -412,6 +430,35 @@
             </div>
         </div>
     </div>
+    <style>
+        .interest-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .interest-none  { background: #aaa; }
+        .interest-low   { background: #e74c3c; }
+        .interest-mid   { background: #e67e22; }
+        .interest-good  { background: #2980b9; }
+        .interest-high  { background: #27ae60; }
+    </style>
+    <script>
+        function renderInterestScore(data) {
+            if (data === null || data === undefined || data === '') {
+                return '<span class="interest-badge interest-none">—</span>';
+            }
+            var score = parseInt(data, 10);
+            var cls = score >= 81 ? 'interest-high'
+                    : score >= 61 ? 'interest-good'
+                    : score >= 31 ? 'interest-mid'
+                    : score > 0  ? 'interest-low'
+                    : 'interest-none';
+            return '<span class="interest-badge ' + cls + '">' + score + '%</span>';
+        }
+    </script>
     <script>
         $('#delete-selected-action-confirmation-submit-button').bind('click', function () {
             var postData = {

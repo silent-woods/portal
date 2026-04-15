@@ -342,7 +342,6 @@ public partial class ExecutiveDashboardController : BaseAdminController
                 await Task.WhenAll(sparkRevTasks.Concat(sparkExpTasks).Concat(prevRevTasks).Concat(prevExpTasks));
                 await Task.WhenAll(sparkSalTasks.Concat(prevSalTasks));
 
-                // KPI aggregates = sum of all months in range
                 revenue = sparkRevTasks.Sum(t => t.Result.TotalIncome);
                 expense = sparkExpTasks.Sum(t => t.Result.TotalExpense);
                 directCost = sparkSalTasks.Sum(t => t.Result);
@@ -1270,7 +1269,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
         var eIds = employeeId.HasValue ? new List<int> { employeeId.Value } : null;
 
         var tsTask = _timeSheetsService.GetAllTimeSheetAsync(employeeIds: eIds, projectIds: pIds, from: dateFrom, to: dateTo, pageSize: int.MaxValue);
-        var employeesTask = _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: true);
+        var employeesTask = _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: false);
         var projectsTask = _projectsService.GetAllProjectsAsync(pageSize: int.MaxValue);
         await Task.WhenAll(tsTask, employeesTask, projectsTask);
 
@@ -1306,7 +1305,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
                     utilPct = tot > 0 ? Math.Round(b / tot * 100, 1) : 0m
                 };
             })
-            .OrderByDescending(x => x.billableHrs).Take(10).ToList<object>();
+            .OrderByDescending(x => x.billableHrs).ToList<object>();
         var noProjectText = await _localizationService.GetResourceAsync("Dashboard.NoProject");
         var projectFallback = await _localizationService.GetResourceAsync("Dashboard.ProjectFallback");
         var projectUtil = tsList
@@ -1365,7 +1364,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
         );
 
         var allTasksTask = _projectTaskService.GetAllProjectTasksAsync(projectIds: pIds, pageSize: int.MaxValue);
-        var employeesTask = _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: true);
+        var employeesTask = _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: false);
         var projectsTask = _projectsService.GetAllProjectsAsync(pageSize: int.MaxValue);
 
         await Task.WhenAll(allTasksTask, employeesTask, projectsTask, tsTask);
@@ -1510,7 +1509,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
             pageSize: int.MaxValue
         );
         var allTasksTask = _projectTaskService.GetAllProjectTasksAsync(projectIds: pIds, pageSize: int.MaxValue);
-        var employeesTask = _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: true);
+        var employeesTask = _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: false);
         var projectsTask = _projectsService.GetAllProjectsAsync(pageSize: int.MaxValue);
 
         await Task.WhenAll(allTasksTask, employeesTask, projectsTask, tsTask);
@@ -1688,6 +1687,8 @@ public partial class ExecutiveDashboardController : BaseAdminController
         var fyStartMonth = await GetFyStartMonthAsync();
         var (dfrom, dto, prevFrom, prevTo, periodLabel, prevPeriodLabel) =
             ResolveOperationalPeriod(period, dateFrom, dateTo, monthFrom, yearFrom, monthTo, yearTo, fyStartMonth);
+        dto     = dto.Date.AddDays(1).AddTicks(-1);
+        prevTo  = prevTo.Date.AddDays(1).AddTicks(-1);
         var dealsTask    = _dealsService.GetAllDealsAsync("", 0, 0, null, pageSize: int.MaxValue);
         var leadsTask    = _leadService.GetAllLeadAsync("", "", null, "", "", 0, 0, null, 0, pageSize: int.MaxValue);
         var followupsTask = _linkedInFollowupsService.GetAllLinkedInFollowupsAsync("", "", "", "", "", pageSize: int.MaxValue);
@@ -1758,7 +1759,8 @@ public partial class ExecutiveDashboardController : BaseAdminController
         var monthlyLeadTrend = trendIntervals.Select(i =>
             allLeads.Count(l => l.CreatedOnUtc.Year == i.year && l.CreatedOnUtc.Month == i.month)).ToList();
         var monthlyDealTrend = trendIntervals.Select(i =>
-            allDeals.Count(d => d.CreatedOnUtc.Year == i.year && d.CreatedOnUtc.Month == i.month)).ToList();
+            allDeals.Count(d => d.StageId == 7 && d.ClosingDate.HasValue &&
+                                d.ClosingDate.Value.Year == i.year && d.ClosingDate.Value.Month == i.month)).ToList();
         var monthlyTrendLabels = trendIntervals.Select(i => i.label).ToList();
         var dealsClosedWon      = allDeals.Count(d => d.StageId == 7);
         var dealsClosedLost     = allDeals.Count(d => d.StageId == 8);
@@ -2101,8 +2103,6 @@ public partial class ExecutiveDashboardController : BaseAdminController
         if (string.IsNullOrEmpty(campaignKey))
             return Json(new { success = false });
 
-        // No live sync here — reads only from DB for instant response.
-        // Use SyncCampaignTimeline endpoint for a manual refresh.
         DateTime? from = DateTime.TryParse(fromDate, out var fd) ? fd.Date : (DateTime?)null;
         var rows = await _zohoCampaignService.GetDailyStatsByKeyAsync(campaignKey, days, from);
 
@@ -2191,6 +2191,65 @@ public partial class ExecutiveDashboardController : BaseAdminController
             .ToList();
 
         return Json(new { success = true, campaigns });
+    }
+
+    [HttpGet]
+    public virtual async Task<IActionResult> GetLeadIntelligenceData(int page = 1, int pageSize = 20, string sortBy = "interestScore", string sortDir = "desc")
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM))
+            return AccessDeniedView();
+
+        var leadsTask      = _leadService.GetAllLeadAsync("", "", null, "", "", 0, 0, null, 0, pageSize: int.MaxValue);
+        var emailStatsTask = _zohoCampaignService.GetLeadEmailStatsAsync();
+        await Task.WhenAll(leadsTask, emailStatsTask);
+
+        var allLeads   = leadsTask.Result.ToList();
+        var emailStats = emailStatsTask.Result;
+
+        var joined = allLeads.Select(l =>
+        {
+            emailStats.TryGetValue(l.Id, out var es);
+            return new
+            {
+                lead              = l,
+                totalOpens        = es.TotalOpens,
+                totalClicks       = es.TotalClicks,
+                totalBounces      = es.TotalBounces,
+                totalUnsubscribes = es.TotalUnsubscribes,
+                interestScore     = l.InterestScore ?? 0
+            };
+        });
+
+        var asc = string.Equals(sortDir, "asc", StringComparison.OrdinalIgnoreCase);
+        joined = sortBy switch
+        {
+            "opens"        => asc ? joined.OrderBy(x => x.totalOpens).ThenBy(x => x.interestScore)
+                                  : joined.OrderByDescending(x => x.totalOpens).ThenByDescending(x => x.interestScore),
+            "clicks"       => asc ? joined.OrderBy(x => x.totalClicks).ThenBy(x => x.interestScore)
+                                  : joined.OrderByDescending(x => x.totalClicks).ThenByDescending(x => x.interestScore),
+            "bounces"      => asc ? joined.OrderBy(x => x.totalBounces).ThenBy(x => x.interestScore)
+                                  : joined.OrderByDescending(x => x.totalBounces).ThenByDescending(x => x.interestScore),
+            "unsubscribes" => asc ? joined.OrderBy(x => x.totalUnsubscribes).ThenBy(x => x.interestScore)
+                                  : joined.OrderByDescending(x => x.totalUnsubscribes).ThenByDescending(x => x.interestScore),
+            _              => asc ? joined.OrderBy(x => x.interestScore).ThenBy(x => x.totalOpens)
+                                  : joined.OrderByDescending(x => x.interestScore).ThenByDescending(x => x.totalOpens)
+        };
+
+        var totalCount = joined.Count();
+        var skip       = (Math.Max(1, page) - 1) * pageSize;
+        var pageData   = joined.Skip(skip).Take(pageSize).Select(x => new
+        {
+            id                = x.lead.Id,
+            name              = (x.lead.FirstName + " " + x.lead.LastName).Trim(),
+            company           = x.lead.CompanyName ?? "",
+            interestScore     = x.interestScore,
+            totalOpens        = x.totalOpens,
+            totalClicks       = x.totalClicks,
+            totalBounces      = x.totalBounces,
+            totalUnsubscribes = x.totalUnsubscribes
+        }).ToList();
+
+        return Json(new { leads = pageData, totalCount, page, pageSize });
     }
 
     #endregion
