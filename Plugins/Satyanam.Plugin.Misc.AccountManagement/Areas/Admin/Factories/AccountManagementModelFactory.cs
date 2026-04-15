@@ -695,7 +695,7 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
                         }
                     }
                     model.SendEmail.Subject = "Satyanam: Invoice - " + invoice.InvoiceNumber;
-                    model.SendEmail.Body = $@"<p>Hello <strong>[{contactName}]</strong>,</p><p>I hope you are doing well.</p>
+                    model.SendEmail.Body = $@"<p>Hello <strong>{contactName}</strong>,</p><p>I hope you are doing well.</p>
                         <p>Please find the attached invoice for <strong>{invoice.Title}</strong>.</p><p>Feel free to reach out if you have any concerns.</p><p>Thanks,<br />Vipul</p>";
                 }
             }

@@ -30,7 +30,11 @@ public static partial class AccountManagementDefaults
 
     #region Static System Names for a ZIP
 
-    public static string InvoiceAndTimesheet = "InvoiceAndTimesheet.zip";
+    public static string InvoiceAndTimesheet = "Invoice.zip";
+
+    public static string Invoice = "Invoice";
+
+    public static string TimeSummaryReport = "Time Report";
 
     #endregion
 }

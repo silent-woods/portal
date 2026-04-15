@@ -14,6 +14,7 @@ using App.Services.Logging;
 using App.Services.Messages;
 using App.Web.Framework.Controllers;
 using DocumentFormat.OpenXml.EMMA;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -34,6 +35,7 @@ public partial class LeadAPIController : BaseController
     protected readonly ILeadAPIService _leadAPIService;
     protected readonly ILeadService _leadService;
     protected readonly ILeadStatusService _leadStatusService;
+    protected readonly ILinkedInMessagesService _linkedInMessagesService;
     protected readonly ILocalizationService _localizationService;
     protected readonly ILogger _logger;
     protected readonly IStateProvinceService _stateProvinceService;
@@ -53,6 +55,7 @@ public partial class LeadAPIController : BaseController
         ILeadAPIService leadAPIService,
         ILeadService leadService,
         ILeadStatusService leadStatusService,
+        ILinkedInMessagesService linkedInMessagesService,
         ILocalizationService localizationService,
         ILogger logger,
         IStateProvinceService stateProvinceService,
@@ -68,6 +71,7 @@ public partial class LeadAPIController : BaseController
         _leadAPIService = leadAPIService;
         _leadService = leadService;
         _leadStatusService = leadStatusService;
+        _linkedInMessagesService = linkedInMessagesService;
         _localizationService = localizationService;
         _logger = logger;
         _stateProvinceService = stateProvinceService;
@@ -226,26 +230,25 @@ public partial class LeadAPIController : BaseController
                 CreatedOnUtc = DateTime.UtcNow
             };
 
-            if (!string.IsNullOrEmpty(model.Address1) && !string.IsNullOrEmpty(model.Address2) && !string.IsNullOrEmpty(model.ZipCode) && !string.IsNullOrEmpty(model.City) && !string.IsNullOrEmpty(model.State) &&
-                !string.IsNullOrEmpty(model.Country))
+            if (!string.IsNullOrEmpty(model.Address1) || !string.IsNullOrEmpty(model.Address2) || !string.IsNullOrEmpty(model.ZipCode) || !string.IsNullOrEmpty(model.City) ||
+                !string.IsNullOrEmpty(model.State) || !string.IsNullOrEmpty(model.Country))
             {
                 var existingCountry = await _countryService.GetCountryByNameAsync(model.Country);
                 var existingStateProvince = await _stateProvinceService.GetStateProvinceByNameAsync(model.State);
 
-                if (existingCountry != null && existingStateProvince != null)
+                var address = new Address
                 {
-                    var address = new Address
-                    {
-                        Address1 = model.Address1,
-                        Address2 = model.Address2,
-                        City = model.City,
-                        StateProvinceId = existingStateProvince.Id,
-                        CountryId = existingCountry.Id,
-                        ZipPostalCode = model.ZipCode,
-                    };
-                    await _addressService.InsertAddressAsync(address);
-                    lead.AddressId = address.Id;
-                }
+                    Address1 = model.Address1,
+                    Address2 = model.Address2,
+                    City = model.City,
+                    ZipPostalCode = model.ZipCode,
+                };
+                if (existingCountry != null)
+                    address.CountryId = existingCountry.Id;
+                if (existingStateProvince != null)
+                    address.StateProvinceId = existingStateProvince.Id;
+                await _addressService.InsertAddressAsync(address);
+                lead.AddressId = address.Id;
             }
 
             if (existingLeadStatus != null)
@@ -403,6 +406,70 @@ public partial class LeadAPIController : BaseController
             leadAPIResponseModel.ResponseMessage = "An error occurred while processing your request.";
 
             await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, null);
+
+            return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
+        }
+    }
+
+    [HttpPost]
+    public virtual async Task<IActionResult> SyncLinkedInMessage([FromBody] LinkedinMessagingModel model)
+    {
+        var leadAPIResponseModel = new LeadAPIResponseModel();
+        var leadAPILogs = new LeadAPILog();
+
+        try
+        {
+            leadAPIResponseModel = await CheckIfAuthenticated(leadAPIResponseModel);
+
+            if (!leadAPIResponseModel.Success)
+            {
+                leadAPIResponseModel.ResponseMessage = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.LeadAPI.Common.UnauthorizedAccess");
+                await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, model);
+
+                return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
+            }
+
+            if (string.IsNullOrWhiteSpace(_leadAPISettings.APIKey) || string.IsNullOrWhiteSpace(_leadAPISettings.APISecretKey))
+            {
+                leadAPIResponseModel.Success = false;
+                leadAPIResponseModel.ResponseMessage = "Invalid API Key";
+
+                await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, model);
+                return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
+            }
+
+            var existingLead = await _leadService.GetExistingLeadByLinkedinUrlAsync(linkedinURL: model.ReceiverProfile);
+
+            var existingLeadStatus = await _leadStatusService.GetLeadStatusByNameAsync(leadStatusName: LeadAPIDefaults.NewLeadStatus);
+
+            var linkedInMessages = new LinkedInMessages
+            {
+                Message = model.Message,
+                ReceiverName = model.ReceiverName,
+                ReceiverProfile = model.ReceiverProfile,
+                ConversationId = model.ConversationId,
+                Direction = model.Direction,
+                CreatedOnUtc = DateTime.UtcNow
+            };
+            if (existingLead != null)
+                linkedInMessages.LeadId = existingLead.Id;
+            await _linkedInMessagesService.InsertLinkedinMessageAsync(linkedInMessages);
+
+            leadAPIResponseModel.Success = true;
+            leadAPIResponseModel.ResponseMessage = "Linkedin message synced successfully";
+
+            await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, model);
+
+            return Json(new { result = true, message = leadAPIResponseModel.ResponseMessage });
+        }
+        catch (Exception ex)
+        {
+            await _logger.ErrorAsync("Error in SyncLinkedInMessage API: " + ex.Message, ex);
+
+            leadAPIResponseModel.Success = false;
+            leadAPIResponseModel.ResponseMessage = "An error occurred while processing your request.";
+
+            await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, model);
 
             return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
         }

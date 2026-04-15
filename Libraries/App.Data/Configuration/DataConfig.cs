@@ -14,6 +14,11 @@ namespace App.Data.Configuration
         public string ConnectionString { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets the value of encrypted connection string
+        /// </summary>
+        public bool EncryptConnectionString { get; set; }
+
+        /// <summary>
         /// Gets or sets a data provider
         /// </summary>
         [JsonConverter(typeof(StringEnumConverter))]

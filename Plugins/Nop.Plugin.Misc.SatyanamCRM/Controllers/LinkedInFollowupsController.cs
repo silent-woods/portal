@@ -544,7 +544,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
             //  Assign computed values to model
             model.LastMessageDate = lastMessageDate;
-            model.NextFollowUpDate = nextFollowUpDate;
+            model.NextFollowUpDate = null;
             model.DaysUntilNext = daysUntilNext ?? 0;
             model.RemainingFollowUps = remainingFollowUps ?? 0;
             model.AutoStatus = autoStatus;

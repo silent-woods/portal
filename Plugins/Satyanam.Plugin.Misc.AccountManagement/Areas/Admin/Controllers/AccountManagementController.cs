@@ -173,13 +173,13 @@ public partial class AccountManagementController : BaseAdminController
         return zippedFilePath;
     }
 
-    protected virtual string AddTimestampToFileName(string fileName)
+    protected virtual string AddTimestampToFileName(string fileName, int invoiceNumber)
     {
-        var timestamp = DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss");
+        //var timestamp = DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss");
         var extension = Path.GetExtension(fileName);
         var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
 
-        return $"{nameWithoutExtension}_{timestamp}{extension}";
+        return $"{nameWithoutExtension} - {invoiceNumber}{extension}";
     }
 
     protected virtual async Task<InvoiceItem> CreateInvoiceItemAsync(int invoiceId, string title, string role, decimal totalHours, decimal billingRate)
@@ -1150,8 +1150,15 @@ public partial class AccountManagementController : BaseAdminController
             var invoiceBytes = invoiceDownload?.DownloadBinary;
             var timesheetBytes = timesheetDownload?.DownloadBinary;
 
-            var invoiceFileName = invoiceDownload != null ? $"{invoiceDownload.Filename}{invoiceDownload.Extension}" : null;
-            var timesheetFileName = timesheetDownload != null ? $"{timesheetDownload.Filename}{timesheetDownload.Extension}" : null;
+            string invoiceFileName = string.Empty;
+            string timesheetFileName = string.Empty;
+            if (invoiceBytes != null && timesheetBytes != null)
+            {
+                invoiceDownload.Filename = AccountManagementDefaults.Invoice + " - " + existingInvoice.InvoiceNumber;
+                timesheetDownload.Filename = AccountManagementDefaults.TimeSummaryReport + " - " + existingInvoice.InvoiceNumber;
+                invoiceFileName = invoiceDownload != null ? $"{invoiceDownload.Filename}{invoiceDownload.Extension}" : null;
+                timesheetFileName = timesheetDownload != null ? $"{timesheetDownload.Filename}{timesheetDownload.Extension}" : null;
+            }
 
             string attachmentFilePath = null;
             string attachmentFileName = null;
@@ -1159,24 +1166,25 @@ public partial class AccountManagementController : BaseAdminController
             if (invoiceBytes != null && timesheetBytes != null)
             {
                 var filesToZip = new Dictionary<string, byte[]>
-            {
-                { invoiceFileName, invoiceBytes },
-                { timesheetFileName, timesheetBytes }
-            };
-                string combinedFileName = AddTimestampToFileName(AccountManagementDefaults.InvoiceAndTimesheet);
+                {
+                    { invoiceFileName, invoiceBytes },
+                    { timesheetFileName, timesheetBytes }
+                };
+                string combinedFileName = AddTimestampToFileName(AccountManagementDefaults.InvoiceAndTimesheet, existingInvoice.InvoiceNumber);
                 attachmentFilePath = await SaveZipFileToFolderAsync(combinedFileName, filesToZip);
                 attachmentFileName = combinedFileName;
             }
             else if (invoiceBytes != null)
             {
-                invoiceFileName = AddTimestampToFileName(invoiceFileName);
-                attachmentFilePath = SaveFileToFolder(AddTimestampToFileName(invoiceFileName), invoiceBytes);
+                invoiceFileName = invoiceDownload != null ? $"{AccountManagementDefaults.Invoice}{invoiceDownload.Extension}" : null;
+                invoiceFileName = AddTimestampToFileName(invoiceFileName, existingInvoice.InvoiceNumber);
+                attachmentFilePath = SaveFileToFolder(invoiceFileName, invoiceBytes);
                 attachmentFileName = invoiceFileName;
-
             }
             else if (timesheetBytes != null)
             {
-                timesheetFileName = AddTimestampToFileName(timesheetFileName);
+                timesheetFileName = timesheetDownload != null ? $"{AccountManagementDefaults.TimeSummaryReport}{timesheetDownload.Extension}" : null;
+                timesheetFileName = AddTimestampToFileName(timesheetFileName, existingInvoice.InvoiceNumber);
                 attachmentFilePath = SaveFileToFolder(timesheetFileName, timesheetBytes);
                 attachmentFileName = timesheetFileName;
             }

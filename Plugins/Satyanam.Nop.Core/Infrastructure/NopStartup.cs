@@ -67,6 +67,7 @@ namespace Satyanam.Nop.Core.Infrastructure
             services.AddScoped<IInquiryService, InquiryService>();
             services.AddScoped<IProjectTaskCategoryMappingService, ProjectTaskCategoryMappingService>();
             services.AddScoped<IFollowUpTaskService, FollowUpTaskService>();
+            services.AddScoped<ILinkedInMessagesService, LinkedInMessagesService>();
 
 
         }
