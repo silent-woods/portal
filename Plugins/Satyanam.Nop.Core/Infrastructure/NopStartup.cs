@@ -21,7 +21,7 @@ namespace Satyanam.Nop.Core.Infrastructure
         public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
             //register custom services
-            services.AddScoped<ITitleService,TitleService>();
+            services.AddScoped<ITitleService, TitleService>();
             services.AddScoped<IIndustryService, IndustryService>();
             services.AddScoped<ILeadSourceService, LeadSourceService>();
             services.AddScoped<ILeadStatusService, LeadStatusService>();
@@ -68,8 +68,6 @@ namespace Satyanam.Nop.Core.Infrastructure
             services.AddScoped<IProjectTaskCategoryMappingService, ProjectTaskCategoryMappingService>();
             services.AddScoped<IFollowUpTaskService, FollowUpTaskService>();
             services.AddScoped<ILinkedInMessagesService, LinkedInMessagesService>();
-
-
         }
 
         /// <summary>

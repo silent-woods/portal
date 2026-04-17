@@ -32,9 +32,9 @@ namespace Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Factories;
 
 public partial class AccountManagementModelFactory : IAccountManagementModelFactory
 {
-	#region Fields
+    #region Fields
 
-	protected readonly IAccountManagementService _accountManagementService;
+    protected readonly IAccountManagementService _accountManagementService;
     protected readonly ICompanyService _companyService;
     protected readonly IContactsService _contactsService;
     protected readonly ICurrencyService _currencyService;
@@ -44,11 +44,11 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
     protected readonly ILocalizationService _localizationService;
     protected readonly IProjectsService _projectsService;
 
-	#endregion
+    #endregion
 
-	#region Ctor
+    #region Ctor
 
-	public AccountManagementModelFactory(IAccountManagementService accountManagementService,
+    public AccountManagementModelFactory(IAccountManagementService accountManagementService,
         ICompanyService companyService,
         IContactsService contactsService,
         ICurrencyService currencyService,
@@ -57,8 +57,8 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
         IEmployeeSalaryService employeeSalaryService,
         ILocalizationService localizationService,
         IProjectsService projectsService)
-	{
-		_accountManagementService = accountManagementService;
+    {
+        _accountManagementService = accountManagementService;
         _companyService = companyService;
         _contactsService = contactsService;
         _currencyService = currencyService;
@@ -67,7 +67,7 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
         _employeeSalaryService = employeeSalaryService;
         _localizationService = localizationService;
         _projectsService = projectsService;
-	}
+    }
 
     #endregion
 

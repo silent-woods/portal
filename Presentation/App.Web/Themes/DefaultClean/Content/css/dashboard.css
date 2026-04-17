@@ -211,51 +211,36 @@ input[type="datetime-local"], input[type="text"] {
         text-overflow: ellipsis;
     }
 
-    /* col 10: On Track (was col 9) */
+    /* col 10: Next Review */
     .followup-table th:nth-child(10),
     .followup-table td:nth-child(10) {
-        width: 80px;
-        text-align: center;
-        white-space: nowrap;
-        font-weight: 600;
-    }
-
-    /* col 11: Next Review (was col 10) */
-    .followup-table th:nth-child(11),
-    .followup-table td:nth-child(11) {
         width: 180px;
         white-space: nowrap;
         text-align: center;
     }
 
-    /* col 12: Comment (was col 11) */
-    .followup-table th:nth-child(12),
-    .followup-table td:nth-child(12) {
-        width: 200px;
-        white-space: normal;
+    /* col 11: Pending Since */
+    .followup-table th:nth-child(11),
+    .followup-table td:nth-child(11) {
+        width: 160px;
+        white-space: nowrap;
+        text-align: center;
     }
 
-    /* col 13: Last Follow-Up (was col 12) */
+    /* col 12: Last Follow-Up */
+    .followup-table th:nth-child(12),
+    .followup-table td:nth-child(12) {
+        width: 160px;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    /* col 13: Last Tracked On */
     .followup-table th:nth-child(13),
     .followup-table td:nth-child(13) {
         width: 160px;
         white-space: nowrap;
         text-align: center;
-    }
-
-    /* col 14: Last Tracked On (was col 13) */
-    .followup-table th:nth-child(14),
-    .followup-table td:nth-child(14) {
-        width: 160px;
-        white-space: nowrap;
-        text-align: center;
-    }
-
-    /* col 15: Type (was col 14) */
-    .followup-table th:nth-child(15),
-    .followup-table td:nth-child(15) {
-        width: 60px;
-        white-space: nowrap;
     }
 
     /* last: Action column */
@@ -280,7 +265,7 @@ input[type="datetime-local"], input[type="text"] {
 }
 
 .followup-table {
-    min-width: 1600px;
+    min-width: 1420px;
     border-collapse: collapse;
 }
 

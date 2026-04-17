@@ -4,10 +4,10 @@ namespace Satyanam.Plugin.Misc.LeadAPI.Models;
 
 public partial class LinkedinMessagingModel
 {
-	#region Properties
+    #region Properties
 
-	[JsonProperty("message")]
-	public string Message { get; set; }
+    [JsonProperty("message")]
+    public string Message { get; set; }
 
     [JsonProperty("receiverName")]
     public string ReceiverName { get; set; }
@@ -21,5 +21,5 @@ public partial class LinkedinMessagingModel
     [JsonProperty("direction")]
     public string Direction { get; set; }
 
-	#endregion
+    #endregion
 }

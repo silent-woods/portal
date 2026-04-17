@@ -28,7 +28,7 @@ public partial class LinkedInMessagesService : ILinkedInMessagesService
     {
         ArgumentNullException.ThrowIfNull(nameof(linkedInMessages));
 
-        await _linkedinMessagesRepository.InsertAsync(linkedInMessages); 
+        await _linkedinMessagesRepository.InsertAsync(linkedInMessages);
     }
 
     #endregion

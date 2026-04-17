@@ -100,11 +100,6 @@
         <div id="to-container">
             <input type="date" asp-for="To" id="To" class="filter-input" />
         </div>
-        <select id="typeFilter" class="filter-input filter-type">
-            <option value="">Select Type</option>
-            <option value="manual">Manual</option>
-            <option value="auto">Auto</option>
-        </select>
         <select id="percentageFilter" class="filter-input filter-percentage">
             @foreach (var p in Model.AvailableAlertPercentages)
             {
@@ -113,10 +108,6 @@
                 </option>
             }
         </select>
-        <label class="filter-checkbox">
-            <input type="checkbox" id="showOnlyNotTrack" />
-            Not On Track
-        </label>
         <button id="btnSearch" class="search-btn">
             Search
         </button>

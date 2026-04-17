@@ -1,4 +1,4 @@
-﻿@model App.Web.Models.Dashboard.PendingDashboardModel
+@model App.Web.Models.Dashboard.PendingDashboardModel
 @{
     bool hasAnyData =
         (Model.Overdue?.Any() == true) ||
@@ -86,13 +86,6 @@
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text">
-                            @T("User.Dashboard.FollowUp.Fields.OnTrack")
-                            <span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
-                        </th>
                         <th class="sortable" data-type="date">
                             @T("User.Dashboard.FollowUp.Fields.NextReview")
                             <span class="sort-icons">
@@ -100,8 +93,8 @@
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text comment">
-                            @T("User.Dashboard.FollowUp.Fields.Comment")
+                        <th class="sortable" data-type="number">
+                            @T("User.Dashboard.FollowUp.Fields.PendingSince")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
@@ -116,13 +109,6 @@
                         </th>
                         <th class="sortable" data-type="date">
                             @T("User.Dashboard.FollowUp.Fields.LastTrackedOn")
-                            <span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="text">
-                            @T("User.Dashboard.FollowUp.Fields.Type")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
@@ -160,18 +146,21 @@
                             <td>@t.EstimationTime</td>
                             <td>@t.DevelopementTime</td>
                             <td>@t.AlertType</td>
-                            <td>@Html.Raw(t.TrackReason)</td>
                             <td class="next-followup">
                                 @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
-                            <td class="comment">@t.LastComment</td>
+                            <td>
+                                @if (t.StatusStartDate.HasValue)
+                                {
+                                    @(t.StatusStartDate.Value.ToString("d-MMM-yyyy") + " (" + t.PendingSinceDays + ")")
+                                }
+                            </td>
                             <td>
                                 @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
                             <td>
                                 @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
-                            <td>@(t.IsManual ? "Manual" : "Auto")</td>
                             <td class="action-cell">
                                 @if (t.CanTakeFollowUp)
                                 {
@@ -182,7 +171,7 @@
                             </td>
                         </tr>
                         <tr class="subgrid-row" style="display:none;">
-                            <td colspan="15"><div class="subgrid-container"></div></td>
+                            <td colspan="14"><div class="subgrid-container"></div></td>
                         </tr>
                     }
                 </tbody>
@@ -255,13 +244,6 @@
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text">
-                            @T("User.Dashboard.FollowUp.Fields.OnTrack")
-                            <span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
-                        </th>
                         <th class="sortable" data-type="date">
                             @T("User.Dashboard.FollowUp.Fields.NextReview")
                             <span class="sort-icons">
@@ -269,8 +251,8 @@
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text comment">
-                            @T("User.Dashboard.FollowUp.Fields.Comment")
+                        <th class="sortable" data-type="number">
+                            @T("User.Dashboard.FollowUp.Fields.PendingSince")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
@@ -285,13 +267,6 @@
                         </th>
                         <th class="sortable" data-type="date">
                             @T("User.Dashboard.FollowUp.Fields.LastTrackedOn")
-                            <span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="text">
-                            @T("User.Dashboard.FollowUp.Fields.Type")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
@@ -329,18 +304,21 @@
                             <td>@t.EstimationTime</td>
                             <td>@t.DevelopementTime</td>
                             <td>@t.AlertType</td>
-                            <td>@Html.Raw(t.TrackReason)</td>
                             <td class="next-followup">
                                 @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
-                            <td class="comment">@t.LastComment</td>
+                            <td>
+                                @if (t.StatusStartDate.HasValue)
+                                {
+                                    @(t.StatusStartDate.Value.ToString("d-MMM-yyyy") + " (" + t.PendingSinceDays + ")")
+                                }
+                            </td>
                             <td>
                                 @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
                             <td>
                                 @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
-                            <td>@(t.IsManual ? "Manual" : "Auto")</td>
                             <td class="action-cell">
                                 @if (t.CanTakeFollowUp)
                                 {
@@ -351,7 +329,7 @@
                             </td>
                         </tr>
                         <tr class="subgrid-row" style="display:none;">
-                            <td colspan="15"><div class="subgrid-container"></div></td>
+                            <td colspan="14"><div class="subgrid-container"></div></td>
                         </tr>
                     }
                 </tbody>
@@ -424,13 +402,6 @@
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text">
-                            @T("User.Dashboard.FollowUp.Fields.OnTrack")
-                            <span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
-                        </th>
                         <th class="sortable" data-type="date">
                             @T("User.Dashboard.FollowUp.Fields.NextReview")
                             <span class="sort-icons">
@@ -438,8 +409,8 @@
                                 <span class="arrow down">▼</span>
                             </span>
                         </th>
-                        <th class="sortable" data-type="text comment">
-                            @T("User.Dashboard.FollowUp.Fields.Comment")
+                        <th class="sortable" data-type="number">
+                            @T("User.Dashboard.FollowUp.Fields.PendingSince")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
@@ -454,13 +425,6 @@
                         </th>
                         <th class="sortable" data-type="date">
                             @T("User.Dashboard.FollowUp.Fields.LastTrackedOn")
-                            <span class="sort-icons">
-                                <span class="arrow up">▲</span>
-                                <span class="arrow down">▼</span>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="text">
-                            @T("User.Dashboard.FollowUp.Fields.Type")
                             <span class="sort-icons">
                                 <span class="arrow up">▲</span>
                                 <span class="arrow down">▼</span>
@@ -498,18 +462,21 @@
                             <td>@t.EstimationTime</td>
                             <td>@t.DevelopementTime</td>
                             <td>@t.AlertType</td>
-                            <td>@Html.Raw(t.TrackReason)</td>
                             <td class="next-followup">
                                 @t.NextFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
-                            <td class="comment">@t.LastComment</td>
+                            <td>
+                                @if (t.StatusStartDate.HasValue)
+                                {
+                                    @(t.StatusStartDate.Value.ToString("d-MMM-yyyy") + " (" + t.PendingSinceDays + ")")
+                                }
+                            </td>
                             <td>
                                 @t.LastFollowupDateTime?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
                             <td>
                                 @t.LastTrackedOn?.ToString("dd-MMM-yyyy hh:mm tt")
                             </td>
-                            <td>@(t.IsManual ? "Manual" : "Auto")</td>
                             <td class="action-cell">
                                 @if (t.CanTakeFollowUp)
                                 {
@@ -520,7 +487,7 @@
                             </td>
                         </tr>
                         <tr class="subgrid-row" style="display:none;">
-                            <td colspan="16"><div class="subgrid-container"></div></td>
+                            <td colspan="14"><div class="subgrid-container"></div></td>
                         </tr>
                     }
                 </tbody>
@@ -558,8 +525,8 @@
         taskName: $("#taskSearch").val(),
         projectIds: $('#projectFilter').val() || [],
         employeeIds: $('#employeeId').val() || [],
-        showOnlyNotTrack: $("#showOnlyNotTrack").is(":checked"),
-        sourceType: $("#typeFilter").val(),
+        showOnlyNotTrack: false,
+        sourceType: "",
         percentageFilter: $("#percentageFilter").val(),
         from: $("#From").val(),
         to: $("#To").val(),
@@ -570,10 +537,9 @@
          $("table").on("click", ".btn-followup", function () {
         var row = $(this).closest("tr");
         var nextCell = row.find(".next-followup");
-        var commentCell = row.find(".comment");
         var actionCell = row.find(".action-cell");
         row.data("originalNext", nextCell.text().trim());
-        row.data("originalComment", commentCell.text().trim());
+        row.data("originalNextCss", { overflow: nextCell.css("overflow"), whiteSpace: nextCell.css("white-space"), width: nextCell.css("width") });
         nextCell.html("<div>Loading...</div>");
         $.ajax({
             url: "/Dashboard/GetFollowUpDurations",
@@ -590,22 +556,19 @@
                 });
                 dropdownHtml += `</select>`;
 
+                nextCell.css({ overflow: "visible", whiteSpace: "normal", width: "360px" });
     nextCell.html(`
         <div class="followup-editor">
             <div class="duration-wrapper">
                 ${dropdownHtml}
             </div>
+            <input type="text" class="comment-input" placeholder="Enter follow-up comment" />
             <label class="complete-wrapper">
                 <input type="checkbox" class="mark-complete" />
                 <span>Mark Completed</span>
             </label>
         </div>
     `);
-
-                commentCell.html(
-                    `<input type="text" class="comment-input"
-                     placeholder="Enter follow-up comment" />`
-                );
 
                 actionCell.html(`
                     <button class="save-btn btn-save">Save</button>
@@ -620,12 +583,11 @@
      $("table").on("click", ".btn-cancel", function () {
         var row = $(this).closest("tr");
         var nextCell = row.find(".next-followup");
-        var commentCell = row.find(".comment");
         var actionCell = row.find(".action-cell");
         var originalNext = row.data("originalNext");
-        var originalComment = row.data("originalComment");
+        var originalCss = row.data("originalNextCss") || {};
+        nextCell.css({ overflow: originalCss.overflow || "", whiteSpace: originalCss.whiteSpace || "", width: originalCss.width || "" });
         nextCell.text(originalNext && originalNext !== "" ? originalNext : "-");
-        commentCell.text(originalComment || "");
         actionCell.html(
             `<button class="follow-btn btn-followup">Follow-Up</button>`
         );
@@ -653,11 +615,10 @@
         var row = btn.closest("tr");
         var taskId = row.data("id");
         var nextCell = row.find(".next-followup");
-        var commentCell = row.find(".comment");
         var actionCell = row.find(".action-cell");
         var selectedMinutes = parseInt(nextCell.find(".next-review-dropdown").val());
         var isCompleted = nextCell.find(".mark-complete").is(":checked");
-        var comment = commentCell.find("input").val();
+        var comment = nextCell.find(".comment-input").val();
 
            if (!isCompleted) {
         if (!selectedMinutes) {

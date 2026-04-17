@@ -328,6 +328,15 @@ namespace App.Web.Factories.Extensions
                         continue;
                 }
 
+                var statusStartDate = await _taskChangeLogService.GetCurrentStatusStartDateAsync(task.Id, task.StatusId);
+                var statusStartIst = statusStartDate.HasValue
+                    ? TimeZoneInfo.ConvertTimeFromUtc(statusStartDate.Value, istTimeZone)
+                    : (DateTime?)null;
+                var todayIst = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, istTimeZone).Date;
+                int pendingSinceDays = statusStartIst.HasValue
+                    ? (todayIst - statusStartIst.Value.Date).Days
+                    : 0;
+
                 var item = new FollowUpTaskModel
                 {
                     Id = f.Id,
@@ -352,7 +361,9 @@ namespace App.Web.Factories.Extensions
                     StatusName = status?.StatusName,
                     StatusColor = status?.ColorCode,
                     UsedPercentage = usedPercentage,
-                    CanTakeFollowUp = managedProjectIds != null && managedProjectIds.Contains(task.ProjectId)
+                    CanTakeFollowUp = managedProjectIds != null && managedProjectIds.Contains(task.ProjectId),
+                    StatusStartDate = statusStartIst,
+                    PendingSinceDays = pendingSinceDays
                 };
                 if (statusType != 1)
                 {

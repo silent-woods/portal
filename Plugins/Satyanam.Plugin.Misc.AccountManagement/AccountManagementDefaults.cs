@@ -23,7 +23,7 @@ public static partial class AccountManagementDefaults
     public static string CompanyName = "Satyanam Info Solutions Pvt Ltd";
 
     public static string CompanyAddress = "601, Satyamev Eminence, Science City, 380060, Ahmedabad, India";
-    
+
     public static string CompanyWebsite = "https://www.satyanamsoft.com/";
 
     #endregion

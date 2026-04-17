@@ -32,6 +32,8 @@ namespace App.Web.Models.Dashboard
         public DateTime? LastFollowupDateTime { get; set; }
         public DateTime? NextFollowupDateTime { get; set; }
         public DateTime UpdatedOn { get; set; }
+        public DateTime? StatusStartDate { get; set; }
+        public int PendingSinceDays { get; set; }
     }
 
     public class SaveFollowUpRequestModel
