@@ -487,7 +487,7 @@ namespace App.Web.Areas.Admin.Controllers
         [HttpPost]
         public virtual async Task<IActionResult> ApproveSelected(ICollection<int> selectedIds)
         {
-            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageBlog))
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageLeaveManagement, PermissionAction.Edit))
                 return AccessDeniedView();
 
             if (selectedIds == null || selectedIds.Count == 0)

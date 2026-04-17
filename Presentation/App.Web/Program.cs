@@ -52,7 +52,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("ChromeExtensionPolicy", policy =>
     {
-        policy.AllowAnyMethod().AllowAnyHeader().SetIsOriginAllowed(origin => origin.StartsWith("chrome-extension://"));
+        policy
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .SetIsOriginAllowed(origin =>
+                origin.StartsWith("chrome-extension://") ||
+                origin.Contains("linkedin.com")
+            );
     });
 });
 
