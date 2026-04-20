@@ -3,15 +3,19 @@
     ViewBag.PageTitle = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Title").Text;
     NopHtml.SetActiveMenuItemSystemName("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard");
 
-    bool canViewFinancial   = ViewBag.CanViewFinancial   == true;
-    bool canViewOperational = ViewBag.CanViewOperational == true;
-    bool canViewCRM         = ViewBag.CanViewCRM         == true;
+    bool canViewFinancial             = ViewBag.CanViewFinancial           == true;
+    bool canViewOperational           = ViewBag.CanViewOperational         == true;
+    bool canViewCRM                   = ViewBag.CanViewCRM                 == true;
+    bool canViewEmployeeUtilization   = ViewBag.CanViewEmployeeUtilization == true;
 
     // Determine which tab should be active (first visible one)
-    string activeTab = canViewFinancial ? "financial" : canViewOperational ? "operational" : canViewCRM ? "crm" : "";
+    string activeTab = canViewFinancial ? "financial"
+                     : canViewOperational ? "operational"
+                     : canViewCRM ? "crm"
+                     : canViewEmployeeUtilization ? "utilization" : "";
 }
 
-@if (!canViewFinancial && !canViewOperational && !canViewCRM)
+@if (!canViewFinancial && !canViewOperational && !canViewCRM && !canViewEmployeeUtilization)
 {
     <div class="alert alert-warning">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.NoSectionAccess")</div>
 }
@@ -36,6 +40,12 @@ else
                 <i class="fas fa-handshake"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Tab.CRM")
             </button>
         }
+        @if (canViewEmployeeUtilization)
+        {
+            <button class="exec-tab @(activeTab == "utilization" ? "active" : "")" data-tab="utilization">
+                <i class="fas fa-user-clock"></i> @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Tab.EmployeeUtilization")
+            </button>
+        }
     </div>
 
     @if (canViewFinancial)
@@ -54,6 +64,12 @@ else
     {
         <div id="exec-tab-crm" @(activeTab != "crm" ? Html.Raw("style=\"display:none;\"") : Html.Raw(""))>
             @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_CRMInsightsSection.cshtml")
+        </div>
+    }
+    @if (canViewEmployeeUtilization)
+    {
+        <div id="exec-tab-utilization" @(activeTab != "utilization" ? Html.Raw("style=\"display:none;\"") : Html.Raw(""))>
+            @await Html.PartialAsync("~/Plugins/Misc.AccountManagement/Areas/Admin/Views/ExecutiveDashboard/_EmployeeUtilizationSection.cshtml")
         </div>
     }
 }
@@ -94,7 +110,8 @@ else
     var loaded = {
         financial:   activeTab === 'financial',
         operational: activeTab === 'operational',
-        crm:         activeTab === 'crm'
+        crm:         activeTab === 'crm',
+        utilization: activeTab === 'utilization'
     };
 
     $(document).ready(function () {
@@ -105,13 +122,14 @@ else
             $('.exec-tab').removeClass('active');
             $(this).addClass('active');
 
-            $('#exec-tab-financial, #exec-tab-operational, #exec-tab-crm').hide();
+            $('#exec-tab-financial, #exec-tab-operational, #exec-tab-crm, #exec-tab-utilization').hide();
             $('#exec-tab-' + tab).show();
 
             if (!loaded[tab]) {
                 loaded[tab] = true;
                 $(document).trigger('exec:load:' + tab);
             }
+            $(document).trigger('exec:show:' + tab);
         });
     });
 }());

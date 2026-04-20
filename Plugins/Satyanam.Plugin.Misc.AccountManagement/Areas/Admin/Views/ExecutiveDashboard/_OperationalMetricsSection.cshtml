@@ -1096,5 +1096,13 @@
             $(document).one('exec:load:operational', _opsInitLoad);
         }
     });
+
+    $(document).on('exec:show:operational', function () {
+        var barId = opsState.granularity === 'week' ? '#ops-preset-bar-week'
+                  : opsState.granularity === 'year' ? '#ops-preset-bar-year'
+                  : '#ops-preset-bar-month';
+        $(barId + ' .btn-preset').removeClass('active');
+        if (opsState.preset) $(barId + ' [data-ops-preset="' + opsState.preset + '"]').addClass('active');
+    });
 }());
 </script>

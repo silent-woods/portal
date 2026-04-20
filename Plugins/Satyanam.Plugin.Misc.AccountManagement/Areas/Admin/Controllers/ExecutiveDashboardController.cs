@@ -53,6 +53,8 @@ public partial class ExecutiveDashboardController : BaseAdminController
     private readonly ICompanyService _companyService;
     private readonly ICurrencyService _currencyService;
     private readonly IZohoCampaignService _zohoCampaignService;
+    private readonly IEmployeeSalaryService _employeeSalaryService;
+    private readonly ISalaryComponentConfigService _salaryComponentConfigService;
 
     #endregion
 
@@ -76,7 +78,9 @@ public partial class ExecutiveDashboardController : BaseAdminController
         IInquiryService inquiryService,
         ICompanyService companyService,
         ICurrencyService currencyService,
-        IZohoCampaignService zohoCampaignService)
+        IZohoCampaignService zohoCampaignService,
+        IEmployeeSalaryService employeeSalaryService,
+        ISalaryComponentConfigService salaryComponentConfigService)
     {
         _accountManagementService = accountManagementService;
         _localizationService = localizationService;
@@ -96,6 +100,8 @@ public partial class ExecutiveDashboardController : BaseAdminController
         _companyService = companyService;
         _currencyService = currencyService;
         _zohoCampaignService = zohoCampaignService;
+        _employeeSalaryService = employeeSalaryService;
+        _salaryComponentConfigService = salaryComponentConfigService;
     }
 
     #endregion
@@ -264,9 +270,10 @@ public partial class ExecutiveDashboardController : BaseAdminController
             return AccessDeniedView();
 
         ViewBag.FyStartMonth = await GetFyStartMonthAsync();
-        ViewBag.CanViewFinancial   = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial);
-        ViewBag.CanViewOperational = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational);
-        ViewBag.CanViewCRM         = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM);
+        ViewBag.CanViewFinancial             = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial);
+        ViewBag.CanViewOperational           = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational);
+        ViewBag.CanViewCRM                   = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardCRM);
+        ViewBag.CanViewEmployeeUtilization   = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardEmployeeUtilization);
         return View();
     }
 
@@ -903,6 +910,26 @@ public partial class ExecutiveDashboardController : BaseAdminController
     }
 
     private static decimal ToHours(int hours, int minutes) => hours + Math.Round(minutes / 60m, 2);
+
+    private static decimal ParseCtcToMonthlyGross(string ctc)
+    {
+        if (string.IsNullOrWhiteSpace(ctc))
+            return 0;
+
+        ctc = ctc.Trim().Replace("₹", "").Replace(",", "").Replace(" ", "").ToUpper();
+
+        if (ctc.EndsWith("LPA"))
+        {
+            ctc = ctc[..^3];
+            return decimal.TryParse(ctc, out var v) ? v * 100000m / 12m : 0;
+        }
+        if (ctc.EndsWith("L"))
+        {
+            ctc = ctc[..^1];
+            return decimal.TryParse(ctc, out var v) ? v * 100000m / 12m : 0;
+        }
+        return decimal.TryParse(ctc, out var result) ? result / 12m : 0;
+    }
 
     private static List<(DateTime from, DateTime to, string label)> GetMonthlyDateIntervals(DateTime dateFrom, DateTime dateTo)
     {
@@ -2250,6 +2277,148 @@ public partial class ExecutiveDashboardController : BaseAdminController
         }).ToList();
 
         return Json(new { leads = pageData, totalCount, page, pageSize });
+    }
+
+    [HttpPost]
+    public virtual async Task<IActionResult> GetEmployeeUtilizationData(
+        string period = "lastmonth",
+        int? employeeId = null,
+        int? projectId = null,
+        DateTime? customFrom = null, DateTime? customTo = null,
+        int? monthFrom = null, int? yearFrom = null,
+        int? monthTo = null, int? yearTo = null)
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardEmployeeUtilization))
+            return AccessDeniedView();
+
+        var fyStartMonth = await GetFyStartMonthAsync();
+        var (dateFrom, dateTo, _, _, _, _) = ResolveOperationalPeriod(period, customFrom, customTo, monthFrom, yearFrom, monthTo, yearTo, fyStartMonth);
+
+        var eIds  = employeeId.HasValue && employeeId.Value > 0 ? new List<int> { employeeId.Value } : null;
+        var pIds  = projectId.HasValue  && projectId.Value  > 0 ? new List<int> { projectId.Value  } : null;
+        var tsTask        = _timeSheetsService.GetAllTimeSheetAsync(employeeIds: eIds, projectIds: pIds, from: dateFrom, to: dateTo, pageSize: int.MaxValue);
+        var employeesTask = _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: false);
+        var billingsTask  = _accountManagementService.GetAllProjectBillingsAsync(pageSize: int.MaxValue);
+        await Task.WhenAll(tsTask, employeesTask, billingsTask);
+
+        var tsList = tsTask.Result.ToList();
+
+        var allEmployees = employeesTask.Result.ToList();
+        if (employeeId.HasValue && employeeId.Value > 0)
+            allEmployees = allEmployees.Where(e => e.Id == employeeId.Value).ToList();
+        if (projectId.HasValue && projectId.Value > 0)
+        {
+            var empIdsWithTs = tsList.Select(t => t.EmployeeId).Distinct().ToHashSet();
+            allEmployees = allEmployees.Where(e => empIdsWithTs.Contains(e.Id)).ToList();
+        }
+        var inrCurrency = await GetInrCurrencyAsync();
+        var activeBillings = billingsTask.Result
+            .Where(b => !b.Deleted && b.IsActive)
+            .GroupBy(b => b.ProjectId)
+            .Select(g => g.OrderByDescending(b => b.Id).First())
+            .ToList();
+
+        var projectBillingRate = new Dictionary<int, decimal>();
+        foreach (var billing in activeBillings)
+        {
+            var rateInInr = billing.BillingRate > 0
+                ? await ToInrAsync((decimal)billing.BillingRate, billing.PaymentCurrencyId, inrCurrency)
+                : 0m;
+            projectBillingRate[billing.ProjectId] = rateInInr;
+        }
+        var payrollTasks = allEmployees.Select(e => _salaryComponentConfigService.GetEmployeePayrollInfoAsync(e.Id)).ToList();
+        await Task.WhenAll(payrollTasks);
+        var empMonthlySalary = allEmployees
+            .Zip(payrollTasks, (e, t) => (e.Id, monthly: ParseCtcToMonthlyGross(t.Result?.CTC)))
+            .ToDictionary(x => x.Id, x => x.monthly);
+
+        var intervals = GetMonthlyDateIntervals(dateFrom, dateTo);
+        var monthHeaders = intervals.Select(iv => new
+        {
+            label   = iv.label,
+            monthId = iv.from.Month,
+            yearId  = iv.from.Year
+        }).ToList<object>();
+
+        var employeeRows = allEmployees.Select(emp =>
+        {
+            var empTs = tsList.Where(t => t.EmployeeId == emp.Id).ToList();
+
+            var monthData = intervals.Select(iv =>
+            {
+                var mTs          = empTs.Where(t => t.SpentDate.Date >= iv.from.Date && t.SpentDate.Date <= iv.to.Date).ToList();
+                var billableHrs  = Math.Round(mTs.Where(t => t.Billable).Sum(t => ToHours(t.SpentHours, t.SpentMinutes)), 1);
+                var totalHrs     = Math.Round(mTs.Sum(t => ToHours(t.SpentHours, t.SpentMinutes)), 1);
+                var utilPct      = totalHrs > 0 ? Math.Round(billableHrs / totalHrs * 100, 1) : 0m;
+                var revenue = Math.Round(
+                    mTs.Where(t => t.Billable)
+                       .GroupBy(t => t.ProjectId)
+                       .Sum(g => ToHours(g.Sum(t => t.SpentHours), g.Sum(t => t.SpentMinutes))
+                                 * projectBillingRate.GetValueOrDefault(g.Key, 0)),
+                    2);
+
+                empMonthlySalary.TryGetValue(emp.Id, out var grossSalary);
+                var hourlyCostRate  = grossSalary > 0 ? Math.Round(grossSalary / 160m, 4) : 0m;
+                var billableHrsForCost = Math.Min(totalHrs, 160m);
+                var cost            = Math.Round(billableHrsForCost * hourlyCostRate, 2);
+                var profit          = Math.Round(revenue - cost, 2);
+                decimal? monthRoi   = cost > 0 ? Math.Round(profit / cost * 100, 1) : (decimal?)null;
+
+                return new { billableHrs, totalHrs, utilPct, revenue, cost, profit, roiPct = monthRoi };
+            }).ToList<object>();
+
+            dynamic[] md = monthData.Cast<dynamic>().ToArray();
+            var totalBillHrs  = Math.Round(md.Sum(m => (decimal)m.billableHrs), 1);
+            var totalAllHrs   = Math.Round(md.Sum(m => (decimal)m.totalHrs), 1);
+            var totalRevenue  = Math.Round(md.Sum(m => (decimal)m.revenue), 2);
+            var totalCost     = Math.Round(md.Sum(m => (decimal)m.cost), 2);
+            var totalProfit   = Math.Round(totalRevenue - totalCost, 2);
+            var avgUtilPct    = totalAllHrs > 0 ? Math.Round(totalBillHrs / totalAllHrs * 100, 1) : 0m;
+            decimal? roiPct   = totalCost > 0 ? Math.Round(totalProfit / totalCost * 100, 1) : (decimal?)null;
+
+            return new
+            {
+                id     = emp.Id,
+                name   = $"{emp.FirstName} {emp.LastName}".Trim(),
+                months = monthData,
+                total  = new { billableHrs = totalBillHrs, totalHrs = totalAllHrs, avgUtilPct, revenue = totalRevenue, cost = totalCost, profit = totalProfit, roiPct }
+            };
+        }).ToList<object>();
+
+        var monthTotals = intervals.Select((iv, idx) =>
+        {
+            var allEmpMd  = employeeRows.Cast<dynamic>().Select(r => ((IList<object>)r.months)[idx]).Cast<dynamic>().ToList();
+            var mtRevenue = Math.Round(allEmpMd.Sum(m => (decimal)m.revenue), 2);
+            var mtCost    = Math.Round(allEmpMd.Sum(m => (decimal)m.cost), 2);
+            var mtProfit  = Math.Round(mtRevenue - mtCost, 2);
+            decimal? mtRoi = mtCost > 0 ? Math.Round(mtProfit / mtCost * 100, 1) : (decimal?)null;
+            return new
+            {
+                billableHrs = Math.Round(allEmpMd.Sum(m => (decimal)m.billableHrs), 1),
+                revenue     = mtRevenue,
+                cost        = mtCost,
+                profit      = mtProfit,
+                roiPct      = mtRoi
+            };
+        }).ToList<object>();
+
+        var allRows    = employeeRows.Cast<dynamic>().ToList();
+        var gtBillHrs  = Math.Round(allRows.Sum(r => (decimal)r.total.billableHrs), 1);
+        var gtRevenue  = Math.Round(allRows.Sum(r => (decimal)r.total.revenue), 2);
+        var gtCost     = Math.Round(allRows.Sum(r => (decimal)r.total.cost), 2);
+        var gtProfit   = Math.Round(gtRevenue - gtCost, 2);
+        var gtTotalHrs = Math.Round(allRows.Sum(r => (decimal)r.total.totalHrs), 1);
+        var gtAvgUtil  = gtTotalHrs > 0 ? Math.Round(gtBillHrs / gtTotalHrs * 100, 1) : 0m;
+        decimal? gtRoi = gtCost > 0 ? Math.Round(gtProfit / gtCost * 100, 1) : (decimal?)null;
+
+        return Json(new
+        {
+            kpi = new { totalBillableHrs = gtBillHrs, totalRevenue = gtRevenue, totalCost = gtCost, avgRoiPct = gtRoi },
+            months      = monthHeaders,
+            employees   = employeeRows,
+            monthTotals,
+            grandTotal  = new { billableHrs = gtBillHrs, totalHrs = gtTotalHrs, avgUtilPct = gtAvgUtil, revenue = gtRevenue, cost = gtCost, profit = gtProfit, roiPct = gtRoi }
+        });
     }
 
     #endregion

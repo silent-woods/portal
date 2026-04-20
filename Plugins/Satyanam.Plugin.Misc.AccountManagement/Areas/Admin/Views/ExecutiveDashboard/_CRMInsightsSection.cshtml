@@ -1708,5 +1708,11 @@
         loadCRMData();
         loadLeadIntelligence();
     });
+
+    $(document).on('exec:show:crm', function () {
+        var activeBar = crmState.granularity === 'month' ? '#crm-preset-bar-month' : '#crm-preset-bar-year';
+        $(activeBar + ' .btn-preset').removeClass('active');
+        if (crmState.preset) $(activeBar + ' [data-crm-preset="' + crmState.preset + '"]').addClass('active');
+    });
 }());
 </script>

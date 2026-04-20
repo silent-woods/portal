@@ -214,6 +214,7 @@ public partial class AccountManagementController : BaseAdminController
             EnablePlugin = settings.EnablePlugin,
             InvoiceNumber = settings.InvoiceNumber,
             InvoiceLogoId = settings.InvoiceLogoId,
+            QARate = settings.QARate,
             EmailAccountId = settings.EmailAccountId,
             FinancialYearStartMonth = settings.FinancialYearStartMonth > 0 ? settings.FinancialYearStartMonth : 4,
             SalaryProcessingDay = expenseSettings.SalaryProcessingDay,
@@ -283,6 +284,7 @@ public partial class AccountManagementController : BaseAdminController
             EnablePlugin = model.EnablePlugin,
             InvoiceNumber = model.InvoiceNumber,
             InvoiceLogoId = model.InvoiceLogoId,
+            QARate = model.QARate,
             EmailAccountId = model.EmailAccountId,
             FinancialYearStartMonth = model.FinancialYearStartMonth > 0 ? model.FinancialYearStartMonth : 4,
         };
@@ -1335,13 +1337,17 @@ public partial class AccountManagementController : BaseAdminController
 
         var document = new PdfInvoiceDocument(pdfInvoiceModel);
         var pdfBytes = document.GeneratePdf();
+        string generatedInvoice = AccountManagementDefaults.Invoice + " - " + existingInvoice.InvoiceNumber;
 
-        return File(pdfBytes, "application/pdf", $"{existingInvoice.Title}.pdf");
+        return File(pdfBytes, "application/pdf", $"{generatedInvoice}.pdf");
     }
 
-    public virtual async Task<IActionResult> CreateInvoiceFromTimeSummaryReport(DateTime from, DateTime to, int projectId, int periodId, int hoursId)
+    public virtual async Task<IActionResult> CreateInvoiceFromTimeSummaryReport(DateTime from, DateTime to, int projectId, int periodId, int hoursId, string searchEmployeeId)
     {
         int createdInvoiceId = 1;
+        var accountManagementSettings = await _settingService.LoadSettingAsync<AccountManagementSettings>();
+
+        List<int> employeedList = searchEmployeeId.Split(',').Select(int.Parse).ToList();
 
         if (projectId <= 0)
         {
@@ -1373,7 +1379,7 @@ public partial class AccountManagementController : BaseAdminController
         var timeSheetReports = new List<TimeSheetReport>();
         foreach (var employee in allEmployees)
         {
-            var existingTimeSheetReport = await _accountManagementService.GetReportByEmployeeListWithProjectsAsync(from, to, employee.Id, projectId,
+            var existingTimeSheetReport = await _accountManagementService.GetReportByEmployeeListWithProjectsAsync(employeedList, from, to, employee.Id, projectId,
                 periodId, hoursId);
 
             existingTimeSheetReport.ForEach(report =>
@@ -1395,10 +1401,14 @@ public partial class AccountManagementController : BaseAdminController
         var filteredTimeSummaryReports = timeSheetReports.Where(x => x.SpentHours > 0 || x.SpentMinutes > 0).ToList();
 
         var qaReports = filteredTimeSummaryReports.Where(x => x.EmployeeId == qaEmployeeMapping).ToList();
-        var qaTotalMinutes = qaReports.Sum(x => (x.SpentHours * 60) + x.SpentMinutes);
-        decimal qaTotalHours = qaTotalMinutes / 60;
-        decimal qaRemainingMinutes = qaTotalMinutes % 60;
-        qaTotalHours = Math.Round(qaTotalHours + (qaRemainingMinutes / 60), 2);
+        decimal qaTotalHours = decimal.Zero; decimal qaRemainingMinutes = decimal.Zero;
+        if (qaReports.Any())
+        {
+            var qaTotalMinutes = qaReports.Sum(x => (x.SpentHours * 60) + x.SpentMinutes);
+            qaTotalHours = qaTotalMinutes / 60;
+            qaRemainingMinutes = qaTotalMinutes % 60;
+            qaTotalHours = Math.Round(qaTotalHours + (qaRemainingMinutes / 60), 2);
+        }
 
         var developerReports = filteredTimeSummaryReports.Where(x => x.EmployeeId != qaEmployeeMapping).ToList();
         var developerTotalMinutes = developerReports.Sum(x => (x.SpentHours * 60) + x.SpentMinutes);
@@ -1453,8 +1463,10 @@ public partial class AccountManagementController : BaseAdminController
         var existingInvoice = await _accountManagementService.GetInvoiceByIdAsync(invoice.Id);
         if (existingInvoice != null)
         {
-            var developerInvoiceItem = await CreateInvoiceItemAsync(invoice.Id, title, "Developer", developerTotalHours, existingProjectBilling.BillingRate);
-            var qaInvoiceItem = await CreateInvoiceItemAsync(invoice.Id, title, "QA", qaTotalHours, existingProjectBilling.BillingRate);
+            var developerInvoiceItem = await CreateInvoiceItemAsync(invoice.Id, title, "Development", developerTotalHours, existingProjectBilling.BillingRate);
+            InvoiceItem qaInvoiceItem = new InvoiceItem();
+            if (qaReports.Any())
+                qaInvoiceItem = await CreateInvoiceItemAsync(invoice.Id, title, "QA", qaTotalHours, accountManagementSettings.QARate);
 
             existingInvoice.SubTotalAmount = developerInvoiceItem.Amount + qaInvoiceItem.Amount;
             existingInvoice.TotalPrimaryAmount = developerInvoiceItem.Amount + qaInvoiceItem.Amount;

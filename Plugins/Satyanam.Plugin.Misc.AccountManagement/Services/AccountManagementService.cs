@@ -1,7 +1,7 @@
 ﻿using App.Core;
+using App.Core.Domain.Extension.ProjectTasks;
 using App.Core.Domain.Extension.TimeSheets;
 using App.Core.Domain.Messages;
-using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.Enums;
 using App.Core.Domain.Projects;
 using App.Core.Domain.ProjectTasks;
 using App.Core.Domain.TimeSheets;
@@ -15,6 +15,7 @@ using App.Services.Media;
 using App.Services.Messages;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using Satyanam.Nop.Core.Domains;
+using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.Enums;
 using Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.Models.Enums;
 using Satyanam.Plugin.Misc.AccountManagement.Domain;
 using System;
@@ -789,20 +790,23 @@ public partial class AccountManagementService : IAccountManagementService
 
     #region Time Summary Report Methods
 
-    public virtual async Task<IList<TimeSheetReport>> GetReportByEmployeeListWithProjectsAsync(DateTime? from, DateTime? to, int employeeId = 0,
+    public virtual async Task<IList<TimeSheetReport>> GetReportByEmployeeListWithProjectsAsync(List<int> employeeIds, DateTime? from, DateTime? to, int employeeId = 0,
         int projectId = 0, int periodId = 0, int hoursId = 0)
     {
         var query = await _timeSheetRepository.GetAllAsync(async query =>
         {
             query = query.Where(c => c.EmployeeId == employeeId && c.SpentDate >= from && c.SpentDate <= to).Where(c => !_projectTaskRepository.Table
-                .Any(t => t.Id == c.TaskId && t.IsDeleted)); ;
+                .Any(t => t.Id == c.TaskId && t.IsDeleted));
 
             if (projectId > 0)
                 query = query.Where(c => c.ProjectId == projectId);
 
+            if (employeeIds != null && employeeIds.Count > 0 && !employeeIds.Contains(0))
+                query = query.Where(c => employeeIds.Contains(c.EmployeeId));
+            
             if (hoursId == 2)
                 query = query.Where(c => c.Billable == true);
-
+            
             if (hoursId == 3)
                 query = query.Where(c => c.Billable == false);
 
@@ -810,22 +814,23 @@ public partial class AccountManagementService : IAccountManagementService
         });
 
         query = query.ToList();
+        IList<TimeSheetReport> timeSheetReports = query
+                    .GroupBy(c => c.SpentDate)
+                    .Select(g => new TimeSheetReport
+                    {
+                        EmployeeId = g.First().EmployeeId,
+                        SpentDate = g.Key,
+                        TaskId = g.First().TaskId,
+                        CreateOnUtc = g.First().CreateOnUtc,
+                        UpdateOnUtc = g.First().UpdateOnUtc,
+                        TotalMinutes = g.Sum(c => (c.SpentHours * 60) + c.SpentMinutes),
+                        SpentHours = g.Sum(c => (c.SpentHours * 60) + c.SpentMinutes) / 60,
+                        SpentMinutes = g.Sum(c => (c.SpentHours * 60) + c.SpentMinutes) % 60,
+                        BillableMinutes = g.Where(c => c.Billable).Sum(c => (c.SpentHours * 60) + c.SpentMinutes),
+                    })
+                    .ToList();
 
-        var timeSheetReports = query.GroupBy(c => c.SpentDate).Select(g => new TimeSheetReport
-        {
-            EmployeeId = g.First().EmployeeId,
-            SpentDate = g.Key,
-            TaskId = g.First().TaskId,
-            CreateOnUtc = g.First().CreateOnUtc,
-            UpdateOnUtc = g.First().UpdateOnUtc,
-            TotalMinutes = g.Sum(c => (c.SpentHours * 60) + c.SpentMinutes),
-            SpentHours = g.Sum(c => (c.SpentHours * 60) + c.SpentMinutes) / 60,
-            SpentMinutes = g.Sum(c => (c.SpentHours * 60) + c.SpentMinutes) % 60,
-            BillableMinutes = g.Where(c => c.Billable)
-                    .Sum(c => (c.SpentHours * 60) + c.SpentMinutes),
-        }).ToList();
-
-        for (var date = from.Value; date <= to.Value; date = date.AddDays(1))
+        foreach (var date in Enumerable.Range(0, (to.Value - from.Value).Days + 1).Select(d => from.Value.AddDays(d)))
         {
             if (!timeSheetReports.Any(r => r.SpentDate == date))
             {
@@ -851,7 +856,6 @@ public partial class AccountManagementService : IAccountManagementService
             timeSheetReports.First().TotalSpentHours = totalMinutes / 60;
             timeSheetReports.First().TotalSpentMinutes = totalMinutes % 60;
         }
-
         return timeSheetReports;
     }
 

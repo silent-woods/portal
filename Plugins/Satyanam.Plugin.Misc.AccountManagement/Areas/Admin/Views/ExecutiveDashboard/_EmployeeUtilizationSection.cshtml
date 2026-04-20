@@ -1,0 +1,611 @@
+<div class="card card-default util-section-card">
+    <div class="card-body">
+
+        <div class="section-header util-section-header">
+            <span class="section-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Section.Title")</span>
+            <div class="util-filters-row">
+                <select id="util-project-filter" class="ops-filter-select">
+                    <option value="0">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Filter.AllProjects")</option>
+                </select>
+                <select id="util-employee-filter" class="ops-filter-select">
+                    <option value="0">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Filter.AllEmployees")</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="preset-bar" id="util-preset-bar">
+            <button class="btn-preset" data-util-preset="currentmonth">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Preset.CurrentMonth")</button>
+            <button class="btn-preset active" data-util-preset="lastmonth">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Preset.LastMonth")</button>
+            <button class="btn-preset" data-util-preset="last3months">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Preset.Last3Months")</button>
+            <button class="btn-preset" data-util-preset="last6months">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Preset.Last6Months")</button>
+            <button class="btn-preset" data-util-preset="thisyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Preset.CurrentYear")</button>
+            <button class="btn-preset" data-util-preset="lastyear">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Preset.LastYear")</button>
+            <button class="btn-preset" data-util-preset="custom">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Preset.Custom")</button>
+            <div class="period-inputs ms-2" id="util-custom-inputs" style="display:none;">
+                <select id="util-month-from">
+                    @for (var m = 1; m <= 12; m++) { <option value="@m">@(new DateTime(2000, m, 1).ToString("MMM"))</option> }
+                </select>
+                <select id="util-year-from">
+                    @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                </select>
+                <span class="ops-period-separator">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Filter.PeriodTo")</span>
+                <select id="util-month-to">
+                    @for (var m = 1; m <= 12; m++) { <option value="@m">@(new DateTime(2000, m, 1).ToString("MMM"))</option> }
+                </select>
+                <select id="util-year-to">
+                    @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--) { <option value="@y">@y</option> }
+                </select>
+                <button id="util-custom-apply" class="btn btn-sm btn-primary ms-1">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Filter.Apply")</button>
+            </div>
+        </div>
+
+        <div class="kpi-grid util-kpi-grid">
+            <div class="kpi-card util-kpi-billable">
+                <div class="kpi-card-top">
+                    <span class="kpi-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Card.BillableHrs")</span>
+                    <div class="kpi-icon" style="background:#ede9fe;"><i class="fas fa-clock" style="color:#7c3aed;"></i></div>
+                </div>
+                <div class="kpi-value" id="util-kpi-val-billhrs">—</div>
+                <div class="kpi-subtitle">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Card.BillableHrs.Subtitle")</div>
+                <div class="kpi-loading" id="util-load-billhrs"><div class="spinner-sm"></div></div>
+            </div>
+            <div class="kpi-card util-kpi-revenue">
+                <div class="kpi-card-top">
+                    <span class="kpi-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Card.Revenue")</span>
+                    <div class="kpi-icon" style="background:#dcfce7;"><i class="fas fa-rupee-sign" style="color:#16a34a;"></i></div>
+                </div>
+                <div class="kpi-value" id="util-kpi-val-revenue">—</div>
+                <div class="kpi-subtitle">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Card.Revenue.Subtitle")</div>
+                <div class="kpi-loading" id="util-load-revenue"><div class="spinner-sm"></div></div>
+            </div>
+            <div class="kpi-card util-kpi-cost">
+                <div class="kpi-card-top">
+                    <span class="kpi-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Card.Cost")</span>
+                    <div class="kpi-icon" style="background:#fee2e2;"><i class="fas fa-wallet" style="color:#dc2626;"></i></div>
+                </div>
+                <div class="kpi-value" id="util-kpi-val-cost">—</div>
+                <div class="kpi-subtitle">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Card.Cost.Subtitle")</div>
+                <div class="kpi-loading" id="util-load-cost"><div class="spinner-sm"></div></div>
+            </div>
+            <div class="kpi-card util-kpi-roi">
+                <div class="kpi-card-top">
+                    <span class="kpi-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Card.AvgROI")</span>
+                    <div class="kpi-icon" style="background:#ede9fe;"><i class="fas fa-percentage" style="color:#7c3aed;"></i></div>
+                </div>
+                <div class="kpi-value" id="util-kpi-val-roi">—</div>
+                <div class="kpi-subtitle">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Card.AvgROI.Subtitle")</div>
+                <div class="kpi-loading" id="util-load-roi"><div class="spinner-sm"></div></div>
+            </div>
+        </div>
+
+        <div class="util-chart-section">
+            <div class="util-chart-wrap">
+                <div class="util-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Chart.ROITrend")</div>
+                <canvas id="util-roi-chart" height="110"></canvas>
+            </div>
+            <div class="util-chart-wrap">
+                <div class="util-chart-title">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Chart.RevCost")</div>
+                <canvas id="util-revcost-chart" height="110"></canvas>
+            </div>
+        </div>
+
+        <div class="util-table-section">
+            <div class="util-table-wrap" id="util-table-wrap">
+                <div id="util-no-data" class="util-no-data" style="display:none;">
+                    @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Message.NoData")
+                </div>
+                <table class="table table-bordered table-sm util-pivot" id="util-pivot-table" style="display:none;">
+                    <thead id="util-thead"></thead>
+                    <tbody id="util-tbody"></tbody>
+                    <tfoot id="util-tfoot"></tfoot>
+                </table>
+            </div>
+            <div class="util-overlay" id="util-overlay" style="display:none;">
+                <div class="spinner-border text-primary" role="status"><span class="sr-only">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Loading")</span></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@{
+    var utilRes = new
+    {
+        employee   = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Col.Employee").Text,
+        billHrs    = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Col.BillHrs").Text,
+        util       = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Col.Util").Text,
+        revenue    = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Col.Revenue").Text,
+        cost       = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Col.Cost").Text,
+        profit     = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Col.Profit").Text,
+        roi        = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Col.ROI").Text,
+        totalCol   = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Col.Total").Text,
+        grandTotal = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Row.GrandTotal").Text,
+        totalHrs   = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.TotalHrs").Text,
+        avgUtil    = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.AvgUtil").Text,
+        loadFailed   = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Message.LoadFailed").Text,
+        chartRoi     = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Chart.ROITrend").Text,
+        chartRevCost = T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.Chart.RevCost").Text
+    };
+}
+
+<script>
+(function () {
+    var res = {
+        employee:   '@Html.Raw(utilRes.employee)',
+        billHrs:    '@Html.Raw(utilRes.billHrs)',
+        util:       '@Html.Raw(utilRes.util)',
+        revenue:    '@Html.Raw(utilRes.revenue)',
+        cost:       '@Html.Raw(utilRes.cost)',
+        profit:     '@Html.Raw(utilRes.profit)',
+        roi:        '@Html.Raw(utilRes.roi)',
+        totalCol:   '@Html.Raw(utilRes.totalCol)',
+        grandTotal: '@Html.Raw(utilRes.grandTotal)',
+        totalHrs:   '@Html.Raw(utilRes.totalHrs)',
+        avgUtil:    '@Html.Raw(utilRes.avgUtil)',
+        loadFailed:   '@Html.Raw(utilRes.loadFailed)',
+        chartRoi:     '@Html.Raw(utilRes.chartRoi)',
+        chartRevCost: '@Html.Raw(utilRes.chartRevCost)'
+    };
+
+    var utilState = { preset: 'lastmonth', employeeId: 0, projectId: 0, monthFrom: null, yearFrom: null, monthTo: null, yearTo: null };
+    var lastData  = null;
+    var sortState = { key: null, asc: true };
+
+    function fmtHrs(v) {
+        if (v == null || isNaN(v)) return '—';
+        return parseFloat(v).toFixed(1) + 'h';
+    }
+
+    function fmtCurrency(v) {
+        if (v == null || isNaN(v)) return '—';
+        var n = parseFloat(v);
+        if (n === 0) return '₹0';
+        var abs = Math.abs(n);
+        var sign = n < 0 ? '-' : '';
+        if (abs >= 10000000) return sign + '₹' + (abs / 10000000).toFixed(2) + 'Cr';
+        if (abs >= 100000)   return sign + '₹' + (abs / 100000).toFixed(2) + 'L';
+        if (abs >= 1000)     return sign + '₹' + (abs / 1000).toFixed(1) + 'K';
+        return sign + '₹' + abs.toFixed(0);
+    }
+
+    function fmtPct(v) {
+        if (v == null || isNaN(v)) return '—';
+        return parseFloat(v).toFixed(1) + '%';
+    }
+
+    function utilBadgeClass(pct) {
+        if (pct == null) return '';
+        if (pct >= 75) return 'util-high';
+        if (pct >= 50) return 'util-mid';
+        return 'util-low';
+    }
+
+    function utilBadge(pct) {
+        if (pct == null) return '<span class="util-badge util-zero">—</span>';
+        var cls = utilBadgeClass(pct);
+        return '<span class="util-badge ' + cls + '">' + fmtPct(pct) + '</span>';
+    }
+
+    var utilRoiChart = null;
+
+    function buildRoiChart(data) {
+        var labels = data.months.map(function (m) { return m.label; });
+        var values;
+
+        if (utilState.employeeId && utilState.employeeId > 0) {
+            var emp = data.employees.find(function (e) { return e.id === utilState.employeeId; });
+            values = emp ? emp.months.map(function (m) { return m.roiPct; }) : [];
+        } else {
+            values = data.monthTotals.map(function (mt) { return mt.roiPct; });
+        }
+
+        var barColors = values.map(function (v) {
+            if (v == null) return 'rgba(156,163,175,0.5)';
+            if (v >= 50)   return 'rgba(21,128,61,0.75)';
+            if (v >= 0)    return 'rgba(217,119,6,0.75)';
+            return 'rgba(220,38,38,0.75)';
+        });
+        var borderColors = values.map(function (v) {
+            if (v == null) return 'rgba(156,163,175,1)';
+            if (v >= 50)   return 'rgba(21,128,61,1)';
+            if (v >= 0)    return 'rgba(217,119,6,1)';
+            return 'rgba(220,38,38,1)';
+        });
+
+        if (utilRoiChart) { utilRoiChart.destroy(); utilRoiChart = null; }
+
+        var canvas = document.getElementById('util-roi-chart');
+        if (!canvas) return;
+        utilRoiChart = new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: res.roi,
+                    data: values,
+                    borderColor: '#7c3aed',
+                    backgroundColor: 'rgba(124,58,237,0.08)',
+                    borderWidth: 2,
+                    tension: 0.35,
+                    fill: true,
+                    pointRadius: 5,
+                    pointBackgroundColor: borderColors,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    spanGaps: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                return ctx.raw != null ? ctx.raw.toFixed(1) + '%' : '—';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                    y: {
+                        ticks: { callback: function (v) { return parseFloat(v).toFixed(1) + '%'; }, font: { size: 11 } },
+                        grid: { color: 'rgba(0,0,0,0.06)' }
+                    }
+                }
+            }
+        });
+    }
+
+    var utilRevCostChart = null;
+
+    function buildRevCostChart(data) {
+        var labels = data.months.map(function (m) { return m.label; });
+        var revenues, costs;
+
+        if (utilState.employeeId && utilState.employeeId > 0) {
+            var emp = data.employees.find(function (e) { return e.id === utilState.employeeId; });
+            revenues = emp ? emp.months.map(function (m) { return m.revenue; }) : [];
+            costs    = emp ? emp.months.map(function (m) { return m.cost; })    : [];
+        } else {
+            revenues = data.monthTotals.map(function (mt) { return mt.revenue; });
+            costs    = data.monthTotals.map(function (mt) { return mt.cost; });
+        }
+
+        if (utilRevCostChart) { utilRevCostChart.destroy(); utilRevCostChart = null; }
+
+        var canvas = document.getElementById('util-revcost-chart');
+        if (!canvas) return;
+        utilRevCostChart = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: res.revenue,
+                        data: revenues,
+                        backgroundColor: 'rgba(21,128,61,0.7)',
+                        borderColor: 'rgba(21,128,61,1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: res.cost,
+                        data: costs,
+                        backgroundColor: 'rgba(220,38,38,0.65)',
+                        borderColor: 'rgba(220,38,38,1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: true, position: 'top', labels: { font: { size: 11 }, boxWidth: 12, padding: 10 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                var n = ctx.raw;
+                                if (n == null) return '—';
+                                var abs = Math.abs(n), sign = n < 0 ? '-' : '';
+                                if (abs >= 10000000) return ctx.dataset.label + ': ' + sign + '₹' + (abs / 10000000).toFixed(2) + 'Cr';
+                                if (abs >= 100000)   return ctx.dataset.label + ': ' + sign + '₹' + (abs / 100000).toFixed(2) + 'L';
+                                if (abs >= 1000)     return ctx.dataset.label + ': ' + sign + '₹' + (abs / 1000).toFixed(1) + 'K';
+                                return ctx.dataset.label + ': ' + sign + '₹' + abs.toFixed(0);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                    y: {
+                        ticks: {
+                            callback: function (v) {
+                                var abs = Math.abs(v);
+                                if (abs >= 100000) return '₹' + (v / 100000).toFixed(1) + 'L';
+                                if (abs >= 1000)   return '₹' + (v / 1000).toFixed(0) + 'K';
+                                return '₹' + v;
+                            },
+                            font: { size: 11 }
+                        },
+                        grid: { color: 'rgba(0,0,0,0.06)' }
+                    }
+                }
+            }
+        });
+    }
+
+    function roiBadge(pct) {
+        if (pct == null) return '<span class="roi-badge roi-null">—</span>';
+        var cls = pct >= 50 ? 'roi-high' : pct >= 0 ? 'roi-mid' : 'roi-neg';
+        return '<span class="roi-badge ' + cls + '">' + fmtPct(pct) + '</span>';
+    }
+
+    function setLoading(on) {
+        $('#util-overlay').toggle(on);
+        if (on) {
+            ['billhrs','revenue','cost','roi'].forEach(function(k) { $('#util-load-' + k).show(); });
+        } else {
+            ['billhrs','revenue','cost','roi'].forEach(function(k) { $('#util-load-' + k).hide(); });
+        }
+    }
+
+    function buildPayload() {
+        var p = { period: utilState.preset, employeeId: utilState.employeeId || 0, projectId: utilState.projectId || 0 };
+        if (utilState.preset === 'custom') {
+            p.monthFrom = utilState.monthFrom;
+            p.yearFrom  = utilState.yearFrom;
+            p.monthTo   = utilState.monthTo;
+            p.yearTo    = utilState.yearTo;
+        }
+        return p;
+    }
+
+    function loadProjectsList() {
+        $.post('@Url.Action("GetProjectsList", "ExecutiveDashboard")', addAntiForgeryToken({}), function (projects) {
+            var $sel = $('#util-project-filter');
+            $sel.find('option:not(:first)').remove();
+            projects.forEach(function (p) {
+                $sel.append($('<option>').val(p.id).text(p.title));
+            });
+        });
+    }
+
+    function loadEmployeesList() {
+        $.post('@Url.Action("GetEmployeesList", "ExecutiveDashboard")', addAntiForgeryToken({}), function (employees) {
+            var $sel = $('#util-employee-filter');
+            $sel.find('option:not(:first)').remove();
+            employees.forEach(function (e) {
+                $sel.append($('<option>').val(e.id).text(e.name));
+            });
+        });
+    }
+
+    function srtIcon(key) {
+        return ' <span class="util-sort-icon" data-icon-key="' + key + '">⇅</span>';
+    }
+
+    function buildTheadHtml(months) {
+        var monthCount = months.length;
+        var totalColspan = 7;
+        var monthColspan = 4;
+
+        var row1 = '<tr class="util-thead-top">';
+        row1 += '<th rowspan="2" class="util-col-employee util-sortable" data-sort-key="name">' + res.employee + srtIcon('name') + '</th>';
+        months.forEach(function (m) {
+            row1 += '<th colspan="' + monthColspan + '" class="util-month-header">' + m.label + '</th>';
+        });
+        row1 += '<th colspan="' + totalColspan + '" class="util-total-header">' + res.totalCol + '</th>';
+        row1 += '</tr>';
+
+        var row2 = '<tr class="util-thead-sub">';
+        for (var i = 0; i < monthCount; i++) {
+            var p = 'm' + i + '-';
+            row2 += '<th class="util-sub-util util-sortable"   data-sort-key="' + p + 'util">'    + res.util    + srtIcon(p + 'util')    + '</th>';
+            row2 += '<th class="util-sub-rev util-sortable"    data-sort-key="' + p + 'revenue">' + res.revenue + srtIcon(p + 'revenue') + '</th>';
+            row2 += '<th class="util-sub-cost util-sortable"   data-sort-key="' + p + 'cost">'    + res.cost    + srtIcon(p + 'cost')    + '</th>';
+            row2 += '<th class="util-sub-profit util-sortable" data-sort-key="' + p + 'profit">'  + res.profit  + srtIcon(p + 'profit')  + '</th>';
+        }
+        row2 += '<th class="util-sub-billhrs util-sortable"  data-sort-key="t-billhrs">'  + res.billHrs  + srtIcon('t-billhrs')  + '</th>';
+        row2 += '<th class="util-sub-totalhrs util-sortable" data-sort-key="t-totalhrs">' + res.totalHrs + srtIcon('t-totalhrs') + '</th>';
+        row2 += '<th class="util-sub-util util-sortable"     data-sort-key="t-avgutil">'  + res.avgUtil  + srtIcon('t-avgutil')  + '</th>';
+        row2 += '<th class="util-sub-rev util-sortable"      data-sort-key="t-revenue">'  + res.revenue  + srtIcon('t-revenue')  + '</th>';
+        row2 += '<th class="util-sub-cost util-sortable"     data-sort-key="t-cost">'     + res.cost     + srtIcon('t-cost')     + '</th>';
+        row2 += '<th class="util-sub-profit util-sortable"   data-sort-key="t-profit">'   + res.profit   + srtIcon('t-profit')   + '</th>';
+        row2 += '<th class="util-sub-roi util-sortable"      data-sort-key="t-roi">'      + res.roi      + srtIcon('t-roi')      + '</th>';
+        row2 += '</tr>';
+
+        return row1 + row2;
+    }
+
+    function getSortValue(emp, key) {
+        if (key === 'name') return (emp.name || '').toLowerCase();
+        if (key.charAt(0) === 'm') {
+            var parts = key.split('-'), idx = parseInt(parts[0].substring(1), 10), sub = parts[1];
+            var mo = emp.months[idx] || {};
+            if (sub === 'util')    return mo.utilPct    != null ? mo.utilPct    : -1;
+            if (sub === 'revenue') return mo.revenue    != null ? mo.revenue    : 0;
+            if (sub === 'cost')    return mo.cost       != null ? mo.cost       : 0;
+            if (sub === 'profit')  return mo.profit     != null ? mo.profit     : 0;
+            return 0;
+        }
+        var t = emp.total || {};
+        if (key === 't-billhrs')  return t.billableHrs != null ? t.billableHrs : 0;
+        if (key === 't-totalhrs') return t.totalHrs    != null ? t.totalHrs    : 0;
+        if (key === 't-avgutil')  return t.avgUtilPct  != null ? t.avgUtilPct  : -1;
+        if (key === 't-revenue')  return t.revenue     != null ? t.revenue     : 0;
+        if (key === 't-cost')     return t.cost        != null ? t.cost        : 0;
+        if (key === 't-profit')   return t.profit      != null ? t.profit      : 0;
+        if (key === 't-roi')      return t.roiPct      != null ? t.roiPct      : -Infinity;
+        return 0;
+    }
+
+    function updateSortIcons() {
+        $('#util-thead .util-sort-icon').text('⇅').removeClass('asc-active desc-active');
+        if (sortState.key) {
+            $('#util-thead .util-sort-icon[data-icon-key="' + sortState.key + '"]')
+                .text(sortState.asc ? '↑' : '↓')
+                .addClass(sortState.asc ? 'asc-active' : 'desc-active');
+        }
+    }
+
+    function sortAndRender() {
+        if (!lastData || !lastData.employees) return;
+        var emps = lastData.employees.slice();
+        if (sortState.key) {
+            emps.sort(function (a, b) {
+                var va = getSortValue(a, sortState.key);
+                var vb = getSortValue(b, sortState.key);
+                if (va < vb) return sortState.asc ? -1 : 1;
+                if (va > vb) return sortState.asc ? 1 : -1;
+                return 0;
+            });
+        }
+        var tbodyHtml = '';
+        emps.forEach(function (emp) { tbodyHtml += buildRowHtml(emp); });
+        $('#util-tbody').html(tbodyHtml);
+        updateSortIcons();
+    }
+
+    function buildRowHtml(emp) {
+        var tr = '<tr class="util-emp-row">';
+        tr += '<td class="util-emp-name">' + emp.name + '</td>';
+        emp.months.forEach(function (m) {
+            tr += '<td class="util-cell-util util-month-first">'   + utilBadge(m.utilPct)   + '</td>';
+            tr += '<td class="util-cell-rev">'                     + fmtCurrency(m.revenue) + '</td>';
+            tr += '<td class="util-cell-cost">'                    + fmtCurrency(m.cost)    + '</td>';
+            tr += '<td class="util-cell-profit ' + (m.profit >= 0 ? 'util-profit-pos' : 'util-profit-neg') + '">' + fmtCurrency(m.profit) + '</td>';
+        });
+        var t = emp.total;
+        tr += '<td class="util-cell-hrs util-total-cell">'  + fmtHrs(t.billableHrs)  + '</td>';
+        tr += '<td class="util-cell-hrs util-total-cell">'  + fmtHrs(t.totalHrs)     + '</td>';
+        tr += '<td class="util-cell-util util-total-cell">' + utilBadge(t.avgUtilPct) + '</td>';
+        tr += '<td class="util-cell-rev util-total-cell">'  + fmtCurrency(t.revenue)  + '</td>';
+        tr += '<td class="util-cell-cost util-total-cell">' + fmtCurrency(t.cost)     + '</td>';
+        tr += '<td class="util-cell-profit util-total-cell ' + (t.profit >= 0 ? 'util-profit-pos' : 'util-profit-neg') + '">' + fmtCurrency(t.profit) + '</td>';
+        tr += '<td class="util-cell-roi util-total-cell">'  + (t.roiPct != null ? fmtPct(t.roiPct) : '—') + '</td>';
+        tr += '</tr>';
+        return tr;
+    }
+
+    function buildFooterHtml(monthTotals, grandTotal) {
+        var tr = '<tr class="util-footer-row">';
+        tr += '<td class="util-emp-name util-footer-label">' + res.grandTotal + '</td>';
+        monthTotals.forEach(function (mt) {
+            tr += '<td class="util-cell-util util-footer-cell util-month-first">—</td>';
+            tr += '<td class="util-cell-rev util-footer-cell">'    + fmtCurrency(mt.revenue) + '</td>';
+            tr += '<td class="util-cell-cost util-footer-cell">'   + fmtCurrency(mt.cost)    + '</td>';
+            tr += '<td class="util-cell-profit util-footer-cell">' + fmtCurrency(mt.profit)  + '</td>';
+        });
+        var g = grandTotal;
+        tr += '<td class="util-cell-hrs util-footer-cell util-total-cell">'     + fmtHrs(g.billableHrs)      + '</td>';
+        tr += '<td class="util-cell-hrs util-footer-cell util-total-cell">'     + fmtHrs(g.totalHrs)         + '</td>';
+        tr += '<td class="util-cell-util util-footer-cell util-total-cell">'    + utilBadge(g.avgUtilPct)    + '</td>';
+        tr += '<td class="util-cell-rev util-footer-cell util-total-cell">'     + fmtCurrency(g.revenue)     + '</td>';
+        tr += '<td class="util-cell-cost util-footer-cell util-total-cell">'    + fmtCurrency(g.cost)        + '</td>';
+        tr += '<td class="util-cell-profit util-footer-cell util-total-cell ' + (g.profit >= 0 ? 'util-profit-pos' : 'util-profit-neg') + '">' + fmtCurrency(g.profit) + '</td>';
+        tr += '<td class="util-cell-roi util-footer-cell util-total-cell">'     + (g.roiPct != null ? fmtPct(g.roiPct) : '—') + '</td>';
+        tr += '</tr>';
+        return tr;
+    }
+
+    function loadUtilData() {
+        setLoading(true);
+        $('#util-pivot-table').hide();
+        $('#util-no-data').hide();
+
+        $.post('@Url.Action("GetEmployeeUtilizationData", "ExecutiveDashboard")', addAntiForgeryToken(buildPayload()), function (d) {
+            setLoading(false);
+
+            $('#util-kpi-val-billhrs').text(fmtHrs(d.kpi.totalBillableHrs));
+            $('#util-kpi-val-revenue').text(fmtCurrency(d.kpi.totalRevenue));
+            $('#util-kpi-val-cost').text(fmtCurrency(d.kpi.totalCost));
+            $('#util-kpi-val-roi').text(d.kpi.avgRoiPct != null ? fmtPct(d.kpi.avgRoiPct) : '—');
+
+            buildRoiChart(d);
+            buildRevCostChart(d);
+
+            if (!d.employees || d.employees.length === 0) {
+                $('#util-no-data').show();
+                return;
+            }
+            lastData = d;
+            sortState.key = null;
+            sortState.asc = true;
+            $('#util-thead').html(buildTheadHtml(d.months));
+            var tbodyHtml = '';
+            d.employees.forEach(function (emp) { tbodyHtml += buildRowHtml(emp); });
+            $('#util-tbody').html(tbodyHtml);
+            $('#util-tfoot').html(buildFooterHtml(d.monthTotals, d.grandTotal));
+            $('#util-pivot-table').show();
+
+        }).fail(function () {
+            setLoading(false);
+            alert(res.loadFailed);
+        });
+    }
+
+    $(document).on('exec:load:utilization', function () {
+        loadProjectsList();
+        loadEmployeesList();
+        loadUtilData();
+    });
+
+    $(document).on('exec:show:utilization', function () {
+        $('#util-preset-bar .btn-preset').removeClass('active');
+        $('#util-preset-bar [data-util-preset="' + utilState.preset + '"]').addClass('active');
+    });
+
+    $(document).ready(function () {
+        $(document).on('click', '#util-thead .util-sortable', function () {
+            var key = $(this).data('sort-key');
+            if (!key) return;
+            if (sortState.key === key) {
+                sortState.asc = !sortState.asc;
+            } else {
+                sortState.key = key;
+                sortState.asc = true;
+            }
+            sortAndRender();
+        });
+
+        $(document).on('click', '#util-preset-bar [data-util-preset]', function () {
+            var preset = $(this).data('util-preset');
+            $('#util-preset-bar [data-util-preset]').removeClass('active');
+            $(this).addClass('active');
+            utilState.preset = preset;
+            if (preset === 'custom') {
+                $('#util-custom-inputs').show();
+                return; 
+            }
+            $('#util-custom-inputs').hide();
+            loadUtilData();
+        });
+
+        $('#util-custom-apply').on('click', function () {
+            utilState.monthFrom = parseInt($('#util-month-from').val());
+            utilState.yearFrom  = parseInt($('#util-year-from').val());
+            utilState.monthTo   = parseInt($('#util-month-to').val());
+            utilState.yearTo    = parseInt($('#util-year-to').val());
+            loadUtilData();
+        });
+
+        $('#util-project-filter').on('change', function () {
+            utilState.projectId = parseInt($(this).val()) || 0;
+            loadUtilData();
+        });
+
+        $('#util-employee-filter').on('change', function () {
+            utilState.employeeId = parseInt($(this).val()) || 0;
+            loadUtilData();
+        });
+    });
+
+}());
+</script>
+
+<link rel="stylesheet" href="~/Plugins/Misc.AccountManagement/Content/employee-utilization.css" />

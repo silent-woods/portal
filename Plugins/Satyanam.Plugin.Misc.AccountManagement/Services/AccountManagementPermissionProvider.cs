@@ -28,6 +28,7 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
     public static readonly PermissionRecord ManageExecutiveDashboardFinancial = new() { Name = "Admin area. Account Management - Executive Dashboard: Financial Section", SystemName = "ManageExecutiveDashboardFinancial", Category = "Account" };
     public static readonly PermissionRecord ManageExecutiveDashboardOperational = new() { Name = "Admin area. Account Management - Executive Dashboard: Operational Section", SystemName = "ManageExecutiveDashboardOperational", Category = "Account" };
     public static readonly PermissionRecord ManageExecutiveDashboardCRM = new() { Name = "Admin area. Account Management - Executive Dashboard: CRM Section", SystemName = "ManageExecutiveDashboardCRM", Category = "Account" };
+    public static readonly PermissionRecord ManageExecutiveDashboardEmployeeUtilization = new() { Name = "Admin area. Account Management - Executive Dashboard: Employee Utilization Section", SystemName = "ManageExecutiveDashboardEmployeeUtilization", Category = "Account" };
 
     #endregion
 
@@ -54,7 +55,8 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
             ManageExecutiveDashboard,
             ManageExecutiveDashboardFinancial,
             ManageExecutiveDashboardOperational,
-            ManageExecutiveDashboardCRM
+            ManageExecutiveDashboardCRM,
+            ManageExecutiveDashboardEmployeeUtilization
         };
     }
 
@@ -83,7 +85,8 @@ public partial class AccountManagementPermissionProvider : IPermissionProvider
                     ManageExecutiveDashboard,
                     ManageExecutiveDashboardFinancial,
                     ManageExecutiveDashboardOperational,
-                    ManageExecutiveDashboardCRM
+                    ManageExecutiveDashboardCRM,
+                    ManageExecutiveDashboardEmployeeUtilization
                 }
             ),
 

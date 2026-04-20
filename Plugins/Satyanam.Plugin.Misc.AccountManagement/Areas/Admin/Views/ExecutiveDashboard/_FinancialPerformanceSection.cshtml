@@ -669,6 +669,7 @@
 
     function applyPreset(preset) {
         var today = new Date();
+        state.currentPreset = preset;
 
         $('.btn-preset').removeClass('active');
         $('[data-preset="' + preset + '"]').addClass('active');
@@ -902,6 +903,12 @@
     $('[data-toggle="tooltip"]').tooltip({ trigger: 'hover', html: false });
     applyPreset('lastmonth');
     loadInvoiceStatusSummary();
+
+    $(document).on('exec:show:financial', function () {
+        var barId = state.granularity === 4 ? '#preset-bar-year' : '#preset-bar-month';
+        $(barId + ' .btn-preset').removeClass('active');
+        if (state.currentPreset) $(barId + ' [data-preset="' + state.currentPreset + '"]').addClass('active');
+    });
 }());
 </script>
 

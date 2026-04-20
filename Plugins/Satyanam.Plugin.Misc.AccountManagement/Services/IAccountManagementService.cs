@@ -146,7 +146,7 @@ public partial interface IAccountManagementService
 
     #region Time Summary Report Methods
 
-    Task<IList<TimeSheetReport>> GetReportByEmployeeListWithProjectsAsync(DateTime? from, DateTime? to, int employeeId = 0,
+    Task<IList<TimeSheetReport>> GetReportByEmployeeListWithProjectsAsync(List<int> employeeIds, DateTime? from, DateTime? to, int employeeId = 0,
         int projectId = 0, int periodId = 0, int hoursId = 0);
 
     #endregion

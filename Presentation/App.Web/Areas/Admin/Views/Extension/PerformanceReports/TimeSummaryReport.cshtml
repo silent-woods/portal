@@ -1836,6 +1836,8 @@
 
                         $('#create-invoice-btn').click(function () {
                             var projectIds = $('#SelectedProjectIds').data('kendoMultiSelect').value();
+                            var selectedEmployeeIds = $('#SelectedEmployeeIds').val();
+                            var employeeIdsString = selectedEmployeeIds.join(',');
 
                             $.ajax({
                                 url: '@Url.Action("CreateInvoiceFromTimeSummaryReport", "AccountManagement")',
@@ -1845,7 +1847,8 @@
                                     to: $('#To').val(),
                                     projectId: projectIds[0],
                                     periodId: $('#SearchPeriodId').val(),
-                                    hoursId: $('#HoursId').val()
+                                    hoursId: $('#HoursId').val(),
+                                    searchEmployeeId: employeeIdsString
                                 },
                                 success: function (response) {
                                     if (response.redirectUrl) {
