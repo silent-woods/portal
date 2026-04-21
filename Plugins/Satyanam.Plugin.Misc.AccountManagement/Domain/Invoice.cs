@@ -34,6 +34,8 @@ public partial class Invoice : BaseEntity, ISoftDeletedEntity
 
     public DateTime DueDate { get; set; }
 
+    public DateTime? ReminderDate { get; set; }
+
     public int InvoiceFileId { get; set; }
 
     public int TimeSheetFileId { get; set; }

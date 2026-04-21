@@ -502,6 +502,24 @@ public partial class AccountManagementService : IAccountManagementService
         return await invoices.ToPagedListAsync(pageIndex, pageSize);
     }
 
+    public virtual async Task<IList<Invoice>> GetAllDueInvoicesAsync(int reminderMail = 0)
+    {
+        var today = DateTime.UtcNow.Date;
+
+        var invoices = from i in _invoiceRepository.Table
+                       join pb in _projectBillingRepository.Table on i.ProjectBillingId equals pb.Id
+                       join ag in _accountGroupRepository.Table on i.AccountGroupId equals ag.Id
+                       where !i.Deleted && !pb.Deleted && !ag.Deleted
+                       select i;
+
+        invoices = invoices.Where(i => i.StatusId == (int)InvoiceEnum.Sent && i.DueDate.Date <= today);
+
+        if (reminderMail > 0)
+            invoices = invoices.Where(i => !i.ReminderDate.HasValue || i.ReminderDate.Value.AddDays(reminderMail).Date <= today);
+
+        return await invoices.ToListAsync();
+    }
+
     #endregion
 
     #region Invoice Item Methods
@@ -783,6 +801,35 @@ public partial class AccountManagementService : IAccountManagementService
 
             return await _workflowMessageService.SendNotificationAsync(messageTemplate, emailAccount, languageId, tokens, toEmail, toName,
                 attachmentFilePath, attachmentFileName, fromEmail: emailAccount.Email, fromName: emailAccount.DisplayName);
+        }).ToListAsync();
+    }
+
+    public virtual async Task<IList<int>> SendInvoiceReminderEmailAsync(string customerName = null, string customerEmail = null, int invoiceNumber = 0, DateTime? dueDate = null, int languageId = 0)
+    {
+        var store = await _storeContext.GetCurrentStoreAsync();
+        languageId = await EnsureLanguageIsActiveAsync(languageId, store.Id);
+
+        var messageTemplates = await GetActiveMessageTemplatesAsync(AccountManagementDefaults.SendInvoiceReminderNotification, store.Id);
+        if (!messageTemplates.Any())
+            return new List<int>();
+
+        var commonTokens = new List<Token>();
+        var results = new List<int>();
+
+        return await messageTemplates.SelectAwait(async messageTemplate =>
+        {
+            var emailAccount = await GetEmailAccountOfMessageTemplateAsync(messageTemplate, languageId);
+
+            var tokens = new List<Token>(commonTokens);
+            await _messageTokenProvider.AddStoreTokensAsync(tokens, store, emailAccount);
+            await _eventPublisher.MessageTokensAddedAsync(messageTemplate, tokens);
+
+            tokens.Add(new Token("Customer.FullName", customerName, true));
+            tokens.Add(new Token("Invoice.InvoiceNumber", invoiceNumber, true));
+            tokens.Add(new Token("Invoice.DueDate", dueDate.Value.Date.ToString("dd-MMM-yyyy"), true));
+
+            return await _workflowMessageService.SendNotificationAsync(messageTemplate, emailAccount, languageId, tokens, customerEmail, customerName,
+                null, null, fromEmail: emailAccount.Email, fromName: emailAccount.DisplayName);
         }).ToListAsync();
     }
 

@@ -84,6 +84,8 @@ public partial interface IAccountManagementService
     Task<IPagedList<Invoice>> GetAllInvoicesAsync(DateTime? createdFromUTC = null, DateTime? createdToUTC = null, int companyId = 0, int statusId = 0,
         int monthId = 0, int yearId = 0, int invoiceNumber = 0, bool showHidden = false, int pageIndex = 0, int pageSize = int.MaxValue);
 
+    Task<IList<Invoice>> GetAllDueInvoicesAsync(int reminderMail = 0);
+
     #endregion
 
     #region Invoice Item Methods
@@ -142,6 +144,8 @@ public partial interface IAccountManagementService
 
     Task<IList<int>> SendInvoiceEmailAsync(IList<string> contactEmails, string companyName, int invoiceFileId, int timesheetFileId, int languageId);
 
+    Task<IList<int>> SendInvoiceReminderEmailAsync(string customerName = null, string customerEmail = null, int invoiceNumber = 0, DateTime? dueDate = null, int languageId = 0);
+     
     #endregion
 
     #region Time Summary Report Methods

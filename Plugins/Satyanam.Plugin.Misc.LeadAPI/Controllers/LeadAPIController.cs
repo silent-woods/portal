@@ -285,6 +285,125 @@ public partial class LeadAPIController : BaseController
         }
     }
 
+    [HttpPost]
+    public virtual async Task<IActionResult> CreateMultipleLead([FromBody] List<LeadAPIModel> multipleLeads)
+    {
+        var leadAPIResponseModel = new LeadAPIResponseModel();
+        var leadAPILogs = new LeadAPILog();
+
+        try
+        {
+            leadAPIResponseModel = await CheckIfAuthenticated(leadAPIResponseModel);
+
+            if (!leadAPIResponseModel.Success)
+            {
+                leadAPIResponseModel.ResponseMessage = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.LeadAPI.Common.UnauthorizedAccess");
+                await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, multipleLeads);
+
+                return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
+            }
+
+            if (string.IsNullOrWhiteSpace(_leadAPISettings.APIKey) || string.IsNullOrWhiteSpace(_leadAPISettings.APISecretKey))
+            {
+                leadAPIResponseModel.Success = false;
+                leadAPIResponseModel.ResponseMessage = "Invalid API Key";
+
+                await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, multipleLeads);
+                return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
+            }
+
+            foreach (var multipleLead in multipleLeads)
+            {
+                var existingLead = await _leadService.GetExistingLeadByLinkedinUrlAsync(linkedinURL: multipleLead.LinkedInUrl);
+                if (existingLead != null)
+                    continue;
+
+                if (string.IsNullOrWhiteSpace(multipleLead.Name) || string.IsNullOrWhiteSpace(multipleLead.CompanyName))
+                    continue;
+
+                string firstName = multipleLead.Name;
+                string lastName = "";
+
+                if (!string.IsNullOrWhiteSpace(multipleLead.Name))
+                {
+                    var nameParts = multipleLead.Name.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+                    firstName = nameParts[0];
+                    if (nameParts.Length > 1)
+                        lastName = nameParts[1];
+                }
+
+                var existingLeadStatus = await _leadStatusService.GetLeadStatusByNameAsync(leadStatusName: LeadAPIDefaults.NewLeadStatus);
+
+                var lead = new Lead
+                {
+                    FirstName = firstName,
+                    LastName = lastName,
+                    CompanyName = multipleLead.CompanyName,
+                    Email = multipleLead.Email,
+                    Phone = multipleLead.MobileNo,
+                    Description = multipleLead.Summary,
+                    LinkedinUrl = multipleLead.LinkedInUrl,
+                    IndustryId = multipleLead.IndustryId,
+                    EmailOptOut = true,
+                    CreatedOnUtc = DateTime.UtcNow
+                };
+
+                if (!string.IsNullOrEmpty(multipleLead.Address1) || !string.IsNullOrEmpty(multipleLead.Address2) || !string.IsNullOrEmpty(multipleLead.ZipCode) || !string.IsNullOrEmpty(multipleLead.City) ||
+                    !string.IsNullOrEmpty(multipleLead.State) || !string.IsNullOrEmpty(multipleLead.Country))
+                {
+                    var existingCountry = await _countryService.GetCountryByNameAsync(multipleLead.Country);
+                    var existingStateProvince = await _stateProvinceService.GetStateProvinceByNameAsync(multipleLead.State);
+
+                    var address = new Address
+                    {
+                        Address1 = multipleLead.Address1,
+                        Address2 = multipleLead.Address2,
+                        City = multipleLead.City,
+                        ZipPostalCode = multipleLead.ZipCode,
+                    };
+                    if (existingCountry != null)
+                        address.CountryId = existingCountry.Id;
+                    if (existingStateProvince != null)
+                        address.StateProvinceId = existingStateProvince.Id;
+                    await _addressService.InsertAddressAsync(address);
+                    lead.AddressId = address.Id;
+                }
+
+                if (existingLeadStatus != null)
+                    lead.LeadStatusId = existingLeadStatus.Id;
+                await _leadService.InsertLeadAsync(lead);
+
+                foreach (var tag in multipleLead.Tags)
+                {
+                    var leadTags = new LeadTags()
+                    {
+                        LeadId = lead.Id,
+                        TagsId = tag
+                    };
+                    await _leadService.InsertLeadTagsAsync(leadTags);
+                }
+            }
+
+            leadAPIResponseModel.Success = true;
+            leadAPIResponseModel.ResponseMessage = "Lead created successfully";
+
+            await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, multipleLeads);
+
+            return Json(new { result = true, message = leadAPIResponseModel.ResponseMessage });
+        }
+        catch (Exception ex)
+        {
+            await _logger.ErrorAsync("Error in CreateLead API: " + ex.Message, ex);
+
+            leadAPIResponseModel.Success = false;
+            leadAPIResponseModel.ResponseMessage = "An error occurred while processing your request.";
+
+            await LogLeadAPICallAsync(leadAPIResponseModel, leadAPILogs, multipleLeads);
+
+            return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
+        }
+    }
+
     [HttpGet]
     public virtual async Task<IActionResult> GetAllAvailableTags()
     {
@@ -474,7 +593,6 @@ public partial class LeadAPIController : BaseController
             return Json(new { result = false, message = leadAPIResponseModel.ResponseMessage });
         }
     }
-
 
     #endregion
 }

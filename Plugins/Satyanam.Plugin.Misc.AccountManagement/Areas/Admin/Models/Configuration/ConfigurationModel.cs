@@ -36,6 +36,9 @@ public partial record ConfigurationModel : BaseNopEntityModel
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Fields.QARate")]
     public decimal QARate { get; set; }
 
+    [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Fields.ReminderMail")]
+    public int ReminderMail { get; set; }
+
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.Configuration.Fields.EmailAccountId")]
     public int EmailAccountId { get; set; }
 

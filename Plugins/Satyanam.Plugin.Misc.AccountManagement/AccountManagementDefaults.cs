@@ -12,6 +12,8 @@ public static partial class AccountManagementDefaults
 
     public const string SendInvoiceNotification = "Invoice.CustomerNotification";
 
+    public const string SendInvoiceReminderNotification = "InvoiceReminder.CustomerNotification";
+
     public const string SendInvoiceSubject = "Your Invoice is ready.";
 
     #endregion
@@ -35,6 +37,12 @@ public static partial class AccountManagementDefaults
     public static string Invoice = "Invoice";
 
     public static string TimeSummaryReport = "Time Report";
+
+    #endregion
+
+    #region Static System Name for a Invoice Reminder
+
+    public const string InvoiceReminderScheduleTaskType = "Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.ScheduleTasks.InvoiceReminderMailTask";
 
     #endregion
 }

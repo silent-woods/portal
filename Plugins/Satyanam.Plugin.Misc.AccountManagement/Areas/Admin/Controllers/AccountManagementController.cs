@@ -215,6 +215,7 @@ public partial class AccountManagementController : BaseAdminController
             InvoiceNumber = settings.InvoiceNumber,
             InvoiceLogoId = settings.InvoiceLogoId,
             QARate = settings.QARate,
+            ReminderMail = settings.ReminderMail,
             EmailAccountId = settings.EmailAccountId,
             FinancialYearStartMonth = settings.FinancialYearStartMonth > 0 ? settings.FinancialYearStartMonth : 4,
             SalaryProcessingDay = expenseSettings.SalaryProcessingDay,
@@ -285,6 +286,7 @@ public partial class AccountManagementController : BaseAdminController
             InvoiceNumber = model.InvoiceNumber,
             InvoiceLogoId = model.InvoiceLogoId,
             QARate = model.QARate,
+            ReminderMail = model.ReminderMail,
             EmailAccountId = model.EmailAccountId,
             FinancialYearStartMonth = model.FinancialYearStartMonth > 0 ? model.FinancialYearStartMonth : 4,
         };
@@ -952,6 +954,7 @@ public partial class AccountManagementController : BaseAdminController
                 InvoiceDate = DateTime.UtcNow,
                 IsActive = model.IsActive,
                 DisplayOrder = model.DisplayOrder,
+                ReminderDate = null,
                 CreatedOnUtc = DateTime.UtcNow,
                 UpdatedOnUtc = DateTime.UtcNow
             };
@@ -1042,6 +1045,7 @@ public partial class AccountManagementController : BaseAdminController
             existingInvoice.Notes = model.Notes;
             existingInvoice.IsActive = model.IsActive;
             existingInvoice.DisplayOrder = model.DisplayOrder;
+            existingInvoice.ReminderDate = null;
             existingInvoice.UpdatedOnUtc = DateTime.UtcNow;
 
             await _accountManagementService.UpdateInvoiceAsync(existingInvoice);
@@ -1440,6 +1444,7 @@ public partial class AccountManagementController : BaseAdminController
             InvoiceDate = DateTime.UtcNow,
             IsActive = true,
             DisplayOrder = (await _accountManagementService.GetAllInvoicesAsync()).Count() + 1,
+            ReminderDate = null,
             CreatedOnUtc = DateTime.UtcNow,
             UpdatedOnUtc = DateTime.UtcNow
         };
