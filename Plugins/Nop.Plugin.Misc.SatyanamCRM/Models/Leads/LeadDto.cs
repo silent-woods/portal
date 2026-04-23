@@ -41,6 +41,7 @@ namespace Satyanam.Nop.Plugin.SatyanamCRM.Models.Leads
         public string City { get; set; }
         public string ZipCode { get; set; }
         public string LinkedInRecruiter { get; set; }
+        public string Tags { get; set; }
 
         public List<LeadModel> LeadModels { get; set; }
     }

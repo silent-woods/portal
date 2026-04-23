@@ -97,7 +97,7 @@ namespace Satyanam.Nop.Core.Services
 
                 return sortByInterest
                     ? query.OrderByDescending(c => c.InterestScore ?? 0)
-                    : query.OrderBy(c => c.Id);
+                    : query.OrderByDescending(c => c.CreatedOnUtc);
             });
             //paging
             return new PagedList<Lead>(query.ToList(), pageIndex, pageSize);

@@ -45,6 +45,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
         private readonly ITagsService _tagsService;
         private readonly ILocalizationService _localizationService;
         private readonly IEmailverificationService _emailverificationService;
+        private readonly ILinkedInFollowupsService _linkedInFollowupsService;
         #endregion
 
         #region Ctor
@@ -64,7 +65,8 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                                  CatalogSettings catalogSettings,
                                  ITagsService tagsService,
                                  ILocalizationService localizationService,
-                                 IEmailverificationService emailverificationService)
+                                 IEmailverificationService emailverificationService,
+                                 ILinkedInFollowupsService linkedInFollowupsService)
         {
             _leadRepository = leadRepository;
             _titleService = titleService;
@@ -82,6 +84,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
             _tagsService = tagsService;
             _localizationService = localizationService;
             _emailverificationService = emailverificationService;
+            _linkedInFollowupsService = linkedInFollowupsService;
         }
 
         #endregion
@@ -277,12 +280,11 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
             if (!isExcel && !isCsv)
                 throw new ArgumentException("Invalid file type. Please upload a valid Excel (.xlsx) or CSV (.csv) file.");
 
-
             try
             {
                 var stream = new MemoryStream();
                 await importFile.CopyToAsync(stream);
-                stream.Position = 0; // Ensure stream is reset before reading
+                stream.Position = 0;
 
                 var workbook = new XLWorkbook(stream, XLEventTracking.Disabled);
                 var worksheet = workbook.Worksheet(1);
@@ -291,6 +293,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                 var headerRow = rows.FirstOrDefault();
                 if (headerRow == null)
                     throw new Exception("The file is empty or the header row is missing.");
+
                 var headers = new Dictionary<string, int>();
                 var existingColumnNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -303,56 +306,66 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                     }
                 }
 
-                // Required columns check
+                // ── Column presence flags ──────────────────────────────────────────────
                 bool hasFirstName = headers.ContainsKey("First Name");
                 bool hasLastName = headers.ContainsKey("Last Name");
-                bool hasNameColumn = headers.ContainsKey("Name");
-                bool hasEmailsColumn = headers.ContainsKey("Emails");
+                bool hasNameColumn = headers.ContainsKey("Name") || headers.ContainsKey("Lead Name");
+                bool hasEmailsColumn = headers.ContainsKey("Emails") || headers.ContainsKey("Secondary Email");
                 bool hasZipColumn = headers.ContainsKey("Zip") || headers.ContainsKey("ZipCode");
                 bool hasTagsColumn = headers.ContainsKey("Tags");
                 bool hasEmailOptOutColumn = headers.ContainsKey("EmailOptOut") || headers.ContainsKey("Subscribers");
+                bool hasEmailStatusColumn = headers.ContainsKey("EmailStatus");
+                bool hasLeadOwnerColumn = headers.ContainsKey("Lead Owner");
+
                 var revenueColumnName = headers.ContainsKey("Annual Revenue") ? "Annual Revenue" :
-                        headers.ContainsKey("Sales Revenue USD") ? "Sales Revenue USD" : null;
+                                        headers.ContainsKey("Sales Revenue USD") ? "Sales Revenue USD" : null;
+
+                // ── Required columns check ─────────────────────────────────────────────
                 if (!hasFirstName && !hasNameColumn)
-                    throw new Exception("Missing required column: First Name (or Name)");
+                    throw new Exception("Missing required column: First Name (or Name / Lead Name)");
 
                 if (!hasLastName && !hasNameColumn)
-                    throw new Exception("Missing required column: Last Name (or Name)");
+                    throw new Exception("Missing required column: Last Name (or Name / Lead Name)");
 
-                // Fetch all existing countries
+                // ── Pre-load data ──────────────────────────────────────────────────────
                 var allCountries = await _countryService.GetAllCountriesAsync();
                 var existingLeads = await _leadService.GetAllLeadAsync("", "", new List<int>(), "", "", 0, 0, new List<int>(), 0);
-                //    var existingLeadIdentifiers = new HashSet<string>(existingLeads.Select(l =>
-                //$"{l.FirstName} {l.LastName} {l.Email} {l.CompanyName}".Trim()), StringComparer.OrdinalIgnoreCase);
-                var existingLeadIdentifiers = new HashSet<string>(existingLeads
-                                                                    .Where(l => !string.IsNullOrWhiteSpace(l.Email))
-                                                                    .Select(l => l.Email.Trim().ToLower()),
-                                                                     StringComparer.OrdinalIgnoreCase
-                                                                  );
-
+                var defaultFollowupStatus = (await _leadStatusService.GetAllLeadStatusByNameAsync(""))
+    .FirstOrDefault(s => s.Name.ToLower() == " ");
+                var existingLeadIdentifiers = new HashSet<string>(
+                    existingLeads
+                        .Where(l => !string.IsNullOrWhiteSpace(l.Email))
+                        .Select(l => l.Email.Trim().ToLower()),
+                    StringComparer.OrdinalIgnoreCase
+                );
 
                 var seenLeads = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 var duplicateRecords = new List<string>();
-                foreach (var row in rows.Skip(1)) // Skip header row
+
+                // ── Process rows ───────────────────────────────────────────────────────
+                foreach (var row in rows.Skip(1))
                 {
+                    // ── Name ──────────────────────────────────────────────────────────
                     string firstName = hasFirstName ? GetCellValue(row, headers, "First Name") : null;
                     string lastName = hasLastName ? GetCellValue(row, headers, "Last Name") : null;
 
                     if (hasNameColumn && (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName)))
                     {
-                        string fullName = GetCellValue(row, headers, "Name");
+                        string fullName = headers.ContainsKey("Name")
+                            ? GetCellValue(row, headers, "Name")
+                            : GetCellValue(row, headers, "Lead Name");
+
                         var nameParts = fullName?.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
                         firstName = nameParts?.Length > 0 ? nameParts[0] : "";
                         lastName = nameParts?.Length > 1 ? nameParts[1] : "";
                     }
 
+                    // ── Email & verification ───────────────────────────────────────────
                     string email = GetCellValue(row, headers, "Email");
-                    //string verificationResult = await _emailverificationService.VerifyEmailApi(email);
-                    //dynamic verificationResponse = Newtonsoft.Json.JsonConvert.DeserializeObject(verificationResult);
-
                     EmailValidationStatus emailStatus = EmailValidationStatus.None;
 
-                    if (!string.IsNullOrWhiteSpace(email))
+                    // Only call the API if the file does NOT already have EmailStatus column
+                    if (!hasEmailStatusColumn && !string.IsNullOrWhiteSpace(email))
                     {
                         try
                         {
@@ -371,49 +384,34 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                                 var safeToSend = ((string)verificationResponse?.safe_to_send)?.ToLowerInvariant();
 
                                 if (result == "valid" && safeToSend == "true")
-                                {
                                     emailStatus = EmailValidationStatus.Valid;
-                                }
                                 else if (result == "invalid" || safeToSend == "false")
-                                {
                                     emailStatus = EmailValidationStatus.Invalid;
-                                }
                                 else
-                                {
                                     emailStatus = EmailValidationStatus.None;
-                                }
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             _notificationService.WarningNotification("Email verification failed. Please try again later.");
                         }
                     }
 
+                    // Override with value from file column if present
+                    if (hasEmailStatusColumn)
+                    {
+                        string rawStatus = GetCellValue(row, headers, "EmailStatus")?.Trim().ToLowerInvariant();
+                        emailStatus = rawStatus switch
+                        {
+                            "valid" => EmailValidationStatus.Valid,
+                            "invalid" => EmailValidationStatus.Invalid,
+                            _ => emailStatus
+                        };
+                    }
 
-
-                    string secondaryEmails = hasEmailsColumn ? GetCellValue(row, headers, "Emails") : null;
-                    //string leadIdentifier = $"{firstName} {lastName} {email}".Trim();
-                    //if (seenLeads.Contains(leadIdentifier))
-                    //{
-                    //    continue; // Skip duplicate entry in file
-                    //}
-
-                    //// Check if lead exists in the database
-                    //if (existingLeadIdentifiers.Contains(leadIdentifier))
-                    //{
-                    //    duplicateRecords.Add($"{firstName} {lastName}");
-                    //    continue; // Skip adding this record
-                    //}
-
-                    //seenLeads.Add(leadIdentifier); // Mark this lead as processed
+                    // ── Duplicate check ───────────────────────────────────────────────
                     var normalizedEmail = email?.Trim().ToLower();
 
-                    // Skip if email is empty
-                    //if (string.IsNullOrWhiteSpace(normalizedEmail))
-                    //    continue;
-
-                    // Skip duplicate in same import file
                     if (!string.IsNullOrWhiteSpace(normalizedEmail))
                     {
                         if (seenLeads.Contains(normalizedEmail))
@@ -425,10 +423,17 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                             continue;
                         }
 
-                        seenLeads.Add(normalizedEmail); // Only track non-empty emails
+                        seenLeads.Add(normalizedEmail);
                     }
 
-
+                    // ── Secondary emails ──────────────────────────────────────────────
+                    string secondaryEmails = null;
+                    if (hasEmailsColumn)
+                    {
+                        secondaryEmails = headers.ContainsKey("Emails")
+                            ? GetCellValue(row, headers, "Emails")
+                            : GetCellValue(row, headers, "Secondary Email");
+                    }
 
                     if (!string.IsNullOrWhiteSpace(secondaryEmails))
                     {
@@ -440,150 +445,149 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                             .ToList();
 
                         if (!string.IsNullOrWhiteSpace(email))
-                        {
                             emailList.Remove(email);
-                        }
 
                         secondaryEmails = string.Join(", ", emailList);
                     }
 
+                    // ── Phone numbers ─────────────────────────────────────────────────
                     var phoneColumns = headers
-                        .Where(h => h.Key.Contains("phone", StringComparison.OrdinalIgnoreCase) || h.Key.Contains("telephones", StringComparison.OrdinalIgnoreCase))
+                        .Where(h => h.Key.Contains("phone", StringComparison.OrdinalIgnoreCase) ||
+                                    h.Key.Contains("telephones", StringComparison.OrdinalIgnoreCase))
                         .Select(h => h.Value)
                         .ToList();
                     string phoneNumbers = GetMultiplePhoneNumbers(row, phoneColumns);
 
-                    //                bool isDuplicate = existingLeads.Any(l =>
-                    //(!string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(l.Email) && l.Email.Equals(email, StringComparison.OrdinalIgnoreCase)) ||
-                    //(!string.IsNullOrWhiteSpace(firstName) && !string.IsNullOrWhiteSpace(l.FirstName) &&
-                    // !string.IsNullOrWhiteSpace(lastName) && !string.IsNullOrWhiteSpace(l.LastName) &&
-                    // !string.IsNullOrWhiteSpace(l.CompanyName) && !string.IsNullOrWhiteSpace(l.CompanyName) &&
-                    // l.FirstName.Equals(firstName, StringComparison.OrdinalIgnoreCase) &&
-                    // l.LastName.Equals(lastName, StringComparison.OrdinalIgnoreCase) &&
-                    // l.CompanyName.Equals(l.CompanyName, StringComparison.OrdinalIgnoreCase) &&
-                    // (!string.IsNullOrWhiteSpace(l.WebsiteUrl) && !string.IsNullOrWhiteSpace(l.WebsiteUrl) &&
-                    //  l.WebsiteUrl.Equals(l.WebsiteUrl, StringComparison.OrdinalIgnoreCase))));
-
-                    //                if (isDuplicate)
-                    //                {
-                    //                    duplicateRecords.Add($"{firstName} {lastName}"); // Store only the unique names
-                    //                    continue; // Skip adding this record
-                    //                }
+                    // ── EmailOptOut ───────────────────────────────────────────────────
                     bool emailOptOut = false;
                     if (hasEmailOptOutColumn)
                     {
-                        string emailOptOutValue = GetCellValue(row, headers, headers.ContainsKey("EmailOptOut") ? "EmailOptOut" : "Subscribers");
+                        string emailOptOutValue = GetCellValue(row, headers,
+                            headers.ContainsKey("EmailOptOut") ? "EmailOptOut" : "Subscribers");
 
-                        // Convert "true"/"false" or "0"/"1" to boolean
                         if (!string.IsNullOrWhiteSpace(emailOptOutValue))
                         {
                             emailOptOut = emailOptOutValue.Trim().Equals("true", StringComparison.OrdinalIgnoreCase) ||
                                           emailOptOutValue.Trim().Equals("1");
                         }
                     }
+
+                    // ── Annual Revenue ────────────────────────────────────────────────
                     string revenueRaw = revenueColumnName != null ? GetCellValue(row, headers, revenueColumnName) : null;
-                    Console.WriteLine($"Raw Revenue from Excel: {revenueRaw ?? "N/A"}"); // Debugging
-
                     int parsedRevenue = await TryParseAnnualRevenueAsync(revenueRaw);
-                    Console.WriteLine($"Stored Revenue: {parsedRevenue}");
 
+                    // ── Skype (handles "Skype", "Skype ID", "Skyp ID") ───────────────
+                    string skypeValue = headers.ContainsKey("Skype") ? GetCellValue(row, headers, "Skype")
+                                      : headers.ContainsKey("Skype ID") ? GetCellValue(row, headers, "Skype ID")
+                                      : headers.ContainsKey("Skyp ID") ? GetCellValue(row, headers, "Skyp ID")
+                                      : null;
+
+                    // ── Website URL ───────────────────────────────────────────────────
+                    string websiteRaw = headers.ContainsKey("Website") ? GetCellValue(row, headers, "Website")
+                                      : headers.ContainsKey("WebsiteUrl") ? GetCellValue(row, headers, "WebsiteUrl")
+                                      : headers.ContainsKey("Location on Site") ? GetCellValue(row, headers, "Location on Site")
+                                      : null;
+
+                    // ── Lead Owner ────────────────────────────────────────────────────
+                    string leadOwner = hasLeadOwnerColumn ? GetCellValue(row, headers, "Lead Owner") : null;
+
+                    // ── Build Lead entity ─────────────────────────────────────────────
                     var lead = new Lead
                     {
                         FirstName = firstName,
                         LastName = lastName,
-                        CompanyName = GetCellValue(row, headers, "Company"),
+                        CompanyName = GetCellValue(row, headers, "Company Name"),
                         Phone = phoneNumbers,
                         Email = email,
                         SecondaryEmail = secondaryEmails,
-
-                        // Handle Website URL (Checking "Website" or "Location on Site")
-                        WebsiteUrl = SanitizeUrl(headers.ContainsKey("Website") ? GetCellValue(row, headers, "Website") :
-                              headers.ContainsKey("Location on Site") ? GetCellValue(row, headers, "Location on Site") : null),
+                        WebsiteUrl = SanitizeUrl(websiteRaw),
                         AnnualRevenue = parsedRevenue > 0 ? parsedRevenue : 0,
-                        NoofEmployee = await TryParseEmployeeCountAsync(GetCellValue(row, headers, "Employees")),
-                        SkypeId = GetCellValue(row, headers, "Skype"),
+                        NoofEmployee = await TryParseEmployeeCountAsync(
+                                             headers.ContainsKey("NoofEmployee") ? GetCellValue(row, headers, "NoofEmployee") :
+                                             headers.ContainsKey("Employees") ? GetCellValue(row, headers, "Employees") : null),
+                        SkypeId = skypeValue,
                         Twitter = GetCellValue(row, headers, "Twitter"),
-
-                        LinkedinUrl = SanitizeUrl(GetCellValue(row, headers, "LinkedIn")),
-                        Facebookurl = GetCellValue(row, headers, "Facebook"),
+                        LinkedinUrl = SanitizeUrl(
+                                             headers.ContainsKey("LinkedinUrl") ? GetCellValue(row, headers, "LinkedinUrl") :
+                                             headers.ContainsKey("LinkedIn") ? GetCellValue(row, headers, "LinkedIn") : null),
+                        Facebookurl = headers.ContainsKey("FacebookUrl") ? GetCellValue(row, headers, "FacebookUrl") :
+                                         headers.ContainsKey("Facebook") ? GetCellValue(row, headers, "Facebook") : null,
                         Description = GetCellValue(row, headers, "Description"),
                         EmailStatusId = (int)emailStatus,
                         EmailOptOut = emailOptOut,
                         CreatedOnUtc = DateTime.UtcNow,
                         UpdatedOnUtc = DateTime.UtcNow
                     };
-                    //string revenueDisplay = $"${lead.AnnualRevenue}";
-                    // Handle Title
+
+                    // Assign LeadOwner if your entity supports it
+                    // e.g. lead.OwnerName = leadOwner;
+
+                    // ── Title ─────────────────────────────────────────────────────────
                     var titleName = GetCellValue(row, headers, "Title");
                     var title = await _titleService.GetOrCreateTitleByNameAsync(titleName);
                     lead.TitleId = title?.Id ?? 0;
 
-                    // Handle Lead Source
+                    // ── Lead Source ───────────────────────────────────────────────────
                     var leadSourceName = GetCellValue(row, headers, "Lead Source");
                     var leadSource = await _leadSourceService.GetOrCreateLeadSourceByNameAsync(leadSourceName);
                     lead.LeadSourceId = leadSource?.Id ?? 0;
 
-                    // Handle Industry
+                    // ── Industry ──────────────────────────────────────────────────────
                     var industryName = headers.ContainsKey("Industry") ? GetCellValue(row, headers, "Industry")
-                        : headers.ContainsKey("Vertical") ? GetCellValue(row, headers, "Vertical")
-                        : null;
+                                     : headers.ContainsKey("Vertical") ? GetCellValue(row, headers, "Vertical")
+                                     : null;
                     var industry = await _industryService.GetOrCreateIndustryByNameAsync(industryName);
                     lead.IndustryId = industry?.Id ?? 0;
 
-                    // Handle Category
+                    // ── Category ──────────────────────────────────────────────────────
                     var categoryName = GetCellValue(row, headers, "Category");
                     var category = await _categoryService.GetOrCreateCategorysByNameAsync(categoryName);
                     lead.CategoryId = category?.Id ?? 0;
 
-                    // Handle Lead Status
+                    // ── Lead Status ───────────────────────────────────────────────────
                     var leadStatusName = GetCellValue(row, headers, "Lead Status");
                     var leadStatus = await _leadStatusService.GetOrCreateLeadStatusByNameAsync(leadStatusName);
                     lead.LeadStatusId = leadStatus?.Id ?? 0;
-                    var stateName = GetCellValue(row, headers, "State");
-                    // Handle Country & State
+
+                    // ── Country ───────────────────────────────────────────────────────
                     var countryName = GetCellValue(row, headers, "Country");
                     var country = (App.Core.Domain.Directory.Country)null;
 
                     if (!string.IsNullOrWhiteSpace(countryName))
                     {
                         country = allCountries.FirstOrDefault(c => c.Name.Equals(countryName, StringComparison.OrdinalIgnoreCase))
-                                ?? allCountries.FirstOrDefault(c => c.TwoLetterIsoCode.Equals(countryName, StringComparison.OrdinalIgnoreCase))
-                                ?? allCountries.FirstOrDefault(c => c.ThreeLetterIsoCode.Equals(countryName, StringComparison.OrdinalIgnoreCase));
+                               ?? allCountries.FirstOrDefault(c => c.TwoLetterIsoCode.Equals(countryName, StringComparison.OrdinalIgnoreCase))
+                               ?? allCountries.FirstOrDefault(c => c.ThreeLetterIsoCode.Equals(countryName, StringComparison.OrdinalIgnoreCase));
                     }
-                    var fullCountryName = country?.Name;
 
-                    // Fetch states for the selected country
-
+                    // ── State ─────────────────────────────────────────────────────────
+                    var stateName = GetCellValue(row, headers, "State");
                     var state = (App.Core.Domain.Directory.StateProvince)null;
+
                     if (!string.IsNullOrWhiteSpace(stateName) && country != null)
                     {
                         var existingStates = await _stateProvinceService.GetStateProvincesByCountryIdAsync(country.Id);
-
-                        // Normalize state names (trim spaces)
                         stateName = stateName.Trim();
 
-                        // Try exact match (both lower & upper case)
                         state = existingStates.FirstOrDefault(s =>
-                            s.Name.Trim().Equals(stateName, StringComparison.OrdinalIgnoreCase) ||
-                            (!string.IsNullOrWhiteSpace(s.Abbreviation) && s.Abbreviation.Trim().Equals(stateName, StringComparison.OrdinalIgnoreCase))
-                        );
+                                    s.Name.Trim().Equals(stateName, StringComparison.OrdinalIgnoreCase) ||
+                                    (!string.IsNullOrWhiteSpace(s.Abbreviation) &&
+                                     s.Abbreviation.Trim().Equals(stateName, StringComparison.OrdinalIgnoreCase)));
 
-                        // If no exact match, try partial match (contains check for both lower & upper case)
                         if (state == null)
                         {
                             state = existingStates.FirstOrDefault(s =>
-                                s.Name.Trim().IndexOf(stateName, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                (!string.IsNullOrWhiteSpace(s.Abbreviation) && s.Abbreviation.Trim().IndexOf(stateName, StringComparison.OrdinalIgnoreCase) >= 0)
-                            );
+                                        s.Name.Trim().IndexOf(stateName, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                        (!string.IsNullOrWhiteSpace(s.Abbreviation) &&
+                                         s.Abbreviation.Trim().IndexOf(stateName, StringComparison.OrdinalIgnoreCase) >= 0));
                         }
                     }
 
-
-
-                    var fullStateName = state?.Name;
-
+                    // ── Address ───────────────────────────────────────────────────────
                     var city = GetCellValue(row, headers, "City");
-                    var zipCode = hasZipColumn ? GetCellValue(row, headers, headers.ContainsKey("Zip") ? "Zip" : "ZipCode") : null;
+                    var zipCode = hasZipColumn
+                        ? GetCellValue(row, headers, headers.ContainsKey("Zip") ? "Zip" : "ZipCode")
+                        : null;
 
                     var address = new Address
                     {
@@ -596,28 +600,59 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                     await _addressService.InsertAddressAsync(address);
                     lead.AddressId = address.Id;
 
-                    // Save lead
+                    // ── Save lead ─────────────────────────────────────────────────────
                     await _leadService.InsertLeadAsync(lead);
+                    if (!string.IsNullOrWhiteSpace(lead.LinkedinUrl))
+                    {
+                        var existingFollowup = await _linkedInFollowupsService.GetLinkedInFollowupsByLinkedInUrlAsync(lead.LinkedinUrl);
+                        if (existingFollowup == null)
+                        {   
+                            await _linkedInFollowupsService.InsertLinkedInFollowupsAsync(new LinkedInFollowups
+                            {
+                                FirstName = lead.FirstName ?? "",
+                                LastName = lead.LastName ?? "",
+                                LinkedinUrl = lead.LinkedinUrl,
+                                Email = lead.Email ?? "",
+                                WebsiteUrl = lead.WebsiteUrl ?? "",
+                                LeadId = lead.Id,
+                                StatusId = defaultFollowupStatus?.Id ?? 0,
+                                LastMessageDate =DateTime.UtcNow,
+                                FollowUp=0,
+                                NextFollowUpDate=DateTime.UtcNow,
+                                DaysUntilNext=0,
+                                RemainingFollowUps=0,
+                                AutoStatus= "No follow-up scheduled",
+                                CreatedByUserId = lead.CustomerId,
+                                CreatedOnUtc = DateTime.UtcNow,
+                                UpdatedOnUtc = DateTime.UtcNow,
+                            });
+                        }
+                        else if (existingFollowup.LeadId == null || existingFollowup.LeadId == 0)
+                        {
+                            existingFollowup.LeadId = lead.Id;
+                            existingFollowup.UpdatedOnUtc = DateTime.UtcNow;
+                            await _linkedInFollowupsService.UpdateLinkedInFollowupsAsync(existingFollowup);
+                        }
+                    }
+                    // ── Tags ──────────────────────────────────────────────────────────
                     if (hasTagsColumn)
                     {
                         string tagsValue = GetCellValue(row, headers, "Tags");
 
                         if (!string.IsNullOrWhiteSpace(tagsValue))
                         {
-                            // Split tags by ',' or ';' and remove extra spaces
-                            var tagNames = tagsValue.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                                                    .Select(t => t.Trim())
-                                                    .Where(t => !string.IsNullOrEmpty(t))
-                                                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                                                    .ToList();
+                            var tagNames = tagsValue
+                                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(t => t.Trim())
+                                .Where(t => !string.IsNullOrEmpty(t))
+                                .Distinct(StringComparer.OrdinalIgnoreCase)
+                                .ToList();
 
                             foreach (var tagName in tagNames)
                             {
-                                // Fetch or create the tag
                                 var tag = await _tagsService.GetOrCreateTagsByNameAsync(tagName);
                                 if (tag != null)
                                 {
-                                    // Check if the lead already has this tag before inserting
                                     var existingLeadTags = await _leadService.GetLeadTagByLeadIdAsync(lead.Id);
                                     if (existingLeadTags == null || !existingLeadTags.Any(t => t.TagsId == tag.Id))
                                     {
@@ -631,12 +666,12 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                             }
                         }
                     }
-
                 }
-                // Show success message with duplicate details if any
+
+                // ── Final notification ─────────────────────────────────────────────────
                 if (duplicateRecords.Any())
                 {
-                    string duplicateMessage = "Duplicate Entry: " + string.Join(",", duplicateRecords);
+                    string duplicateMessage = "Duplicate Entry: " + string.Join(", ", duplicateRecords);
                     _notificationService.WarningNotification(duplicateMessage);
                 }
                 else

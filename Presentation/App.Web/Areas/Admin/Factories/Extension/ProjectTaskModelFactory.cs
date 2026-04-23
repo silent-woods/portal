@@ -16,6 +16,7 @@ using App.Services.TimeSheets;
 using App.Web.Areas.Admin.Factories.Extension;
 using App.Web.Areas.Admin.Infrastructure.Mapper.Extensions;
 using App.Web.Areas.Admin.Models.Extension.ProjectTasks;
+using App.Web.Areas.Admin.Models.Extension.TaskComments;
 using App.Web.Areas.Admin.Models.LeaveManagement;
 using App.Web.Framework.Models.Extensions;
 using App.Web.Models.Boards;
@@ -487,7 +488,8 @@ namespace App.Web.Areas.Admin.Factories
                     projectTaskModel.TaskTypeName = ((TaskTypeEnum)selectedAvailableDaysOption).ToString();
                     projectTaskModel.EstimationTimeHHMM = await _timeSheetsService.ConvertToHHMMFormat(projectTasks.EstimatedTime);
                     projectTaskModel.SpentTime = await _timeSheetsService.ConvertSpentTimeAsync(projectTasks.SpentHours, projectTasks.SpentMinutes);
-                    projectTaskModel.CreatedOnUtc = await _dateTimeHelper.ConvertToUserTimeAsync(projectTasks.CreatedOnUtc, DateTimeKind.Utc);
+                    var istTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+                    projectTaskModel.CreatedOnUtc = TimeZoneInfo.ConvertTimeFromUtc(projectTaskModel.CreatedOnUtc, istTimeZone);
 
                     if(projectTasks.DueDate != null)
                     projectTaskModel.DueDateFormat = projectTasks.DueDate.HasValue

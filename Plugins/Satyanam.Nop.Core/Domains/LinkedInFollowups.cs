@@ -22,6 +22,7 @@ namespace Satyanam.Nop.Core.Domains
         public int StatusId { get; set; }
         public string Notes { get; set; }
         public int CreatedByUserId { get; set; }
+        public int? LeadId { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public DateTime UpdatedOnUtc { get; set; }
     }

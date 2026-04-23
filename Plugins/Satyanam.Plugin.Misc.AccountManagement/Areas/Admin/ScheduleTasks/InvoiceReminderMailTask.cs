@@ -13,40 +13,40 @@ namespace Satyanam.Plugin.Misc.AccountManagement.Areas.Admin.ScheduleTasks;
 
 public partial class InvoiceReminderMailTask : IScheduleTask
 {
-	#region Fields
+    #region Fields
 
-	protected readonly IAccountManagementService _accountManagementService;
+    protected readonly IAccountManagementService _accountManagementService;
     protected readonly ICompanyService _companyService;
     protected readonly IContactsService _contactsService;
     protected readonly IScheduleTaskService _scheduleTaskService;
-	protected readonly ISettingService _settingService;
+    protected readonly ISettingService _settingService;
     protected readonly IWorkContext _workContext;
 
-	#endregion
+    #endregion
 
-	#region Ctor
+    #region Ctor
 
-	public InvoiceReminderMailTask(IAccountManagementService accountManagementService,
+    public InvoiceReminderMailTask(IAccountManagementService accountManagementService,
         ICompanyService companyService,
         IContactsService contactsService,
         IScheduleTaskService scheduleTaskService,
         ISettingService settingService,
         IWorkContext workContext)
-	{
-		_accountManagementService = accountManagementService;
+    {
+        _accountManagementService = accountManagementService;
         _companyService = companyService;
         _contactsService = contactsService;
         _scheduleTaskService = scheduleTaskService;
-		_settingService = settingService;
+        _settingService = settingService;
         _workContext = workContext;
-	}
+    }
 
     #endregion
 
     #region Methods
 
     public async Task ExecuteAsync()
-	{
+    {
         var settings = await _settingService.LoadSettingAsync<AccountManagementSettings>();
         if (!settings.EnablePlugin)
             return;

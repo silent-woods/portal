@@ -1,4 +1,5 @@
 using App.Core.Domain.Directory;
+using App.Core.Domain.Employees;
 using App.Core.Domain.Extension.ProjectTasks;
 using App.Core.Domain.Extension.Projects;
 using App.Services.Configuration;
@@ -278,10 +279,22 @@ public partial class ExecutiveDashboardController : BaseAdminController
     }
 
     [HttpPost]
-    public virtual async Task<IActionResult> GetFinancialKPIData(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
+    public virtual async Task<IActionResult> GetFinancialKPIData(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo, int? projectId = null)
     {
         if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
+
+        int[] filterInvoiceIds = null;
+        bool isProjectFiltered = projectId.HasValue && projectId.Value > 0;
+        if (isProjectFiltered)
+        {
+            var billings = await _accountManagementService.GetAllProjectBillingsAsync(pageSize: int.MaxValue);
+            var billingIds = billings.Where(b => b.ProjectId == projectId.Value).Select(b => b.Id).ToHashSet();
+            var allInvoices = await _accountManagementService.GetAllInvoicesAsync(pageSize: int.MaxValue);
+            filterInvoiceIds = allInvoices.Where(inv => billingIds.Contains(inv.ProjectBillingId)).Select(inv => inv.Id).ToArray();
+            if (filterInvoiceIds.Length == 0)
+                filterInvoiceIds = new[] { -1 };
+        }
 
         decimal revenue = 0, expense = 0, prevRevenue = 0, prevExpense = 0, directCost = 0, prevDirectCost = 0;
         string periodLabel = "", prevPeriodLabel = "", chartNote = "";
@@ -299,19 +312,28 @@ public partial class ExecutiveDashboardController : BaseAdminController
             if (mFrom == mTo && yFrom == yTo)
             {
                 var (prevMonth, prevYear) = GetPreviousPeriod(mFrom, yFrom);
-                var incTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: mFrom, yearId: yFrom);
-                var expTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: mFrom, yearId: yFrom);
-                var prevIncTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: prevMonth, yearId: prevYear);
-                var prevExpTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: prevMonth, yearId: prevYear);
-                var salaryTask = GetSalaryCostAsync(monthId: mFrom, yearId: yFrom);
-                var prevSalaryTask = GetSalaryCostAsync(monthId: prevMonth, yearId: prevYear);
-                await Task.WhenAll(incTask, expTask, prevIncTask, prevExpTask, salaryTask, prevSalaryTask);
-                revenue = incTask.Result.TotalIncome;
-                expense = expTask.Result.TotalExpense;
-                prevRevenue = prevIncTask.Result.TotalIncome;
-                prevExpense = prevExpTask.Result.TotalExpense;
-                directCost = salaryTask.Result;
-                prevDirectCost = prevSalaryTask.Result;
+                var incTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: mFrom, yearId: yFrom, invoiceIds: filterInvoiceIds);
+                var prevIncTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: prevMonth, yearId: prevYear, invoiceIds: filterInvoiceIds);
+                if (isProjectFiltered)
+                {
+                    await Task.WhenAll(incTask, prevIncTask);
+                    revenue = incTask.Result.TotalIncome;
+                    prevRevenue = prevIncTask.Result.TotalIncome;
+                }
+                else
+                {
+                    var expTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: mFrom, yearId: yFrom);
+                    var prevExpTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: prevMonth, yearId: prevYear);
+                    var salaryTask = GetSalaryCostAsync(monthId: mFrom, yearId: yFrom);
+                    var prevSalaryTask = GetSalaryCostAsync(monthId: prevMonth, yearId: prevYear);
+                    await Task.WhenAll(incTask, expTask, prevIncTask, prevExpTask, salaryTask, prevSalaryTask);
+                    revenue = incTask.Result.TotalIncome;
+                    expense = expTask.Result.TotalExpense;
+                    prevRevenue = prevIncTask.Result.TotalIncome;
+                    prevExpense = prevExpTask.Result.TotalExpense;
+                    directCost = salaryTask.Result;
+                    prevDirectCost = prevSalaryTask.Result;
+                }
                 periodLabel = new DateTime(yFrom, mFrom, 1).ToString("MMM yyyy", CultureInfo.InvariantCulture);
                 prevPeriodLabel = new DateTime(prevYear, prevMonth, 1).ToString("MMM yyyy", CultureInfo.InvariantCulture);
                 chartNote = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Chart.Last3MonthsNote");
@@ -339,38 +361,52 @@ public partial class ExecutiveDashboardController : BaseAdminController
                 var intervals = GetMonthRangeIntervals(mFrom, yFrom, mTo, yTo);
                 var prevIntervals = GetPreviousPeriodIntervals(mFrom, yFrom, intervals.Count);
 
-                var sparkRevTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year)).ToList();
-                var sparkExpTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
-                var sparkSalTasks = intervals.Select(i => GetSalaryCostAsync(monthId: i.month, yearId: i.year)).ToList();
-                var prevRevTasks = prevIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year)).ToList();
-                var prevExpTasks = prevIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
-                var prevSalTasks = prevIntervals.Select(i => GetSalaryCostAsync(monthId: i.month, yearId: i.year)).ToList();
-
-                await Task.WhenAll(sparkRevTasks.Concat(sparkExpTasks).Concat(prevRevTasks).Concat(prevExpTasks));
-                await Task.WhenAll(sparkSalTasks.Concat(prevSalTasks));
-
-                revenue = sparkRevTasks.Sum(t => t.Result.TotalIncome);
-                expense = sparkExpTasks.Sum(t => t.Result.TotalExpense);
-                directCost = sparkSalTasks.Sum(t => t.Result);
-                prevRevenue = prevRevTasks.Sum(t => t.Result.TotalIncome);
-                prevExpense = prevExpTasks.Sum(t => t.Result.TotalExpense);
-                prevDirectCost = prevSalTasks.Sum(t => t.Result);
+                var sparkRevTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year, invoiceIds: filterInvoiceIds)).ToList();
+                var prevRevTasks  = prevIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year, invoiceIds: filterInvoiceIds)).ToList();
 
                 periodLabel = $"{new DateTime(yFrom, mFrom, 1):MMM yyyy} – {new DateTime(yTo, mTo, 1):MMM yyyy}";
                 var prevFirst = prevIntervals.FirstOrDefault();
-                var prevLast = prevIntervals.LastOrDefault();
+                var prevLast  = prevIntervals.LastOrDefault();
                 prevPeriodLabel = prevIntervals.Any()
                     ? $"{new DateTime(prevFirst.year, prevFirst.month, 1):MMM yyyy} – {new DateTime(prevLast.year, prevLast.month, 1):MMM yyyy}"
                     : "";
 
-                for (var i = 0; i < intervals.Count; i++)
+                if (isProjectFiltered)
                 {
-                    var r = sparkRevTasks[i].Result.TotalIncome;
-                    var e = sparkExpTasks[i].Result.TotalExpense;
-                    revenuePoints.Add(r); cashFlowPoints.Add(r - e);
-                    cashInPoints.Add(r); cashOutPoints.Add(e);
-                    directCostPoints.Add(sparkSalTasks[i].Result);
-                    labels.Add(intervals[i].label);
+                    await Task.WhenAll(sparkRevTasks.Concat(prevRevTasks));
+                    revenue     = sparkRevTasks.Sum(t => t.Result.TotalIncome);
+                    prevRevenue = prevRevTasks.Sum(t => t.Result.TotalIncome);
+                    for (var i = 0; i < intervals.Count; i++)
+                    {
+                        var r = sparkRevTasks[i].Result.TotalIncome;
+                        revenuePoints.Add(r); cashFlowPoints.Add(r);
+                        cashInPoints.Add(r);  cashOutPoints.Add(0);
+                        directCostPoints.Add(0); labels.Add(intervals[i].label);
+                    }
+                }
+                else
+                {
+                    var sparkExpTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
+                    var sparkSalTasks = intervals.Select(i => GetSalaryCostAsync(monthId: i.month, yearId: i.year)).ToList();
+                    var prevExpTasks  = prevIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
+                    var prevSalTasks  = prevIntervals.Select(i => GetSalaryCostAsync(monthId: i.month, yearId: i.year)).ToList();
+                    await Task.WhenAll(sparkRevTasks.Concat(sparkExpTasks).Concat(prevRevTasks).Concat(prevExpTasks));
+                    await Task.WhenAll(sparkSalTasks.Concat(prevSalTasks));
+                    revenue     = sparkRevTasks.Sum(t => t.Result.TotalIncome);
+                    expense     = sparkExpTasks.Sum(t => t.Result.TotalExpense);
+                    directCost  = sparkSalTasks.Sum(t => t.Result);
+                    prevRevenue = prevRevTasks.Sum(t => t.Result.TotalIncome);
+                    prevExpense = prevExpTasks.Sum(t => t.Result.TotalExpense);
+                    prevDirectCost = prevSalTasks.Sum(t => t.Result);
+                    for (var i = 0; i < intervals.Count; i++)
+                    {
+                        var r = sparkRevTasks[i].Result.TotalIncome;
+                        var e = sparkExpTasks[i].Result.TotalExpense;
+                        revenuePoints.Add(r); cashFlowPoints.Add(r - e);
+                        cashInPoints.Add(r);  cashOutPoints.Add(e);
+                        directCostPoints.Add(sparkSalTasks[i].Result);
+                        labels.Add(intervals[i].label);
+                    }
                 }
             }
         }
@@ -383,45 +419,61 @@ public partial class ExecutiveDashboardController : BaseAdminController
             var yearIntervals = GetFYRangeIntervals(yFrom, yTo, fyStartMonth);
             var prevYearIntervals = GetFYRangeIntervals(yFrom - span, yTo - span, fyStartMonth);
 
-            var sparkRevTasks = yearIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year)).ToList();
-            var sparkExpTasks = yearIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
-            var sparkSalTasks3 = yearIntervals.Select(i => GetSalaryCostAsync(monthId: i.month, yearId: i.year)).ToList();
-            var prevRevTasks = prevYearIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year)).ToList();
-            var prevExpTasks = prevYearIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
-            var prevSalTasks3 = prevYearIntervals.Select(i => GetSalaryCostAsync(monthId: i.month, yearId: i.year)).ToList();
-
-            await Task.WhenAll(sparkRevTasks.Concat(sparkExpTasks).Concat(prevRevTasks).Concat(prevExpTasks));
-            await Task.WhenAll(sparkSalTasks3.Concat(prevSalTasks3));
-
-            revenue = sparkRevTasks.Sum(t => t.Result.TotalIncome);
-            expense = sparkExpTasks.Sum(t => t.Result.TotalExpense);
-            directCost = sparkSalTasks3.Sum(t => t.Result);
-            prevRevenue = prevRevTasks.Sum(t => t.Result.TotalIncome);
-            prevExpense = prevExpTasks.Sum(t => t.Result.TotalExpense);
-            prevDirectCost = prevSalTasks3.Sum(t => t.Result);
-            periodLabel = yFrom == yTo ? FyLabel(yFrom, fyStartMonth) : $"{FyLabel(yFrom, fyStartMonth)}–{FyLabel(yTo, fyStartMonth)}";
+            var sparkRevTasksY = yearIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year, invoiceIds: filterInvoiceIds)).ToList();
+            var prevRevTasksY  = prevYearIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year, invoiceIds: filterInvoiceIds)).ToList();
+            periodLabel     = yFrom == yTo ? FyLabel(yFrom, fyStartMonth) : $"{FyLabel(yFrom, fyStartMonth)}–{FyLabel(yTo, fyStartMonth)}";
             prevPeriodLabel = span == 1 ? FyLabel(yFrom - 1, fyStartMonth) : $"{FyLabel(yFrom - span, fyStartMonth)}–{FyLabel(yFrom - 1, fyStartMonth)}";
 
-            for (var i = 0; i < yearIntervals.Count; i++)
+            if (isProjectFiltered)
             {
-                var r = sparkRevTasks[i].Result.TotalIncome;
-                var e = sparkExpTasks[i].Result.TotalExpense;
-                revenuePoints.Add(r);
-                cashFlowPoints.Add(r - e);
-                cashInPoints.Add(r);
-                cashOutPoints.Add(e);
-                directCostPoints.Add(sparkSalTasks3[i].Result);
-                labels.Add(yearIntervals[i].label);
+                await Task.WhenAll(sparkRevTasksY.Concat(prevRevTasksY));
+                revenue     = sparkRevTasksY.Sum(t => t.Result.TotalIncome);
+                prevRevenue = prevRevTasksY.Sum(t => t.Result.TotalIncome);
+                for (var i = 0; i < yearIntervals.Count; i++)
+                {
+                    var r = sparkRevTasksY[i].Result.TotalIncome;
+                    revenuePoints.Add(r); cashFlowPoints.Add(r);
+                    cashInPoints.Add(r);  cashOutPoints.Add(0);
+                    directCostPoints.Add(0); labels.Add(yearIntervals[i].label);
+                }
+            }
+            else
+            {
+                var sparkExpTasksY  = yearIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
+                var sparkSalTasksY  = yearIntervals.Select(i => GetSalaryCostAsync(monthId: i.month, yearId: i.year)).ToList();
+                var prevExpTasksY   = prevYearIntervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
+                var prevSalTasksY   = prevYearIntervals.Select(i => GetSalaryCostAsync(monthId: i.month, yearId: i.year)).ToList();
+                await Task.WhenAll(sparkRevTasksY.Concat(sparkExpTasksY).Concat(prevRevTasksY).Concat(prevExpTasksY));
+                await Task.WhenAll(sparkSalTasksY.Concat(prevSalTasksY));
+                revenue        = sparkRevTasksY.Sum(t => t.Result.TotalIncome);
+                expense        = sparkExpTasksY.Sum(t => t.Result.TotalExpense);
+                directCost     = sparkSalTasksY.Sum(t => t.Result);
+                prevRevenue    = prevRevTasksY.Sum(t => t.Result.TotalIncome);
+                prevExpense    = prevExpTasksY.Sum(t => t.Result.TotalExpense);
+                prevDirectCost = prevSalTasksY.Sum(t => t.Result);
+                for (var i = 0; i < yearIntervals.Count; i++)
+                {
+                    var r = sparkRevTasksY[i].Result.TotalIncome;
+                    var e = sparkExpTasksY[i].Result.TotalExpense;
+                    revenuePoints.Add(r); cashFlowPoints.Add(r - e);
+                    cashInPoints.Add(r);  cashOutPoints.Add(e);
+                    directCostPoints.Add(sparkSalTasksY[i].Result);
+                    labels.Add(yearIntervals[i].label);
+                }
             }
         }
 
         BuildResult:
-        var netCashFlow = revenue - expense;
+        var netCashFlow     = revenue - expense;
         var prevNetCashFlow = prevRevenue - prevExpense;
-        var grossPct = revenue > 0 ? Math.Round((revenue - directCost) / revenue * 100, 2) : (decimal?)null;
-        var netPct = revenue > 0 ? Math.Round((revenue - expense) / revenue * 100, 2) : (decimal?)null;
-        var prevGrossPct = prevRevenue > 0 ? Math.Round((prevRevenue - prevDirectCost) / prevRevenue * 100, 2) : (decimal?)null;
-        var prevNetPct = prevRevenue > 0 ? Math.Round((prevRevenue - prevExpense) / prevRevenue * 100, 2) : (decimal?)null;
+        decimal? grossPct = null, netPct = null, prevGrossPct = null, prevNetPct = null;
+        if (!isProjectFiltered)
+        {
+            grossPct     = revenue     > 0 ? Math.Round((revenue     - directCost)     / revenue     * 100, 2) : (decimal?)null;
+            netPct       = revenue     > 0 ? Math.Round((revenue     - expense)         / revenue     * 100, 2) : (decimal?)null;
+            prevGrossPct = prevRevenue > 0 ? Math.Round((prevRevenue - prevDirectCost)  / prevRevenue * 100, 2) : (decimal?)null;
+            prevNetPct   = prevRevenue > 0 ? Math.Round((prevRevenue - prevExpense)     / prevRevenue * 100, 2) : (decimal?)null;
+        }
 
         return Json(new
         {
@@ -463,7 +515,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     }
 
     [HttpPost]
-    public virtual async Task<IActionResult> GetRevenueDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
+    public virtual async Task<IActionResult> GetRevenueDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo, int? projectId = null)
     {
         if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
@@ -472,23 +524,35 @@ public partial class ExecutiveDashboardController : BaseAdminController
         decimal revenue;
         IEnumerable<object> topInvoices;
 
+        HashSet<int> projBillingIds = projectId.HasValue && projectId.Value > 0
+            ? await GetProjectBillingIdsAsync(projectId.Value)
+            : null;
+
         List<Domain.Invoice> allInvoicesForRevenue;
         var intervals = ResolveModalIntervals(granularityId, monthFrom, yearFrom, monthTo, yearTo, yearFrom, yearTo, fyStartMonth);
         if (intervals != null)
         {
-            var revTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year)).ToList();
             var invTasks = intervals.Select(i => _accountManagementService.GetAllInvoicesAsync(monthId: i.month, yearId: i.year)).ToList();
-            await Task.WhenAll(revTasks.Cast<Task>().Concat(invTasks.Cast<Task>()));
-            revenue = revTasks.Sum(t => t.Result.TotalIncome);
+            await Task.WhenAll(invTasks);
             allInvoicesForRevenue = invTasks.SelectMany(t => t.Result ?? Enumerable.Empty<Domain.Invoice>()).ToList();
+            if (projBillingIds != null)
+                allInvoicesForRevenue = allInvoicesForRevenue.Where(i => projBillingIds.Contains(i.ProjectBillingId)).ToList();
+            var filterIds = projBillingIds != null ? (allInvoicesForRevenue.Select(i => i.Id).ToArray() is { Length: > 0 } ids ? ids : new[] { -1 }) : null;
+            var revTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year, invoiceIds: filterIds)).ToList();
+            await Task.WhenAll(revTasks);
+            revenue = revTasks.Sum(t => t.Result.TotalIncome);
         }
         else
         {
-            var summaryTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, dateFrom: dateFrom, dateTo: dateTo);
             var invoicesTask = _accountManagementService.GetAllInvoicesAsync(createdFromUTC: dateFrom, createdToUTC: dateTo);
-            await Task.WhenAll(summaryTask, invoicesTask);
-            revenue = summaryTask.Result.TotalIncome;
+            await invoicesTask;
             allInvoicesForRevenue = (invoicesTask.Result ?? Enumerable.Empty<Domain.Invoice>()).ToList();
+            if (projBillingIds != null)
+                allInvoicesForRevenue = allInvoicesForRevenue.Where(i => projBillingIds.Contains(i.ProjectBillingId)).ToList();
+            var filterIds = projBillingIds != null ? (allInvoicesForRevenue.Select(i => i.Id).ToArray() is { Length: > 0 } ids2 ? ids2 : new[] { -1 }) : null;
+            var summaryTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, dateFrom: dateFrom, dateTo: dateTo, invoiceIds: filterIds);
+            await summaryTask;
+            revenue = summaryTask.Result.TotalIncome;
         }
 
         var revBillingMap  = await BuildBillingMapAsync(allInvoicesForRevenue);
@@ -511,7 +575,7 @@ public partial class ExecutiveDashboardController : BaseAdminController
     }
 
     [HttpPost]
-    public virtual async Task<IActionResult> GetGrossProfitDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
+    public virtual async Task<IActionResult> GetGrossProfitDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo, int? projectId = null)
     {
         if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
@@ -520,33 +584,50 @@ public partial class ExecutiveDashboardController : BaseAdminController
         decimal revenue = 0, directCost = 0;
         List<object> chartData = new();
 
+        bool isProjectFiltered = projectId.HasValue && projectId.Value > 0;
+        int[] filterIds = null;
+        if (isProjectFiltered)
+        {
+            var billingIds = await GetProjectBillingIdsAsync(projectId.Value);
+            var allInv = await _accountManagementService.GetAllInvoicesAsync(pageSize: int.MaxValue);
+            var projInvIds = allInv.Where(i => billingIds.Contains(i.ProjectBillingId)).Select(i => i.Id).ToArray();
+            filterIds = projInvIds.Length > 0 ? projInvIds : new[] { -1 };
+        }
+
         var intervals = ResolveModalIntervals(granularityId, monthFrom, yearFrom, monthTo, yearTo, yearFrom, yearTo, fyStartMonth);
         if (intervals != null)
         {
-            var revTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year)).ToList();
-            var salTasks = intervals.Select(i => GetSalaryCostAsync(monthId: i.month, yearId: i.year)).ToList();
+            var revTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year, invoiceIds: filterIds)).ToList();
             await Task.WhenAll(revTasks);
-            await Task.WhenAll(salTasks);
             revenue = revTasks.Sum(t => t.Result.TotalIncome);
-            directCost = salTasks.Sum(t => t.Result);
+            if (!isProjectFiltered)
+            {
+                var salTasks = intervals.Select(i => GetSalaryCostAsync(monthId: i.month, yearId: i.year)).ToList();
+                await Task.WhenAll(salTasks);
+                directCost = salTasks.Sum(t => t.Result);
+            }
             chartData = intervals.Select((iv, idx) => (object)new { label = new DateTime(iv.year, iv.month, 1).ToString("MMM yy", CultureInfo.InvariantCulture), revenue = revTasks[idx].Result.TotalIncome }).ToList();
         }
         else
         {
-            var summaryTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, dateFrom: dateFrom, dateTo: dateTo);
-            var salaryTask = GetSalaryCostAsync(dateFrom: dateFrom, dateTo: dateTo);
-            await Task.WhenAll(summaryTask, salaryTask);
+            var summaryTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, dateFrom: dateFrom, dateTo: dateTo, invoiceIds: filterIds);
+            await summaryTask;
             revenue = summaryTask.Result.TotalIncome;
-            directCost = salaryTask.Result;
+            if (!isProjectFiltered)
+            {
+                var salaryTask = GetSalaryCostAsync(dateFrom: dateFrom, dateTo: dateTo);
+                await salaryTask;
+                directCost = salaryTask.Result;
+            }
         }
 
         var grossProfit = revenue - directCost;
-        var grossPct = revenue > 0 ? Math.Round(grossProfit / revenue * 100, 2) : (decimal?)null;
+        decimal? grossPct = (!isProjectFiltered && revenue > 0) ? Math.Round(grossProfit / revenue * 100, 2) : (decimal?)null;
         return Json(new { revenue, directCost, grossProfit, grossPct, chartData });
     }
 
     [HttpPost]
-    public virtual async Task<IActionResult> GetNetProfitDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
+    public virtual async Task<IActionResult> GetNetProfitDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo, int? projectId = null)
     {
         if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
@@ -555,32 +636,54 @@ public partial class ExecutiveDashboardController : BaseAdminController
         decimal revenue = 0, totalExpense = 0;
         List<object> chartData = new();
 
+        bool isProjectFiltered = projectId.HasValue && projectId.Value > 0;
+        int[] filterIds = null;
+        if (isProjectFiltered)
+        {
+            var billingIds = await GetProjectBillingIdsAsync(projectId.Value);
+            var allInv = await _accountManagementService.GetAllInvoicesAsync(pageSize: int.MaxValue);
+            var projInvIds = allInv.Where(i => billingIds.Contains(i.ProjectBillingId)).Select(i => i.Id).ToArray();
+            filterIds = projInvIds.Length > 0 ? projInvIds : new[] { -1 };
+        }
+
         var intervals = ResolveModalIntervals(granularityId, monthFrom, yearFrom, monthTo, yearTo, yearFrom, yearTo, fyStartMonth);
         if (intervals != null)
         {
-            var revTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year)).ToList();
-            var expTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
-            await Task.WhenAll(revTasks.Concat(expTasks));
+            var revTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year, invoiceIds: filterIds)).ToList();
+            await Task.WhenAll(revTasks);
             revenue = revTasks.Sum(t => t.Result.TotalIncome);
-            totalExpense = expTasks.Sum(t => t.Result.TotalExpense);
-            chartData = intervals.Select((iv, idx) => (object)new { label = new DateTime(iv.year, iv.month, 1).ToString("MMM yy", CultureInfo.InvariantCulture), revenue = revTasks[idx].Result.TotalIncome, expense = expTasks[idx].Result.TotalExpense }).ToList();
+            if (!isProjectFiltered)
+            {
+                var expTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
+                await Task.WhenAll(expTasks);
+                totalExpense = expTasks.Sum(t => t.Result.TotalExpense);
+                chartData = intervals.Select((iv, idx) => (object)new { label = new DateTime(iv.year, iv.month, 1).ToString("MMM yy", CultureInfo.InvariantCulture), revenue = revTasks[idx].Result.TotalIncome, expense = expTasks[idx].Result.TotalExpense }).ToList();
+            }
+            else
+            {
+                chartData = intervals.Select((iv, idx) => (object)new { label = new DateTime(iv.year, iv.month, 1).ToString("MMM yy", CultureInfo.InvariantCulture), revenue = revTasks[idx].Result.TotalIncome, expense = 0m }).ToList();
+            }
         }
         else
         {
-            var incTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, dateFrom: dateFrom, dateTo: dateTo);
-            var expTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, dateFrom: dateFrom, dateTo: dateTo);
-            await Task.WhenAll(incTask, expTask);
+            var incTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, dateFrom: dateFrom, dateTo: dateTo, invoiceIds: filterIds);
+            await incTask;
             revenue = incTask.Result.TotalIncome;
-            totalExpense = expTask.Result.TotalExpense;
+            if (!isProjectFiltered)
+            {
+                var expTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 20, dateFrom: dateFrom, dateTo: dateTo);
+                await expTask;
+                totalExpense = expTask.Result.TotalExpense;
+            }
         }
 
         var netProfit = revenue - totalExpense;
-        var netPct = revenue > 0 ? Math.Round(netProfit / revenue * 100, 2) : (decimal?)null;
+        decimal? netPct = (!isProjectFiltered && revenue > 0) ? Math.Round(netProfit / revenue * 100, 2) : (decimal?)null;
         return Json(new { revenue, totalExpense, netProfit, netPct, chartData });
     }
 
     [HttpPost]
-    public virtual async Task<IActionResult> GetCashFlowDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
+    public virtual async Task<IActionResult> GetCashFlowDetail(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? monthId, int? yearId, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo, int? projectId = null)
     {
         if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
@@ -589,39 +692,56 @@ public partial class ExecutiveDashboardController : BaseAdminController
         decimal cashIn = 0, cashOut = 0;
         var expenseRows = new List<object>();
 
+        bool isProjectFiltered = projectId.HasValue && projectId.Value > 0;
+        int[] filterIds = null;
+        if (isProjectFiltered)
+        {
+            var billingIds = await GetProjectBillingIdsAsync(projectId.Value);
+            var allInv = await _accountManagementService.GetAllInvoicesAsync(pageSize: int.MaxValue);
+            var projInvIds = allInv.Where(i => billingIds.Contains(i.ProjectBillingId)).Select(i => i.Id).ToArray();
+            filterIds = projInvIds.Length > 0 ? projInvIds : new[] { -1 };
+        }
+
         var salariesLabel = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.SalariesPayroll") ?? "Salaries & Payroll";
         var otherLabel    = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Modal.CashFlow.Other") ?? "Other";
 
         var intervals = ResolveModalIntervals(granularityId, monthFrom, yearFrom, monthTo, yearTo, yearFrom, yearTo, fyStartMonth);
         if (intervals != null)
         {
-            var incTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year)).ToList();
-            var txnTasks = intervals.Select(i => _accountManagementService.GetAllAccountTransactionsAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
-            var groupsTask = _accountManagementService.GetAllAccountGroupsAsync();
-            await Task.WhenAll(incTasks.Cast<Task>().Concat(txnTasks.Cast<Task>()).Append(groupsTask));
-
+            var incTasks = intervals.Select(i => _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, monthId: i.month, yearId: i.year, invoiceIds: filterIds)).ToList();
+            await Task.WhenAll(incTasks);
             cashIn = incTasks.Sum(t => t.Result.TotalIncome);
-            var allTxns = txnTasks.SelectMany(t => t.Result ?? Enumerable.Empty<Domain.AccountTransaction>()).ToList();
-            cashOut = allTxns.Sum(t => t.Amount);
-            BuildExpenseRows(allTxns, groupsTask.Result, expenseRows, salariesLabel, otherLabel);
+            if (!isProjectFiltered)
+            {
+                var txnTasks  = intervals.Select(i => _accountManagementService.GetAllAccountTransactionsAsync(transactionTypeId: 20, monthId: i.month, yearId: i.year)).ToList();
+                var groupsTask = _accountManagementService.GetAllAccountGroupsAsync();
+                await Task.WhenAll(txnTasks.Cast<Task>().Append(groupsTask));
+                var allTxns = txnTasks.SelectMany(t => t.Result ?? Enumerable.Empty<Domain.AccountTransaction>()).ToList();
+                cashOut = allTxns.Sum(t => t.Amount);
+                BuildExpenseRows(allTxns, groupsTask.Result, expenseRows, salariesLabel, otherLabel);
+            }
         }
         else
         {
-            var incTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, dateFrom: dateFrom, dateTo: dateTo);
-            var txnTask = _accountManagementService.GetAllAccountTransactionsAsync(transactionTypeId: 20, dateFrom: dateFrom, dateTo: dateTo);
-            var groupsTask = _accountManagementService.GetAllAccountGroupsAsync();
-            await Task.WhenAll(incTask, txnTask, groupsTask);
+            var incTask = _accountManagementService.GetAccountTransactionSummaryAsync(transactionTypeId: 10, dateFrom: dateFrom, dateTo: dateTo, invoiceIds: filterIds);
+            await incTask;
             cashIn = incTask.Result.TotalIncome;
-            var txnList = txnTask.Result ?? Enumerable.Empty<Domain.AccountTransaction>();
-            cashOut = txnList.Sum(t => t.Amount);
-            BuildExpenseRows(txnList, groupsTask.Result, expenseRows, salariesLabel, otherLabel);
+            if (!isProjectFiltered)
+            {
+                var txnTask   = _accountManagementService.GetAllAccountTransactionsAsync(transactionTypeId: 20, dateFrom: dateFrom, dateTo: dateTo);
+                var groupsTask = _accountManagementService.GetAllAccountGroupsAsync();
+                await Task.WhenAll(txnTask, groupsTask);
+                var txnList = txnTask.Result ?? Enumerable.Empty<Domain.AccountTransaction>();
+                cashOut = txnList.Sum(t => t.Amount);
+                BuildExpenseRows(txnList, groupsTask.Result, expenseRows, salariesLabel, otherLabel);
+            }
         }
 
         return Json(new { cashIn, cashOut, netPosition = cashIn - cashOut, expenseRows });
     }
 
     [HttpPost]
-    public virtual async Task<IActionResult> GetInvoiceStatusSummary(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo)
+    public virtual async Task<IActionResult> GetInvoiceStatusSummary(int granularityId, DateTime? dateFrom, DateTime? dateTo, int? yearFrom, int? yearTo, int? monthFrom, int? monthTo, int? projectId = null)
     {
         if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
@@ -643,6 +763,12 @@ public partial class ExecutiveDashboardController : BaseAdminController
         {
             var result = await _accountManagementService.GetAllInvoicesAsync(createdFromUTC: dateFrom, createdToUTC: dateTo);
             allInvoices = result?.ToList() ?? new List<Domain.Invoice>();
+        }
+
+        if (projectId.HasValue && projectId.Value > 0)
+        {
+            var billingIds = await GetProjectBillingIdsAsync(projectId.Value);
+            allInvoices = allInvoices.Where(i => billingIds.Contains(i.ProjectBillingId)).ToList();
         }
         var paid    = allInvoices.Where(i => i.StatusId == (int)InvoiceEnum.Paid).ToList();
         var overdue = allInvoices.Where(i => unpaidStatuses.Contains(i.StatusId) && i.DueDate != default && i.DueDate.Date < today).ToList();
@@ -702,6 +828,12 @@ public partial class ExecutiveDashboardController : BaseAdminController
     {
         var currencies = await _currencyService.GetAllCurrenciesAsync(showHidden: true);
         return currencies.FirstOrDefault(c => c.CurrencyCode == "INR");
+    }
+
+    private async Task<HashSet<int>> GetProjectBillingIdsAsync(int projectId)
+    {
+        var billings = await _accountManagementService.GetAllProjectBillingsAsync(pageSize: int.MaxValue);
+        return billings.Where(b => b.ProjectId == projectId).Select(b => b.Id).ToHashSet();
     }
 
     private async Task<Dictionary<int, Domain.ProjectBilling>> BuildBillingMapAsync(IEnumerable<Domain.Invoice> invoices)
@@ -950,7 +1082,10 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetEmployeesList()
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational))
+        var canOps      = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational);
+        var canFin      = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial);
+        var canUtil     = await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardEmployeeUtilization);
+        if (!canOps && !canFin && !canUtil)
             return AccessDeniedView();
 
         var employees = await _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: false);
@@ -964,7 +1099,8 @@ public partial class ExecutiveDashboardController : BaseAdminController
     [HttpPost]
     public virtual async Task<IActionResult> GetProjectsList()
     {
-        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational))
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardOperational) &&
+            !await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
             return AccessDeniedView();
 
         var projects = await _projectsService.GetAllProjectsAsync(pageSize: int.MaxValue);
@@ -2297,20 +2433,21 @@ public partial class ExecutiveDashboardController : BaseAdminController
         var eIds  = employeeId.HasValue && employeeId.Value > 0 ? new List<int> { employeeId.Value } : null;
         var pIds  = projectId.HasValue  && projectId.Value  > 0 ? new List<int> { projectId.Value  } : null;
         var tsTask        = _timeSheetsService.GetAllTimeSheetAsync(employeeIds: eIds, projectIds: pIds, from: dateFrom, to: dateTo, pageSize: int.MaxValue);
-        var employeesTask = _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: false);
+        var employeesTask = _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: true);
         var billingsTask  = _accountManagementService.GetAllProjectBillingsAsync(pageSize: int.MaxValue);
         await Task.WhenAll(tsTask, employeesTask, billingsTask);
 
         var tsList = tsTask.Result.ToList();
 
-        var allEmployees = employeesTask.Result.ToList();
+        var empIdsWithTsInPeriod = tsList.Select(t => t.EmployeeId).Distinct().ToHashSet();
+        var allEmployees = employeesTask.Result
+            .Where(e => e.EmployeeStatusId == (int)EmployeeStatusEnum.Active || empIdsWithTsInPeriod.Contains(e.Id))
+            .ToList();
+
         if (employeeId.HasValue && employeeId.Value > 0)
             allEmployees = allEmployees.Where(e => e.Id == employeeId.Value).ToList();
         if (projectId.HasValue && projectId.Value > 0)
-        {
-            var empIdsWithTs = tsList.Select(t => t.EmployeeId).Distinct().ToHashSet();
-            allEmployees = allEmployees.Where(e => empIdsWithTs.Contains(e.Id)).ToList();
-        }
+            allEmployees = allEmployees.Where(e => empIdsWithTsInPeriod.Contains(e.Id)).ToList();
         var inrCurrency = await GetInrCurrencyAsync();
         var activeBillings = billingsTask.Result
             .Where(b => !b.Deleted && b.IsActive)
@@ -2416,6 +2553,172 @@ public partial class ExecutiveDashboardController : BaseAdminController
             kpi = new { totalBillableHrs = gtBillHrs, totalRevenue = gtRevenue, totalCost = gtCost, avgRoiPct = gtRoi },
             months      = monthHeaders,
             employees   = employeeRows,
+            monthTotals,
+            grandTotal  = new { billableHrs = gtBillHrs, totalHrs = gtTotalHrs, avgUtilPct = gtAvgUtil, revenue = gtRevenue, cost = gtCost, profit = gtProfit, roiPct = gtRoi }
+        });
+    }
+
+    [HttpPost]
+    public virtual async Task<IActionResult> GetProjectUtilizationData(
+        string period = "lastmonth",
+        DateTime? customFrom = null, DateTime? customTo = null,
+        int? monthFrom = null, int? yearFrom = null,
+        int? monthTo = null, int? yearTo = null,
+        int? projectId = null,
+        int? employeeId = null)
+    {
+        if (!await _permissionService.AuthorizeAsync(AccountManagementPermissionProvider.ManageExecutiveDashboardFinancial))
+            return AccessDeniedView();
+
+        var fyStartMonth = await GetFyStartMonthAsync();
+        var (dateFrom, dateTo, _, _, _, _) = ResolveOperationalPeriod(period, customFrom, customTo, monthFrom, yearFrom, monthTo, yearTo, fyStartMonth);
+
+        var tsTask        = _timeSheetsService.GetAllTimeSheetAsync(from: dateFrom, to: dateTo, pageSize: int.MaxValue);
+        var projectsTask  = _projectsService.GetAllProjectsAsync(pageSize: int.MaxValue);
+        var billingsTask  = _accountManagementService.GetAllProjectBillingsAsync(pageSize: int.MaxValue);
+        var employeesTask = _employeeService.GetAllEmployeesAsync(pageSize: int.MaxValue, showInActive: true);
+        await Task.WhenAll(tsTask, projectsTask, billingsTask, employeesTask);
+
+        var allEmployees = employeesTask.Result.ToList();
+        var allEmpIdSet  = allEmployees.Select(e => e.Id).ToHashSet();
+        // Restrict to employees that exist in the system — mirrors what the employee table processes
+        var tsList       = tsTask.Result.Where(t => allEmpIdSet.Contains(t.EmployeeId)).ToList();
+
+        bool filterByEmployee = employeeId.HasValue && employeeId.Value > 0;
+
+        var projIdsWithTs = (filterByEmployee
+            ? tsList.Where(t => t.EmployeeId == employeeId.Value)
+            : tsList)
+            .Select(t => t.ProjectId).Where(id => id > 0).Distinct().ToHashSet();
+
+        var allProjects  = projectsTask.Result
+            .Where(p => projIdsWithTs.Contains(p.Id))
+            .Where(p => !projectId.HasValue || projectId.Value <= 0 || p.Id == projectId.Value)
+            .OrderBy(p => p.ProjectTitle)
+            .ToList();
+
+        var inrCurrency = await GetInrCurrencyAsync();
+        var activeBillings = billingsTask.Result
+            .Where(b => !b.Deleted && b.IsActive)
+            .GroupBy(b => b.ProjectId)
+            .Select(g => g.OrderByDescending(b => b.Id).First())
+            .ToList();
+
+        var projectBillingRate = new Dictionary<int, decimal>();
+        foreach (var billing in activeBillings)
+        {
+            var rateInInr = billing.BillingRate > 0
+                ? await ToInrAsync((decimal)billing.BillingRate, billing.PaymentCurrencyId, inrCurrency)
+                : 0m;
+            projectBillingRate[billing.ProjectId] = rateInInr;
+        }
+
+        var relevantEmpIds  = tsList.Select(t => t.EmployeeId).Where(id => id > 0).Distinct().ToHashSet();
+        var relevantEmps    = allEmployees.Where(e => relevantEmpIds.Contains(e.Id)).ToList();
+        var payrollTasks    = relevantEmps.Select(e => _salaryComponentConfigService.GetEmployeePayrollInfoAsync(e.Id)).ToList();
+        await Task.WhenAll(payrollTasks);
+        var empMonthlySalary = relevantEmps
+            .Zip(payrollTasks, (e, t) => (e.Id, monthly: ParseCtcToMonthlyGross(t.Result?.CTC)))
+            .ToDictionary(x => x.Id, x => x.monthly);
+
+        var intervals    = GetMonthlyDateIntervals(dateFrom, dateTo);
+        var monthHeaders = intervals.Select(iv => new
+        {
+            label   = iv.label,
+            monthId = iv.from.Month,
+            yearId  = iv.from.Year
+        }).ToList<object>();
+
+        var empMonthTotalHrs = relevantEmpIds.ToDictionary(
+            empId => empId,
+            empId => intervals.Select(iv =>
+                Math.Round(tsList
+                    .Where(t => t.EmployeeId == empId && t.SpentDate.Date >= iv.from.Date && t.SpentDate.Date <= iv.to.Date)
+                    .Sum(t => ToHours(t.SpentHours, t.SpentMinutes)), 2)
+            ).ToArray()
+        );
+
+        var projectRows = allProjects.Select(proj =>
+        {
+            var projTs      = tsList
+                .Where(t => t.ProjectId == proj.Id)
+                .Where(t => !filterByEmployee || t.EmployeeId == employeeId!.Value)
+                .ToList();
+            var billingRate = projectBillingRate.GetValueOrDefault(proj.Id, 0);
+
+            var monthData = intervals.Select((iv, idx) =>
+            {
+                var mTs         = projTs.Where(t => t.SpentDate.Date >= iv.from.Date && t.SpentDate.Date <= iv.to.Date).ToList();
+                var billableHrs = Math.Round(mTs.Where(t => t.Billable).Sum(t => ToHours(t.SpentHours, t.SpentMinutes)), 1);
+                var totalHrs    = Math.Round(mTs.Sum(t => ToHours(t.SpentHours, t.SpentMinutes)), 1);
+                var utilPct     = totalHrs > 0 ? Math.Round(billableHrs / totalHrs * 100, 1) : 0m;
+                var revenue     = Math.Round(billableHrs * billingRate, 2);
+
+                var cost = 0m;
+                foreach (var empId in mTs.Select(t => t.EmployeeId).Where(id => id > 0).Distinct())
+                {
+                    var empProjHrs      = Math.Round(mTs.Where(t => t.EmployeeId == empId).Sum(t => ToHours(t.SpentHours, t.SpentMinutes)), 2);
+                    if (empProjHrs <= 0) continue;
+                    var empTotalInMonth = empMonthTotalHrs.TryGetValue(empId, out var hrs) ? hrs[idx] : 0m;
+                    if (empTotalInMonth <= 0) continue;
+                    empMonthlySalary.TryGetValue(empId, out var grossSalary);
+                    if (grossSalary <= 0) continue;
+                    var hourlyCostRate    = Math.Round(grossSalary / 160m, 4);
+                    var empMonthlyCostCap = Math.Min(empTotalInMonth, 160m) * hourlyCostRate;
+                    cost += empMonthlyCostCap * (empProjHrs / empTotalInMonth);
+                }
+                cost = Math.Round(cost, 2);
+
+                var profit  = Math.Round(revenue - cost, 2);
+                decimal? roiPct = cost > 0 ? Math.Round(profit / cost * 100, 1) : (decimal?)null;
+                return new { billableHrs, totalHrs, utilPct, revenue, cost, profit, roiPct };
+            }).ToList<object>();
+
+            dynamic[] md     = monthData.Cast<dynamic>().ToArray();
+            var totalBillHrs = Math.Round(md.Sum(m => (decimal)m.billableHrs), 1);
+            var totalAllHrs  = Math.Round(md.Sum(m => (decimal)m.totalHrs), 1);
+            var totalRevenue = Math.Round(md.Sum(m => (decimal)m.revenue), 2);
+            var totalCost    = Math.Round(md.Sum(m => (decimal)m.cost), 2);
+            var totalProfit  = Math.Round(totalRevenue - totalCost, 2);
+            var avgUtilPct   = totalAllHrs > 0 ? Math.Round(totalBillHrs / totalAllHrs * 100, 1) : 0m;
+            decimal? rowRoi  = totalCost > 0 ? Math.Round(totalProfit / totalCost * 100, 1) : (decimal?)null;
+
+            return new
+            {
+                id     = proj.Id,
+                name   = proj.ProjectTitle ?? $"Project #{proj.Id}",
+                months = monthData,
+                total  = new { billableHrs = totalBillHrs, totalHrs = totalAllHrs, avgUtilPct, revenue = totalRevenue, cost = totalCost, profit = totalProfit, roiPct = rowRoi }
+            };
+        }).ToList<object>();
+
+        var monthTotals = intervals.Select((iv, idx) =>
+        {
+            var allProjMd = projectRows.Cast<dynamic>().Select(r => ((IList<object>)r.months)[idx]).Cast<dynamic>().ToList();
+            var mtRev    = Math.Round(allProjMd.Sum(m => (decimal)m.revenue), 2);
+            var mtCost   = Math.Round(allProjMd.Sum(m => (decimal)m.cost), 2);
+            var mtProfit = Math.Round(mtRev - mtCost, 2);
+            decimal? mtRoi = mtCost > 0 ? Math.Round(mtProfit / mtCost * 100, 1) : (decimal?)null;
+            return new
+            {
+                billableHrs = Math.Round(allProjMd.Sum(m => (decimal)m.billableHrs), 1),
+                revenue = mtRev, cost = mtCost, profit = mtProfit, roiPct = mtRoi
+            };
+        }).ToList<object>();
+
+        var allRows    = projectRows.Cast<dynamic>().ToList();
+        var gtBillHrs  = Math.Round(allRows.Sum(r => (decimal)r.total.billableHrs), 1);
+        var gtRevenue  = Math.Round(allRows.Sum(r => (decimal)r.total.revenue), 2);
+        var gtCost     = Math.Round(allRows.Sum(r => (decimal)r.total.cost), 2);
+        var gtProfit   = Math.Round(gtRevenue - gtCost, 2);
+        var gtTotalHrs = Math.Round(allRows.Sum(r => (decimal)r.total.totalHrs), 1);
+        var gtAvgUtil  = gtTotalHrs > 0 ? Math.Round(gtBillHrs / gtTotalHrs * 100, 1) : 0m;
+        decimal? gtRoi = gtCost > 0 ? Math.Round(gtProfit / gtCost * 100, 1) : (decimal?)null;
+
+        return Json(new
+        {
+            months      = monthHeaders,
+            projects    = projectRows,
             monthTotals,
             grandTotal  = new { billableHrs = gtBillHrs, totalHrs = gtTotalHrs, avgUtilPct = gtAvgUtil, revenue = gtRevenue, cost = gtCost, profit = gtProfit, roiPct = gtRoi }
         });

@@ -1,5 +1,6 @@
 ﻿using App.Core;
 using App.Core.Domain.Common;
+using App.Core.Domain.Customers;
 using App.Core.Domain.Security;
 using App.Data.Extensions;
 using App.Services;
@@ -105,12 +106,23 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             if (model == null)
                 throw new ArgumentNullException(nameof(model));
 
-            model.Status = (await _leadStatusService.GetAllLeadStatusByNameAsync(leadStatusName: string.Empty)).Select(ls => new SelectListItem
+            var statusList = (await _leadStatusService.GetAllLeadStatusByNameAsync(string.Empty)).OrderBy(x => x.Id)
+                .Select(ls => new SelectListItem
+                {
+                    Text = ls.Name,
+                    Value = ls.Id.ToString(),
+                    Selected = ls.Id == model.StatusId
+                }).ToList();
+
+            //  ADD "Select" OPTION AT TOP
+            statusList.Insert(0, new SelectListItem
             {
-                Text = ls.Name,
-                Value = ls.Id.ToString(),
-                Selected = ls.Id == model.StatusId
-            }).ToList();
+                Text = "Select",
+                Value = "0",
+                Selected = model.StatusId == 0
+            });
+
+            model.Status = statusList;
         }
 
         [HttpGet]
@@ -130,17 +142,13 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 DateTime? lastMessDate = null;
                 DateTime? nextFollowDate = null;
 
-                if (!string.IsNullOrWhiteSpace(searchLastMessDate))
-                {
-                    if (DateTime.TryParse(searchLastMessDate, out DateTime parsedLast))
-                        lastMessDate = parsedLast;
-                }
+                if (!string.IsNullOrWhiteSpace(searchLastMessDate) &&
+                    DateTime.TryParse(searchLastMessDate, out DateTime parsedLast))
+                    lastMessDate = parsedLast;
 
-                if (!string.IsNullOrWhiteSpace(nextFollowUpDate))
-                {
-                    if (DateTime.TryParse(nextFollowUpDate, out DateTime parsedNext))
-                        nextFollowDate = parsedNext;
-                }
+                if (!string.IsNullOrWhiteSpace(nextFollowUpDate) &&
+                    DateTime.TryParse(nextFollowUpDate, out DateTime parsedNext))
+                    nextFollowDate = parsedNext;
 
                 var all = await _linkedInFollowupsService.GetAllLinkedInFollowupsAsync(
                     searchFirstName,
@@ -150,7 +158,10 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     searchWebsiteUrl,
                     lastMessDate,
                     nextFollowDate,
-                    searchStatus,
+
+                    // ✅ FIX: "All" should not filter
+                    searchStatus > 0 ? searchStatus : (int?)null,
+
                     searchCreatedByUserId,
                     0,
                     int.MaxValue,
@@ -163,44 +174,32 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
                 var result = new List<object>();
 
-                // ✅ ALL (special UI item)
+                // ✅ ALL (top option)
                 result.Add(new
                 {
                     StatusId = 0,
                     StatusName = "All",
-                    Count = 0,
+                    Count = all.Count,
                     ColorCode = "#6c757d",
                     IsAll = true
                 });
 
-                // ✅ ENUM STATUSES
-                var enumResults = Enum.GetValues(typeof(FollowUpStatusEnum))
-                    .Cast<FollowUpStatusEnum>()
-                    .Select(status =>
-                    {
-                        var member = typeof(FollowUpStatusEnum)
-                            .GetMember(status.ToString())
-                            .FirstOrDefault();
+                // ✅ GET STATUS FROM DB (MAIN CHANGE)
+                var statuses = (await _leadStatusService.GetAllLeadStatusByNameAsync("")).OrderBy(x => x.Id).ToList();
 
-                        var displayAttr = member?
-                            .GetCustomAttributes(typeof(DisplayAttribute), false)
-                            .FirstOrDefault() as DisplayAttribute;
+                var dbResults = statuses.Select(status => new
+                {
+                    StatusId = status.Id,
+                    StatusName = status.Name,
+                    Count = summary.ContainsKey(status.Id) ? summary[status.Id] : 0,
 
-                        var displayName = displayAttr?.Name ?? status.ToString();
+                    // ✅ DYNAMIC COLOR
+                    ColorCode = GetColorForStatus(status.Name),
 
-                        return new
-                        {
-                            StatusId = (int)status,
-                            StatusName = displayName,
-                            Count = summary.ContainsKey((int)status)
-                                ? summary[(int)status]
-                                : 0,
-                            ColorCode = GetColorForStatus(status),
-                            IsAll = false
-                        };
-                    });
+                    IsAll = false
+                });
 
-                result.AddRange(enumResults);
+                result.AddRange(dbResults);
 
                 return Json(result);
             }
@@ -209,22 +208,32 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 return StatusCode(500, "StatusSummary Error: " + ex.Message);
             }
         }
-
-        // Optional helper method for color coding (you can adjust colors)
-        private string GetColorForStatus(FollowUpStatusEnum status)
+        private string GetColorForStatus(string statusName)
         {
-            return status switch
+            if (string.IsNullOrWhiteSpace(statusName))
+                return "#777";
+
+            return GenerateColorFromText(statusName);
+        }
+        private string GenerateColorFromText(string text)
+        {
+            int hash = 0;
+
+            foreach (char c in text)
             {
-                FollowUpStatusEnum.Pending => "#f0ad4e",
-                FollowUpStatusEnum.MessageSent => "#5bc0de",
-                FollowUpStatusEnum.Replied => "#5cb85c",
-                FollowUpStatusEnum.InConversation => "#0275d8",
-                FollowUpStatusEnum.NotInterested => "#d9534f",
-                FollowUpStatusEnum.Converted => "#28a745",
-                FollowUpStatusEnum.Closed => "#6c757d",
-                FollowUpStatusEnum.BlockedOrRemoved => "#343a40",
-                _ => "#777"
-            };
+                hash = c + ((hash << 5) - hash);
+            }
+
+            int r = (hash & 0xFF0000) >> 16;
+            int g = (hash & 0x00FF00) >> 8;
+            int b = (hash & 0x0000FF);
+
+            // soften colors
+            r = (r + 256) / 2;
+            g = (g + 256) / 2;
+            b = (b + 256) / 2;
+
+            return $"#{r:X2}{g:X2}{b:X2}";
         }
 
         public virtual async Task PrepareLeadOwnerAsync(LinkedInFollowupsModel model)
@@ -253,17 +262,19 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         {
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));
-            searchModel.Status = Enum.GetValues(typeof(FollowUpStatusEnum))
-        .Cast<FollowUpStatusEnum>()
-        .Select(e => new SelectListItem
+            searchModel.Status = (await _leadStatusService.GetAllLeadStatusByNameAsync("")).OrderBy(x=>x.Id)
+        .Select(ls => new SelectListItem
         {
-            Text = e.ToString(),
-            Value = ((int)e).ToString()
-        })
-        .ToList();
+            Text = ls.Name,
+            Value = ls.Id.ToString()
+        }).ToList();
 
-            // Add "All" option
-            searchModel.Status.Insert(0, new SelectListItem { Text = "All", Value = "" });
+            // All OPTION (IMPORTANT FOR FILTER)
+            searchModel.Status.Insert(0, new SelectListItem
+            {
+                Text = "All",
+                Value = "0"
+            });
             var employees = await _employeeService.GetAllEmployeeNameAsync("");
 
             searchModel.AvailableUser = employees.Select(emp => new SelectListItem
@@ -298,7 +309,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 website: searchModel.SearchWebsiteUrl,
                 lastMessageDate: searchModel.SearchLastMessDate,
                 nextFollowUpDate: searchModel.NextFollowUpDate,
-                statusId: searchModel.SearchStatus,
+                statusId: searchModel.SearchStatus > 0 ? searchModel.SearchStatus : (int?)null,
                 createdByUserId: searchModel.SearchCreatedByUserId > 0 ? searchModel.SearchCreatedByUserId : null,
                 pageIndex: searchModel.Page - 1, pageSize: searchModel.PageSize);
 
@@ -327,9 +338,11 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     linkedInFollowupsModel.RemainingFollowUps = linkedInFollowups.RemainingFollowUps;
                     linkedInFollowupsModel.AutoStatus = linkedInFollowups.AutoStatus;
                     linkedInFollowupsModel.StatusId = linkedInFollowups.StatusId;
-                    linkedInFollowupsModel.StatusText = ((FollowUpStatusEnum)linkedInFollowups.StatusId).ToString();
-                    if (selectedAvailableOption != 0 || selectedAvailableOption != null) linkedInFollowupsModel.StatusId
-                        = (int)((FollowUpStatusEnum)selectedAvailableOption);
+                    var status = await _leadStatusService.GetLeadStatusByIdAsync(linkedInFollowups.StatusId);
+                    linkedInFollowupsModel.StatusText = status?.Name ?? "";
+                    //linkedInFollowupsModel.StatusText = ((FollowUpStatusEnum)linkedInFollowups.StatusId).ToString();
+                    //if (selectedAvailableOption != 0 || selectedAvailableOption != null) linkedInFollowupsModel.StatusId
+                    //    = (int)((FollowUpStatusEnum)selectedAvailableOption);
                     linkedInFollowupsModel.Notes = linkedInFollowups.Notes;
                     linkedInFollowupsModel.CreatedByUserId = linkedInFollowups.CreatedByUserId;
 
@@ -350,7 +363,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
         public virtual async Task<LinkedInFollowupsModel> PrepareLinkedInFollowupsModelAsync(LinkedInFollowupsModel model, LinkedInFollowups linkedInFollowups, bool excludeProperties = false)
         {
-            var statusList = await FollowUpStatusEnum.None.ToSelectListAsync();
+            //var statusList = await FollowUpStatusEnum.None.ToSelectListAsync();
             if (linkedInFollowups != null)
             {
                 //fill in model values from the entity
@@ -377,12 +390,21 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 }
             }
             await PrepareLeadOwnerAsync(model);
-            model.Status = (await _leadStatusService.GetAllLeadStatusByNameAsync(leadStatusName: string.Empty)).Select(ls => new SelectListItem
+            var statusList = (await _leadStatusService.GetAllLeadStatusByNameAsync(string.Empty)).OrderBy(x=>x.Id)
+        .Select(ls => new SelectListItem
+        {
+            Text = ls.Name,
+            Value = ls.Id.ToString(),
+            Selected = ls.Id == model.StatusId
+        }).ToList();
+            statusList.Insert(0, new SelectListItem
             {
-                Text = ls.Name,
-                Value = ls.Id.ToString(),
-                Selected = ls.Id == model.StatusId
-            }).ToList();
+                Text = "Select",
+                Value = "0",
+                Selected = model.StatusId == 0
+            });
+
+            model.Status = statusList;
             return model;
         }
 
@@ -549,9 +571,77 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             model.RemainingFollowUps = remainingFollowUps ?? 0;
             model.AutoStatus = autoStatus;
 
-            if (model.StatusId == 0)
-                model.StatusId = (int)FollowUpStatusEnum.None;
+            Lead existingLead = null;
 
+            // --- 1. Check by Email ---
+            if (!string.IsNullOrWhiteSpace(model.Email))
+            {
+                var leads = await _leadService.GetAllLeadAsync(
+                    "", "", null, model.Email, "", 0, 0, null, 0,
+                    0, 1, true, null);
+
+                if (leads != null && leads.TotalCount > 0)
+                    existingLead = leads.FirstOrDefault();
+            }
+
+            // --- 2. If not found → check by LinkedIn ---
+            if (existingLead == null && !string.IsNullOrWhiteSpace(model.LinkedinUrl))
+            {
+                var allLeads = await _leadService.GetAllLeadAsync(
+                    "", "", null, "", "", 0, 0, null, 0,
+                    0, int.MaxValue, true, null);
+
+                if (allLeads != null)
+                {
+                    existingLead = allLeads.FirstOrDefault(l =>
+                        !string.IsNullOrWhiteSpace(l.LinkedinUrl) &&
+                        l.LinkedinUrl.Equals(model.LinkedinUrl, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+
+            int leadId = 0;
+
+            // --- 3. If exists → use it ---
+            if (existingLead != null)
+            {
+                leadId = existingLead.Id;
+                if (model.StatusId > 0 && existingLead.LeadStatusId != model.StatusId)
+                {
+                    existingLead.LeadStatusId = model.StatusId;
+                    existingLead.UpdatedOnUtc = DateTime.UtcNow;
+                    await _leadService.UpdateLeadAsync(existingLead);
+                }
+            }
+            else
+            {
+                // --- 4. Create new Lead ---
+                var address = new Address
+                {
+                    CreatedOnUtc = DateTime.UtcNow
+                };
+                await _addressService.InsertAddressAsync(address);
+
+                int emailStatusId = (int)EmailValidationStatus.None;
+                if (!string.IsNullOrWhiteSpace(model.Email))
+                    emailStatusId = (int)await GetEmailValidationStatusAsync(model.Email);
+
+                var newLead = new Lead
+                {
+                    FirstName = model.FirstName ?? "",
+                    LastName = model.LastName ?? "",
+                    Email = model.Email ?? "",
+                    LinkedinUrl = model.LinkedinUrl ?? "",
+                    WebsiteUrl = model.WebsiteUrl ?? "",
+                    AddressId = address.Id,
+                    EmailStatusId = emailStatusId,
+                    LeadStatusId = model.StatusId,
+                    CreatedOnUtc = DateTime.UtcNow,
+                    UpdatedOnUtc = DateTime.UtcNow
+                };
+
+                await _leadService.InsertLeadAsync(newLead);
+                leadId = newLead.Id;
+            }
             //  Save to database
             var linkedInFollowUps = new LinkedInFollowups
             {
@@ -568,6 +658,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 AutoStatus = model.AutoStatus,
                 StatusId = model.StatusId,
                 Notes = model.Notes,
+                LeadId = leadId,
                 CreatedByUserId = model.CreatedByUserId,
                 CreatedOnUtc = DateTime.UtcNow,
                 UpdatedOnUtc = DateTime.UtcNow,
@@ -644,7 +735,153 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             // --- Formula Logic End ---
             if (model.StatusId == 0)
                 model.StatusId = linkedInFollowUps.StatusId;
+            Lead existingLead = null;
 
+            // --- 1. Check by Email ---
+            if (!string.IsNullOrWhiteSpace(model.Email))
+            {
+                var leads = await _leadService.GetAllLeadAsync(
+                    "", "", null, model.Email, "", 0, 0, null, 0,
+                    0, 1, true, null);
+
+                if (leads != null && leads.TotalCount > 0)
+                    existingLead = leads.FirstOrDefault();
+            }
+
+            // --- 2. If not found → check by LinkedIn ---
+            if (existingLead == null && !string.IsNullOrWhiteSpace(model.LinkedinUrl))
+            {
+                var allLeads = await _leadService.GetAllLeadAsync(
+                    "", "", null, "", "", 0, 0, null, 0,
+                    0, int.MaxValue, true, null);
+
+                if (allLeads != null)
+                {
+                    existingLead = allLeads.FirstOrDefault(l =>
+                        !string.IsNullOrWhiteSpace(l.LinkedinUrl) &&
+                        l.LinkedinUrl.Equals(model.LinkedinUrl, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+
+            int leadId = 0;
+            int customerId = 0;
+            if (existingLead != null && existingLead.CustomerId > 0)
+            {
+                try
+                {
+                    var employee = await _employeeService.GetEmployeeByIdAsync(existingLead.CustomerId);
+                    if (employee != null && !string.IsNullOrWhiteSpace(employee.OfficialEmail))
+                    {
+                        var allCustomers = await _customerService.GetAllCustomersAsync();
+                        if (allCustomers != null)
+                        {
+                            var matchedCustomer = allCustomers.FirstOrDefault(c =>
+                                c != null &&
+                                !string.IsNullOrWhiteSpace(c.Email) &&
+                                c.Email.Equals(employee.OfficialEmail, StringComparison.OrdinalIgnoreCase));
+
+                            if (matchedCustomer != null)
+                                customerId = matchedCustomer.Id;
+                        }
+                    }
+                }
+                catch
+                {
+                    customerId = 0;
+                }
+            }
+            int emailStatuId = (int)EmailValidationStatus.None;
+            if (!string.IsNullOrWhiteSpace(existingLead.Email))
+            {
+                emailStatuId = (int)await GetEmailValidationStatusAsync(existingLead.Email);
+            }
+            if (existingLead != null)
+            {
+                leadId = existingLead.Id;
+
+                // UPDATE LEAD IF DATA CHANGED
+                bool hasChanges = false;
+
+                if ((existingLead.FirstName ?? "") != (model.FirstName ?? ""))
+                {
+                    existingLead.FirstName = model.FirstName ?? "";
+                    hasChanges = true;
+                }
+
+                if ((existingLead.LastName ?? "") != (model.LastName ?? ""))
+                {
+                    existingLead.LastName = model.LastName ?? "";
+                    hasChanges = true;
+                }
+
+                if ((existingLead.Email ?? "") != (model.Email ?? ""))
+                {
+                    existingLead.Email = model.Email ?? "";
+                    hasChanges = true;
+                }
+
+                if ((existingLead.LinkedinUrl ?? "") != (model.LinkedinUrl ?? ""))
+                {
+                    existingLead.LinkedinUrl = model.LinkedinUrl ?? "";
+                    hasChanges = true;
+                }
+
+                if ((existingLead.WebsiteUrl ?? "") != (model.WebsiteUrl ?? ""))
+                {
+                    existingLead.WebsiteUrl = model.WebsiteUrl ?? "";
+                    hasChanges = true;
+                }
+                if (model.StatusId > 0 && existingLead.LeadStatusId != model.StatusId)
+                {
+                    existingLead.LeadStatusId = model.StatusId;
+                    hasChanges = true;
+                }
+                if (customerId > 0 && existingLead.CustomerId != customerId)
+                {
+                    existingLead.CustomerId = customerId;
+                    hasChanges = true;
+                }
+                if (existingLead.EmailStatusId != emailStatuId)
+                {
+                    existingLead.EmailStatusId = emailStatuId;
+                    hasChanges = true;
+                }
+                if (hasChanges)
+                {
+                    existingLead.UpdatedOnUtc = DateTime.UtcNow;
+                    await _leadService.UpdateLeadAsync(existingLead);
+                }
+            }
+            else
+            {
+                // --- CREATE NEW LEAD ---
+                var address = new Address
+                {
+                    CreatedOnUtc = DateTime.UtcNow
+                };
+                await _addressService.InsertAddressAsync(address);
+
+                int emailStatusId = (int)EmailValidationStatus.None;
+                if (!string.IsNullOrWhiteSpace(model.Email))
+                    emailStatusId = (int)await GetEmailValidationStatusAsync(model.Email);
+
+                var newLead = new Lead
+                {
+                    FirstName = model.FirstName ?? "",
+                    LastName = model.LastName ?? "",
+                    Email = model.Email ?? "",
+                    LinkedinUrl = model.LinkedinUrl ?? "",
+                    WebsiteUrl = model.WebsiteUrl ?? "",
+                    AddressId = address.Id,
+                    EmailStatusId = emailStatusId,
+                    LeadStatusId = model.StatusId,
+                    CreatedOnUtc = DateTime.UtcNow,
+                    UpdatedOnUtc = DateTime.UtcNow
+                };
+
+                await _leadService.InsertLeadAsync(newLead);
+                leadId = newLead.Id;
+            }
             //  Update database entity
             linkedInFollowUps.FirstName = model.FirstName;
             linkedInFollowUps.LastName = model.LastName;
@@ -659,6 +896,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             linkedInFollowUps.AutoStatus = autoStatus;
             linkedInFollowUps.StatusId = model.StatusId;
             linkedInFollowUps.Notes = model.Notes;
+            linkedInFollowUps.LeadId = leadId;
             if (model.CreatedByUserId > 0)
             {
                 linkedInFollowUps.CreatedByUserId = model.CreatedByUserId;
@@ -733,6 +971,16 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             entity.StatusId = model.StatusId;
             entity.UpdatedOnUtc = DateTime.UtcNow;
             await _linkedInFollowupsService.UpdateLinkedInFollowupsAsync(entity);
+            if (entity.LeadId.HasValue && entity.LeadId.Value > 0)
+            {
+                var lead = await _leadService.GetLeadByIdAsync(entity.LeadId.Value);
+                if (lead != null && lead.LeadStatusId != model.StatusId)
+                {
+                    lead.LeadStatusId = model.StatusId;
+                    lead.UpdatedOnUtc = DateTime.UtcNow;
+                    await _leadService.UpdateLeadAsync(lead);
+                }
+            }
 
             ViewBag.RefreshPage = true; // important
             return View("~/Plugins/Misc.SatyanamCRM/Views/LinkedInFollowups/StatusChange.cshtml", model);
@@ -944,6 +1192,11 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         existingLead.WebsiteUrl = followUp.WebsiteUrl ?? "";
                         hasChanges = true;
                     }
+                    if (followUp.StatusId > 0 && existingLead.LeadStatusId != followUp.StatusId)
+                    {
+                        existingLead.LeadStatusId = followUp.StatusId;
+                        hasChanges = true;
+                    }
                     if (customerId > 0 && existingLead.CustomerId != customerId)
                     {
                         existingLead.CustomerId = customerId;
@@ -967,7 +1220,12 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         skippedCount++;
                         skippedNames.Add($"{followUp.FirstName} {followUp.LastName}".Trim());
                     }
-
+                    if (followUp.LeadId == null || followUp.LeadId == 0)
+                    {
+                        followUp.LeadId = existingLead.Id;
+                        followUp.UpdatedOnUtc = DateTime.UtcNow;
+                        await _linkedInFollowupsService.UpdateLinkedInFollowupsAsync(followUp);
+                    }
                     continue;
                 }
 
@@ -988,12 +1246,16 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     CustomerId = customerId,
                     AddressId = address.Id,
                     EmailStatusId = emailStatusId,
+                    LeadStatusId = followUp.StatusId > 0 ? followUp.StatusId : 0,
                     CreatedOnUtc = DateTime.UtcNow,
                     UpdatedOnUtc = DateTime.UtcNow,
                 };
 
                 await _leadService.InsertLeadAsync(lead);
                 createdCount++;
+                followUp.LeadId = lead.Id;
+        followUp.UpdatedOnUtc = DateTime.UtcNow;
+        await _linkedInFollowupsService.UpdateLinkedInFollowupsAsync(followUp);
             }
 
             if (createdCount > 0)

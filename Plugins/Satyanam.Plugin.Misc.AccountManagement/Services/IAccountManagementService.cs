@@ -145,7 +145,7 @@ public partial interface IAccountManagementService
     Task<IList<int>> SendInvoiceEmailAsync(IList<string> contactEmails, string companyName, int invoiceFileId, int timesheetFileId, int languageId);
 
     Task<IList<int>> SendInvoiceReminderEmailAsync(string customerName = null, string customerEmail = null, int invoiceNumber = 0, DateTime? dueDate = null, int languageId = 0);
-     
+
     #endregion
 
     #region Time Summary Report Methods

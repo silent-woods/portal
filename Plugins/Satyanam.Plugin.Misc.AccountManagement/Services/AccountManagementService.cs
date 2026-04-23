@@ -458,7 +458,7 @@ public partial class AccountManagementService : IAccountManagementService
         return await _invoiceRepository.GetByIdAsync(id);
     }
 
-    public virtual async Task<IPagedList<Invoice>> GetAllInvoicesAsync(DateTime? createdFromUTC = null, DateTime? createdToUTC = null, int companyId = 0, 
+    public virtual async Task<IPagedList<Invoice>> GetAllInvoicesAsync(DateTime? createdFromUTC = null, DateTime? createdToUTC = null, int companyId = 0,
         int statusId = 0, int monthId = 0, int yearId = 0, int invoiceNumber = 0, bool showHidden = false, int pageIndex = 0, int pageSize = int.MaxValue)
     {
         var invoices = from i in _invoiceRepository.Table
@@ -850,10 +850,10 @@ public partial class AccountManagementService : IAccountManagementService
 
             if (employeeIds != null && employeeIds.Count > 0 && !employeeIds.Contains(0))
                 query = query.Where(c => employeeIds.Contains(c.EmployeeId));
-            
+
             if (hoursId == 2)
                 query = query.Where(c => c.Billable == true);
-            
+
             if (hoursId == 3)
                 query = query.Where(c => c.Billable == false);
 

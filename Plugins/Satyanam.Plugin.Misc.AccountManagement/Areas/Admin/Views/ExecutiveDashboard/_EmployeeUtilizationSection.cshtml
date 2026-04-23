@@ -105,6 +105,27 @@
             </div>
         </div>
 
+        <div class="util-proj-section">
+            <div class="util-section-header" style="margin-top:28px;">
+                <span class="section-title" style="font-size:13px;">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.ProjectProfitability.Title")</span>
+            </div>
+            <div class="util-table-section">
+                <div class="util-table-wrap">
+                    <div id="proj-util-no-data" class="util-no-data" style="display:none;">
+                        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.ProjectProfitability.NoData")
+                    </div>
+                    <table class="table table-bordered table-sm util-pivot" id="proj-util-pivot-table" style="display:none;">
+                        <thead id="proj-util-thead"></thead>
+                        <tbody id="proj-util-tbody"></tbody>
+                        <tfoot id="proj-util-tfoot"></tfoot>
+                    </table>
+                </div>
+                <div class="util-overlay" id="proj-util-overlay" style="display:none;">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -553,6 +574,7 @@
         loadProjectsList();
         loadEmployeesList();
         loadUtilData();
+        loadProjUtilData();
     });
 
     $(document).on('exec:show:utilization', function () {
@@ -584,6 +606,7 @@
             }
             $('#util-custom-inputs').hide();
             loadUtilData();
+            loadProjUtilData();
         });
 
         $('#util-custom-apply').on('click', function () {
@@ -592,17 +615,189 @@
             utilState.monthTo   = parseInt($('#util-month-to').val());
             utilState.yearTo    = parseInt($('#util-year-to').val());
             loadUtilData();
+            loadProjUtilData();
         });
 
         $('#util-project-filter').on('change', function () {
             utilState.projectId = parseInt($(this).val()) || 0;
             loadUtilData();
+            loadProjUtilData();
         });
 
         $('#util-employee-filter').on('change', function () {
             utilState.employeeId = parseInt($(this).val()) || 0;
             loadUtilData();
+            loadProjUtilData();
         });
+    });
+
+    var pRes = {
+        project:    '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Financial.ProjectUtil.Col.Project").Text',
+        billHrs:    '@Html.Raw(utilRes.billHrs)',
+        util:       '@Html.Raw(utilRes.util)',
+        revenue:    '@Html.Raw(utilRes.revenue)',
+        cost:       '@Html.Raw(utilRes.cost)',
+        profit:     '@Html.Raw(utilRes.profit)',
+        roi:        '@Html.Raw(utilRes.roi)',
+        totalCol:   '@Html.Raw(utilRes.totalCol)',
+        grandTotal: '@Html.Raw(utilRes.grandTotal)',
+        totalHrs:   '@Html.Raw(utilRes.totalHrs)',
+        avgUtil:    '@Html.Raw(utilRes.avgUtil)',
+        noData:     '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.EmployeeUtilization.ProjectProfitability.NoData").Text',
+        loadFailed: '@T("Satyanam.Plugin.Misc.AccountManagement.Admin.ExecutiveDashboard.Financial.ProjectUtil.LoadFailed").Text'
+    };
+    var lastProjData = null;
+    var projSort     = { key: null, asc: true };
+
+    function pFmtH(v) { return v == null || isNaN(v) ? '—' : parseFloat(v).toFixed(1) + 'h'; }
+    function pFmtC(v) {
+        if (v == null || isNaN(v)) return '—';
+        var n = parseFloat(v), abs = Math.abs(n), sign = n < 0 ? '-' : '';
+        if (abs >= 10000000) return sign + '₹' + (abs / 10000000).toFixed(2) + 'Cr';
+        if (abs >= 100000)   return sign + '₹' + (abs / 100000).toFixed(2) + 'L';
+        if (abs >= 1000)     return sign + '₹' + (abs / 1000).toFixed(1) + 'K';
+        return sign + '₹' + abs.toFixed(0);
+    }
+    function pFmtP(v) { return v == null || isNaN(v) ? '—' : parseFloat(v).toFixed(1) + '%'; }
+    function pUtilBadge(pct) {
+        if (pct == null) return '<span class="util-badge util-zero">—</span>';
+        var cls = pct >= 75 ? 'util-high' : pct >= 50 ? 'util-mid' : 'util-low';
+        return '<span class="util-badge ' + cls + '">' + pFmtP(pct) + '</span>';
+    }
+    function pRoiBadge(pct) {
+        if (pct == null) return '<span class="roi-badge roi-null">—</span>';
+        var cls = pct >= 50 ? 'roi-high' : pct >= 0 ? 'roi-mid' : 'roi-neg';
+        return '<span class="roi-badge ' + cls + '">' + pFmtP(pct) + '</span>';
+    }
+    function pSrtIcon(key) { return ' <span class="util-sort-icon" data-picon-key="' + key + '">⇅</span>'; }
+
+    function buildProjTheadHtml(months) {
+        var row1 = '<tr class="util-thead-top">';
+        row1 += '<th rowspan="2" class="util-col-employee util-sortable" data-psort-key="name">' + pRes.project + pSrtIcon('name') + '</th>';
+        months.forEach(function (m) { row1 += '<th colspan="4" class="util-month-header">' + m.label + '</th>'; });
+        row1 += '<th colspan="7" class="util-total-header">' + pRes.totalCol + '</th></tr>';
+        var row2 = '<tr class="util-thead-sub">';
+        for (var i = 0; i < months.length; i++) {
+            var p = 'pm' + i + '-';
+            row2 += '<th class="util-sortable" data-psort-key="' + p + 'util">'    + pRes.util    + pSrtIcon(p + 'util')    + '</th>';
+            row2 += '<th class="util-sortable" data-psort-key="' + p + 'revenue">' + pRes.revenue + pSrtIcon(p + 'revenue') + '</th>';
+            row2 += '<th class="util-sortable" data-psort-key="' + p + 'cost">'    + pRes.cost    + pSrtIcon(p + 'cost')    + '</th>';
+            row2 += '<th class="util-sortable" data-psort-key="' + p + 'profit">'  + pRes.profit  + pSrtIcon(p + 'profit')  + '</th>';
+        }
+        row2 += '<th class="util-sortable" data-psort-key="t-billhrs">'  + pRes.billHrs  + pSrtIcon('t-billhrs')  + '</th>';
+        row2 += '<th class="util-sortable" data-psort-key="t-totalhrs">' + pRes.totalHrs + pSrtIcon('t-totalhrs') + '</th>';
+        row2 += '<th class="util-sortable" data-psort-key="t-avgutil">'  + pRes.avgUtil  + pSrtIcon('t-avgutil')  + '</th>';
+        row2 += '<th class="util-sortable" data-psort-key="t-revenue">'  + pRes.revenue  + pSrtIcon('t-revenue')  + '</th>';
+        row2 += '<th class="util-sortable" data-psort-key="t-cost">'     + pRes.cost     + pSrtIcon('t-cost')     + '</th>';
+        row2 += '<th class="util-sortable" data-psort-key="t-profit">'   + pRes.profit   + pSrtIcon('t-profit')   + '</th>';
+        row2 += '<th class="util-sortable" data-psort-key="t-roi">'      + pRes.roi      + pSrtIcon('t-roi')      + '</th></tr>';
+        return row1 + row2;
+    }
+    function buildProjRowHtml(proj) {
+        var tr = '<tr class="util-emp-row"><td class="util-emp-name">' + (proj.name || '') + '</td>';
+        proj.months.forEach(function (m) {
+            tr += '<td class="util-cell-util util-month-first">' + pUtilBadge(m.utilPct) + '</td>';
+            tr += '<td class="util-cell-rev">' + pFmtC(m.revenue) + '</td>';
+            tr += '<td class="util-cell-cost">' + pFmtC(m.cost) + '</td>';
+            tr += '<td class="util-cell-profit ' + (m.profit >= 0 ? 'util-profit-pos' : 'util-profit-neg') + '">' + pFmtC(m.profit) + '</td>';
+        });
+        var t = proj.total;
+        tr += '<td class="util-cell-hrs util-total-cell">' + pFmtH(t.billableHrs) + '</td>';
+        tr += '<td class="util-cell-hrs util-total-cell">' + pFmtH(t.totalHrs) + '</td>';
+        tr += '<td class="util-cell-util util-total-cell">' + pUtilBadge(t.avgUtilPct) + '</td>';
+        tr += '<td class="util-cell-rev util-total-cell">' + pFmtC(t.revenue) + '</td>';
+        tr += '<td class="util-cell-cost util-total-cell">' + pFmtC(t.cost) + '</td>';
+        tr += '<td class="util-cell-profit util-total-cell ' + (t.profit >= 0 ? 'util-profit-pos' : 'util-profit-neg') + '">' + pFmtC(t.profit) + '</td>';
+        tr += '<td class="util-cell-roi util-total-cell">' + pRoiBadge(t.roiPct) + '</td></tr>';
+        return tr;
+    }
+    function buildProjFooterHtml(monthTotals, gt) {
+        var tr = '<tr class="util-footer-row"><td class="util-emp-name util-footer-label">' + pRes.grandTotal + '</td>';
+        monthTotals.forEach(function (mt) {
+            tr += '<td class="util-cell-util util-footer-cell util-month-first">—</td>';
+            tr += '<td class="util-cell-rev util-footer-cell">' + pFmtC(mt.revenue) + '</td>';
+            tr += '<td class="util-cell-cost util-footer-cell">' + pFmtC(mt.cost) + '</td>';
+            tr += '<td class="util-cell-profit util-footer-cell">' + pFmtC(mt.profit) + '</td>';
+        });
+        tr += '<td class="util-cell-hrs util-footer-cell util-total-cell">' + pFmtH(gt.billableHrs) + '</td>';
+        tr += '<td class="util-cell-hrs util-footer-cell util-total-cell">' + pFmtH(gt.totalHrs) + '</td>';
+        tr += '<td class="util-cell-util util-footer-cell util-total-cell">' + pUtilBadge(gt.avgUtilPct) + '</td>';
+        tr += '<td class="util-cell-rev util-footer-cell util-total-cell">' + pFmtC(gt.revenue) + '</td>';
+        tr += '<td class="util-cell-cost util-footer-cell util-total-cell">' + pFmtC(gt.cost) + '</td>';
+        tr += '<td class="util-cell-profit util-footer-cell util-total-cell ' + (gt.profit >= 0 ? 'util-profit-pos' : 'util-profit-neg') + '">' + pFmtC(gt.profit) + '</td>';
+        tr += '<td class="util-cell-roi util-footer-cell util-total-cell">' + pRoiBadge(gt.roiPct) + '</td></tr>';
+        return tr;
+    }
+    function getProjSortVal(proj, key) {
+        if (key === 'name') return (proj.name || '').toLowerCase();
+        if (key.substring(0, 2) === 'pm') {
+            var parts = key.split('-'), idx = parseInt(parts[0].substring(2), 10), sub = parts[1];
+            var mo = proj.months[idx] || {};
+            return sub === 'util' ? (mo.utilPct != null ? mo.utilPct : -1) : (mo[sub] != null ? mo[sub] : 0);
+        }
+        var t = proj.total || {};
+        var map = { 't-billhrs': 'billableHrs', 't-totalhrs': 'totalHrs', 't-avgutil': 'avgUtilPct', 't-revenue': 'revenue', 't-cost': 'cost', 't-profit': 'profit', 't-roi': 'roiPct' };
+        var field = map[key];
+        return field ? (t[field] != null ? t[field] : (key === 't-roi' ? -Infinity : 0)) : 0;
+    }
+    function updateProjSortIcons() {
+        $('#proj-util-thead .util-sort-icon').text('⇅').removeClass('asc-active desc-active');
+        if (projSort.key) {
+            $('#proj-util-thead .util-sort-icon[data-picon-key="' + projSort.key + '"]')
+                .text(projSort.asc ? '↑' : '↓').addClass(projSort.asc ? 'asc-active' : 'desc-active');
+        }
+    }
+    function projSortAndRender() {
+        if (!lastProjData || !lastProjData.projects) return;
+        var rows = lastProjData.projects.slice();
+        if (projSort.key) {
+            rows.sort(function (a, b) {
+                var va = getProjSortVal(a, projSort.key), vb = getProjSortVal(b, projSort.key);
+                return va < vb ? (projSort.asc ? -1 : 1) : va > vb ? (projSort.asc ? 1 : -1) : 0;
+            });
+        }
+        var html = ''; rows.forEach(function (p) { html += buildProjRowHtml(p); });
+        $('#proj-util-tbody').html(html);
+        updateProjSortIcons();
+    }
+    function buildProjUtilRequestData() {
+        var data = {
+            period:     utilState.preset,
+            projectId:  utilState.projectId  || 0,
+            employeeId: utilState.employeeId || 0
+        };
+        if (utilState.preset === 'custom' && utilState.monthFrom) {
+            data.monthFrom = utilState.monthFrom; data.yearFrom = utilState.yearFrom;
+            data.monthTo   = utilState.monthTo;   data.yearTo   = utilState.yearTo;
+        }
+        addAntiForgeryToken(data);
+        return data;
+    }
+    function loadProjUtilData() {
+        $('#proj-util-overlay').show();
+        $('#proj-util-pivot-table').hide();
+        $('#proj-util-no-data').hide();
+        $.post('@Url.Action("GetProjectUtilizationData", "ExecutiveDashboard")', buildProjUtilRequestData(), function (d) {
+            $('#proj-util-overlay').hide();
+            lastProjData = d; projSort.key = null; projSort.asc = true;
+            if (!d.projects || d.projects.length === 0) {
+                $('#proj-util-no-data').show(); return;
+            }
+            $('#proj-util-thead').html(buildProjTheadHtml(d.months));
+            var tbody = ''; d.projects.forEach(function (p) { tbody += buildProjRowHtml(p); });
+            $('#proj-util-tbody').html(tbody);
+            $('#proj-util-tfoot').html(buildProjFooterHtml(d.monthTotals, d.grandTotal));
+            $('#proj-util-pivot-table').show();
+        }).fail(function () {
+            $('#proj-util-overlay').hide();
+            alert(pRes.loadFailed);
+        });
+    }
+    $(document).on('click', '#proj-util-thead .util-sortable', function () {
+        var key = $(this).data('psort-key');
+        if (!key) return;
+        projSort.key === key ? (projSort.asc = !projSort.asc) : (projSort.key = key, projSort.asc = true);
+        projSortAndRender();
     });
 
 }());

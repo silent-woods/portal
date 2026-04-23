@@ -54,7 +54,7 @@ namespace Satyanam.Nop.Core.Services
                 if (!string.IsNullOrWhiteSpace(firstname))
                     query = query.Where(c => c.FirstName.Contains(firstname));
 
-                if (!string.IsNullOrWhiteSpace(firstname))
+                if (!string.IsNullOrWhiteSpace(lastname))
                     query = query.Where(c => c.LastName.Contains(lastname));
 
                 if (!string.IsNullOrWhiteSpace(email))
@@ -79,7 +79,7 @@ namespace Satyanam.Nop.Core.Services
                 if (createdByUserId.HasValue)
                     query = query.Where(x => x.CreatedByUserId == createdByUserId.Value);
 
-                return query.OrderBy(c => c.Id);
+                return query.OrderByDescending(c => c.CreatedOnUtc);
             });
             //paging
             return new PagedList<LinkedInFollowups>(query.ToList(), pageIndex, pageSize);
@@ -142,7 +142,16 @@ namespace Satyanam.Nop.Core.Services
 
             return await query.FirstOrDefaultAsync();
         }
+        public async Task<LinkedInFollowups> GetLinkedInFollowupsByLinkedInUrlAsync(string linkedinUrl)
+        {
+            if (string.IsNullOrWhiteSpace(linkedinUrl))
+                return null;
 
+            var query = _linkedInFollowupsRepository.Table
+                .Where(x => x.LinkedinUrl == linkedinUrl);
+
+            return await query.FirstOrDefaultAsync();
+        }
         #endregion
 
         #endregion

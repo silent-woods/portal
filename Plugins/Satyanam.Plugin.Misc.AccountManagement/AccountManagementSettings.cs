@@ -4,8 +4,8 @@ namespace Satyanam.Plugin.Misc.AccountManagement;
 
 public partial class AccountManagementSettings : ISettings
 {
-	#region Properties
-	public bool EnablePlugin { get; set; }
+    #region Properties
+    public bool EnablePlugin { get; set; }
     public int InvoiceNumber { get; set; }
     public int InvoiceLogoId { get; set; }
     public decimal QARate { get; set; }
@@ -13,5 +13,5 @@ public partial class AccountManagementSettings : ISettings
     public int EmailAccountId { get; set; }
     public int FinancialYearStartMonth { get; set; } = 4;
 
-	#endregion
+    #endregion
 }

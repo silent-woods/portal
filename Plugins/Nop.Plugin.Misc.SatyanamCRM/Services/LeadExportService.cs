@@ -57,6 +57,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                 worksheet.Column("V").Width = 14;
                 worksheet.Column("W").Width = 16;
                 worksheet.Column("X").Width = 22;
+                worksheet.Column("Y").Width = 22;
 
                 var range = worksheet.Range("A1:B10");
 
@@ -138,10 +139,15 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                 worksheet.Cell(row, 23).Value = "ZipCode";
                 worksheet.Cell(row, 23).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                worksheet.Cell(row, 24).Value = "Description";
+                worksheet.Cell(row, 24).Value = "Tags";
                 worksheet.Cell(row, 24).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                worksheet.Cell(row, 25).Value = "Description";
+                worksheet.Cell(row, 25).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+
                 var cookingHeaderRow = worksheet.Row(row).Style.Font.Bold = true;
-                worksheet.Range($"A{row}:X{row}").Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent1, 0.75);
+                worksheet.Range($"A{row}:Y{row}").Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent1, 0.75);
                 row++;
                 foreach (var item in leads)
                 {
@@ -261,11 +267,15 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Services
                     worksheet.Cell(row, 23).Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
                     worksheet.Cell(row, 23).Style.Alignment.WrapText = true;
 
-                    worksheet.Cell(row, 24).Value = item.Description;
+                    worksheet.Cell(row, 24).Value = item.Tags;
                     worksheet.Cell(row, 24).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
                     worksheet.Cell(row, 24).Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
                     worksheet.Cell(row, 24).Style.Alignment.WrapText = true;
 
+                    worksheet.Cell(row, 25).Value = item.Description;
+                    worksheet.Cell(row, 25).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                    worksheet.Cell(row, 25).Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                    worksheet.Cell(row, 25).Style.Alignment.WrapText = true;
                     row++;
                 }
                 row += 1;

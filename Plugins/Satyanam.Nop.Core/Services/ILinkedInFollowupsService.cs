@@ -20,6 +20,6 @@ namespace Satyanam.Nop.Core.Services
         Task UpdateLinkedInFollowupsAsync(LinkedInFollowups linkedInFollowups);
         Task DeleteLinkedInFollowupsAsync(LinkedInFollowups linkedInFollowups);
         Task<LinkedInFollowups> GetLinkedInFollowupByLinkedinUrlOrEmailAsync(string linkedinUrl, string email);
-
+        Task<LinkedInFollowups> GetLinkedInFollowupsByLinkedInUrlAsync(string linkedinUrl);
     }
 }

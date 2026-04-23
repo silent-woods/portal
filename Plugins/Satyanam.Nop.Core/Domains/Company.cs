@@ -3,10 +3,10 @@ using System;
 
 namespace Satyanam.Nop.Core.Domains
 {
-	/// <summary>
-	/// Represents a  Company
-	/// </summary>
-	public class Company : BaseEntity
+    /// <summary>
+    /// Represents a  Company
+    /// </summary>
+    public class Company : BaseEntity
     {
         public int ContactId { get; set; }
         public string CompanyName { get; set; }
@@ -16,7 +16,7 @@ namespace Satyanam.Nop.Core.Domains
         public int AccountTypeId { get; set; }
         public int IndustryId { get; set; }
         public int CustomerId { get; set; }
-		public string Phone { get; set; }
+        public string Phone { get; set; }
         public int OwnerShipId { get; set; }
         public int NoofEmployee { get; set; }
         public int AnnualRevenue { get; set; }

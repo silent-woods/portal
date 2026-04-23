@@ -587,7 +587,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     Id = d.Id,
                     FirstName = d.FirstName,
                     LastName = d.LastName,
-                    Name= $"{d.FirstName} {d.LastName}".Trim(),
+                    Name = $"{d.FirstName} {d.LastName}".Trim(),
                     TitleName = titleDict.TryGetValue(d.TitleId, out var name) ? name : string.Empty
                 }).ToAsyncEnumerable()
             );

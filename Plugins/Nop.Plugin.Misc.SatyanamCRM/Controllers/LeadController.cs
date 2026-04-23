@@ -2,6 +2,7 @@
 using App.Core.Domain.Common;
 using App.Core.Domain.Directory;
 using App.Core.Domain.Security;
+using App.Data;
 using App.Data.Extensions;
 using App.Services;
 using App.Services.Common;
@@ -64,6 +65,8 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
         private readonly IEmailverificationService _emailverificationService;
         private readonly ILeadExportService _leadExportService;
         private readonly IZohoCampaignService _zohoCampaignService;
+        private readonly ILinkedInFollowupsService _linkedInFollowupsService;
+        private readonly IRepository<LeadTags> _leadTagRepository;
 
         #endregion
 
@@ -92,7 +95,9 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                                IDealsService dealsService,
                                IEmailverificationService emailverificationService,
                                ILeadExportService leadExportService,
-                               IZohoCampaignService zohoCampaignService)
+                               IZohoCampaignService zohoCampaignService,
+                               ILinkedInFollowupsService linkedInFollowupsService,
+                               IRepository<LeadTags> leadTagRepository)
         {
             _permissionService = permissionService;
             _leadService = leadService;
@@ -118,6 +123,8 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
             _emailverificationService = emailverificationService;
             _leadExportService = leadExportService;
             _zohoCampaignService = zohoCampaignService;
+            _linkedInFollowupsService = linkedInFollowupsService;
+            _leadTagRepository = leadTagRepository;
         }
 
         #endregion
@@ -212,7 +219,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 Value = "0"
             });
             var leadStatusName = "";
-            var leadStatus = await _leadStatusService.GetAllLeadStatusByNameAsync(leadStatusName);
+            var leadStatus = (await _leadStatusService.GetAllLeadStatusByNameAsync(leadStatusName)).OrderBy(x=>x.Id).ToList();
             foreach (var p in leadStatus)
             {
                 model.LeadStatus.Add(new SelectListItem
@@ -415,7 +422,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 new SelectListItem { Text = "Not Synced", Value = "false" }
             };
             var leadStatusName = "";
-            var leadStatus = await _leadStatusService.GetAllLeadStatusByNameAsync(leadStatusName);
+            var leadStatus = (await _leadStatusService.GetAllLeadStatusByNameAsync(leadStatusName)).OrderBy(x => x.Id).ToList();
             foreach (var p in leadStatus)
             {
                 searchModel.AvailableStatus.Add(new SelectListItem
@@ -708,6 +715,59 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         await _leadService.InsertLeadTagsAsync(leadTag);
                     }
                 }
+                if (!string.IsNullOrWhiteSpace(lead.LinkedinUrl))
+                {
+                    var existingFollowups = await _linkedInFollowupsService.GetAllLinkedInFollowupsAsync(
+                        showHidden: true,
+                        firstname: "",
+                        lastname: "",
+                        email: "",
+                        linkedinUrl: lead.LinkedinUrl,
+                        website: "",
+                        lastMessageDate: null,
+                        nextFollowUpDate: null,
+                        statusId: null,
+                        createdByUserId: null,
+                        pageIndex: 0,
+                        pageSize: 1);
+
+                    if (existingFollowups == null || existingFollowups.TotalCount == 0)
+                    {
+                        var linkedInFollowUp = new LinkedInFollowups
+                        {
+                            FirstName = lead.FirstName ?? "",
+                            LastName = lead.LastName ?? "",
+                            LinkedinUrl = lead.LinkedinUrl,
+                            Email = lead.Email ?? "",
+                            WebsiteUrl = lead.WebsiteUrl ?? "",
+                            LastMessageDate = null,
+                            FollowUp = 0,
+                            NextFollowUpDate = null,
+                            DaysUntilNext = 0,
+                            RemainingFollowUps = 0,
+                            AutoStatus = "No follow-up scheduled",
+                            StatusId = lead.LeadStatusId,//need to change here
+                            Notes = "",
+                            LeadId = lead.Id,
+                            CreatedByUserId = 0,
+                            CreatedOnUtc = DateTime.UtcNow,
+                            UpdatedOnUtc = DateTime.UtcNow,
+                        };
+                        await _linkedInFollowupsService.InsertLinkedInFollowupsAsync(linkedInFollowUp);
+                    }
+                    else
+                    {
+                        // Followup already exists — just update LeadId if not set
+                        var existing = existingFollowups.FirstOrDefault();
+                        if (existing != null && (existing.LeadId == null || existing.LeadId == 0))
+                        {
+                            existing.LeadId = lead.Id;
+                            existing.StatusId = lead.LeadStatusId;
+                            existing.UpdatedOnUtc = DateTime.UtcNow;
+                            await _linkedInFollowupsService.UpdateLinkedInFollowupsAsync(existing);
+                        }
+                    }
+                }
                 _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Plugin.SatyanamCRM.Leads.Added"));
 
                 if (!continueEditing)
@@ -794,7 +854,41 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 model.Name = leads.FirstName + " " + leads.LastName;
 
                 await _leadService.UpdateLeadAsync(leads);
+                if (!string.IsNullOrWhiteSpace(leads.LinkedinUrl))
+                {
+                    var existingFollowup = await _linkedInFollowupsService.GetLinkedInFollowupsByLinkedInUrlAsync(leads.LinkedinUrl);
 
+                    if (existingFollowup == null)
+                    {
+                        // No followup exists → create new one
+                        var linkedInFollowUp = new LinkedInFollowups
+                        {
+                            FirstName = leads.FirstName ?? "",
+                            LastName = leads.LastName ?? "",
+                            LinkedinUrl = leads.LinkedinUrl,
+                            Email = leads.Email ?? "",
+                            WebsiteUrl = leads.WebsiteUrl ?? "",
+                            LeadId = leads.Id,
+                            StatusId = leads.LeadStatusId,//need to change
+                            CreatedByUserId = leads.CustomerId,
+                            CreatedOnUtc = DateTime.UtcNow,
+                            UpdatedOnUtc = DateTime.UtcNow,
+                        };
+                        await _linkedInFollowupsService.InsertLinkedInFollowupsAsync(linkedInFollowUp);
+                    }
+                    else
+                    {
+                        // Followup exists → update name, email, website and LeadId
+                        existingFollowup.FirstName = leads.FirstName ?? "";
+                        existingFollowup.LastName = leads.LastName ?? "";
+                        existingFollowup.Email = leads.Email ?? "";
+                        existingFollowup.WebsiteUrl = leads.WebsiteUrl ?? "";
+                        existingFollowup.LeadId = leads.Id;
+                        existingFollowup.StatusId = leads.LeadStatusId;
+                        existingFollowup.UpdatedOnUtc = DateTime.UtcNow;
+                        await _linkedInFollowupsService.UpdateLinkedInFollowupsAsync(existingFollowup);
+                    }
+                }
                 var existingTags = await _leadService.GetLeadTagByLeadIdAsync(model.Id);
                 var existingTagIds = existingTags?.Select(t => t.TagsId).ToList() ?? new List<int>();
 
@@ -920,6 +1014,14 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     var industry = (await _industryService.GetIndustryByIdAsync(lead.IndustryId))?.Name;
                     var leadStatus = (await _leadStatusService.GetLeadStatusByIdAsync(lead.LeadStatusId))?.Name;
                     var category = (await _categorysService.GetCategorysByIdAsync(lead.CategoryId))?.Name;
+                    var tagMapping = _leadTagRepository.Table.Where(x => x.LeadId == lead.Id).Select(x => x.TagsId).ToList();
+                    var tagNames = new List<string>();
+                    if (tagMapping.Any())
+                    {
+                        var tags = await _tagsService.GetTagsByIdsAsync(tagMapping.ToArray());
+                        tagNames = tags.Select(t => t.Name).ToList();
+                    }
+                    var tagsCommaSeparated = string.Join(", ", tagNames);
                     var emailStatus = Enum.GetName(typeof(EmailValidationStatus), lead.EmailStatusId) ?? " ";
                     //      var address = await _addressService.GetAddressByIdAsync(lead.AddressId);
                     //      var country = (address?.CountryId ?? 0) > 0
@@ -969,6 +1071,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         IndustryId = industry ?? " ",
                         LeadStatusId = leadStatus ?? " ",
                         CategoryId = category ?? " ",
+                        Tags = tagsCommaSeparated,
                         Twitter = lead.Twitter ?? " ",
                         LinkedinUrl = lead.LinkedinUrl ?? " ",
                         Facebookurl = lead.Facebookurl ?? " ",
@@ -1102,6 +1205,14 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     var industry = (await _industryService.GetIndustryByIdAsync(lead.IndustryId))?.Name;
                     var leadStatus = (await _leadStatusService.GetLeadStatusByIdAsync(lead.LeadStatusId))?.Name;
                     var category = (await _categorysService.GetCategorysByIdAsync(lead.CategoryId))?.Name;
+                    var tagMapping = _leadTagRepository.Table.Where(x => x.LeadId == lead.Id).Select(x => x.TagsId).ToList();
+                    var tagNames = new List<string>();
+                    if (tagMapping.Any())
+                    {
+                        var tags = await _tagsService.GetTagsByIdsAsync(tagMapping.ToArray());
+                        tagNames = tags.Select(t => t.Name).ToList();
+                    }
+                    var tagsCommaSeparated = string.Join(", ", tagNames);
                     var emailStatus = Enum.GetName(typeof(EmailValidationStatus), lead.EmailStatusId) ?? " ";
                     Address address = null;
                     Country country = null;
@@ -1143,6 +1254,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                         IndustryId = industry ?? " ",
                         LeadStatusId = leadStatus ?? " ",
                         CategoryId = category ?? " ",
+                        Tags = tagsCommaSeparated,
                         Twitter = lead.Twitter ?? " ",
                         LinkedinUrl = lead.LinkedinUrl ?? " ",
                         Facebookurl = lead.Facebookurl ?? " ",
