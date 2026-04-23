@@ -424,6 +424,7 @@ public partial class AccountManagementModelFactory : IAccountManagementModelFact
             model.Address = bankAccount.Address;
             model.Currency = bankAccount.Currency;
             model.Notes = bankAccount.Notes;
+            model.PaymentInstructions = bankAccount.PaymentInstructions;
             model.IsDefault = bankAccount.IsDefault;
             model.IsActive = bankAccount.IsActive;
             model.DisplayOrder = bankAccount.DisplayOrder;

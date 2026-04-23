@@ -495,6 +495,7 @@ public partial class AccountManagementController : BaseAdminController
                 Address = model.Address,
                 Currency = model.Currency,
                 Notes = model.Notes,
+                PaymentInstructions = model.PaymentInstructions,
                 IsDefault = model.IsDefault,
                 IsActive = model.IsActive,
                 DisplayOrder = model.DisplayOrder,
@@ -585,6 +586,7 @@ public partial class AccountManagementController : BaseAdminController
             existingBankAccount.Address = model.Address;
             existingBankAccount.Currency = model.Currency;
             existingBankAccount.Notes = model.Notes;
+            existingBankAccount.PaymentInstructions = model.PaymentInstructions;
             existingBankAccount.IsDefault = model.IsDefault;
             existingBankAccount.IsActive = model.IsActive;
             existingBankAccount.DisplayOrder = model.DisplayOrder;
@@ -1247,51 +1249,22 @@ public partial class AccountManagementController : BaseAdminController
         if (existingBankAccount == null)
             return RedirectToAction(nameof(Invoices));
 
-        var bankDetails = new Dictionary<string, string>
-        {
-            ["Account Holder"] = existingBankAccount.AccountName,
-            ["Account"] = existingBankAccount.AccountNo,
-            ["Bank"] = existingBankAccount.BankName,
-            ["Branch"] = existingBankAccount.Branch,
-            ["Address"] = string.IsNullOrEmpty(existingBankAccount.Address) ? null : Regex.Replace(existingBankAccount.Address, "<.*?>", "").Trim(),
-            ["SWIFT Code"] = existingBankAccount.SwiftCode,
-            ["IFSC Code"] = existingBankAccount.IFSCCode,
-            ["Account Type"] = existingBankAccount.AccountType,
-            ["Currency"] = existingBankAccount.Currency,
-            ["Notes"] = string.IsNullOrEmpty(existingBankAccount.Notes) ? null : Regex.Replace(existingBankAccount.Notes, "<.*?>", "").Trim()
-        }.Where(kv => !string.IsNullOrWhiteSpace(kv.Value)).Select(kv => $"{kv.Key}: {kv.Value}").Aggregate((a, b) => $"{a}\n{b}");
-
         string billTo = string.Empty;
         var existingProjectBilling = await _accountManagementService.GetProjectBillingByIdAsync(existingInvoice.ProjectBillingId);
         if (existingProjectBilling != null)
         {
             var existingCompany = await _companyService.GetCompanyByIdAsync(existingProjectBilling.CompanyId);
-            if (existingCompany != null)
+            if (existingCompany == null)
             {
-                var address = await _addressService.GetAddressByIdAsync(existingCompany.BillingAddressId);
-                if (address != null)
-                {
-                    string countryName = string.Empty; string stateName = string.Empty;
-                    var country = await _countryService.GetCountryByIdAsync(address.CountryId ?? 0);
-                    if (country != null)
-                        countryName = country.Name;
-
-                    var state = await _stateProvinceService.GetStateProvinceByIdAsync(address.StateProvinceId ?? 0);
-                    if (state != null)
-                        stateName = state.Name;
-
-                    billTo = $"{existingCompany?.CompanyName}\n" +
-                     $"{address?.Address1}{(string.IsNullOrEmpty(address?.Address2) ? "" : ", " + address.Address2)}\n" +
-                     $"{address?.City}, {stateName} {address?.ZipPostalCode}\n" +
-                     $"{countryName}";
-
-                    if (string.IsNullOrWhiteSpace(countryName))
-                    {
-                        _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.GenerateInvoice.NoBillingInformation"));
-                        return RedirectToAction(nameof(InvoiceEdit), new { id = id });
-                    }
-                }
+                _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.GenerateInvoice.NoBillingInformation"));
+                return RedirectToAction(nameof(InvoiceEdit), new { id = id });
             }
+            if (string.IsNullOrEmpty(existingCompany.BillTo))
+            {
+                _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.Admin.Invoice.GenerateInvoice.NoBillingInformation"));
+                return RedirectToAction(nameof(InvoiceEdit), new { id = id });
+            }
+            billTo = string.IsNullOrEmpty(existingCompany.BillTo) ? null : Regex.Replace(existingCompany.BillTo, "<.*?>", "").Trim();
         }
 
         var pdfInvoiceModel = new PdfInvoiceModel
@@ -1314,7 +1287,7 @@ public partial class AccountManagementController : BaseAdminController
             Discount = existingInvoice.DiscountAmount,
             Tax = existingInvoice.TaxAmount,
             Total = existingInvoice.TotalPaymentAmount,
-            BankDetails = bankDetails,
+            BankDetails = string.IsNullOrEmpty(existingBankAccount.PaymentInstructions) ? null : Regex.Replace(existingBankAccount.PaymentInstructions, "<.*?>", "").Trim(),
             Notes = string.IsNullOrEmpty(existingInvoice.Notes) ? null : Regex.Replace(existingInvoice.Notes, "<.*?>", "").Trim()
         };
 

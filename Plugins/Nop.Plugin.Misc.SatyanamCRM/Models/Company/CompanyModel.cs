@@ -96,6 +96,8 @@ namespace Satyanam.Nop.Plugin.SatyanamCRM.Models.Company
         public string ShipingAddress2 { get; set; }
         [NopResourceDisplayName("Nop.Plugin.Misc.SatyanamCRM.Model.Company.Description")]
         public string Description { get; set; }
+        [NopResourceDisplayName("Nop.Plugin.Misc.SatyanamCRM.Model.Company.BillTo")]
+        public string BillTo { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public DateTime UpdatedOnUtc { get; set; }
         public CompanyDealsSearchModel companyDealsSearchModel { get; set; }

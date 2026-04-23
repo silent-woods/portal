@@ -22,6 +22,7 @@ namespace Satyanam.Nop.Core.Domains
         public int AnnualRevenue { get; set; }
         public int BillingAddressId { get; set; }
         public int ShipingAddressId { get; set; }
+        public string BillTo { get; set; }
         public string Description { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public DateTime UpdatedOnUtc { get; set; }

@@ -511,6 +511,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     model.NoofEmployee = company.NoofEmployee;
                     model.AnnualRevenue = company.AnnualRevenue;
                     model.Description = company.Description;
+                    model.BillTo = company.BillTo;
                     model.CreatedOnUtc = company.CreatedOnUtc;
                     model.UpdatedOnUtc = company.UpdatedOnUtc;
 
@@ -769,6 +770,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 company.NoofEmployee = model.NoofEmployee;
                 company.AnnualRevenue = model.AnnualRevenue;
                 company.Description = model.Description;
+                company.BillTo = model.BillTo;
                 company.CreatedOnUtc = DateTime.UtcNow;
                 company.UpdatedOnUtc = DateTime.UtcNow;
                 company.BillingAddressId = billingAddressid;
@@ -864,6 +866,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 companys.NoofEmployee = model.NoofEmployee;
                 companys.AnnualRevenue = model.AnnualRevenue;
                 companys.Description = model.Description;
+                companys.BillTo = model.BillTo;
                 companys.CreatedOnUtc = model.CreatedOnUtc;
                 companys.UpdatedOnUtc = DateTime.UtcNow;
                 companys.BillingAddressId = model.BillingAddressId;

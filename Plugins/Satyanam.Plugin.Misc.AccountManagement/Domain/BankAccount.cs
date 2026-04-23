@@ -30,6 +30,8 @@ public partial class BankAccount : BaseEntity, ISoftDeletedEntity
 
     public string Notes { get; set; }
 
+    public string PaymentInstructions { get; set; }
+
     public bool IsDefault { get; set; }
 
     public bool IsActive { get; set; }

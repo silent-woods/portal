@@ -40,6 +40,9 @@ public partial record BankAccountModel : BaseNopEntityModel
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.BankAccount.Fields.Notes")]
     public string Notes { get; set; }
 
+    [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.BankAccount.Fields.PaymentInstructions")]
+    public string PaymentInstructions { get; set; }
+
     [NopResourceDisplayName("Satyanam.Plugin.Misc.AccountManagement.Admin.BankAccount.Fields.IsDefault")]
     public bool IsDefault { get; set; }
 
