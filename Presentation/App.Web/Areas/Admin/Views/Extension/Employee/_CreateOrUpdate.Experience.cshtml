@@ -1,82 +1,84 @@
-﻿@model EmployeeModel
+@model EmployeeModel
 
-<div class="card-body">
+@if (Model.Id > 0)
+{
+    var canEdit   = await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageExperience, PermissionAction.Edit);
+    var canDelete = await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageExperience, PermissionAction.Delete);
 
-    @if (Model.Id > 0)
-    {
-        <div class="card card-default">
-            <div class="card-body">
-                @{
-                    var gridModel = new DataTablesModel
-                    {
-                        Name = "experience-grid",
-                        UrlRead = new DataUrl("ExperienceList", "Employee", new RouteValueDictionary { [nameof(Model.ExperienceSearchModel.employeeId)] = Model.Id }),
-                        UrlDelete = new DataUrl("ExperienceDelete", "Employee", new RouteValueDictionary { [nameof(Model.Id)] = Model.ExperienceModel.FirstOrDefault()?.Id }),
-                        Length = Model.ExperienceSearchModel.PageSize,
-                        LengthMenu = Model.ExperienceSearchModel.AvailablePageSizes,
-                    };
-
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ExperienceModel.EmployeeName))
-                    {
-                        Title = T("Admin.Experience.Fields.EmployeeName").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ExperienceModel.PreviousCompanyName))
-                    {
-                        Title = T("Admin.Experience.Fields.PreviousCompanyName").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ExperienceModel.Designation))
-                    {
-                        Title = T("Admin.Experience.Fields.Designation").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ExperienceModel.Froms))
-                    {
-                        Title = T("Admin.Experience.Fields.From").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ExperienceModel.Tos))
-                    {
-                        Title = T("Admin.Experience.Fields.To").Text,
-                    });
-                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageExperience, PermissionAction.Edit))
-                    {
-                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ExperienceModel.Id))
-                        {
-                            Title = T("Admin.Common.Edit").Text,
-                            Width = "80",
-                            ClassName = NopColumnClassDefaults.Button,
-                            Render = new RenderButtonEdit(new DataUrl("~/Admin/Employee/ExperienceEdit?employeeId=" + Model.Id + "&id=" + Model.ExperienceModel.FirstOrDefault()?.Id, true))
-                        });
-                    }
-                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageExperience, PermissionAction.Delete))
-                    {
-                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(ExperienceModel.Id))
-                        {
-                            Title = T("Admin.Common.Delete").Text,
-                            Width = "100",
-                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
-                            ClassName = NopColumnClassDefaults.Button
-                        });
-                    }
-                }
-                @await Html.PartialAsync("Table", gridModel)
-            </div>
+    <div class="am-card">
+        <div class="am-card-header">
+            <div class="am-card-title"><i class="fas fa-building"></i> @T("Admin.HRM.Employee.Experience")</div>
             @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageExperience, PermissionAction.Add))
             {
-                <div class="card-body">
-                    <button type="button" class="btn btn-primary" onclick="location.href = '@Url.Action("ExperienceCreate", new { employeeId = Model.Id })'">
-                        <i class="fas fa-plus-square"></i>
-                        @T("Admin.Employee.Experience.AddButton")
-                    </button>
-                </div>
+                <button type="button" id="exp-add-btn" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> @T("Admin.Employee.Experience.AddButton")
+                </button>
             }
-            
         </div>
-    }
-    else
-    {
-        <div class="card card-default">
-            <div class="card-body">
-                @T("Admin.Employee.Experience.SaveBeforeEdit")
-            </div>
+        <div class="am-dt-wrap">
+            <table id="exp-table" class="am-dt">
+                <thead><tr>
+                    <th>@T("Admin.Experience.Fields.PreviousCompanyName")</th>
+                    <th>@T("Admin.Experience.Fields.Designation")</th>
+                    <th>@T("Admin.Experience.Fields.From")</th>
+                    <th>@T("Admin.Experience.Fields.To")</th>
+                        @if (canEdit || canDelete)
+                        {
+                            <th>@T("Admin.Common.Actions")</th>
+                        }
+                </tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
-    }
-</div>
+        <div id="exp-footer" class="am-dt-footer">
+            <span class="am-dt-count">@T("Admin.Common.Loading")</span>
+            <div class="am-dt-pager"></div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var token     = $('input[name="__RequestVerificationToken"]').first().val();
+        var canEdit   = @(canEdit ? "true" : "false");
+        var canDel    = @(canDelete ? "true" : "false");
+        var popupBase = '@Url.Action("ExperiencePopup", "Employee", new { employeeId = Model.Id })' + '&id=';
+        var addUrl    = '@Url.Action("ExperiencePopup", "Employee", new { employeeId = Model.Id })';
+        var saveUrl   = '@Url.Action("ExperiencePopupSave", "Employee")';
+
+        var tbl = amEmpTable({
+            tableId: 'exp-table', footerId: 'exp-footer',
+            listUrl:   '@Url.Action("ExperienceList",   "Employee")',
+            deleteUrl: '@Url.Action("ExperienceDelete", "Employee")',
+            empId: @Model.Id, pageSize: 10, token: token,
+            confirmMsg: 'Delete this experience record?',
+            onLoad: function (t) { amSyncCount('am-stat-experience', 'am-badge-experience', t); },
+            renderRow: function (row) {
+                var act = '';
+                if (canEdit) act += '<button type="button" class="btn am-dt-edit" data-id="' + row.Id + '"><i class="fas fa-pencil-alt"></i></button>';
+                if (canDel)  act += '<button type="button" class="btn am-dt-del"  data-id="' + row.Id + '"><i class="fas fa-trash-alt"></i></button>';
+                return '<tr>' +
+                    '<td class="am-dt-name">' + (row.PreviousCompanyName || '—') + '</td>' +
+                    '<td>' + (row.Designation || '<span class="am-dt-muted">—</span>') + '</td>' +
+                    '<td>' + (row.Froms       || '<span class="am-dt-muted">—</span>') + '</td>' +
+                    '<td>' + (row.Tos         || '<span class="am-dt-muted">—</span>') + '</td>' +
+                    (canEdit || canDel ? '<td><div class="am-dt-actions">' + act + '</div></td>' : '') +
+                    '</tr>';
+            }
+        });
+
+        $(document).off('click.exp-edit').on('click.exp-edit', '#exp-table .am-dt-edit', function () {
+            var id = $(this).data('id');
+            amOpenPopup({ url: popupBase + id, saveUrl: saveUrl, title: 'Edit Experience', onSaved: function () { tbl.reload(); } });
+        });
+
+        var addBtn = document.getElementById('exp-add-btn');
+        if (addBtn) addBtn.onclick = function () {
+            amOpenPopup({ url: addUrl, saveUrl: saveUrl, title: 'Add Experience', onSaved: function () { tbl.reload(); } });
+        };
+    }());
+    </script>
+}
+else
+{
+    <div class="am-save-first"><i class="fas fa-info-circle"></i> @T("Admin.Employee.Experience.SaveBeforeEdit")</div>
+}

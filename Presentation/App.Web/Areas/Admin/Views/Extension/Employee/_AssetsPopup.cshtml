@@ -1,0 +1,48 @@
+@model AssetsModel
+@{ Layout = null; }
+
+<input type="hidden" asp-for="Id" />
+<input type="hidden" asp-for="EmployeeID" />
+<input type="hidden" name="SelectedEmployeeId" value="@Model.EmployeeID" />
+
+<div class="am-popup-fields">
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="Type" /></div>
+        <div class="am-popup-input">
+            <nop-select asp-for="TypeId" asp-items="Model.Types" asp-required="true" />
+            <span asp-validation-for="TypeId" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="Name" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="Name" asp-required="true" />
+            <span asp-validation-for="Name" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row" id="am-asset-doc-row">
+        <div class="am-popup-label"><nop-label asp-for="DocumentId" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="DocumentId" />
+            <span asp-validation-for="DocumentId" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="Description" /></div>
+        <div class="am-popup-input">
+            <nop-textarea asp-for="Description" asp-required="true" />
+            <span asp-validation-for="Description" class="field-validation-error"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    function toggleAssetDoc() {
+        var val = document.getElementById('@Html.IdFor(m => m.TypeId)').value;
+        document.getElementById('am-asset-doc-row').style.display = (val == '1') ? 'none' : '';
+    }
+    document.getElementById('@Html.IdFor(m => m.TypeId)').addEventListener('change', toggleAssetDoc);
+    toggleAssetDoc();
+}());
+</script>

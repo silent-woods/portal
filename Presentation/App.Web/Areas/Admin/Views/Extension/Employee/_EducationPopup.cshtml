@@ -1,0 +1,37 @@
+@model EducationModel
+@{ Layout = null; }
+
+<input type="hidden" asp-for="Id" />
+<input type="hidden" asp-for="EmployeeID" />
+<input type="hidden" name="SelectedEmployeeId" value="@Model.EmployeeID" />
+
+<div class="am-popup-fields">
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="Course" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="Course" asp-required="true" />
+            <span asp-validation-for="Course" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="InstitutionName" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="InstitutionName" asp-required="true" />
+            <span asp-validation-for="InstitutionName" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="MarksScored" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="MarksScored" asp-required="true" />
+            <span asp-validation-for="MarksScored" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="YearOfCompletion" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="YearOfCompletion" asp-required="true" />
+            <span asp-validation-for="YearOfCompletion" class="field-validation-error"></span>
+        </div>
+    </div>
+</div>

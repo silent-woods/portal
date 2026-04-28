@@ -302,6 +302,8 @@ namespace App.Web.Areas.Admin.Controllers.Extension
 
             //prepare model
             var model = await _employeeModelFactory.PrepareEmployeeModelAsync(null, employee);
+            if (model.PictureId > 0)
+                model.PictureUrl = await _pictureService.GetPictureUrlAsync(model.PictureId);
 
             return View("/Areas/Admin/Views/Extension/Employee/Edit.cshtml", model);
         }
@@ -1139,6 +1141,237 @@ namespace App.Web.Areas.Admin.Controllers.Extension
             //return Json(new { success = true });
 
         }
+        #endregion
+
+        #region Popup Actions (Education / Experience / Assets / Address)
+
+        [HttpGet]
+        public virtual async Task<IActionResult> EducationPopup(int employeeId, int id = 0)
+        {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation,
+                    id == 0 ? PermissionAction.Add : PermissionAction.Edit))
+                return AccessDeniedView();
+
+            EducationModel model;
+            if (id > 0)
+            {
+                var education = await _educationService.GetEducationByIdAsync(id);
+                if (education == null) return NotFound();
+                model = await _educationModelFactory.PrepareEducationModelAsync(null, education);
+                model.EmployeeID = employeeId;
+            }
+            else
+            {
+                model = await _educationModelFactory.PrepareEducationModelAsync(new EducationModel(), null);
+                model.EmployeeID = employeeId;
+                model.SelectedEmployeeId.Add(employeeId);
+            }
+            return PartialView("/Areas/Admin/Views/Extension/Employee/_EducationPopup.cshtml", model);
+        }
+
+        [HttpPost]
+        public virtual async Task<IActionResult> EducationPopupSave(EducationModel model)
+        {
+            var isEdit = model.Id > 0;
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation,
+                    isEdit ? PermissionAction.Edit : PermissionAction.Add))
+                return Json(new { success = false, errors = new[] { await _localizationService.GetResourceAsync("Admin.Common.AccessDenied") } });
+
+            if (!model.SelectedEmployeeId.Any())
+                model.SelectedEmployeeId.Add(model.EmployeeID);
+            model.EmployeeID = model.SelectedEmployeeId.FirstOrDefault();
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
+                return Json(new { success = false, errors });
+            }
+
+            if (isEdit)
+            {
+                var education = await _educationService.GetEducationByIdAsync(model.Id);
+                if (education == null) return Json(new { success = false, errors = new[] { await _localizationService.GetResourceAsync("Admin.Common.RecordNotFound") } });
+                education = model.ToEntity(education);
+                await _educationService.UpdateEducationAsync(education);
+            }
+            else
+            {
+                var education = model.ToEntity<Education>();
+                await _educationService.InsertEducationAsync(education);
+            }
+            return Json(new { success = true });
+        }
+
+        [HttpGet]
+        public virtual async Task<IActionResult> ExperiencePopup(int employeeId, int id = 0)
+        {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageExperience,
+                    id == 0 ? PermissionAction.Add : PermissionAction.Edit))
+                return AccessDeniedView();
+
+            ExperienceModel model;
+            if (id > 0)
+            {
+                var experience = await _experienceService.GetExperienceByIdAsync(id);
+                if (experience == null) return NotFound();
+                model = await _experienceModelFactory.PrepareExperienceModelAsync(null, experience);
+                model.EmployeeID = employeeId;
+            }
+            else
+            {
+                model = await _experienceModelFactory.PrepareExperienceModelAsync(new ExperienceModel(), null);
+                model.EmployeeID = employeeId;
+                model.SelectedEmployeeId.Add(employeeId);
+            }
+            return PartialView("/Areas/Admin/Views/Extension/Employee/_ExperiencePopup.cshtml", model);
+        }
+
+        [HttpPost]
+        public virtual async Task<IActionResult> ExperiencePopupSave(ExperienceModel model)
+        {
+            var isEdit = model.Id > 0;
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageExperience,
+                    isEdit ? PermissionAction.Edit : PermissionAction.Add))
+                return Json(new { success = false, errors = new[] { await _localizationService.GetResourceAsync("Admin.Common.AccessDenied") } });
+
+            if (!model.SelectedEmployeeId.Any())
+                model.SelectedEmployeeId.Add(model.EmployeeID);
+            model.EmployeeID = model.SelectedEmployeeId.FirstOrDefault();
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
+                return Json(new { success = false, errors });
+            }
+
+            if (model.From > model.To)
+                return Json(new { success = false, errors = new[] { await _localizationService.GetResourceAsync("Admin.Catalog.EmployeeExperience.Error.ToGreaterThenFrom") } });
+
+            if (isEdit)
+            {
+                var experience = await _experienceService.GetExperienceByIdAsync(model.Id);
+                if (experience == null) return Json(new { success = false, errors = new[] { await _localizationService.GetResourceAsync("Admin.Common.RecordNotFound") } });
+                experience = model.ToEntity(experience);
+                await _experienceService.UpdateExperienceAsync(experience);
+            }
+            else
+            {
+                var experience = model.ToEntity<Experience>();
+                await _experienceService.InsertExperienceAsync(experience);
+            }
+            return Json(new { success = true });
+        }
+
+        [HttpGet]
+        public virtual async Task<IActionResult> AssetsPopup(int employeeId, int id = 0)
+        {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAssets,
+                    id == 0 ? PermissionAction.Add : PermissionAction.Edit))
+                return AccessDeniedView();
+
+            AssetsModel model;
+            if (id > 0)
+            {
+                var assets = await _assetsService.GetAssetsByIdAsync(id);
+                if (assets == null) return NotFound();
+                model = await _assetsModelFactory.PrepareAssetsModelAsync(null, assets);
+                model.EmployeeID = employeeId;
+            }
+            else
+            {
+                model = await _assetsModelFactory.PrepareAssetsModelAsync(new AssetsModel(), null);
+                model.EmployeeID = employeeId;
+                model.SelectedEmployeeId.Add(employeeId);
+            }
+            return PartialView("/Areas/Admin/Views/Extension/Employee/_AssetsPopup.cshtml", model);
+        }
+
+        [HttpPost]
+        public virtual async Task<IActionResult> AssetsPopupSave(AssetsModel model)
+        {
+            var isEdit = model.Id > 0;
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAssets,
+                    isEdit ? PermissionAction.Edit : PermissionAction.Add))
+                return Json(new { success = false, errors = new[] { await _localizationService.GetResourceAsync("Admin.Common.AccessDenied") } });
+
+            if (!model.SelectedEmployeeId.Any())
+                model.SelectedEmployeeId.Add(model.EmployeeID);
+            model.EmployeeID = model.SelectedEmployeeId.FirstOrDefault();
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
+                return Json(new { success = false, errors });
+            }
+
+            if (isEdit)
+            {
+                var assets = await _assetsService.GetAssetsByIdAsync(model.Id);
+                if (assets == null) return Json(new { success = false, errors = new[] { await _localizationService.GetResourceAsync("Admin.Common.RecordNotFound") } });
+                assets = model.ToEntity(assets);
+                await _assetsService.UpdateAssetsAsync(assets);
+            }
+            else
+            {
+                var assets = model.ToEntity<Assets>();
+                await _assetsService.InsertAssetsAsync(assets);
+            }
+            return Json(new { success = true });
+        }
+
+        [HttpGet]
+        public virtual async Task<IActionResult> AddressPopup(int employeeId, int id = 0)
+        {
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress,
+                    id == 0 ? PermissionAction.Add : PermissionAction.Edit))
+                return AccessDeniedView();
+
+            EmpAddressModel model;
+            if (id > 0)
+            {
+                var address = await _empAddressService.GetAddressByIdAsync(id);
+                if (address == null) return NotFound();
+                model = await _empAddressModelFactory.PrepareAddressModelAsync(null, address);
+                model.EmployeeId = employeeId;
+            }
+            else
+            {
+                model = await _empAddressModelFactory.PrepareAddressModelAsync(new EmpAddressModel(), null);
+                model.EmployeeId = employeeId;
+            }
+            return PartialView("/Areas/Admin/Views/Extension/Employee/_AddressPopup.cshtml", model);
+        }
+
+        [HttpPost]
+        public virtual async Task<IActionResult> AddressPopupSave(EmpAddressModel model)
+        {
+            var isEdit = model.Id > 0;
+            if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress,
+                    isEdit ? PermissionAction.Edit : PermissionAction.Add))
+                return Json(new { success = false, errors = new[] { await _localizationService.GetResourceAsync("Admin.Common.AccessDenied") } });
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
+                return Json(new { success = false, errors });
+            }
+
+            if (isEdit)
+            {
+                var address = await _empAddressService.GetAddressByIdAsync(model.Id);
+                if (address == null) return Json(new { success = false, errors = new[] { await _localizationService.GetResourceAsync("Admin.Common.RecordNotFound") } });
+                address = model.ToEntity(address);
+                await _empAddressService.UpdateAddressAsync(address);
+            }
+            else
+            {
+                var address = model.ToEntity<EmpAddress>();
+                address.CreatedOnUtc = await _dateTimeHelper.GetUTCAsync();
+                await _empAddressService.InsertAddressAsync(address);
+            }
+            return Json(new { success = true });
+        }
+
         #endregion
 
         #region Activity Tracking

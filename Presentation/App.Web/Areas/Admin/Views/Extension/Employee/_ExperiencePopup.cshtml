@@ -1,0 +1,37 @@
+@model ExperienceModel
+@{ Layout = null; }
+
+<input type="hidden" asp-for="Id" />
+<input type="hidden" asp-for="EmployeeID" />
+<input type="hidden" name="SelectedEmployeeId" value="@Model.EmployeeID" />
+
+<div class="am-popup-fields">
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="PreviousCompanyName" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="PreviousCompanyName" asp-required="true" />
+            <span asp-validation-for="PreviousCompanyName" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="Designation" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="Designation" asp-required="true" />
+            <span asp-validation-for="Designation" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="From" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="From" asp-required="true" />
+            <span asp-validation-for="From" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="To" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="To" asp-required="true" />
+            <span asp-validation-for="To" class="field-validation-error"></span>
+        </div>
+    </div>
+</div>

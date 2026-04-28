@@ -1,88 +1,369 @@
-﻿@model EmployeeModel
+@model EmployeeModel
 
 @{
-    var showTour = ViewBag.ShowTour ?? false;
+    var selectedDept   = Model.Departments?.FirstOrDefault(x => x.Value == Model.DepartmentId.ToString() && Model.DepartmentId > 0)?.Text ?? "";
+    var selectedDesig  = Model.Designation?.FirstOrDefault(x => x.Value == Model.DesignationId.ToString() && Model.DesignationId > 0)?.Text ?? "";
+    var selectedStatus = Model.EmployeesStatus?.FirstOrDefault(x => x.Selected)?.Text ?? "";
+    var statusLower    = selectedStatus.ToLower();
+    var statusClass    = statusLower.Contains("active") && !statusLower.Contains("in")
+                             ? "am-badge-success"
+                             : statusLower.Contains("inactive") || statusLower.Contains("terminat")
+                                 ? "am-badge-danger"
+                                 : "am-badge-warning";
+    var initials  = $"{Model.FirstName?.FirstOrDefault()}{Model.LastName?.FirstOrDefault()}".ToUpper();
+    var fullName  = $"{Model.FirstName} {Model.LastName}".Trim();
+    if (string.IsNullOrWhiteSpace(fullName)) fullName = T("Admin.HRM.Employees.NewEmployee").Text;
 
-    const string hideInfoBlockAttributeName = "EmployeePage.HideInfoBlock";
-    var customer = await workContext.GetCurrentCustomerAsync();
-    var hideInfoBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideInfoBlockAttributeName);
-
-    const string hidePersonalBlockAttributeName = "EmployeePage.HidePersonalBlock";
-    var hidePersonalBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hidePersonalBlockAttributeName);
-
-    const string hideWorkBlockAttributeName = "EmployeePage.HideWorkBlock";
-    var hideWorkBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideWorkBlockAttributeName);
-
-    const string hideAddressBlockAttributeName = "EmployeePage.HideAddressBlock";
-    var hideAddressBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideAddressBlockAttributeName);
-
-    const string hideEducationBlockAttributeName = "EmployeePage.HideEducationBlock";
-    var hideEducationBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideEducationBlockAttributeName);
-    
-    const string hideExperienceBlockAttributeName = "EmployeePage.HideExperienceBlock";
-    var hideExperienceBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideEducationBlockAttributeName);
-
-    const string hideAssetsBlockAttributeName = "EmployeePage.HideAssetsBlock";
-    var hideAssetsBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hideAssetsBlockAttributeName);
-
-    const string hidePayrollBlockAttributeName = "EmployeePage.HidePayrollBlock";
-    var hidePayrollBlock = showTour ? false : await genericAttributeService.GetAttributeAsync<bool>(customer, hidePayrollBlockAttributeName);
-
+    var eduCount   = Model.EducationModel?.Count  ?? 0;
+    var expCount   = Model.ExperienceModel?.Count  ?? 0;
+    var assetCount = Model.AssetsModels?.Count     ?? 0;
+    var addrCount  = Model.EmpAddressModels?.Count ?? 0;
 }
 
-@* <div asp-validation-summary="All"></div> *@
 <input asp-for="Id" type="hidden" />
 <input asp-for="Customer_Id" type="hidden" />
 
-<section class="content">
-    <div class="container-fluid">
-        <div class="form-horizontal">
-            @* <div class="row">
-                <div class="col-md-12 clearfix">
-                    <div class="float-left">
-                        @await Component.InvokeAsync(typeof(SettingModeViewComponent), new { modeName = "employee-advanced-mode" })
-                    </div>                   
-                </div>
-            </div> *@
+<script>
+window.amSyncCount = function (statId, badgeId, total) {
+    $('#' + statId).text(total);
+    var $b = $('#' + badgeId);
+    if (total > 0) { $b.text(total).show(); } else { $b.hide(); }
+};
+window.amEmpTable = function (cfg) {
+    var ps = cfg.pageSize || 10, state = { start: 0, total: 0 };
+    function load() {
+        var page = Math.floor(state.start / ps) + 1;
+        $.ajax({
+            url: cfg.listUrl, type: 'POST',
+            data: {
+                draw: 1, start: state.start, length: ps,
+                Page: page, PageSize: ps,
+                employeeId: cfg.empId,
+                __RequestVerificationToken: cfg.token
+            },
+            success: function (r) {
+                state.total = r.recordsTotal || r.RecordsTotal || 0;
+                renderRows(r.data || r.Data || []);
+                renderFooter();
+                if (cfg.onLoad) cfg.onLoad(state.total);
+            }
+        });
+    }
+    function renderRows(rows) {
+        var $tb = $('#' + cfg.tableId + ' tbody'); $tb.empty();
+        if (!rows.length) { var c = $('#' + cfg.tableId + ' thead th').length; $tb.html('<tr><td colspan="' + c + '" class="am-dt-empty"><i class="fas fa-inbox"></i>No records found</td></tr>'); }
+        else { $.each(rows, function (_, r) { $tb.append(cfg.renderRow(r)); }); }
+    }
+    function renderFooter() {
+        var tp = Math.max(1, Math.ceil(state.total / ps)), cp = Math.floor(state.start / ps);
+        var sf = state.total === 0 ? 0 : state.start + 1, st = Math.min(state.start + ps, state.total);
+        var $f = $('#' + cfg.footerId);
+        $f.find('.am-dt-count').text('Showing ' + sf + (st > sf ? '–' + st : '') + ' of ' + state.total + ' records');
+        var $p = $f.find('.am-dt-pager').empty();
+        var mk = function (h, pg, d, a) { return $('<button>').html(h).prop('disabled', d).toggleClass('am-dt-page-active', !!a).attr('data-page', pg); };
+        $p.append(mk('<i class="fas fa-chevron-left"></i>', cp - 1, cp === 0));
+        var s = Math.max(0, cp - 2), e = Math.min(tp - 1, s + 4);
+        for (var p = s; p <= e; p++) { $p.append(mk(p + 1, p, false, p === cp)); }
+        $p.append(mk('<i class="fas fa-chevron-right"></i>', cp + 1, cp >= tp - 1));
+        $p.find('button[data-page]').not(':disabled').on('click', function () { state.start = parseInt($(this).attr('data-page')) * ps; load(); });
+    }
+    $(document).off('click.amdt-' + cfg.tableId).on('click.amdt-' + cfg.tableId, '#' + cfg.tableId + ' .am-dt-del', function () {
+        if (!confirm(cfg.confirmMsg || 'Delete this record?')) return;
+        $.ajax({ url: cfg.deleteUrl, type: 'POST', data: { __RequestVerificationToken: cfg.token, id: $(this).data('id') }, complete: load });
+    });
+    load(); return { reload: load };
+};
+</script>
 
-            <nop-cards id="employee-cards">
-                <nop-card asp-name="employee-info" asp-icon="fas fa-info" asp-title="@T("Admin.HRM.Employee.Info")" asp-hide-block-attribute-name="@hideInfoBlockAttributeName" asp-hide="@hideInfoBlock" asp-advanced="false">
-                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Info.cshtml", Model)
-                </nop-card>
-                <nop-card asp-name="employee-personal" asp-icon="fas fa-dollar-sign" asp-title="@T("Admin.HRM.Employee.Personal")" asp-hide-block-attribute-name="@hidePersonalBlockAttributeName" asp-hide="@hidePersonalBlock" asp-advanced="false">
-                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Personal.cshtml", Model)
-                </nop-card>
-                <nop-card asp-name="employee-work" asp-icon="fas fa-truck" asp-title="@T("Admin.HRM.Employee.Work")" asp-hide-block-attribute-name="@hideWorkBlockAttributeName" asp-hide="@hideWorkBlock" asp-advanced="false">
-                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Work.cshtml", Model)
-                </nop-card>
+<div class="am-emp-layout">
+    <div class="am-profile-card">
+        <div class="am-profile-cover"></div>
+        <div class="am-profile-avatar-wrap">
+            <div class="am-profile-avatar">
+                @if (!string.IsNullOrEmpty(Model.PictureUrl))
+                {
+                    <img src="@Model.PictureUrl" alt="@fullName" />
+                }
+                else
+                {
+                    @initials
+                }
+            </div>
+        </div>
+        <div class="am-profile-info">
+            <div class="am-profile-name">@fullName</div>
+            @if (!string.IsNullOrEmpty(selectedDesig) || !string.IsNullOrEmpty(selectedDept))
+            {
+                <div class="am-profile-role">
+                    @(string.IsNullOrEmpty(selectedDesig) ? selectedDept : string.IsNullOrEmpty(selectedDept) ? selectedDesig : $"{selectedDesig} · {selectedDept}")
+                </div>
+            }
+            <div class="am-profile-badges">
+                <span class="am-badge @statusClass">@selectedStatus</span>
+            </div>
+        </div>
+
+        @if (Model.Id > 0)
+        {
+            <div class="am-profile-divider"></div>
+            <div class="am-meta-list">
+                <div class="am-meta-item">
+                    <div class="am-meta-icon" style="background:#eef1fd;color:#4361ee;">
+                        <i class="fas fa-id-badge"></i>
+                    </div>
+                    <div>
+                        <div class="am-meta-label">Employee ID</div>
+                        <div class="am-meta-value">EMP-@Model.Id.ToString("D4")</div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(selectedDept))
+                {
+                    <div class="am-meta-item">
+                        <div class="am-meta-icon" style="background:#fef9c3;color:#d97706;">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                        <div>
+                            <div class="am-meta-label">Department</div>
+                            <div class="am-meta-value">@selectedDept</div>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(selectedDesig))
+                {
+                    <div class="am-meta-item">
+                        <div class="am-meta-icon" style="background:#ede9fe;color:#6d28d9;">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div>
+                            <div class="am-meta-label">Designation</div>
+                            <div class="am-meta-value">@selectedDesig</div>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.DateofJoining.HasValue)
+                {
+                    <div class="am-meta-item">
+                        <div class="am-meta-icon" style="background:#d1fae5;color:#059669;">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div>
+                            <div class="am-meta-label">Date of Joining</div>
+                            <div class="am-meta-value">
+                                @Model.DateofJoining.Value.ToString("dd MMM yyyy")
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.MobileNo))
+                {
+                    <div class="am-meta-item">
+                        <div class="am-meta-icon" style="background:#dbeafe;color:#2563eb;">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div>
+                            <div class="am-meta-label">Mobile</div>
+                            <div class="am-meta-value">@Model.MobileNo</div>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.OfficialEmail))
+                {
+                    <div class="am-meta-item">
+                        <div class="am-meta-icon" style="background:#f3e8ff;color:#7c3aed;">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div>
+                            <div class="am-meta-label">Official Email</div>
+                            <div class="am-meta-value" style="word-break:break-all;">
+                                @Model.OfficialEmail
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>@* /am-profile-card *@
+
+    <div class="am-tab-area">
+        <div class="am-tab-nav">
+            <div class="am-tab-nav-inner">
+                <button type="button" class="am-tab-btn" data-tab="info">
+                    <i class="fas fa-user"></i> @T("Admin.HRM.Employee.Info")
+                </button>
+                <button type="button" class="am-tab-btn" data-tab="personal">
+                    <i class="fas fa-heart"></i> @T("Admin.HRM.Employee.Personal")
+                </button>
+                <button type="button" class="am-tab-btn" data-tab="work">
+                    <i class="fas fa-briefcase"></i> @T("Admin.HRM.Employee.Work")
+                </button>
                 @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress, PermissionAction.View))
                 {
-                    <nop-card asp-name="employee-address" asp-icon="fas fa-map-marker-alt" asp-title="@T("Admin.HRM.Employee.Address")" asp-hide-block-attribute-name="@hideAddressBlockAttributeName" asp-hide="@hideAddressBlock" asp-advanced="false">
-                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Address.cshtml", Model)
-                    </nop-card>
+                    <button type="button" class="am-tab-btn" data-tab="address">
+                        <i class="fas fa-map-marker-alt"></i> @T("Admin.HRM.Employee.Address")
+                        <span class="am-tab-badge" id="am-badge-address" style="display:none;"></span>
+                    </button>
                 }
                 @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation, PermissionAction.View))
                 {
-                    <nop-card asp-name="employee-education" asp-icon="fas fa-graduation-cap" asp-title="@T("Admin.HRM.Employee.Education")" asp-hide-block-attribute-name="@hideEducationBlockAttributeName" asp-hide="@hideEducationBlock" asp-advanced="false">
-                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Education.cshtml", Model)
-                    </nop-card>
+                    <button type="button" class="am-tab-btn" data-tab="education">
+                        <i class="fas fa-graduation-cap"></i> @T("Admin.HRM.Employee.Education")
+                        <span class="am-tab-badge" id="am-badge-education" style="display:none;"></span>
+                    </button>
                 }
                 @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageExperience, PermissionAction.View))
                 {
-                    <nop-card asp-name="employee-experience" asp-icon="fas fa-chart-line" asp-title="@T("Admin.HRM.Employee.Experience")" asp-hide-block-attribute-name="@hideExperienceBlockAttributeName" asp-hide="@hideExperienceBlock" asp-advanced="false">
-                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Experience.cshtml", Model)
-                    </nop-card>
+                    <button type="button" class="am-tab-btn" data-tab="experience">
+                        <i class="fas fa-building"></i> @T("Admin.HRM.Employee.Experience")
+                        <span class="am-tab-badge" id="am-badge-experience" style="display:none;"></span>
+                    </button>
                 }
                 @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAssets, PermissionAction.View))
                 {
-                    <nop-card asp-name="employee-assets" asp-icon="fas fa-laptop" asp-title="@T("Admin.HRM.Employee.Assets")" asp-hide-block-attribute-name="@hideAssetsBlockAttributeName" asp-hide="@hideAssetsBlock" asp-advanced="false">
-                        @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Assets.cshtml", Model)
-                    </nop-card>
+                    <button type="button" class="am-tab-btn" data-tab="assets">
+                        <i class="fas fa-laptop"></i> @T("Admin.HRM.Employee.Assets")
+                        <span class="am-tab-badge" id="am-badge-assets" style="display:none;"></span>
+                    </button>
                 }
-                <nop-card asp-name="employee-payroll" asp-icon="fas fa-university" asp-title="Payroll Info" asp-hide-block-attribute-name="@hidePayrollBlockAttributeName" asp-hide="@hidePayrollBlock" asp-advanced="false">
-                    @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Payroll.cshtml", Model)
-                </nop-card>
-            </nop-cards>
+                    <button type="button" class="am-tab-btn" data-tab="payroll">
+                        <i class="fas fa-university"></i> @T("Admin.Employee.Tabs.Payroll")
+                    </button>
+            </div>
         </div>
+        <div id="emp-tab-info" class="am-tab-pane">
+            @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Info.cshtml", Model)
+        </div>
+
+        <div id="emp-tab-personal" class="am-tab-pane">
+            @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Personal.cshtml", Model)
+        </div>
+
+        <div id="emp-tab-work" class="am-tab-pane">
+            @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Work.cshtml", Model)
+        </div>
+
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress, PermissionAction.View))
+        {
+            <div id="emp-tab-address" class="am-tab-pane">
+                @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Address.cshtml", Model)
+            </div>
+        }
+
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation, PermissionAction.View))
+        {
+            <div id="emp-tab-education" class="am-tab-pane">
+                @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Education.cshtml", Model)
+            </div>
+        }
+
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageExperience, PermissionAction.View))
+        {
+            <div id="emp-tab-experience" class="am-tab-pane">
+                @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Experience.cshtml", Model)
+            </div>
+        }
+
+        @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageAssets, PermissionAction.View))
+        {
+            <div id="emp-tab-assets" class="am-tab-pane">
+                @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Assets.cshtml", Model)
+            </div>
+        }
+
+        <div id="emp-tab-payroll" class="am-tab-pane">
+            @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.Payroll.cshtml", Model)
+        </div>
+
     </div>
-</section>
+</div>
+
+<script>
+(function () {
+    var empId      = '@Model.Id';
+    var storageKey = 'emp-active-tab-' + empId;
+    var defaultTab = 'info';
+    var tabOrder = ['info', 'personal', 'work', 'address', 'education', 'experience', 'assets', 'payroll'];
+    document.querySelectorAll('.am-field span.required').forEach(function (req) {
+        var wrapper = req.closest('.am-field').querySelector('.label-wrapper');
+        if (wrapper) wrapper.appendChild(req);
+    });
+    function showTab(name, persist) {
+        document.querySelectorAll('.am-tab-pane').forEach(function (p) { p.classList.remove('active'); });
+        document.querySelectorAll('.am-tab-btn').forEach(function (b) { b.classList.remove('active'); });
+        var pane = document.getElementById('emp-tab-' + name);
+        var btn  = document.querySelector('.am-tab-btn[data-tab="' + name + '"]');
+        if (!pane) { showTab(defaultTab, persist); return; }
+        pane.classList.add('active');
+        if (btn) btn.classList.add('active');
+        if (persist !== false) {
+            try { localStorage.setItem(storageKey, name); } catch (e) {}
+        }
+        setTimeout(function () {
+            if (typeof $.fn !== 'undefined' && $.fn.dataTable) {
+                $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+            }
+        }, 50);
+    }
+    function firstErrorTab() {
+        var errorEls = document.querySelectorAll(
+            '.field-validation-error:not(:empty), ' +
+            'input.input-validation-error, ' +
+            'select.input-validation-error, ' +
+            'textarea.input-validation-error'
+        );
+        var errorTabSet = {};
+        errorEls.forEach(function (el) {
+            var pane = el.closest('.am-tab-pane');
+            if (pane) {
+                var tabName = pane.id.replace('emp-tab-', '');
+                errorTabSet[tabName] = true;
+            }
+        });
+        for (var i = 0; i < tabOrder.length; i++) {
+            if (errorTabSet[tabOrder[i]]) return tabOrder[i];
+        }
+        return null;
+    }
+
+    document.querySelectorAll('.am-tab-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { showTab(this.dataset.tab); });
+    });
+    function markErrorTabs() {
+        document.querySelectorAll('.am-tab-btn').forEach(function (btn) {
+            var tabName = btn.dataset.tab;
+            var pane = document.getElementById('emp-tab-' + tabName);
+            if (!pane) return;
+            var hasError = pane.querySelector(
+                '.field-validation-error:not(:empty), ' +
+                'input.input-validation-error, ' +
+                'select.input-validation-error, ' +
+                'textarea.input-validation-error'
+            );
+            btn.classList.toggle('am-tab-has-error', !!hasError);
+        });
+    }
+    markErrorTabs();
+    var errorTab = firstErrorTab();
+    if (errorTab) {
+        showTab(errorTab, false);  
+    } else {
+        var saved = defaultTab;
+        try { saved = localStorage.getItem(storageKey) || defaultTab; } catch (e) {}
+        showTab(saved);
+    }
+    var $form = document.getElementById('employee-form');
+    if ($form) {
+        $form.addEventListener('submit', function () {
+            setTimeout(function () {
+                markErrorTabs();
+                var tab = firstErrorTab();
+                if (tab) showTab(tab, false);
+            }, 0);
+        }, true);
+    }
+}());
+</script>

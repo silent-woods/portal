@@ -1,0 +1,111 @@
+@model EmpAddressModel
+@{ Layout = null; }
+
+<input type="hidden" asp-for="Id" />
+<input type="hidden" asp-for="EmployeeId" />
+
+<div class="am-popup-fields">
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="FirstName" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="FirstName" asp-required="true" />
+            <span asp-validation-for="FirstName" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="LastName" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="LastName" asp-required="true" />
+            <span asp-validation-for="LastName" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="Email" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="Email" asp-required="true" />
+            <span asp-validation-for="Email" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="Company" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="Company" asp-required="true" />
+            <span asp-validation-for="Company" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="CountryName" /></div>
+        <div class="am-popup-input">
+            <nop-select asp-for="CountryId" asp-items="Model.AvailableCountries" asp-required="true" />
+            <span asp-validation-for="CountryId" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="StateProvinceName" /></div>
+        <div class="am-popup-input">
+            <nop-select asp-for="StateProvinceId" asp-items="Model.AvailableStates" asp-required="true" />
+            <span asp-validation-for="StateProvinceId" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="County" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="County" />
+            <span asp-validation-for="County" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="City" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="City" asp-required="true" />
+            <span asp-validation-for="City" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="Address1" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="Address1" asp-required="true" />
+            <span asp-validation-for="Address1" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="Address2" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="Address2" />
+            <span asp-validation-for="Address2" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="ZipPostalCode" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="ZipPostalCode" asp-required="true" />
+            <span asp-validation-for="ZipPostalCode" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="PhoneNumber" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="PhoneNumber" asp-required="true" />
+            <span asp-validation-for="PhoneNumber" class="field-validation-error"></span>
+        </div>
+    </div>
+    <div class="am-popup-row">
+        <div class="am-popup-label"><nop-label asp-for="FaxNumber" /></div>
+        <div class="am-popup-input">
+            <nop-editor asp-for="FaxNumber" />
+            <span asp-validation-for="FaxNumber" class="field-validation-error"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    $('#@Html.IdFor(m => m.CountryId)').on('change', function () {
+        $.get('@Url.Action("GetStatesByCountryId", "Country")', { countryId: $(this).val(), addSelectStateItem: 'true' },
+            function (data) {
+                var $ddl = $('#@Html.IdFor(m => m.StateProvinceId)').empty();
+                $.each(data, function (_, o) { $ddl.append($('<option>').val(o.id).text(o.name)); });
+            });
+    });
+}());
+</script>

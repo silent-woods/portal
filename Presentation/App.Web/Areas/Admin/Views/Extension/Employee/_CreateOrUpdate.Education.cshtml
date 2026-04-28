@@ -1,81 +1,84 @@
-﻿@model EmployeeModel
+@model EmployeeModel
 
-<div class="card-body">
-    @if (Model.Id > 0)
-    {
-        <div class="card card-default">
-            <div class="card-body">
-                @{
-                    var gridModel = new DataTablesModel
-                    {
-                        Name = "education-grid",
-                        UrlRead = new DataUrl("EducationList", "Employee", new RouteValueDictionary { [nameof(Model.EducationSearchModel.employeeId)] = Model.Id }),
-                        UrlDelete = new DataUrl("EducationDelete", "Employee", new RouteValueDictionary { [nameof(Model.Id)] = Model.EducationModel.FirstOrDefault()?.Id }),
-                        Length = Model.EducationSearchModel.PageSize,
-                        LengthMenu = Model.EducationSearchModel.AvailablePageSizes,
-                    };
+@if (Model.Id > 0)
+{
+    var canEdit   = await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation, PermissionAction.Edit);
+    var canDelete = await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation, PermissionAction.Delete);
 
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.EmployeeName))
-                    {
-                        Title = T("Admin.Educations.Fields.EmployeeName").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.Course))
-                    {
-                        Title = T("Admin.Educations.Fields.Course").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.InstitutionName))
-                    {
-                        Title = T("Admin.Educations.Fields.InstitutionName").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.MarksScored))
-                    {
-                        Title = T("Admin.Educations.Fields.MarksScored").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.YearOfCompletion))
-                    {
-                        Title = T("Admin.Educations.Fields.YearOfCompletion").Text,
-                    });
-                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation, PermissionAction.Edit))
-                    {
-                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.Id))
-                        {
-                            Title = T("Admin.Common.Edit").Text,
-                            Width = "80",
-                            ClassName = NopColumnClassDefaults.Button,
-                            Render = new RenderButtonEdit(new DataUrl("~/Admin/Employee/EducationEdit?employeeId=" + Model.Id + "&id=" + Model.EducationModel.FirstOrDefault()?.Id, true))
-                        });
-                    }
-                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation, PermissionAction.Delete))
-                    {
-                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EducationModel.Id))
-                        {
-                            Title = T("Admin.Common.Delete").Text,
-                            Width = "100",
-                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
-                            ClassName = NopColumnClassDefaults.Button
-                        });
-                    }
-                }
-                @await Html.PartialAsync("Table", gridModel)
-            </div>
+    <div class="am-card">
+        <div class="am-card-header">
+            <div class="am-card-title"><i class="fas fa-graduation-cap"></i> @T("Admin.HRM.Employee.Education")</div>
             @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEducation, PermissionAction.Add))
             {
-                <div class="card-body">
-                    <button type="button" class="btn btn-primary" onclick="location.href = '@Url.Action("EducationCreate", new { employeeId = Model.Id })'">
-                        <i class="fas fa-plus-square"></i>
-                        @T("Admin.Employee.Education.AddButton")
-                    </button>
-                </div>
+                <button type="button" id="edu-add-btn" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> @T("Admin.Employee.Education.AddButton")
+                </button>
             }
-            
         </div>
-    }
-    else
-    {
-        <div class="card card-default">
-            <div class="card-body">
-                @T("Admin.Catalog.Employee.Education.SaveBeforeEdit")
-            </div>
+        <div class="am-dt-wrap">
+            <table id="edu-table" class="am-dt">
+                <thead><tr>
+                    <th>@T("Admin.Educations.Fields.Course")</th>
+                    <th>@T("Admin.Educations.Fields.InstitutionName")</th>
+                    <th>@T("Admin.Educations.Fields.MarksScored")</th>
+                    <th>@T("Admin.Educations.Fields.YearOfCompletion")</th>
+                        @if (canEdit || canDelete)
+                        {
+                            <th>@T("Admin.Common.Actions")</th>
+                        }
+                </tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
-    }
-</div>
+        <div id="edu-footer" class="am-dt-footer">
+            <span class="am-dt-count">@T("Admin.Common.Loading")</span>
+            <div class="am-dt-pager"></div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var token       = $('input[name="__RequestVerificationToken"]').first().val();
+        var canEdit     = @(canEdit ? "true" : "false");
+        var canDel      = @(canDelete ? "true" : "false");
+        var popupBase   = '@Url.Action("EducationPopup", "Employee", new { employeeId = Model.Id })'  + '&id=';
+        var addUrl      = '@Url.Action("EducationPopup", "Employee", new { employeeId = Model.Id })';
+        var saveUrl     = '@Url.Action("EducationPopupSave", "Employee")';
+
+        var tbl = amEmpTable({
+            tableId: 'edu-table', footerId: 'edu-footer',
+            listUrl:   '@Url.Action("EducationList",   "Employee")',
+            deleteUrl: '@Url.Action("EducationDelete", "Employee")',
+            empId: @Model.Id, pageSize: 10, token: token,
+            confirmMsg: 'Delete this education record?',
+            onLoad: function (t) { amSyncCount('am-stat-education', 'am-badge-education', t); },
+            renderRow: function (row) {
+                var act = '';
+                if (canEdit) act += '<button type="button" class="btn am-dt-edit" data-id="' + row.Id + '"><i class="fas fa-pencil-alt"></i></button>';
+                if (canDel)  act += '<button type="button" class="btn am-dt-del"  data-id="' + row.Id + '"><i class="fas fa-trash-alt"></i></button>';
+                return '<tr>' +
+                    '<td class="am-dt-name">' + (row.Course           || '—') + '</td>' +
+                    '<td>' + (row.InstitutionName || '<span class="am-dt-muted">—</span>') + '</td>' +
+                    '<td>' + (row.MarksScored     || '<span class="am-dt-muted">—</span>') + '</td>' +
+                    '<td>' + (row.YearOfCompletion|| '<span class="am-dt-muted">—</span>') + '</td>' +
+                    (canEdit || canDel ? '<td><div class="am-dt-actions">' + act + '</div></td>' : '') +
+                    '</tr>';
+            }
+        });
+
+        $(document).off('click.edu-edit').on('click.edu-edit', '#edu-table .am-dt-edit', function () {
+            var id = $(this).data('id');
+            amOpenPopup({ url: popupBase + id, saveUrl: saveUrl, title: 'Edit Education', onSaved: function () { tbl.reload(); } });
+        });
+
+        var addBtn = document.getElementById('edu-add-btn');
+        if (addBtn) addBtn.onclick = function () {
+            amOpenPopup({ url: addUrl, saveUrl: saveUrl, title: 'Add Education', onSaved: function () { tbl.reload(); } });
+        };
+    }());
+    </script>
+}
+else
+{
+    <div class="am-save-first"><i class="fas fa-info-circle"></i> @T("Admin.Catalog.Employee.Education.SaveBeforeEdit")</div>
+}

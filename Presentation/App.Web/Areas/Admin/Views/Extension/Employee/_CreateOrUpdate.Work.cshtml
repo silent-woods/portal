@@ -1,70 +1,55 @@
-﻿@model EmployeeModel
+@model EmployeeModel
 
-<div class="card-body">
-    <div id="employee-details-area">
-        <div>
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <nop-label asp-for="OfficialEmail" />
-                </div>
-                <div class="col-md-9">
-                    <nop-editor asp-for="OfficialEmail" asp-required="true" />
-                    <span asp-validation-for="OfficialEmail"></span>
-                </div>
-            </div>
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <nop-label asp-for="Location" />
-                </div>
-                <div class="col-md-9">
-                    <nop-editor asp-for="Location" />
-                </div>
-            </div>
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <nop-label asp-for="DepartmentName" />
-                </div>
-                <div class="col-md-9">
-                    <nop-select asp-for="DepartmentId" asp-items="Model.Departments" asp-required="true" />
-                    <span asp-validation-for="DepartmentId"></span>
-                </div>
-            </div>
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <nop-label asp-for="DesignationName"  />
-                </div>
-                <div class="col-md-9">
-                    <nop-select asp-for="DesignationId" asp-items="Model.Designation" asp-required="true" />
-                    <span asp-validation-for="DesignationId"></span>
-                </div>
-            </div>
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <nop-label asp-for="DateofJoining"  />
-                </div>
-                <div class="col-md-9">
-                    <nop-editor asp-for="DateofJoining" asp-required="true" />
-                    <span asp-validation-for="DateofJoining"></span>
-                </div>
+<div class="am-card">
+    <div class="am-card-header">
+        <div class="am-card-title"><i class="fas fa-briefcase"></i> @T("Admin.HRM.Employee.Work")</div>
+    </div>
+    <div class="am-card-body">
+
+        <div class="am-form-section">@T("Admin.HRM.Employee.Section.EmploymentDetails")</div>
+        <div class="am-form-grid">
+
+            <div class="am-field">
+                <nop-label asp-for="OfficialEmail" />
+                <nop-editor asp-for="OfficialEmail" asp-required="true" />
+                <span asp-validation-for="OfficialEmail"></span>
             </div>
 
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <nop-label asp-for="DateOfBirth" />
-                </div>
-                <div class="col-md-9">
-                    <nop-editor asp-for="DateOfBirth" asp-required="true" />
-                    <span asp-validation-for="DateOfBirth"></span>
-                </div>
+            <div class="am-field">
+                <nop-label asp-for="Location" />
+                <nop-editor asp-for="Location" />
             </div>
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <nop-label asp-for="IsVendor" />
-                </div>
-                <div class="col-md-9">
-                    <nop-editor asp-for="IsVendor" />
-                </div>
+
+            <div class="am-field">
+                <nop-label asp-for="DepartmentName" />
+                <nop-select asp-for="DepartmentId" asp-items="Model.Departments" asp-required="true" />
+                <span asp-validation-for="DepartmentId"></span>
             </div>
-        </div>        
+
+            <div class="am-field">
+                <nop-label asp-for="DesignationName" />
+                <nop-select asp-for="DesignationId" asp-items="Model.Designation" asp-required="true" />
+                <span asp-validation-for="DesignationId"></span>
+            </div>
+
+            <div class="am-field">
+                <nop-label asp-for="DateofJoining" />
+                <nop-editor asp-for="DateofJoining" asp-required="true" />
+                <span asp-validation-for="DateofJoining"></span>
+            </div>
+
+            <div class="am-field">
+                <nop-label asp-for="DateOfBirth" />
+                <nop-editor asp-for="DateOfBirth" asp-required="true" />
+                <span asp-validation-for="DateOfBirth"></span>
+            </div>
+
+            <div class="am-checkbox-field am-span-2">
+                <nop-editor asp-for="IsVendor" />
+                <nop-label asp-for="IsVendor" />
+            </div>
+
+        </div>
+
     </div>
 </div>

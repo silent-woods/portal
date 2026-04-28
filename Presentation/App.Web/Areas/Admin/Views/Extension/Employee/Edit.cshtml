@@ -1,46 +1,118 @@
 @model EmployeeModel
 
 @{
-    //page title
     ViewBag.PageTitle = T("Admin.HRM.Employees.EditEmployeeDetails").Text;
-    //active menu item (system name)
     NopHtml.SetActiveMenuItemSystemName("Employee");
+    NopHtml.AddCssFileParts("~/css/admin/admin-components.css");
 }
 
 <form asp-controller="Employee" asp-action="Edit" method="post" id="employee-form">
-    <div class="content-header clearfix">
-        <h1 class="float-left">
-            @T("Admin.HRM.Employees.EditEmployeeDetails")
-            <small>
-                <i class="fas fa-arrow-circle-left"></i>
-                <a asp-action="List">@T("Admin.HRM.Employees.BackToList")</a>
-            </small>
-        </h1>
-        <div class="float-right">
+
+    <div class="am-page-hdr">
+        <a asp-action="List" class="am-back-link">
+            <i class="fas fa-arrow-left"></i>
+            @T("Admin.HRM.Employees.BackToList")
+        </a>
+        <span class="am-hdr-title">@T("Admin.HRM.Employees.EditEmployeeDetails")</span>
+        <div class="am-hdr-actions">
             @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployee, PermissionAction.Edit))
             {
-                <button type="submit" id="btnAddNewDesignation" class="btn btn-primary" onclick="javascript:OpenWindow('@(Url.Action("SendOnBordingEmail", "Employee", new { employeeId = @Model.Id, btnId = "btnRefreshDesignation", formId = "Designation-form" }))', 800, 570, true); return false;">
+                <button type="button" class="btn btn-info btn-sm"
+                        onclick="javascript:OpenWindow('@(Url.Action("SendOnBordingEmail", "Employee", new { employeeId = @Model.Id, btnId = "btnRefreshDesignation", formId = "Designation-form" }))', 800, 570, true); return false;">
                     <i class="far fa-envelope"></i>
                     @T("Employee.SendOnBordingEmail")
                 </button>
-                <button type="submit" name="save" class="btn btn-primary">
-                    <i class="far fa-save"></i>
-                    @T("Admin.Common.Save")
-                </button>
-                <button type="submit" name="save-continue" class="btn btn-primary">
+                <button type="submit" name="save-continue" class="btn btn-secondary btn-sm">
                     <i class="far fa-save"></i>
                     @T("Admin.Common.SaveContinue")
+                </button>
+                <button type="submit" name="save" class="btn btn-primary btn-sm">
+                    <i class="far fa-save"></i>
+                    @T("Admin.Common.Save")
                 </button>
             }
             @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployee, PermissionAction.Delete))
             {
-                <span id="employee-delete" class="btn btn-danger">
+                <span id="employee-delete" class="btn btn-danger btn-sm" style="cursor:pointer;">
                     <i class="far fa-trash-alt"></i>
                     @T("Admin.Common.Delete")
                 </span>
             }
         </div>
     </div>
+
     @await Html.PartialAsync("/Areas/Admin/Views/Extension/Employee/_CreateOrUpdate.cshtml", Model)
+
 </form>
+
 <nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="employee-delete" />
+
+<div class="modal fade" id="am-emp-popup" tabindex="-1" role="dialog" aria-labelledby="am-emp-popup-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content am-popup-content">
+            <div class="modal-header am-popup-header">
+                <h5 class="modal-title" id="am-emp-popup-title"></h5>
+                <button type="button" class="close am-popup-close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body am-popup-body" id="am-emp-popup-body">
+                <div class="am-popup-loading"><i class="fas fa-spinner fa-spin"></i>@T("Admin.Common.Loading")</div>
+            </div>
+            <div class="modal-footer am-popup-footer">
+                <div class="am-popup-errors" id="am-emp-popup-errors" style="display:none;"></div>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">@T("Admin.Common.Cancel")</button>
+                <button type="button" class="btn btn-primary" id="am-emp-popup-save">
+                    <i class="fas fa-save"></i> @T("Admin.Common.Save")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.amOpenPopup = function (cfg) {
+    var $modal  = $('#am-emp-popup');
+    var $body   = $('#am-emp-popup-body');
+    var $errors = $('#am-emp-popup-errors');
+    var token   = $('input[name="__RequestVerificationToken"]').first().val();
+
+    $('#am-emp-popup-title').text(cfg.title || '');
+    $body.html('<div class="am-popup-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>');
+    $errors.hide().empty();
+    $modal.modal('show');
+
+    $.get(cfg.url, function (html) {
+        $body.html(html);
+        $body.find('.am-popup-input span.required').each(function () {
+            var $wrapper = $(this).closest('.am-popup-row').find('.am-popup-label .label-wrapper');
+            if ($wrapper.length) $wrapper.append($(this));
+        });
+        if ($.validator && $.validator.unobtrusive)
+            $.validator.unobtrusive.parse($body[0]);
+    }).fail(function () {
+        $body.html('<div class="am-popup-load-error">Failed to load. Please try again.</div>');
+    });
+
+    $('#am-emp-popup-save').off('click.ampopup').on('click.ampopup', function () {
+        $errors.hide().empty();
+        var postData = $body.find(':input[name]').serialize() +
+                       '&__RequestVerificationToken=' + encodeURIComponent(token);
+        $.ajax({
+            url: cfg.saveUrl, type: 'POST', data: postData,
+            success: function (r) {
+                if (r && r.success) {
+                    $modal.modal('hide');
+                    if (cfg.onSaved) cfg.onSaved();
+                } else {
+                    var msgs = (r && r.errors && r.errors.length) ? r.errors : ['An error occurred. Please try again.'];
+                    $errors.html(msgs.map(function (e) { return '<div>' + e + '</div>'; }).join('')).show();
+                }
+            },
+            error: function () {
+                $errors.html('<div>An error occurred. Please try again.</div>').show();
+            }
+        });
+    });
+};
+</script>

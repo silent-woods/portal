@@ -1,85 +1,89 @@
-﻿@model EmployeeModel
+@model EmployeeModel
 <input type="hidden" asp-for="Id" />
-<div class="card-body">
 
-    @if (Model.Id > 0)
-    {
-        <div class="card card-default">
-            <div class="card-body">
-                @{
-                    var gridModel = new DataTablesModel
-                    {
-                        Name = "address-grid",
-                        UrlRead = new DataUrl("AddressList", "Employee", new RouteValueDictionary { [nameof(Model.EmpAddressSearchModels.employeeId)] = Model.Id }),
-                        UrlDelete = new DataUrl("AddressDelete", "Employee", new RouteValueDictionary { [nameof(Model.Id)] = Model.EmpAddressModels.FirstOrDefault()?.Id }),
-                        Length = Model.EmpAddressSearchModels.PageSize,
-                        LengthMenu = Model.EmpAddressSearchModels.AvailablePageSizes,
-                    };
+@if (Model.Id > 0)
+{
+    var canEdit   = await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress, PermissionAction.Edit);
+    var canDelete = await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress, PermissionAction.Delete);
 
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.FirstName))
-                    {
-                        Title = T("Admin.Address.Fields.FirstName").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.LastName))
-                    {
-                        Title = T("Admin.Address.Fields.LastName").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.Email))
-                    {
-                        Title = T("Admin.Address.Fields.Email").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.PhoneNumber))
-                    {
-                        Title = T("Admin.Address.Fields.PhoneNumber").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.Address1))
-                    {
-                        Title = T("Admin.Address.Fields.Address1").Text,
-                    });
-                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.FaxNumber))
-                    {
-                        Title = T("Admin.Address.Fields.FaxNumber").Text,
-                    });
-                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress, PermissionAction.Edit))
-                    {
-                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.Id))
-                        {
-                            Title = T("Admin.Common.Edit").Text,
-                            Width = "80",
-                            ClassName = NopColumnClassDefaults.Button,
-                            Render = new RenderButtonEdit(new DataUrl("~/Admin/Employee/AddressEdit?employeeId=" + Model.Id + "&id=" + Model.EmpAddressModels.FirstOrDefault()?.Id, true))
-                        });
-                    }
-                    @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress, PermissionAction.Delete))
-                    {
-                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(EmpAddressModel.Id))
-                        {
-                            Title = T("Admin.Common.Delete").Text,
-                            Width = "100",
-                            Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
-                            ClassName = NopColumnClassDefaults.Button
-                        });
-                    }
-                }
-                @await Html.PartialAsync("Table", gridModel)
-            </div>
+    <div class="am-card">
+        <div class="am-card-header">
+            <div class="am-card-title"><i class="fas fa-map-marker-alt"></i> @T("Admin.HRM.Employee.Address")</div>
             @if (await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageEmployeeAddress, PermissionAction.Add))
             {
-                <div class="card-body">
-                    <button type="button" class="btn btn-primary" onclick="location.href = '@Url.Action("AddressCreate", new { employeeId = Model.Id })'">
-                        <i class="fas fa-plus-square"></i>
-                        @T("Admin.Employee.Address.AddButton")
-                    </button>
-                </div>
+                <button type="button" id="addr-add-btn" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> @T("Admin.Employee.Address.AddButton")
+                </button>
             }
         </div>
-    }
-    else
-    {
-        <div class="card card-default">
-            <div class="card-body">
-                @T("Admin.Employee.Address.SaveBeforeEdit")
-            </div>
+        <div class="am-dt-wrap">
+            <table id="addr-table" class="am-dt">
+                <thead><tr>
+                    <th>@T("Admin.Address.Fields.FirstName")</th>
+                    <th>@T("Admin.Address.Fields.LastName")</th>
+                    <th>@T("Admin.Address.Fields.Email")</th>
+                    <th>@T("Admin.Address.Fields.PhoneNumber")</th>
+                    <th>@T("Admin.Address.Fields.Address1")</th>
+                    <th>@T("Admin.Address.Fields.FaxNumber")</th>
+                        @if (canEdit || canDelete)
+                        {
+                            <th>@T("Admin.Common.Actions")</th>
+                        }
+                </tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
-    }
-</div>
+        <div id="addr-footer" class="am-dt-footer">
+            <span class="am-dt-count">@T("Admin.Common.Loading")</span>
+            <div class="am-dt-pager"></div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var token     = $('input[name="__RequestVerificationToken"]').first().val();
+        var canEdit   = @(canEdit ? "true" : "false");
+        var canDel    = @(canDelete ? "true" : "false");
+        var popupBase = '@Url.Action("AddressPopup", "Employee", new { employeeId = Model.Id })' + '&id=';
+        var addUrl    = '@Url.Action("AddressPopup", "Employee", new { employeeId = Model.Id })';
+        var saveUrl   = '@Url.Action("AddressPopupSave", "Employee")';
+
+        var tbl = amEmpTable({
+            tableId: 'addr-table', footerId: 'addr-footer',
+            listUrl:   '@Url.Action("AddressList",   "Employee")',
+            deleteUrl: '@Url.Action("AddressDelete", "Employee")',
+            empId: @Model.Id, pageSize: 10, token: token,
+            confirmMsg: 'Delete this address?',
+            onLoad: function (t) { amSyncCount('am-stat-address', 'am-badge-address', t); },
+            renderRow: function (row) {
+                var act = '';
+                if (canEdit) act += '<button type="button" class="btn am-dt-edit" data-id="' + row.Id + '"><i class="fas fa-pencil-alt"></i></button>';
+                if (canDel)  act += '<button type="button" class="btn am-dt-del"  data-id="' + row.Id + '"><i class="fas fa-trash-alt"></i></button>';
+                return '<tr>' +
+                    '<td class="am-dt-name">' + (row.FirstName || '—') + '</td>' +
+                    '<td>' + (row.LastName    || '<span class="am-dt-muted">—</span>') + '</td>' +
+                    '<td>' + (row.Email       || '<span class="am-dt-muted">—</span>') + '</td>' +
+                    '<td>' + (row.PhoneNumber || '<span class="am-dt-muted">—</span>') + '</td>' +
+                    '<td>' + (row.Address1    || '<span class="am-dt-muted">—</span>') + '</td>' +
+                    '<td>' + (row.FaxNumber   || '<span class="am-dt-muted">—</span>') + '</td>' +
+                    (canEdit || canDel ? '<td><div class="am-dt-actions">' + act + '</div></td>' : '') +
+                    '</tr>';
+            }
+        });
+
+        $(document).off('click.addr-edit').on('click.addr-edit', '#addr-table .am-dt-edit', function () {
+            var id = $(this).data('id');
+            amOpenPopup({ url: popupBase + id, saveUrl: saveUrl, title: 'Edit Address', onSaved: function () { tbl.reload(); } });
+        });
+
+        var addBtn = document.getElementById('addr-add-btn');
+        if (addBtn) addBtn.onclick = function () {
+            amOpenPopup({ url: addUrl, saveUrl: saveUrl, title: 'Add Address', onSaved: function () { tbl.reload(); } });
+        };
+    }());
+    </script>
+}
+else
+{
+    <div class="am-save-first"><i class="fas fa-info-circle"></i> @T("Admin.Employee.Address.SaveBeforeEdit")</div>
+}

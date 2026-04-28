@@ -1,134 +1,140 @@
 @model EmployeeModel
 
-<div class="card-body">
-    @if (Model.Id > 0)
-    {
-        <div id="payroll-info-container">
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <div class="label-wrapper">
-                        <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.CTC")</label>
-                        <div title='@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.CTC.Hint")' data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
-                    </div>
-                </div>
-                <div class="col-md-9">
-                    <input type="text" id="payroll-ctc" class="form-control" maxlength="100"
-                           placeholder='@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.CTC.Hint")' />
-                </div>
+@if (Model.Id > 0)
+{
+    <div class="am-card">
+        <div class="am-card-header">
+            <div class="am-card-title"><i class="fas fa-university"></i> Payroll Information</div>
+            <span style="font-size:11px;color:#6b7280;background:#f8f9fc;padding:3px 10px;border-radius:20px;border:1px solid #e5e7eb;">
+                <i class="fas fa-shield-alt" style="color:#10b981;margin-right:4px;"></i>Saved separately
+            </span>
+        </div>
+        <div class="am-card-body">
+
+            <div class="am-sensitive-notice">
+                <i class="fas fa-lock"></i>
+                @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.SensitiveNotice")
             </div>
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <div class="label-wrapper">
-                        <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.PanCardNumber")</label>
-                        <div title='@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.PanCardNumber.Hint")' data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
+
+            <div id="payroll-info-container">
+
+                <div class="am-form-section">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Section.Compensation")</div>
+                <div class="am-form-grid">
+
+                    <div class="am-field">
+                        <div class="label-wrapper">
+                            <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.CTC")</label>
+                            <div title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.CTC.Hint")" data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
+                        </div>
+                        <input type="text" id="payroll-ctc" class="form-control" maxlength="100"
+                               placeholder="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.CTC.Hint")" />
                     </div>
-                </div>
-                <div class="col-md-9">
-                    <input type="text" id="payroll-pan" class="form-control" maxlength="20"
-                           placeholder="e.g. ABCDE1234F" />
-                </div>
-            </div>
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <div class="label-wrapper">
-                        <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BankName")</label>
-                        <div title='@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BankName.Hint")' data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
+
+                    <div class="am-field">
+                        <div class="label-wrapper">
+                            <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.PanCardNumber")</label>
+                            <div title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.PanCardNumber.Hint")" data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
+                        </div>
+                        <input type="text" id="payroll-pan" class="form-control" maxlength="20"
+                               placeholder="e.g. ABCDE1234F" style="text-transform:uppercase;letter-spacing:1px;" />
                     </div>
+
                 </div>
-                <div class="col-md-9">
-                    <input type="text" id="payroll-bank-name" class="form-control" maxlength="200" />
-                </div>
-            </div>
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <div class="label-wrapper">
-                        <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BankAccountNumber")</label>
-                        <div title='@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BankAccountNumber.Hint")' data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
+
+                <div class="am-form-section">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Section.BankDetails")</div>
+                <div class="am-form-grid">
+
+                    <div class="am-field">
+                        <div class="label-wrapper">
+                            <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BankName")</label>
+                            <div title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BankName.Hint")" data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
+                        </div>
+                        <input type="text" id="payroll-bank-name" class="form-control" maxlength="200" />
                     </div>
-                </div>
-                <div class="col-md-9">
-                    <input type="text" id="payroll-account-number" class="form-control" maxlength="100" />
-                </div>
-            </div>
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <div class="label-wrapper">
-                        <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.IFSCCode")</label>
-                        <div title='@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.IFSCCode.Hint")' data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
+
+                    <div class="am-field">
+                        <div class="label-wrapper">
+                            <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BeneficiaryName")</label>
+                            <div title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BeneficiaryName.Hint")" data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
+                        </div>
+                        <input type="text" id="payroll-beneficiary" class="form-control" maxlength="200" />
                     </div>
-                </div>
-                <div class="col-md-9">
-                    <input type="text" id="payroll-ifsc" class="form-control" maxlength="20"
-                           placeholder="e.g. SBIN0001234" />
-                </div>
-            </div>
-            <div class="form-group row">
-                <div class="col-md-3">
-                    <div class="label-wrapper">
-                        <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BeneficiaryName")</label>
-                        <div title='@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BeneficiaryName.Hint")' data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
+
+                    <div class="am-field">
+                        <div class="label-wrapper">
+                            <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BankAccountNumber")</label>
+                            <div title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.BankAccountNumber.Hint")" data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
+                        </div>
+                        <input type="text" id="payroll-account-number" class="form-control" maxlength="100" style="letter-spacing:1px;" />
                     </div>
+
+                    <div class="am-field">
+                        <div class="label-wrapper">
+                            <label class="col-form-label">@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.IFSCCode")</label>
+                            <div title="@T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.Fields.IFSCCode.Hint")" data-toggle="tooltip" class="ico-help"><i class="fas fa-question-circle"></i></div>
+                        </div>
+                        <input type="text" id="payroll-ifsc" class="form-control" maxlength="20"
+                               placeholder="e.g. SBIN0001234" style="text-transform:uppercase;letter-spacing:1px;" />
+                    </div>
+
                 </div>
-                <div class="col-md-9">
-                    <input type="text" id="payroll-beneficiary" class="form-control" maxlength="200" />
-                </div>
+
             </div>
         </div>
+    </div>
 
-        <script>
-            $(function () {
-                var employeeId = @Model.Id;
-                var antiforgeryToken = $('input[name="__RequestVerificationToken"]').val();
-                $.get('@Url.Action("GetPayrollInfo", "EmployeePayrollInfo", new { area = "Admin" })', { employeeId: employeeId }, function (data) {
-                    if (data.success) {
-                        $('#payroll-ctc').val(data.ctc);
-                        $('#payroll-pan').val(data.panCardNumber);
-                        $('#payroll-bank-name').val(data.bankName);
-                        $('#payroll-account-number').val(data.bankAccountNumber);
-                        $('#payroll-ifsc').val(data.ifscCode);
-                        $('#payroll-beneficiary').val(data.beneficiaryName);
+    <script>
+        $(function () {
+            var employeeId = @Model.Id;
+            var antiforgeryToken = $('input[name="__RequestVerificationToken"]').val();
+
+            $.get('@Url.Action("GetPayrollInfo", "EmployeePayrollInfo", new { area = "Admin" })', { employeeId: employeeId }, function (data) {
+                if (data.success) {
+                    $('#payroll-ctc').val(data.ctc);
+                    $('#payroll-pan').val(data.panCardNumber);
+                    $('#payroll-bank-name').val(data.bankName);
+                    $('#payroll-account-number').val(data.bankAccountNumber);
+                    $('#payroll-ifsc').val(data.ifscCode);
+                    $('#payroll-beneficiary').val(data.beneficiaryName);
+                }
+            });
+
+            $('#employee-form').on('submit.payroll', function (e) {
+                e.preventDefault();
+                var $form = $(this);
+                var $active = $(document.activeElement);
+                var clickedBtnName = ($active.is('button[type=submit], input[type=submit]') && $active.attr('name'))
+                    ? $active.attr('name') : null;
+
+                $.ajax({
+                    url: '@Url.Action("SavePayrollInfo", "EmployeePayrollInfo", new { area = "Admin" })',
+                    type: 'POST',
+                    data: {
+                        __RequestVerificationToken: antiforgeryToken,
+                        EmployeeId: employeeId,
+                        CTC: $('#payroll-ctc').val(),
+                        PanCardNumber: $('#payroll-pan').val(),
+                        BankName: $('#payroll-bank-name').val(),
+                        BankAccountNumber: $('#payroll-account-number').val(),
+                        IFSCCode: $('#payroll-ifsc').val(),
+                        BeneficiaryName: $('#payroll-beneficiary').val()
+                    },
+                    complete: function () {
+                        $form.off('submit.payroll');
+                        if (clickedBtnName) {
+                            $('<input>').attr({ type: 'hidden', name: clickedBtnName, value: 'true' }).appendTo($form);
+                        }
+                        $form.submit();
                     }
                 });
-
-                $('#employee-form').on('submit.payroll', function (e) {
-                    e.preventDefault();
-                    var $form = $(this);
-                    var $active = $(document.activeElement);
-                    var clickedBtnName = ($active.is('button[type=submit], input[type=submit]') && $active.attr('name'))
-                        ? $active.attr('name') : null;
-
-                    $.ajax({
-                        url: '@Url.Action("SavePayrollInfo", "EmployeePayrollInfo", new { area = "Admin" })',
-                        type: 'POST',
-                        data: {
-                            __RequestVerificationToken: antiforgeryToken,
-                            EmployeeId: employeeId,
-                            CTC: $('#payroll-ctc').val(),
-                            PanCardNumber: $('#payroll-pan').val(),
-                            BankName: $('#payroll-bank-name').val(),
-                            BankAccountNumber: $('#payroll-account-number').val(),
-                            IFSCCode: $('#payroll-ifsc').val(),
-                            BeneficiaryName: $('#payroll-beneficiary').val()
-                        },
-                        complete: function () {
-                            $form.off('submit.payroll');
-                            if (clickedBtnName) {
-                                $('<input>').attr({ type: 'hidden', name: clickedBtnName, value: 'true' })
-                                    .appendTo($form);
-                            }
-                            $form.submit();
-                        }
-                    });
-                });
             });
-        </script>
-    }
-    else
-    {
-        <div class="card card-default">
-            <div class="card-body">
-                @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.SaveFirst")
-            </div>
-        </div>
-    }
-</div>
+        });
+    </script>
+}
+else
+{
+    <div class="am-save-first">
+        <i class="fas fa-info-circle"></i>
+        @T("Satyanam.Plugin.Misc.AccountManagement.Admin.Employee.Payroll.SaveFirst")
+    </div>
+}
