@@ -34,6 +34,7 @@
                 <thead>
                     <tr>
                         <th></th>
+                        <th></th>
                         <th class="checkbox-col">
                             <input type="checkbox" class="select-all-checkbox" title="Select All" />
                         </th>
@@ -127,6 +128,19 @@
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
                             </td>
+                            <td class="task-name-cell">
+                                <!-- hidden task name -->
+                                <input type="hidden" class="task-name" value="@t.TaskName" />
+                                
+                                <span class="copy-wrapper">
+                                    <img src="@Url.Content("~/Themes/DefaultClean/Content/images/copy-svgrepo-com.svg")"
+                                         class="copy-icon"
+                                         onclick="copyTaskName('@t.TaskName', this)" />
+
+                                    <span class="copy-text">✔ Copied!</span>
+                                </span>
+                              
+                            </td>
                             <td class="checkbox-cell">
                                 <input type="checkbox" class="row-checkbox" value="@t.Id" @(!t.CanTakeFollowUp ? "disabled=\"disabled\"" : "") />
                             </td>
@@ -178,6 +192,7 @@
             </table>
         </div>
     </div>
+    
 }
 @if (Model.DueToday != null && Model.DueToday.Count > 0)
 {
@@ -191,6 +206,7 @@
             <table class="followup-table">
                 <thead>
                     <tr>
+                        <th></th>
                         <th></th>
                         <th class="checkbox-col">
                             <input type="checkbox" class="select-all-checkbox" title="Select All" />
@@ -285,6 +301,18 @@
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
                             </td>
+                            <td class="task-name-cell">
+                                <!-- hidden task name -->
+                                <input type="hidden" class="task-name" value="@t.TaskName" />
+                                <span class="copy-wrapper">
+                                    <img src="@Url.Content("~/Themes/DefaultClean/Content/images/copy-svgrepo-com.svg")"
+                                         class="copy-icon"
+                                         onclick="copyTaskName('@t.TaskName', this)" />
+
+                                    <span class="copy-text">✔ Copied!</span>
+                                </span>
+
+                            </td>
                             <td class="checkbox-cell">
                                 <input type="checkbox" class="row-checkbox" value="@t.Id" @(!t.CanTakeFollowUp ? "disabled=\"disabled\"" : "") />
                             </td>
@@ -349,6 +377,7 @@
             <table class="followup-table">
                 <thead>
                     <tr>
+                        <th></th>
                         <th></th>
                         <th class="checkbox-col">
                             <input type="checkbox" class="select-all-checkbox" title="Select All" />
@@ -443,6 +472,18 @@
                             <td class="expand-cell">
                                 <span class="toggle-subgrid" data-id="@t.Id">+</span>
                             </td>
+                            <td class="task-name-cell">
+                                <!-- hidden task name -->
+                                <input type="hidden" class="task-name" value="@t.TaskName" />
+                                <span class="copy-wrapper">
+                                    <img src="@Url.Content("~/Themes/DefaultClean/Content/images/copy-svgrepo-com.svg")"
+                                         class="copy-icon"
+                                         onclick="copyTaskName('@t.TaskName', this)" />
+
+                                    <span class="copy-text">✔ Copied!</span>
+                                </span>
+
+                            </td>
                             <td class="checkbox-cell">
                                 <input type="checkbox" class="row-checkbox" value="@t.Id" @(!t.CanTakeFollowUp ? "disabled=\"disabled\"" : "") />
                             </td>
@@ -495,6 +536,63 @@
         </div>
     </div>
 }
+@* <script>
+    function copyTaskName(el) {
+        var text = el.parentElement.querySelector('.task-name').value;
+        navigator.clipboard.writeText(text);
+    }
+</script> *@
+@* <script>
+function copyTaskName(text) {
+    var tempInput = document.createElement("input");
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+
+    tempInput.select();
+    tempInput.setSelectionRange(0, 99999);
+
+    document.execCommand("copy");
+
+    document.body.removeChild(tempInput);
+}
+</script> *@
+<script>
+        function copyTaskName(text, element) {
+
+        const wrapper = element.closest(".copy-wrapper");
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => {
+                toggleCopied(wrapper);
+            }).catch(() => {
+                fallbackCopy(text, wrapper);
+            });
+        } else {
+            fallbackCopy(text, wrapper);
+        }
+    }
+
+    function fallbackCopy(text, wrapper) {
+        var input = document.createElement("input");
+        input.value = text;
+        document.body.appendChild(input);
+
+        input.select();
+        document.execCommand("copy");
+
+        document.body.removeChild(input);
+
+        toggleCopied(wrapper);
+    }
+
+    function toggleCopied(wrapper) {
+        wrapper.classList.add("active");
+
+        setTimeout(() => {
+            wrapper.classList.remove("active");
+        }, 1500);
+    }
+</script>
 <script>
     $(document).ready(function () {
         $("table").on("change", ".select-all-checkbox", function () {

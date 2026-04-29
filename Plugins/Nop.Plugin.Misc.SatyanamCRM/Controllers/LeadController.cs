@@ -717,19 +717,9 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                 }
                 if (!string.IsNullOrWhiteSpace(lead.LinkedinUrl))
                 {
-                    var existingFollowups = await _linkedInFollowupsService.GetAllLinkedInFollowupsAsync(
-                        showHidden: true,
-                        firstname: "",
-                        lastname: "",
-                        email: "",
-                        linkedinUrl: lead.LinkedinUrl,
-                        website: "",
-                        lastMessageDate: null,
-                        nextFollowUpDate: null,
-                        statusId: null,
-                        createdByUserId: null,
-                        pageIndex: 0,
-                        pageSize: 1);
+                    var existingFollowups = await _linkedInFollowupsService.GetAllLinkedInFollowupsAsync(showHidden: true,firstname: "",
+                        lastname: "",email: "",linkedinUrl: lead.LinkedinUrl,website: "",lastMessageDate: null,nextFollowUpDate: null,
+                        statusId: null,createdByUserId: null,pageIndex: 0,pageSize: 1);
 
                     if (existingFollowups == null || existingFollowups.TotalCount == 0)
                     {
@@ -746,7 +736,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                             DaysUntilNext = 0,
                             RemainingFollowUps = 0,
                             AutoStatus = "No follow-up scheduled",
-                            StatusId = lead.LeadStatusId,//need to change here
+                            StatusId = lead.LeadStatusId,
                             Notes = "",
                             LeadId = lead.Id,
                             CreatedByUserId = 0,
@@ -757,7 +747,6 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     }
                     else
                     {
-                        // Followup already exists — just update LeadId if not set
                         var existing = existingFollowups.FirstOrDefault();
                         if (existing != null && (existing.LeadId == null || existing.LeadId == 0))
                         {
@@ -860,7 +849,6 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
 
                     if (existingFollowup == null)
                     {
-                        // No followup exists → create new one
                         var linkedInFollowUp = new LinkedInFollowups
                         {
                             FirstName = leads.FirstName ?? "",
@@ -869,7 +857,7 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                             Email = leads.Email ?? "",
                             WebsiteUrl = leads.WebsiteUrl ?? "",
                             LeadId = leads.Id,
-                            StatusId = leads.LeadStatusId,//need to change
+                            StatusId = leads.LeadStatusId,
                             CreatedByUserId = leads.CustomerId,
                             CreatedOnUtc = DateTime.UtcNow,
                             UpdatedOnUtc = DateTime.UtcNow,
@@ -878,7 +866,6 @@ namespace Satyanam.Nop.Plugin.Misc.SatyanamCRM.Controllers
                     }
                     else
                     {
-                        // Followup exists → update name, email, website and LeadId
                         existingFollowup.FirstName = leads.FirstName ?? "";
                         existingFollowup.LastName = leads.LastName ?? "";
                         existingFollowup.Email = leads.Email ?? "";

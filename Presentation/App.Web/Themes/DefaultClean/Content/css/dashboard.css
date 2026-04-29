@@ -35,7 +35,42 @@
         word-wrap: break-word;
         white-space: normal;
     }
+.copy-wrapper {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
 
+.copy-icon {
+    cursor: pointer;
+    width: 30px;
+}
+
+.copy-text {
+    display: none;
+    font-size: 13px;
+    color: #28a745;
+    margin-left: 4px;
+    white-space: nowrap;
+}
+
+/* active state */
+.copy-wrapper.active .copy-icon {
+    display: none;
+}
+
+.copy-wrapper.active .copy-text {
+    display: inline;
+}
+.toast-icon {
+    font-weight: bold;
+}
+
+/* check icon style */
+.toast-icon {
+    font-weight: bold;
+    font-size: 16px;
+}
 .row-empty {
     color: #888;
     text-align: center;
@@ -137,7 +172,7 @@ input[type="datetime-local"], input[type="text"] {
     /* col 2: select checkbox (NEW) */
     .followup-table th:nth-child(2),
     .followup-table td:nth-child(2) {
-        width: 30px;
+        width: 90px;
         text-align: center;
     }
 

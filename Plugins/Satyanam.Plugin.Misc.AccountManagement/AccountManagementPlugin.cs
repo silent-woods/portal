@@ -205,7 +205,7 @@ public partial class AccountManagementPlugin : BasePlugin,  IAdminMenuPlugin , I
         var pluginMenuItem = new SiteMapNode()
         {
             Title = await _localizationService.GetResourceAsync("Satyanam.Plugin.Misc.AccountManagement.MainMenu.Title"),
-            Visible = await Authenticate(),
+            Visible = true,
             IconClass = "fa fa-cube"
         };
 

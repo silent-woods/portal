@@ -2496,5 +2496,14 @@
 	<LocaleResource Name="Plugin.SatyanamCRM.LinkedInFollowUps.Emailverification">
 		<Value>Email verification limit reached or session expired. Skipping validation.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Common.Select">
+		<Value>Select</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Common.All">
+		<Value>All</Value>
+	</LocaleResource>
+	<LocaleResource Name="Plugin.SatyanamCRM.Errors.StatusSummary">
+		<Value>Status summary error</Value>
+	</LocaleResource>
 </Language>
 

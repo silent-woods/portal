@@ -178,7 +178,7 @@
 
                             <div class="grid-item">
                                 <label asp-for="EstimationTimeHHMM" asp-postfix=":"></label>
-                                <input type="text" name="EstimationTimeHHMM" class="readonly-input" id="EstimationTimeHHMM" value="@Model.EstimationTimeHHMM" @(canEditEstimation ? "" : "readonly") />
+                                <input type="text" name="EstimationTimeHHMM" class="@(canEditEstimation ? "" : "readonly-input")" id="EstimationTimeHHMM" value="@Model.EstimationTimeHHMM" @(canEditEstimation ? "" : "readonly") />
                                 <span asp-validation-for="EstimationTimeHHMM"></span>
                             </div>
 
